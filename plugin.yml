@@ -1,0 +1,26 @@
+name: DropHeads
+main: Evil_Code_DropHeads.DropHeads
+author: EvModder/EvDoc/Evil_Witchdoctor
+version: 3.2.1
+softdepend: [EvKitPvP]
+
+commands:
+   spawnhead:
+      description: Get a player or mob head
+      usage: /gethead [name]
+      aliases: [gethead,dhspawn,spawn-head,head,phspawn,skull]
+      permission: evp.dropheads.spawn
+      permission-message: You do not have permission to do this.
+
+permissions:
+   evp.dropheads.alwaysbehead:
+        description: This player will get heads 100% of the time
+        default: false
+
+   evp.dropheads.canbehead:
+        description: This player will be able to get heads
+        default: true
+
+   evp.dropheads.spawn:
+        description: Permission to spawn heads with a command
+        default: op
