@@ -32,14 +32,14 @@ public class EntityDeathListener implements Listener{
 	private Map<Material, Float> toolBonuses = new HashMap<Material, Float>();
 	private double lootingBonus = 0.4;
 	Random rand = new Random();
-	
+
 	public EntityDeathListener(){
 		plugin = DropHeads.getPlugin();
 		playerKillsOnly = plugin.getConfig().getBoolean("player-kills-only", true);
 		playerHeadsOnly = plugin.getConfig().getBoolean("player-heads-only", false);
 		useTaylorModifiers = plugin.getConfig().getBoolean("use-taylor-modifiers", true);
 		lootingBonus = plugin.getConfig().getDouble("looting-bonus", 0.4);
-		
+
 		if(plugin.getConfig().getBoolean("must-use-axe")){
 			mustUseTools.add(Material.DIAMOND_AXE);
 			mustUseTools.add(Material.IRON_AXE);
@@ -59,7 +59,7 @@ public class EntityDeathListener implements Listener{
 			Material mat = Material.getMaterial(toolName.toUpperCase());
 			if(mat != null) toolBonuses.put(mat, (float) specificModifiers.getDouble(toolName));
 		}
-		
+
 		//Load individual mobs' drop chances
 		String chances = FileIO.loadFile("drop chances.txt", plugin.getClass().getResourceAsStream("/default chances.txt"));
 //		String chances = FileIO.loadFile("drop chances.txt", "");
@@ -83,7 +83,7 @@ public class EntityDeathListener implements Listener{
 			}
 		}
 	}
-	
+
 	@EventHandler
 	public void entityDeathEvent(EntityDeathEvent evt){
 		//If in an arena, do not drop heads //TODO: NOTE: Ev-specific arena
@@ -128,11 +128,11 @@ public class EntityDeathListener implements Listener{
 			dropChance += (toolBonus == 0 ? 0 : (toolBonus*(1-dropChance))/(toolBonus+1));
 		}
 		else dropChance += lootBonus*dropChance + toolBonus*dropChance;
-		
+
 		if(rand.nextDouble() < dropChance){
 			evt.getEntity().getWorld().dropItem(evt.getEntity().getLocation(), Utils.getHead(evt.getEntity()));
 
-			plugin.getLogger().fine("Head dropped!\nDrop chance before modifiers: "+rawDropChance+
+			plugin.getLogger().info("Head dropped!\nDrop chance before modifiers: "+rawDropChance+
 									"\nDrop chance after modifiers: "+dropChance+
 									"\nMob killed: "+evt.getEntityType().name());
 		}
