@@ -34,9 +34,11 @@ public class EntitySpawnListener implements Listener{
 
 	@EventHandler
 	public void entitySpawnEvent(CreatureSpawnEvent evt){
-		float modifier = spawnModifiers.get(evt.getSpawnReason());
-		if(modifier != 1){
-			evt.getEntity().setMetadata("SpawnReason", new FixedMetadataValue(plugin, modifier));
+		if(evt.getSpawnReason() != null){
+			Float modifier = spawnModifiers.get(evt.getSpawnReason());
+			if(modifier != null && modifier != 1){
+				evt.getEntity().setMetadata("SpawnReason", new FixedMetadataValue(plugin, modifier));
+			}
 		}
 	}
 }
