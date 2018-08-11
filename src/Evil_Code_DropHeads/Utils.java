@@ -241,14 +241,14 @@ public class Utils {
 		}
 		if(textureKey != null && (textures.containsKey(textureKey) || textures.containsKey(textureKey = entity.getType().name())))
 			return Utils.makeTextureSkull(entity.getType(), textureKey);
-		
+
 		//else
 		ItemStack head = new ItemStack(Material.SKULL_ITEM, 1, (byte)3);
 		SkullMeta meta = (SkullMeta) head.getItemMeta();
-		
+
 		String normalName = ChatColor.WHITE+getNormalizedName(entity.getType());
 		String MHFName = "MHF_"+getMHFHeadName(entity.getType());
-		
+
 		if(MHF_Lookup.contains(MHFName)) meta.setOwner(MHFName);
 		else if(useCustomHeads && customHeads.containsKey(entity)) meta.setOwner(customHeads.get(entity));
 		else meta.setOwner(normalName);
