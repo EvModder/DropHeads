@@ -73,9 +73,15 @@ public class EntityDeathListener implements Listener{
 			if(parts.length > 1){
 				try{
 					EntityType eType = EntityType.valueOf(parts[0]);
-					mobChances.put(eType, Float.parseFloat(parts[1]));
+					float dropChance = Float.parseFloat(parts[1]);
+					mobChances.put(eType, dropChance);
 					if(parts.length > 2){
 						if(parts[2].equalsIgnoreCase("NoLooting")) noLootingEffectMobs.add(eType);
+					}
+					if(dropChance > 1F){
+						plugin.getLogger().severe("Invalid value: "+parts[1]);
+						plugin.getLogger().severe("Drop chance must be between 0 and 1");
+						mobChances.put(eType, Math.min(dropChance/10F, 1F));
 					}
 				}
 				catch(NumberFormatException ex){plugin.getLogger().severe("Invalid value: "+parts[1]);}
