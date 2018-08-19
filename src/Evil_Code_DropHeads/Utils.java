@@ -30,6 +30,7 @@ import com.mojang.authlib.properties.Property;
 
 import EvLibD.FileIO;
 
+@SuppressWarnings("deprecation")
 public class Utils {
 	static class EntityData{
 		EntityType type;
@@ -128,7 +129,7 @@ public class Utils {
 	}
 
 	public static ItemStack makeTextureSkull(String code){
-		ItemStack item = new ItemStack(Material.SKULL_ITEM, 1, (byte)3);
+		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
 		if(code == null) return item;
 		SkullMeta meta = (SkullMeta) item.getItemMeta();
 
@@ -142,7 +143,7 @@ public class Utils {
 	}
 
 	public static ItemStack makeTextureSkull(EntityType entity, String textureKey){
-		ItemStack item = new ItemStack(Material.SKULL_ITEM, 1, (byte)3);
+		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
 		String code = textures.get(textureKey);
 		if(code == null) return item;
 		SkullMeta meta = (SkullMeta) item.getItemMeta();
@@ -159,22 +160,22 @@ public class Utils {
 	public static ItemStack getHead(EntityType entity, String data){
 		switch(entity){
 		case WITHER_SKELETON:
-			return new ItemStack(Material.SKULL_ITEM,1,(byte)1);
+			return new ItemStack(Material.WITHER_SKELETON_SKULL);
 		case SKELETON:
-			return new ItemStack(Material.SKULL_ITEM);
+			return new ItemStack(Material.SKELETON_SKULL);
 		case ZOMBIE:
-			return new ItemStack(Material.SKULL_ITEM,1,(byte)2);
+			return new ItemStack(Material.ZOMBIE_HEAD);
 		case CREEPER:
-			return new ItemStack(Material.SKULL_ITEM,1,(byte)4);
+			return new ItemStack(Material.CREEPER_HEAD);
 		case ENDER_DRAGON:
-			return new ItemStack(Material.SKULL_ITEM,1,(byte)5);
+			return new ItemStack(Material.DRAGON_HEAD);
 		default:
 			String textureKey = entity.name()+ (data == null ? "" : ":"+data);
 			if(textures.containsKey(textureKey)) return Utils.makeTextureSkull(entity, textureKey);
 
 			String normalName = ChatColor.WHITE+getNormalizedName(entity);
 
-			ItemStack head = new ItemStack(Material.SKULL_ITEM,1,(byte)3);
+			ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 			SkullMeta meta = (SkullMeta) head.getItemMeta();
 			if(MHF_Lookup.contains("MHF_"+getMHFHeadName(entity))) meta.setOwner("MHF_"+getMHFHeadName(entity));
 			else if(useCustomHeads && customHeads.containsKey(entity)) meta.setOwner(customHeads.get(entity));
@@ -191,17 +192,17 @@ public class Utils {
 			case PLAYER:
 				return getPlayerHead(entity.getUniqueId(), entity.getName());
 			case WITHER_SKELETON:
-				return new ItemStack(Material.SKULL_ITEM, 1, (byte)1);
+				return new ItemStack(Material.WITHER_SKELETON_SKULL);
 			case SKELETON:
-				return new ItemStack(Material.SKULL_ITEM);
+				return new ItemStack(Material.SKELETON_SKULL);
 			case ZOMBIE:
-				return new ItemStack(Material.SKULL_ITEM, 1, (byte)2);
+				return new ItemStack(Material.ZOMBIE_HEAD);
 			case CREEPER:
 				if(((Creeper)entity).isPowered()) textureKey = "CREEPER:CHARGED";
-				else return new ItemStack(Material.SKULL_ITEM, 1, (byte)4);
+				else return new ItemStack(Material.CREEPER_HEAD);
 				break;
 			case ENDER_DRAGON:
-				return new ItemStack(Material.SKULL_ITEM, 1, (byte)5);
+				return new ItemStack(Material.DRAGON_HEAD);
 			case WOLF:
 				textureKey = entity.getType().name();
 				if(((Wolf)entity).isAngry()) textureKey += ":ANGRY";
@@ -243,7 +244,7 @@ public class Utils {
 			return Utils.makeTextureSkull(entity.getType(), textureKey);
 
 		//else
-		ItemStack head = new ItemStack(Material.SKULL_ITEM, 1, (byte)3);
+		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 		SkullMeta meta = (SkullMeta) head.getItemMeta();
 
 		String normalName = ChatColor.WHITE+getNormalizedName(entity.getType());
@@ -258,7 +259,7 @@ public class Utils {
 	}
 
 	public static ItemStack getPlayerHead(UUID uuid, String playerName){
-		ItemStack head = new ItemStack(Material.SKULL_ITEM, 1, (byte)3);
+		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 		SkullMeta meta = (SkullMeta) head.getItemMeta();
 		GameProfile profile = new GameProfile(uuid, playerName);
 		setGameProfile(meta, profile);
@@ -285,6 +286,30 @@ public class Utils {
 			return 3;
 		}
 	}
+
+	public static boolean isHead(Material type){
+		switch(type){
+			case PLAYER_HEAD:
+			case PLAYER_WALL_HEAD:
+			case WITHER_SKELETON_SKULL:
+			case WITHER_SKELETON_WALL_SKULL:
+			case DRAGON_HEAD:
+			case DRAGON_WALL_HEAD:
+			case SKELETON_SKULL:
+			case SKELETON_WALL_SKULL:
+			case CREEPER_HEAD:
+			case CREEPER_WALL_HEAD:
+			case ZOMBIE_HEAD:
+			case ZOMBIE_WALL_HEAD:
+				return true;
+			default:
+				return false;
+		}
+	}
+	public static boolean isPlayerHead(Material type){
+		return type == Material.PLAYER_HEAD || type == Material.PLAYER_WALL_HEAD;
+	}
+
 
 	public static EntityType getEntityByName(String name){
 		if(name.toUpperCase().startsWith("MHF_")) name = normalizedNameFromMHFName(name);

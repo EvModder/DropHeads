@@ -24,8 +24,8 @@ public final class DropHeads extends EvPlugin {
 		new Utils();
 		getServer().getPluginManager().registerEvents(new EntitySpawnListener(), this);
 		getServer().getPluginManager().registerEvents(new EntityDeathListener(), this);
-		getServer().getPluginManager().registerEvents(new BlockBreakListener(), this);
-		getServer().getPluginManager().registerEvents(new BarfItemListener(), this);
+		//getServer().getPluginManager().registerEvents(new BlockBreakListener(), this);//Fixes stacking
+		//getServer().getPluginManager().registerEvents(new BarfItemListener(), this);//Fixes stacking
 	}
 
 	@Override @SuppressWarnings("deprecation")
@@ -49,7 +49,7 @@ public final class DropHeads extends EvPlugin {
 			OfflinePlayer p = null;
 
 			if(target.toUpperCase().startsWith("MHF_")){
-				head = new ItemStack(Material.SKULL_ITEM, 1, (byte)3);
+				head = new ItemStack(Material.PLAYER_HEAD);
 				SkullMeta meta = (SkullMeta) head.getItemMeta();
 				meta.setOwner(target);
 				EntityType type = Utils.getEntityByName(target);

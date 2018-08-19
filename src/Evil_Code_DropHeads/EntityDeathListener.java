@@ -43,9 +43,9 @@ public class EntityDeathListener implements Listener{
 		if(plugin.getConfig().getBoolean("must-use-axe")){
 			mustUseTools.add(Material.DIAMOND_AXE);
 			mustUseTools.add(Material.IRON_AXE);
-			mustUseTools.add(Material.GOLD_AXE);
+			mustUseTools.add(Material.GOLDEN_AXE);
 			mustUseTools.add(Material.STONE_AXE);
-			mustUseTools.add(Material.WOOD_AXE);
+			mustUseTools.add(Material.WOODEN_AXE);
 		}
 		else for(String toolName : plugin.getConfig().getStringList("must-use")){
 			if(toolName.isEmpty()) continue;
@@ -53,7 +53,7 @@ public class EntityDeathListener implements Listener{
 			if(mat != null) mustUseTools.add(mat);
 			else plugin.getLogger().warning("Unknown Tool \""+toolName+"\"!");
 		}
-		
+
 		ConfigurationSection specificModifiers = plugin.getConfig().getConfigurationSection("specific-tool-modifiers");
 		if(specificModifiers != null) for(String toolName : specificModifiers.getKeys(false)){
 			Material mat = Material.getMaterial(toolName.toUpperCase());
@@ -99,8 +99,8 @@ public class EntityDeathListener implements Listener{
 
 		double rawDropChance, dropChance;
 		double lootBonus = 0, toolBonus = 0;
-		float spawnCauseModifier = evt.getEntity().hasMetadata("SpawnReason") ?
-				evt.getEntity().getMetadata("SpawnReason").get(0).asFloat() : 1;
+		double spawnCauseModifier = evt.getEntity().hasMetadata("SpawnReason") ?
+				evt.getEntity().getMetadata("SpawnReason").get(0).asDouble() : 1D;
 
 		if(playerHeadsOnly && evt.getEntity() instanceof Player == false) return;
 
@@ -120,10 +120,10 @@ public class EntityDeathListener implements Listener{
 			if(!mustUseTools.isEmpty() && (heldItem == null || !mustUseTools.contains(heldItem.getType()))) return;
 
 			if(killer.hasPermission("evp.dropheads.alwaysbehead")) rawDropChance = dropChance = 1;
-			else dropChance = mobChances.containsKey(evt.getEntityType()) ? mobChances.get(evt.getEntityType()) : 0;
+			else dropChance = mobChances.containsKey(evt.getEntityType()) ? mobChances.get(evt.getEntityType()) : 0D;
 		}
 		else if(playerKillsOnly) return;
-		else dropChance = mobChances.containsKey(evt.getEntityType()) ? mobChances.get(evt.getEntityType()) : 0;
+		else dropChance = mobChances.containsKey(evt.getEntityType()) ? mobChances.get(evt.getEntityType()) : 0D;
 
 		rawDropChance = (dropChance *= spawnCauseModifier);
 

@@ -1,8 +1,6 @@
 package Evil_Code_DropHeads;
 
-import net.md_5.bungee.api.ChatColor;
-
-import org.bukkit.Material;
+import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
@@ -19,13 +17,13 @@ public class BarfItemListener implements Listener{
 		pl = DropHeads.getPlugin();
 	}
 
-	@EventHandler
-	public void onBard(PlayerDropItemEvent evt){
-		if(evt.getItemDrop().getItemStack().getType() == Material.SKULL_ITEM){
+	@SuppressWarnings("deprecation") @EventHandler
+	public void onBarf(PlayerDropItemEvent evt){
+		if(Utils.isPlayerHead(evt.getItemDrop().getItemStack().getType())){
 			ItemStack skullItem = evt.getItemDrop().getItemStack();
 			if(skullItem.hasItemMeta() && skullItem.getItemMeta() instanceof SkullMeta){
 				SkullMeta meta = (SkullMeta) skullItem.getItemMeta();
-				
+
 				GameProfile profile = Utils.getGameProfile(meta);
 				if(profile != null){
 					int idx = profile.getName().indexOf("|");
@@ -49,6 +47,6 @@ public class BarfItemListener implements Listener{
 					}
 				}//if(profile != null)
 			}//if(skull has meta)
-		}//if(drop == skull)
+		}//if(drop == player_skull)
 	}//evt
 }
