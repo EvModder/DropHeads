@@ -78,11 +78,12 @@ public class EntityDeathListener implements Listener{
 					if(parts.length > 2){
 						if(parts[2].equalsIgnoreCase("NoLooting")) noLootingEffectMobs.add(eType);
 					}
-					if(dropChance > 1F){
+					// Allow >1 because Spawn-Reason modifiers are added after this
+					/*if(dropChance > 1F){
 						plugin.getLogger().severe("Invalid value: "+parts[1]);
 						plugin.getLogger().severe("Drop chance must be between 0 and 1");
 						mobChances.put(eType, Math.min(dropChance/10F, 1F));
-					}
+					}*/
 				}
 				catch(NumberFormatException ex){plugin.getLogger().severe("Invalid value: "+parts[1]);}
 				catch(IllegalArgumentException ex){plugin.getLogger().severe("Unknown entity type: "+parts[0]);}

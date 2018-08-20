@@ -227,6 +227,8 @@ public class Utils {
 			case SHULKER:
 				textureKey = "SHULKER:"+((Shulker)entity).getColor().name();
 				break;
+			case TROPICAL_FISH:
+				textureKey = "TROPICAL_FISH:"+((Shulker)entity).getColor().name();
 			case VEX:
 				//TODO: Detect what state the Vex is in (Charging or not) instead of just picking randomly
 				textureKey = "VEX"+(new Random().nextBoolean() ? ":CHARGING" : "");
@@ -309,7 +311,6 @@ public class Utils {
 	public static boolean isPlayerHead(Material type){
 		return type == Material.PLAYER_HEAD || type == Material.PLAYER_WALL_HEAD;
 	}
-
 
 	public static EntityType getEntityByName(String name){
 		if(name.toUpperCase().startsWith("MHF_")) name = normalizedNameFromMHFName(name);
