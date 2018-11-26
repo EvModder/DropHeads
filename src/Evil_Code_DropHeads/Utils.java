@@ -128,7 +128,7 @@ public class Utils {
 	}
 
 	public static ItemStack makeTextureSkull(String code){
-		ItemStack item = new ItemStack(Material.SKULL_ITEM);
+		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
 		if(code == null) return item;
 		SkullMeta meta = (SkullMeta) item.getItemMeta();
 
