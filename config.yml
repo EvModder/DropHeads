@@ -30,6 +30,7 @@ must-use:
 specific-tool-modifiers:
   GOLD_AXE: 3
   DIAMOND_AXE: 1
+  GOLD_SWORD: 1
   IRON_AXE: 0.8
   STONE_AXE: 0.5
   DIAMOND_SWORD: 0.2
