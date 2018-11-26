@@ -25,7 +25,7 @@ public class BlockBreakListener implements Listener{
 		pl = DropHeads.getPlugin();
 	}
 
-	@SuppressWarnings("deprecation") @EventHandler(priority = EventPriority.MONITOR)
+	@EventHandler(priority = EventPriority.MONITOR)
 	public void onBlockBreakEvent(BlockBreakEvent evt){
 		if(!evt.isCancelled() && evt.getPlayer().getGameMode() != GameMode.CREATIVE
 				&& Utils.isPlayerHead(evt.getBlock().getType())){
@@ -50,7 +50,7 @@ public class BlockBreakListener implements Listener{
 						skullItem = Utils.getPlayerHead(p.getUniqueId(), p.getName());
 					}
 					else{
-						skullItem = new ItemStack(Material.PLAYER_HEAD);
+						skullItem = new ItemStack(Material.SKULL_ITEM);
 						SkullMeta meta = (SkullMeta) skullItem.getItemMeta();
 						meta.setOwner(profile.getName());
 						meta.setDisplayName(ChatColor.WHITE+profile.getName()

@@ -43,9 +43,9 @@ public class EntityDeathListener implements Listener{
 		if(plugin.getConfig().getBoolean("must-use-axe")){
 			mustUseTools.add(Material.DIAMOND_AXE);
 			mustUseTools.add(Material.IRON_AXE);
-			mustUseTools.add(Material.GOLDEN_AXE);
+			mustUseTools.add(Material.GOLD_AXE);
 			mustUseTools.add(Material.STONE_AXE);
-			mustUseTools.add(Material.WOODEN_AXE);
+			mustUseTools.add(Material.WOOD_AXE);
 		}
 		else for(String toolName : plugin.getConfig().getStringList("must-use")){
 			if(toolName.isEmpty()) continue;

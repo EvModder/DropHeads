@@ -30,7 +30,6 @@ import com.mojang.authlib.properties.Property;
 
 import EvLibD.FileIO;
 
-@SuppressWarnings("deprecation")
 public class Utils {
 	static class EntityData{
 		EntityType type;
@@ -129,7 +128,7 @@ public class Utils {
 	}
 
 	public static ItemStack makeTextureSkull(String code){
-		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
+		ItemStack item = new ItemStack(Material.SKULL_ITEM);
 		if(code == null) return item;
 		SkullMeta meta = (SkullMeta) item.getItemMeta();
 
@@ -143,7 +142,7 @@ public class Utils {
 	}
 
 	public static ItemStack makeTextureSkull(EntityType entity, String textureKey){
-		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
+		ItemStack item = new ItemStack(Material.SKULL_ITEM);
 		String code = textures.get(textureKey);
 		if(code == null) return item;
 		SkullMeta meta = (SkullMeta) item.getItemMeta();
@@ -158,24 +157,29 @@ public class Utils {
 	}
 
 	public static ItemStack getHead(EntityType entity, String data){
+		ItemStack head = new ItemStack(Material.SKULL_ITEM);
 		switch(entity){
 		case WITHER_SKELETON:
-			return new ItemStack(Material.WITHER_SKELETON_SKULL);
+			head.setDurability((short)SkullType.WITHER.ordinal());
+			return head;
 		case SKELETON:
-			return new ItemStack(Material.SKELETON_SKULL);
+			head.setDurability((short)SkullType.SKELETON.ordinal());
+			return head;
 		case ZOMBIE:
-			return new ItemStack(Material.ZOMBIE_HEAD);
+			head.setDurability((short)SkullType.ZOMBIE.ordinal());
+			return head;
 		case CREEPER:
-			return new ItemStack(Material.CREEPER_HEAD);
+			head.setDurability((short)SkullType.CREEPER.ordinal());
+			return head;
 		case ENDER_DRAGON:
-			return new ItemStack(Material.DRAGON_HEAD);
+			head.setDurability((short)SkullType.DRAGON.ordinal());
+			return head;
 		default:
 			String textureKey = entity.name()+ (data == null ? "" : ":"+data);
 			if(textures.containsKey(textureKey)) return Utils.makeTextureSkull(entity, textureKey);
 
 			String normalName = ChatColor.WHITE+getNormalizedName(entity);
 
-			ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 			SkullMeta meta = (SkullMeta) head.getItemMeta();
 			if(MHF_Lookup.contains("MHF_"+getMHFHeadName(entity))) meta.setOwner("MHF_"+getMHFHeadName(entity));
 			else if(useCustomHeads && customHeads.containsKey(entity)) meta.setOwner(customHeads.get(entity));
@@ -188,21 +192,29 @@ public class Utils {
 
 	public static ItemStack getHead(LivingEntity entity){
 		String textureKey = null;
+		ItemStack head = new ItemStack(Material.SKULL_ITEM);
 		switch(entity.getType()){
 			case PLAYER:
 				return getPlayerHead(entity.getUniqueId(), entity.getName());
 			case WITHER_SKELETON:
-				return new ItemStack(Material.WITHER_SKELETON_SKULL);
+				head.setDurability((short)SkullType.WITHER.ordinal());
+				return head;
 			case SKELETON:
-				return new ItemStack(Material.SKELETON_SKULL);
+				head.setDurability((short)SkullType.SKELETON.ordinal());
+				return head;
 			case ZOMBIE:
-				return new ItemStack(Material.ZOMBIE_HEAD);
+				head.setDurability((short)SkullType.ZOMBIE.ordinal());
+				return head;
 			case CREEPER:
 				if(((Creeper)entity).isPowered()) textureKey = "CREEPER:CHARGED";
-				else return new ItemStack(Material.CREEPER_HEAD);
+				else{
+					head.setDurability((short)SkullType.CREEPER.ordinal());
+					return head;
+				}
 				break;
 			case ENDER_DRAGON:
-				return new ItemStack(Material.DRAGON_HEAD);
+				head.setDurability((short)SkullType.DRAGON.ordinal());
+				return head;
 			case WOLF:
 				textureKey = entity.getType().name();
 				if(((Wolf)entity).isAngry()) textureKey += ":ANGRY";
@@ -227,8 +239,9 @@ public class Utils {
 			case SHULKER:
 				textureKey = "SHULKER:"+((Shulker)entity).getColor().name();
 				break;
-			case TROPICAL_FISH:
-				textureKey = "TROPICAL_FISH:"+((Shulker)entity).getColor().name();
+//			case TROPICAL_FISH:
+				//TODO: Generate head dynamically based on tropical fish pattern & colors
+//				textureKey = "TROPICAL_FISH:"+((TropicalFish)entity).getPattern();
 			case VEX:
 				//TODO: Detect what state the Vex is in (Charging or not) instead of just picking randomly
 				textureKey = "VEX"+(new Random().nextBoolean() ? ":CHARGING" : "");
@@ -246,7 +259,6 @@ public class Utils {
 			return Utils.makeTextureSkull(entity.getType(), textureKey);
 
 		//else
-		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 		SkullMeta meta = (SkullMeta) head.getItemMeta();
 
 		String normalName = ChatColor.WHITE+getNormalizedName(entity.getType());
@@ -261,7 +273,7 @@ public class Utils {
 	}
 
 	public static ItemStack getPlayerHead(UUID uuid, String playerName){
-		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+		ItemStack head = new ItemStack(Material.SKULL_ITEM);
 		SkullMeta meta = (SkullMeta) head.getItemMeta();
 		GameProfile profile = new GameProfile(uuid, playerName);
 		setGameProfile(meta, profile);
@@ -291,25 +303,15 @@ public class Utils {
 
 	public static boolean isHead(Material type){
 		switch(type){
-			case PLAYER_HEAD:
-			case PLAYER_WALL_HEAD:
-			case WITHER_SKELETON_SKULL:
-			case WITHER_SKELETON_WALL_SKULL:
-			case DRAGON_HEAD:
-			case DRAGON_WALL_HEAD:
-			case SKELETON_SKULL:
-			case SKELETON_WALL_SKULL:
-			case CREEPER_HEAD:
-			case CREEPER_WALL_HEAD:
-			case ZOMBIE_HEAD:
-			case ZOMBIE_WALL_HEAD:
+			case SKULL:
+			case SKULL_ITEM:
 				return true;
 			default:
 				return false;
 		}
 	}
 	public static boolean isPlayerHead(Material type){
-		return type == Material.PLAYER_HEAD || type == Material.PLAYER_WALL_HEAD;
+		return type == Material.SKULL_ITEM || type == Material.SKULL;
 	}
 
 	public static EntityType getEntityByName(String name){

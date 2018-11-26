@@ -49,7 +49,7 @@ public final class DropHeads extends EvPlugin {
 			OfflinePlayer p = null;
 
 			if(target.toUpperCase().startsWith("MHF_")){
-				head = new ItemStack(Material.PLAYER_HEAD);
+				head = new ItemStack(Material.SKULL_ITEM);
 				SkullMeta meta = (SkullMeta) head.getItemMeta();
 				meta.setOwner(target);
 				EntityType type = Utils.getEntityByName(target);

@@ -17,7 +17,7 @@ public class BarfItemListener implements Listener{
 		pl = DropHeads.getPlugin();
 	}
 
-	@SuppressWarnings("deprecation") @EventHandler
+	@EventHandler
 	public void onBarf(PlayerDropItemEvent evt){
 		if(Utils.isPlayerHead(evt.getItemDrop().getItemStack().getType())){
 			ItemStack skullItem = evt.getItemDrop().getItemStack();
