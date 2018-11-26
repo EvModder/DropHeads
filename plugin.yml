@@ -1,8 +1,7 @@
 name: DropHeads
 main: Evil_Code_DropHeads.DropHeads
 author: EvModder/EvDoc/Evil_Witchdoctor
-version: 3.2.5
-api-version: 1.13
+version: 3.2.6
 softdepend: [EvKitPvP]
 
 commands:
@@ -15,13 +14,13 @@ commands:
 
 permissions:
    evp.dropheads.alwaysbehead:
-        description: This player will get heads 100% of the time
-        default: false
+      description: This player will get heads 100% of the time
+      default: false
 
    evp.dropheads.canbehead:
-        description: This player will be able to get heads
-        default: true
+      description: This player will be able to get heads
+      default: true
 
    evp.dropheads.spawn:
-        description: Permission to spawn heads with a command
-        default: op
+      description: Permission to spawn heads with a command
+      default: op
