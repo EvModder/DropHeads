@@ -71,7 +71,7 @@ public final class DropHeads extends EvPlugin {
 				((Player)sender).getInventory().addItem(head);
 				sender.sendMessage(ChatColor.GREEN+"Spawned Head: " + ChatColor.GOLD +
 						(head.hasItemMeta() && head.getItemMeta().hasDisplayName()
-								? head.getItemMeta().getDisplayName().substring(2)
+								? head.getItemMeta().getDisplayName()//.substring(2)//TODO: strip leading color?
 								: head.getType().toString()));
 			}
 			else sender.sendMessage(ChatColor.RED+"Head \""+target+"\" not found");

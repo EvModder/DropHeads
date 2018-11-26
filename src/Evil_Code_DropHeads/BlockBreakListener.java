@@ -1,9 +1,9 @@
 package Evil_Code_DropHeads;
 
-import net.minecraft.server.v1_12_R1.BlockPosition;
-import net.minecraft.server.v1_12_R1.TileEntitySkull;
+import net.minecraft.server.v1_13_R2.BlockPosition;
+import net.minecraft.server.v1_13_R2.TileEntitySkull;
+import org.bukkit.craftbukkit.v1_13_R2.CraftWorld;
 
-import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
