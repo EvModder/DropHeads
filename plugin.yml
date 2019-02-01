@@ -15,13 +15,13 @@ commands:
 
 permissions:
    evp.dropheads.alwaysbehead:
-        description: This player will get heads 100% of the time
-        default: false
+      description: This player will get heads 100% of the time
+      default: false
 
    evp.dropheads.canbehead:
-        description: This player will be able to get heads
-        default: true
+      description: This player will be able to get heads
+      default: true
 
    evp.dropheads.spawn:
-        description: Permission to spawn heads with a command
-        default: op
+      description: Permission to spawn heads with a command
+      default: op
