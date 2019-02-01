@@ -78,7 +78,9 @@ public class Utils {
 	public Utils(){
 		DropHeads pl = DropHeads.getPlugin();
 		useCustomHeads = pl.getConfig().getBoolean("custom-skins-for-missing-heads", true);
-		for(String head : FileIO.loadResource(pl, "head-list.txt").split("\n")){
+
+		String headsList = FileIO.loadFile("head-list.txt", pl.getClass().getResourceAsStream("/head-list.txt"));
+		for(String head : headsList.split("\n")){
 			head = head.replaceAll(" ", "");
 			int i = head.indexOf(":");
 			if(i != -1) try{

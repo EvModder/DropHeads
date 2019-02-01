@@ -1,5 +1,6 @@
 package Evil_Code_DropHeads;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,12 +20,15 @@ public class EntitySpawnListener implements Listener{
 		plugin = DropHeads.getPlugin();
 
 		//load spawn cause modifiers
-		String modifiers = FileIO.loadResource(plugin, "spawn-cause modifiers.txt");
+		InputStream defaultModifiers = plugin.getClass().getResourceAsStream("/spawn-cause modifiers.txt");
+		String modifiers = FileIO.loadFile("spawn-cause modifiers.txt", defaultModifiers);
 		for(String line : modifiers.split("\n")){
 			line = line.replace(" ", "").replace("\t", "").toUpperCase();
 			int i = line.indexOf(":");
 			if(i != -1){
-				try{spawnModifiers.put(SpawnReason.valueOf(line.substring(0, i)), Float.parseFloat(line.substring(i+1)));}
+				try{spawnModifiers.put(
+						SpawnReason.valueOf(line.substring(0, i)),
+						Float.parseFloat(line.substring(i+1)));}
 				catch(IllegalArgumentException ex){
 					plugin.getLogger().severe("Invalid SpawnReason: '"+line+"' in config file!");
 				}

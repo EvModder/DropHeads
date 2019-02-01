@@ -1,5 +1,6 @@
 package Evil_Code_DropHeads;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -61,12 +62,9 @@ public class EntityDeathListener implements Listener{
 		}
 
 		//Load individual mobs' drop chances
-		String chances = FileIO.loadFile("drop chances.txt", plugin.getClass().getResourceAsStream("/default chances.txt"));
-//		String chances = FileIO.loadFile("drop chances.txt", "");
-//		if(chances.isEmpty()){
-//			chances = FileIO.loadResource(plugin, "default chances.txt");
-//			FileIO.saveFile("drop chances.txt", chances);
-//		}
+		InputStream defaultChances = plugin.getClass().getResourceAsStream("/default chances.txt");
+		String chances = FileIO.loadFile("drop chances.txt", defaultChances);
+
 		for(String line : chances.split("\n")){
 			line = line.replace(" ", "").replace("\t", "").replace("//", "#").split("#")[0].toUpperCase();
 			String[] parts = line.split(":");
@@ -78,7 +76,7 @@ public class EntityDeathListener implements Listener{
 					if(parts.length > 2){
 						if(parts[2].equalsIgnoreCase("NoLooting")) noLootingEffectMobs.add(eType);
 					}
-					// Allow >1 because Spawn-Reason modifiers are added after this
+					// Commented out to allow >1 because Spawn-Reason modifiers are added after this
 					/*if(dropChance > 1F){
 						plugin.getLogger().severe("Invalid value: "+parts[1]);
 						plugin.getLogger().severe("Drop chance must be between 0 and 1");
