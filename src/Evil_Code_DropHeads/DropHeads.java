@@ -12,7 +12,6 @@ import org.bukkit.inventory.meta.SkullMeta;
 import EvLibD.Updater;
 import EvLibD.EvPlugin;
 import EvLibD.Extras;
-import EvLibD.FileIO;
 
 public final class DropHeads extends EvPlugin {
 	private static DropHeads instance; public static DropHeads getPlugin(){return instance;}
@@ -23,11 +22,10 @@ public final class DropHeads extends EvPlugin {
 		}
 		instance = this;
 		new Utils();
-		new FileIO(this);
 		getServer().getPluginManager().registerEvents(new EntitySpawnListener(), this);
 		getServer().getPluginManager().registerEvents(new EntityDeathListener(), this);
 		//getServer().getPluginManager().registerEvents(new BlockBreakListener(), this);//Fixes stacking
-		//getServer().getPluginManager().registerEvents(new BarfItemListener(), this);//Fixes stacking
+		getServer().getPluginManager().registerEvents(new ItemDropListener(), this);//Fixes stacking
 	}
 
 	@Override @SuppressWarnings("deprecation")

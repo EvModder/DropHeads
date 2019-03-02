@@ -8,6 +8,7 @@ import java.util.Random;
 import java.util.UUID;
 
 import org.bukkit.ChatColor;
+import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.SkullType;
 import org.bukkit.entity.Creeper;
@@ -20,6 +21,8 @@ import org.bukkit.entity.Parrot;
 import org.bukkit.entity.Rabbit;
 import org.bukkit.entity.Sheep;
 import org.bukkit.entity.Shulker;
+import org.bukkit.entity.TropicalFish;
+import org.bukkit.entity.TropicalFish.Pattern;
 import org.bukkit.entity.Wolf;
 import org.bukkit.entity.ZombieVillager;
 import org.bukkit.inventory.ItemStack;
@@ -73,6 +76,16 @@ public class Utils {
 		customHeads.put(EntityType.WOLF, "MHF_Wolf");//made by player
 		customHeads.put(EntityType.ZOMBIE_VILLAGER, "scraftbrothers11");
 		/*Need: DONKEY, LLAMA, MULE, SKELETON_HORSE ZOMBIE_HORSE, STRAY, ILLUSIONER */
+	}
+	static class CCP{
+		DyeColor bodyColor, patternColor;
+		Pattern pattern;
+		CCP(DyeColor color, DyeColor pColor, Pattern p){bodyColor = color; patternColor = pColor; pattern = p;}
+	}
+	public static final HashMap<CCP, String> tropicalFishNames;//Names for the 22 common tropical fish
+	static{
+		tropicalFishNames = new HashMap<CCP, String>();
+		tropicalFishNames.put(new CCP(DyeColor.ORANGE, DyeColor.GRAY, Pattern.STRIPEY), "Anemone");
 	}
 
 	public Utils(){
@@ -131,6 +144,9 @@ public class Utils {
 	}
 
 	public static ItemStack makeTextureSkull(String code){
+		return makeTextureSkull(code, ChatColor.WHITE+"UNKNOWN Head");
+	}
+	public static ItemStack makeTextureSkull(String code, String headName){
 		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
 		if(code == null) return item;
 		SkullMeta meta = (SkullMeta) item.getItemMeta();
@@ -139,7 +155,7 @@ public class Utils {
 		profile.getProperties().put("textures", new Property("textures", code));
 		setGameProfile(meta, profile);
 
-		meta.setDisplayName(ChatColor.WHITE+"UNKNOWN Head");
+		meta.setDisplayName(headName);
 		item.setItemMeta(meta);
 		return item;
 	}
@@ -230,7 +246,11 @@ public class Utils {
 				textureKey = "SHULKER:"+((Shulker)entity).getColor().name();
 				break;
 			case TROPICAL_FISH:
-				textureKey = "TROPICAL_FISH:"+((Shulker)entity).getColor().name();
+				TropicalFish f = (TropicalFish)entity;
+				String name = tropicalFishNames.get(new CCP(f.getBodyColor(), f.getPatternColor(), f.getPattern()));
+				if(name == null) name = getNormalizedName(entity.getType());
+				String code = "wow i need to figure this out huh";
+				return makeTextureSkull(code, name);
 			case VEX:
 				//TODO: Detect what state the Vex is in (Charging or not) instead of just picking randomly
 				textureKey = "VEX"+(new Random().nextBoolean() ? ":CHARGING" : "");
@@ -244,7 +264,8 @@ public class Utils {
 			default:
 				textureKey = entity.getType().name();
 		}
-		if(textureKey != null && (textures.containsKey(textureKey) || textures.containsKey(textureKey = entity.getType().name())))
+		if(textureKey != null && (textures.containsKey(textureKey)
+				|| textures.containsKey(textureKey = entity.getType().name())))
 			return Utils.makeTextureSkull(entity.getType(), textureKey);
 
 		//else
@@ -348,6 +369,8 @@ public class Utils {
 			return "Zombie Pigman";
 		case MUSHROOM_COW:
 			return "Mooshroom";
+		case TROPICAL_FISH:
+			return "need more data";//TODO: oof
 		default:
 			StringBuilder name = new StringBuilder();
 			for(String str : type.name().split("_")){
