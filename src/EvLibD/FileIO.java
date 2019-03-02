@@ -11,40 +11,31 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import org.apache.commons.io.FileUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class FileIO{
 	static String DIR = "./plugins/EvFolder/";
-	@Deprecated public FileIO(String dir, boolean force){
-		updateDir(dir, force || !new File(DIR).exists());
-	}
-	@Deprecated public FileIO(String dir){
-		updateDir(dir, !new File(DIR).exists());
-	}
-	public FileIO(JavaPlugin evPl, boolean force){
-		updateDir("./plugins/"+evPl.getName()+"/", force || !new File(DIR).exists());
-	}
-	public FileIO(JavaPlugin evPl){
-		updateDir("./plugins/"+evPl.getName()+"/", !new File(DIR).exists());
-	}
-	static void updateDir(String dir, boolean replaceOrMerge){
-		if(replaceOrMerge) DIR = dir;
-		else if(new File(dir).exists()){
-			Bukkit.getLogger().warning("Relocating data in "+dir+", this might take a minute..");
+
+	static void verifyDir(JavaPlugin evPl){
+		String customDir = "./plugins/"+evPl.getName()+"/";
+		if(!new File(DIR).exists() && UsefulUtils.installedEvPlugins().size() < 2) DIR = customDir;//replace
+		else if(new File(customDir).exists()){//merge
+			Bukkit.getLogger().warning("Relocating data in "+customDir+", this might take a minute..");
 			try{
-				FileUtils.copyDirectory(new File(dir), new File(DIR));
-				FileUtils.deleteDirectory(new File(dir));
+				FileUtils.copyDirectory(new File(customDir), new File(DIR));
+				FileUtils.deleteDirectory(new File(customDir));
 			}
 			catch(IOException e){e.printStackTrace();}
 		}
 	}
 
-	public static String loadFile(String filename, InputStream defaultFile){
+	public static String loadFile(String filename, InputStream defaultValue){
 		BufferedReader reader = null;
 		try{reader = new BufferedReader(new FileReader(DIR+filename));}
 		catch(FileNotFoundException e){
-			if(defaultFile == null) return null;
+			if(defaultValue == null) return null;
 
 			//Create Directory
 			File dir = new File(DIR);
@@ -56,7 +47,7 @@ public class FileIO{
 			String content = null;
 			try{
 				conf.createNewFile();
-				reader = new BufferedReader(new InputStreamReader(defaultFile));
+				reader = new BufferedReader(new InputStreamReader(defaultValue));
 
 				String line = reader.readLine();
 				builder.append(line);
@@ -213,8 +204,19 @@ public class FileIO{
 	}
 
 	public static boolean saveYaml(String filename, YamlConfiguration content){
-		try{content.save(DIR+filename);}
+		try{
+			if(!new File(DIR).exists()) new File(DIR).mkdir();
+			content.save(DIR+filename);
+		}
 		catch(IOException e){return false;}
+		return true;
+	}
+	public static boolean saveConfig(String configName, FileConfiguration config){
+		try{
+			if(!new File(DIR).exists()) new File(DIR).mkdir();
+			config.save(DIR+configName);
+		}
+		catch(IOException ex){ex.printStackTrace(); return false;}
 		return true;
 	}
 }
