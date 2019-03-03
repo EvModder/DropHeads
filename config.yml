@@ -5,10 +5,15 @@ player-kills-only: true
 # by making all mobs except players have a 0% chance of dropping a head)
 player-heads-only: false
 
+# Enable the mechanic where any mob killed by a charged creeper explosion
+# will drop its head with 100% probability * the spawn-cause modifier
+# This setting will override "player-kills-only" (but not "player-heads-only")
+charged-creeper-drops: true
+
 # Percent increase in drop chance per looting level
 looting-bonus: 0.4
 
-# Uses non-linear (taylor modifiers) when calculating effects of modifiers. 
+# Uses non-linear (taylor series modifiers) when calculating drop chance
 use-taylor-modifiers: true
 
 # Only drop heads if the killer used an axe
