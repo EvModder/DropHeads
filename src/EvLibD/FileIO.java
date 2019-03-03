@@ -44,24 +44,20 @@ public class FileIO{
 			//Create the file
 			File conf = new File(DIR+filename);
 			StringBuilder builder = new StringBuilder();
-			String content = null;
 			try{
 				conf.createNewFile();
 				reader = new BufferedReader(new InputStreamReader(defaultValue));
 
 				String line = reader.readLine();
 				builder.append(line);
-				while(line != null){
-					builder.append('\n').append(line);
-					line = reader.readLine();
-				}
+				while((line = reader.readLine()) != null) builder.append('\n').append(line);
 				reader.close();
 
 				BufferedWriter writer = new BufferedWriter(new FileWriter(conf));
-				writer.write(content = builder.toString()); writer.close();
+				writer.write(builder.toString()); writer.close();
+				reader = new BufferedReader(new FileReader(DIR+filename));
 			}
 			catch(IOException e1){e1.printStackTrace();}
-			return content;
 		}
 		StringBuilder file = new StringBuilder();
 		if(reader != null){
