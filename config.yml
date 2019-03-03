@@ -17,7 +17,7 @@ must-use-axe: false
 # Enable plugin Updater (checks for new versions with new head textures)
 update-plugin: true
 
-# List of tools the player must be using one of to be able to get a head
+# (Optional) Whitelist of tools a player must be using for heads to drop
 # If "must-use-axe" is enabled, this list will be ignored
 # If empty, no special weapon/tool will be required to get heads
 must-use:
@@ -25,7 +25,7 @@ must-use:
 #  - DIAMOND_AXE
 #  - WOOD_HOE
 
-# Tools that have a higher chance of beheading (compared to other tools)
+# (Optional) Let certain tools have a higher chance of beheading
 # The number is the percent increase in drop chance when using that tool
 specific-tool-modifiers:
   GOLD_AXE: 3
