@@ -26,14 +26,14 @@ import EvLibD.FileIO;
 import Evil_Code_EvKits.EvKits;
 
 public class EntityDeathListener implements Listener{
-	private DropHeads plugin;
-	private final boolean playerKillsOnly, playerHeadsOnly, useTaylorModifiers, chargedCreepers;
-	private Set<Material> mustUseTools = new HashSet<Material>();
-	private Set<EntityType> noLootingEffectMobs = new HashSet<EntityType>();
-	private Map<EntityType, Float> mobChances = new HashMap<EntityType, Float>();
-	private Map<Material, Float> toolBonuses = new HashMap<Material, Float>();
-	private double lootingBonus = 0.4;
-	Random rand = new Random();
+	final DropHeads plugin;
+	final boolean playerKillsOnly, playerHeadsOnly, useTaylorModifiers, chargedCreepers;
+	final Set<Material> mustUseTools = new HashSet<Material>();
+	final Set<EntityType> noLootingEffectMobs = new HashSet<EntityType>();
+	final Map<EntityType, Float> mobChances = new HashMap<EntityType, Float>();
+	final Map<Material, Float> toolBonuses = new HashMap<Material, Float>();
+	final double lootingBonus;
+	final Random rand;
 
 	public EntityDeathListener(){
 		plugin = DropHeads.getPlugin();
@@ -42,6 +42,7 @@ public class EntityDeathListener implements Listener{
 		useTaylorModifiers = plugin.getConfig().getBoolean("use-taylor-modifiers", true);
 		chargedCreepers = plugin.getConfig().getBoolean("charged-creeper-drops", true);
 		lootingBonus = plugin.getConfig().getDouble("looting-bonus", 0.4);
+		rand = new Random();
 
 		if(plugin.getConfig().getBoolean("must-use-axe")){
 			mustUseTools.add(Material.DIAMOND_AXE);
