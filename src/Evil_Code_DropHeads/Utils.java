@@ -130,7 +130,7 @@ public class Utils {
 		catch(IllegalArgumentException e){e.printStackTrace();}
 		catch(IllegalAccessException e){e.printStackTrace();}
 	}
-	public static GameProfile getGameProfile(SkullMeta meta) {
+	public static GameProfile getGameProfile(SkullMeta meta){
 		try{
 			if(profileField == null) profileField = meta.getClass().getDeclaredField("profile");
 			profileField.setAccessible(true);

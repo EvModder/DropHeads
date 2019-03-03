@@ -28,16 +28,19 @@ public class ItemDropListener implements Listener{
 				if(profile != null){
 					int idx = profile.getName().indexOf("|");
 					if(idx != -1){
+						//Refresh entity head texture
 						EntityType type = EntityType.valueOf(profile.getName().substring(0, idx));
 						evt.getEntity().setItemStack(Utils.makeTextureSkull(type, profile.getName().substring(idx+1)));
 					}
-					else{
+					else{//This is a player head
 						OfflinePlayer p;
 						if(profile.getId() != null && (p = pl.getServer().getOfflinePlayer(profile.getId())) != null
-								&& !p.getName().equals(profile.getName())){
+								&& p.getName() != null && !p.getName().equals(profile.getName())){
+							//If they have changed their name, create a new skullItem with an updated GameProfile
 							evt.getEntity().setItemStack(Utils.getPlayerHead(p.getUniqueId(), p.getName()));
 						}
 						else{
+							//Properly name and drop the Player (or MHF) head
 							meta.setOwner(profile.getName());
 							meta.setDisplayName(ChatColor.WHITE+profile.getName()
 									+ (profile.getName().startsWith("MHF_") ? "" : " Head"));
