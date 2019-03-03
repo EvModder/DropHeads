@@ -9,9 +9,9 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import EvLibD.Updater;
-import EvLibD.EvPlugin;
-import EvLibD.Extras;
+import EvLib2.EvPlugin;
+import EvLib2.Extras;
+import EvLib2.Updater;
 
 public final class DropHeads extends EvPlugin {
 	private static DropHeads instance; public static DropHeads getPlugin(){return instance;}

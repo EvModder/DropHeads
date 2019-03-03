@@ -1,4 +1,4 @@
-package EvLibD;
+package EvLib2;
 
 import java.io.InputStream;
 import org.bukkit.configuration.file.FileConfiguration;

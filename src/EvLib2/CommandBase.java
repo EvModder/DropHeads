@@ -1,8 +1,7 @@
-package EvLibD;
+package EvLib2;
 
 import org.bukkit.command.CommandExecutor;
-
-import EvLibD.EvPlugin;
+import EvLib2.EvPlugin;
 
 public abstract class CommandBase implements CommandExecutor {
 	protected EvPlugin plugin;
