@@ -1,5 +1,5 @@
 # DropHeads
-A highly configurable head collecting plugin for Minecraft
+A light-weight, highly configurable head collecting plugin for Minecraft
 
 <br>
 
