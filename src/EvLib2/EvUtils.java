@@ -4,7 +4,7 @@ import java.util.Vector;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
-public class UsefulUtils{
+public class EvUtils{
 	public static Vector<String> installedEvPlugins(){
 		Vector<String> evPlugins = new Vector<String>();
 		for(Plugin pl : Bukkit.getServer().getPluginManager().getPlugins()){

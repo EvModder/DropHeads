@@ -1,43 +1,240 @@
 package EvLib2;
 
+import java.awt.AlphaComposite;
+import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.HashMap;
+import java.util.TreeMap;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.imageio.ImageIO;
+import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
+import com.sun.org.apache.xml.internal.security.utils.Base64;
 
 public class Extras {
-	public static String executePost(String post){
-		URLConnection connection = null;
-		try{
-			connection = new URL(post).openConnection();
-			connection.setUseCaches(false);
-			connection.setDoOutput(true);
+	private final static String authserver = "https://authserver.mojang.com";
 
-			// Get response
-//			Scanner s = new Scanner(connection.getInputStream()).useDelimiter("\\A");
-//			String response = s.hasNext() ? s.next() : null;
-//			s.close();
-//			return response;
-			BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-			String line = rd.readLine();
-			rd.close();
-			return line;
-		}
-		catch(IOException e){
-			System.out.println(e.getStackTrace());
-			return null;
-		}
-	}
+	public static String putReadURL(String payload, String url){
+		try{
+			HttpURLConnection conn = (HttpURLConnection)new URL(url).openConnection();
+			conn.setDoInput(true);
+			conn.setDoOutput(true);
+			conn.setRequestMethod("PUT");
+			OutputStream out = conn.getOutputStream();
+			out.write(payload.getBytes("UTF-8")); out.close();
+
+			BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+			StringBuilder resp = new StringBuilder(in.readLine());
+			String line = null;
+			while ((line=in.readLine()) != null) resp.append('\n').append(line);
+			in.close();
 	
+			return resp.toString();
+		}
+		catch(IOException e){e.printStackTrace(); return null;}
+	}
+
+	public static String postReadURL(String payload, String url){
+		try{
+			HttpURLConnection conn = (HttpURLConnection)new URL(url).openConnection();
+			conn.setRequestMethod("POST");
+			conn.setRequestProperty("Content-Type", "application/json");
+			conn.setDoInput(true);
+			conn.setDoOutput(true);
+	
+			OutputStream out = conn.getOutputStream();
+			out.write(payload.getBytes("UTF-8")); out.close();
+	
+			BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+			StringBuilder resp = new StringBuilder(in.readLine());
+			String line = null;
+			while ((line=in.readLine()) != null) resp.append('\n').append(line);
+			in.close();
+	
+			return resp.toString();
+		}
+		catch(IOException e){e.printStackTrace(); return null;}
+	}
+
+	private static String getStringBetween(String base, String begin, String end) {
+		int resbeg = 0, resend = base.length()-1;
+
+		Pattern patbeg = Pattern.compile(Pattern.quote(begin));
+		Matcher matbeg = patbeg.matcher(base);
+		if(matbeg.find()) resbeg = matbeg.end();
+
+		Pattern patend = Pattern.compile(Pattern.quote(end));
+		Matcher matend = patend.matcher(base);
+		if(matend.find()) resend = matend.start();
+
+		return base.substring(resbeg, resend);
+	}
+
+	public static String authenticate(String username, String password){
+		String genClientToken = UUID.randomUUID().toString();
+
+		// Setting up json POST request
+		String payload = "{\"agent\": {\"name\": \"Minecraft\",\"version\": 1},\"username\": \"" + username
+				+ "\",\"password\": \"" + password + "\",\"clientToken\": \"" + genClientToken + "\"}";
+
+		String output = postReadURL(payload, authserver + "/authenticate");
+
+		// Setting up patterns
+		String authBeg = "{\"accessToken\":\"";
+		String authEnd = "\",\"clientToken\":\"";
+
+		return getStringBetween(output, authBeg, authEnd);
+	}
+
+	//Names are [3,16] characters from [abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]
 	static HashMap<String, Boolean> exists = new HashMap<String, Boolean>();
 	public static boolean checkExists(String player){
-		if(!exists.containsKey(player)){
-			//Sample data (braces included): {"id":"34471e8dd0c547b9b8e1b5b9472affa4","name":"EvDoc"}
-			String data = executePost("https://api.mojang.com/users/profiles/minecraft/"+player);
-			exists.put(player, data != null);
+		Boolean b = exists.get(player);
+		if(b == null){
+			//Sample data: {"id":"34471e8dd0c547b9b8e1b5b9472affa4","name":"EvDoc"}
+			String data = postReadURL("", "https://api.mojang.com/users/profiles/minecraft/"+player);
+			exists.put(player, b = (data != null));
 		}
-		return exists.get(player);
+		return b;
+	}
+
+	public static BufferedImage upsideDownHead(BufferedImage img){
+		AffineTransform at = new AffineTransform();
+		at.concatenate(AffineTransform.getScaleInstance(1, -1));
+		at.concatenate(AffineTransform.getTranslateInstance(0, -img.getHeight()));
+		BufferedImage newImg = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g = newImg.createGraphics();
+		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC));
+		g.drawImage(img, 0, 0, null);
+		g.drawImage(img.getSubimage(8, 0, 8, 8), 16, 0, null);
+		g.drawImage(img.getSubimage(16, 0, 8, 8), 8, 0, null);
+		g.drawImage(img.getSubimage(40, 0, 8, 8), 48, 0, null);
+		g.drawImage(img.getSubimage(48, 0, 8, 8), 40, 0, null);
+		g.transform(at);
+		g.drawImage(img.getSubimage(0, 8, 64, 8), 0, img.getHeight()-16, null);
+		g.dispose();
+		return newImg;
+	}
+
+	public static void main(String... args){
+		String token = authenticate("mc.alternatecraft@gmail.com", "getcodez!");
+		String uuid = "cf49ab9298164c7fa698f84514dd7f74";
+		System.out.println("token = "+token);
+		
+		FileIO.DIR = "./";
+		TreeMap<String, String> newHeads = new TreeMap<String, String>();
+		String heads = FileIO.loadFile("head-list.txt", "");
+		for(String line : heads.split("\n")){
+			int idx = line.indexOf(':');
+			if(idx > -1 && idx < line.length()-1){
+				String name = line.substring(0, idx).trim();
+				String val = line.substring(idx+1).trim();
+				String json = "no workee";
+				try{json = new String(Base64.decode(val));}
+				catch(Base64DecodingException e){e.printStackTrace();}
+				String url = json.substring(json.indexOf("\"url\":")+7, json.lastIndexOf('"')).trim();
+				//String textureId = url.substring(url.lastIndexOf('/')+1);
+				System.out.println("1. Got texture url from Base64 val");
+				String filename = "textures/"+name+"|DINNERBONE.png";
+				File outfile = new File(filename);
+				//===========================================================================================
+				HttpURLConnection conn;
+				try{
+					conn = (HttpURLConnection)new URL(url).openConnection();
+					conn.setUseCaches(false);
+					conn.setDoOutput(true);
+					conn.setDoInput(true);
+					
+					BufferedInputStream inImg = new BufferedInputStream(conn.getInputStream());
+					BufferedImage image = upsideDownHead(ImageIO.read(inImg));
+					
+					ImageIO.write(image, "png", outfile);
+					System.out.println("2. Saved upside down: "+url+" ("+name+")");
+
+					//===========================================================================================
+					try{Thread.sleep(8000);}catch(InterruptedException e1){e1.printStackTrace();}
+					conn = (HttpURLConnection)new URL("https://api.mojang.com/user/profile/"
+							+ uuid + "/skin").openConnection();
+					conn.setRequestProperty ("Authorization", "Bearer "+token);
+					String boundary = "someArbitraryText";
+					conn.setRequestProperty("Content-Type", "multipart/form-data; boundary="+boundary);
+					conn.setDoInput(true);
+					conn.setDoOutput(true);
+					conn.setRequestMethod("PUT");
+					OutputStream conn_out = conn.getOutputStream();
+					BufferedWriter conn_out_writer = new BufferedWriter(new OutputStreamWriter(conn_out));
+
+					conn_out_writer.write("\r\n--"+boundary+"\r\n");
+					conn_out_writer.write("Content-Disposition: form-data; name=\"model\"\r\n\r\nslim");
+					conn_out_writer.write("\r\n--"+boundary+"\r\n");
+					conn_out_writer.write("Content-Disposition: form-data; name=\"file\"; filename=\""+"yeet.png"+"\"\r\n");
+					conn_out_writer.write("Content-Type: image/png\r\n\r\n");
+					conn_out_writer.flush();
+
+					FileInputStream ifstream = new FileInputStream(outfile);
+					int newBytes;
+					byte[] buffer = new byte[1024];
+					while((newBytes=ifstream.read(buffer)) != -1) conn_out.write(buffer, 0, newBytes);
+					ifstream.close();
+					conn_out.flush();
+					
+					conn_out_writer.write("\r\n--"+boundary+"--\r\n");
+					conn_out_writer.flush();
+					conn_out_writer.close();
+					conn_out.close();
+
+					conn.getInputStream();
+					System.out.println("3. Skin uploaded");
+					try{Thread.sleep(25000);}catch(InterruptedException e1){e1.printStackTrace();}
+					//===========================================================================================
+					System.out.println("4. Getting new texture url");
+					conn = (HttpURLConnection)new URL(
+							"https://sessionserver.mojang.com/session/minecraft/profile/"+uuid).openConnection();
+					conn.setDoOutput(true);
+					BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+					String resp = in.readLine();
+					String textureBeg = "\"textures\",\"value\":\"";
+					String textureEnd = "\"}]}";
+					String newVal = resp.substring(resp.indexOf(textureBeg)+textureBeg.length());
+					newVal = newVal.substring(0, newVal.indexOf(textureEnd));
+					//System.out.println("new val: "+newVal);
+					
+					String newJson = "no workee";
+					try{newJson = new String(Base64.decode(newVal));}
+					catch(Base64DecodingException e){e.printStackTrace();}
+					//System.out.println("New Json: " + newJson);
+					//===========================================================================================
+					
+					String textureVal = newJson.substring(newJson.lastIndexOf("texture/")+8);
+					textureVal = textureVal.substring(0, textureVal.indexOf('"')).trim();
+					String shortJson = "{\"textures\":{\"SKIN\":{\"url\":"
+							+ "\"http://textures.minecraft.net/texture/"
+							+ textureVal + "\"}}}";
+					//System.out.println("Short Json: " + shortJson);
+					String newBase64Val = Base64.encode(shortJson.getBytes(), 0);
+					System.out.println("5. New Base64 val: " + newBase64Val);
+					newHeads.put(name+"|DINNERBONE", newBase64Val);
+					newHeads.put(name, val);
+					try{Thread.sleep(5000);}catch(InterruptedException e1){e1.printStackTrace();}
+				}
+				catch(IOException e){e.printStackTrace();}
+			}
+		}
+		for(String e : newHeads.keySet()){
+			System.out.println(e + ": " + newHeads.get(e));
+		}
 	}
 }

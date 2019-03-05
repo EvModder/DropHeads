@@ -10,6 +10,10 @@ player-heads-only: false
 # This setting will override "player-kills-only" (but not "player-heads-only")
 charged-creeper-drops: true
 
+# A Minecraft easter egg is that mobs named 'Dinnerbone' or 'Grumm' are
+# upside down.. If you want their heads to share this trait, set to true
+grumm-heads: true
+
 # Percent increase in drop chance per looting level
 looting-bonus: 0.4
 

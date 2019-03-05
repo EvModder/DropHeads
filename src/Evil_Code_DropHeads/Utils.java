@@ -4,7 +4,6 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.UUID;
 
 import org.bukkit.ChatColor;
@@ -23,6 +22,7 @@ import org.bukkit.entity.Sheep;
 import org.bukkit.entity.Shulker;
 import org.bukkit.entity.TropicalFish;
 import org.bukkit.entity.TropicalFish.Pattern;
+import org.bukkit.entity.Vex;
 import org.bukkit.entity.Wolf;
 import org.bukkit.entity.ZombieVillager;
 import org.bukkit.inventory.ItemStack;
@@ -40,7 +40,7 @@ public class Utils {
 		EntityData(EntityType t, String d){type=t; data=d;}
 	}
 
-	private static boolean useCustomHeads;
+	private static boolean useCustomHeads, grummEnabled;
 	public static final String[] MHF_Heads = new String[]{//Standard, Mojang-Provided MHF Heads
 		"MHF_Alex", "MHF_Blaze", "MHF_CaveSpider", "MHF_Chicken", "MHF_Cow", "MHF_Creeper", "MHF_Enderman", "MHF_Ghast",
 		"MHF_Golem", "MHF_Herobrine", "MHF_LavaSlime", "MHF_MushroomCow", "MHF_Ocelot", "MHF_Pig", "MHF_PigZombie", "MHF_Sheep",
@@ -90,6 +90,7 @@ public class Utils {
 	public Utils(){
 		DropHeads pl = DropHeads.getPlugin();
 		useCustomHeads = pl.getConfig().getBoolean("custom-skins-for-missing-heads", true);
+		grummEnabled = pl.getConfig().getBoolean("grumm-heads", true);
 
 		String headsList = FileIO.loadFile("head-list.txt", pl.getClass().getResourceAsStream("/head-list.txt"));
 		for(String head : headsList.split("\n")){
@@ -107,7 +108,7 @@ public class Utils {
 				}
 				else{
 					EntityType type = EntityType.valueOf(key.substring(0, j).toUpperCase());
-					textures.put(type.name()+":"+key.substring(j+1), texture);
+					textures.put(type.name()+"|"+key.substring(j+1), texture);
 					pl.getLogger().fine("Loaded: "+type.name()+" - "+key.substring(j+1));
 				}
 			}
@@ -187,7 +188,7 @@ public class Utils {
 		case ENDER_DRAGON:
 			return new ItemStack(Material.DRAGON_HEAD);
 		default:
-			String textureKey = entity.name()+ (data == null ? "" : ":"+data);
+			String textureKey = entity.name()+ (data == null ? "" : "|"+data);
 			if(textures.containsKey(textureKey)) return Utils.makeTextureSkull(entity, textureKey);
 
 			String normalName = ChatColor.WHITE+getNormalizedName(entity);
@@ -204,7 +205,7 @@ public class Utils {
 	}
 
 	public static ItemStack getHead(LivingEntity entity){
-		String textureKey = null;
+		String textureKey = "";
 		switch(entity.getType()){
 			case PLAYER:
 				return getPlayerHead(entity.getUniqueId(), entity.getName());
@@ -215,34 +216,34 @@ public class Utils {
 			case ZOMBIE:
 				return new ItemStack(Material.ZOMBIE_HEAD);
 			case CREEPER:
-				if(((Creeper)entity).isPowered()) textureKey = "CREEPER:CHARGED";
+				if(((Creeper)entity).isPowered()) textureKey = "CREEPER|CHARGED";
 				else return new ItemStack(Material.CREEPER_HEAD);
 				break;
 			case ENDER_DRAGON:
 				return new ItemStack(Material.DRAGON_HEAD);
 			case WOLF:
 				textureKey = entity.getType().name();
-				if(((Wolf)entity).isAngry()) textureKey += ":ANGRY";
+				if(((Wolf)entity).isAngry()) textureKey += "|ANGRY";
 				break;
 			case HORSE:
-				textureKey = "HORSE:"+((Horse)entity).getColor().name();
+				textureKey = "HORSE|"+((Horse)entity).getColor().name();
 				break;
 			case LLAMA:
-				textureKey = "LLAMA:"+((Llama)entity).getColor().name();
+				textureKey = "LLAMA|"+((Llama)entity).getColor().name();
 				break;
 			case PARROT:
-				textureKey = "PARROT:"+((Parrot)entity).getVariant().name();
+				textureKey = "PARROT|"+((Parrot)entity).getVariant().name();
 				break;
 			case RABBIT:
-				textureKey = "RABBIT:"+((Rabbit)entity).getRabbitType().name();
+				textureKey = "RABBIT|"+((Rabbit)entity).getRabbitType().name();
 				break;
 			case SHEEP:
-				textureKey = "SHEEP:";
+				textureKey = "SHEEP|";
 				if(entity.getCustomName() != null && entity.getCustomName().equals("jeb_")) textureKey += "JEB";
 				else textureKey += ((Sheep)entity).getColor().name();
 				break;
 			case SHULKER:
-				textureKey = "SHULKER:"+((Shulker)entity).getColor().name();
+				textureKey = "SHULKER|"+((Shulker)entity).getColor().name();
 				break;
 			case TROPICAL_FISH:
 				TropicalFish f = (TropicalFish)entity;
@@ -251,20 +252,23 @@ public class Utils {
 				String code = "wow i need to figure this out huh";
 				return makeTextureSkull(code, name);
 			case VEX:
-				//TODO: Detect what state the Vex is in (Charging or not) instead of just picking randomly
-				textureKey = "VEX"+(new Random().nextBoolean() ? ":CHARGING" : "");
+				textureKey = "VEX"+(((Vex)entity).isCharging() ? "|CHARGING" : "");
 				break;
 			case ZOMBIE_VILLAGER:
-				textureKey = "ZOMBIE_VILLAGER:"+((ZombieVillager)entity).getVillagerProfession().name();
+				textureKey = "ZOMBIE_VILLAGER|"+((ZombieVillager)entity).getVillagerProfession().name();
 				break;
 			case OCELOT:
-				textureKey = "OCELOT:"+((Ocelot)entity).getCatType().name();
+				textureKey = "OCELOT|"+((Ocelot)entity).getCatType().name();
 				break;
 			default:
 				textureKey = entity.getType().name();
 		}
-		if(textureKey != null && (textures.containsKey(textureKey)
-				|| textures.containsKey(textureKey = entity.getType().name())))
+		if(grummEnabled && entity.getCustomName() != null
+				&& (entity.getCustomName().equals("Dinnerbone") || entity.getCustomName().equals("Grumm"))
+				&& textures.containsKey(textureKey+"|GRUMM")) 
+			return Utils.makeTextureSkull(entity.getType(), textureKey+"|GRUMM");
+				
+		if(textures.containsKey(textureKey) || textures.containsKey(textureKey = entity.getType().name()))
 			return Utils.makeTextureSkull(entity.getType(), textureKey);
 
 		//else

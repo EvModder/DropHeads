@@ -20,7 +20,7 @@ public class FileIO{
 
 	static void verifyDir(JavaPlugin evPl){
 		String customDir = "./plugins/"+evPl.getName()+"/";
-		if(!new File(DIR).exists() && UsefulUtils.installedEvPlugins().size() < 2) DIR = customDir;//replace
+		if(!new File(DIR).exists() && EvUtils.installedEvPlugins().size() < 2) DIR = customDir;//replace
 		else if(new File(customDir).exists()){//merge
 			Bukkit.getLogger().warning("Relocating data in "+customDir+", this might take a minute..");
 			try{
@@ -43,13 +43,12 @@ public class FileIO{
 
 			//Create the file
 			File conf = new File(DIR+filename);
-			StringBuilder builder = new StringBuilder();
 			try{
 				conf.createNewFile();
 				reader = new BufferedReader(new InputStreamReader(defaultValue));
 
 				String line = reader.readLine();
-				builder.append(line);
+				StringBuilder builder = new StringBuilder(line);
 				while((line = reader.readLine()) != null) builder.append('\n').append(line);
 				reader.close();
 
@@ -110,7 +109,7 @@ public class FileIO{
 				reader.close();
 			}catch(IOException e){}
 		}
-		return file.length() == 0 ? "" : file.substring(1);
+		return file.length() == 0 ? "" : file.substring(1);//Hmm; return "" or defaultContent
 	}
 
 	public static boolean saveFile(String filename, String content){
