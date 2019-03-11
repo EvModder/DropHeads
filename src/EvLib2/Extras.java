@@ -27,6 +27,10 @@ import com.sun.org.apache.xml.internal.security.utils.Base64;
 public class Extras {
 	private final static String authserver = "https://authserver.mojang.com";
 
+	public static String getPlayerName(String... args){
+		return String.join("_", args).replace('|', ':').replace('-', ':');
+	}
+
 	public static String putReadURL(String payload, String url){
 		try{
 			HttpURLConnection conn = (HttpURLConnection)new URL(url).openConnection();
@@ -57,14 +61,30 @@ public class Extras {
 	
 			OutputStream out = conn.getOutputStream();
 			out.write(payload.getBytes("UTF-8")); out.close();
-	
+
 			BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 			StringBuilder resp = new StringBuilder(in.readLine());
 			String line = null;
 			while ((line=in.readLine()) != null) resp.append('\n').append(line);
 			in.close();
-	
+
 			return resp.toString();
+		}
+		catch(IOException e){e.printStackTrace(); return null;}
+	}
+
+	public static String getReadURL(String url){
+		try{
+			HttpURLConnection conn = (HttpURLConnection)new URL(url).openConnection();
+			//conn.setRequestMethod("GET");
+			conn.setDoInput(true);
+			BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+			StringBuilder resp = new StringBuilder();
+			String line = null;
+			while ((line=in.readLine()) != null) resp.append('\n').append(line);
+			in.close();
+
+			return resp.length() > 0 ? resp.substring(1) : null;
 		}
 		catch(IOException e){e.printStackTrace(); return null;}
 	}
@@ -105,7 +125,7 @@ public class Extras {
 		Boolean b = exists.get(player);
 		if(b == null){
 			//Sample data: {"id":"34471e8dd0c547b9b8e1b5b9472affa4","name":"EvDoc"}
-			String data = postReadURL("", "https://api.mojang.com/users/profiles/minecraft/"+player);
+			String data = getReadURL("https://api.mojang.com/users/profiles/minecraft/"+player);
 			exists.put(player, b = (data != null));
 		}
 		return b;
@@ -142,13 +162,14 @@ public class Extras {
 			if(idx > -1 && idx < line.length()-1){
 				String name = line.substring(0, idx).trim();
 				String val = line.substring(idx+1).trim();
+				if(name.endsWith("GRUMM") || val.isEmpty()) continue;
 				String json = "no workee";
 				try{json = new String(Base64.decode(val));}
 				catch(Base64DecodingException e){e.printStackTrace();}
 				String url = json.substring(json.indexOf("\"url\":")+7, json.lastIndexOf('"')).trim();
 				//String textureId = url.substring(url.lastIndexOf('/')+1);
 				System.out.println("1. Got texture url from Base64 val");
-				String filename = "textures/"+name+"|DINNERBONE.png";
+				String filename = "textures/"+name+"|GRUMM.png";
 				File outfile = new File(filename);
 				//===========================================================================================
 				HttpURLConnection conn;
@@ -226,8 +247,8 @@ public class Extras {
 					//System.out.println("Short Json: " + shortJson);
 					String newBase64Val = Base64.encode(shortJson.getBytes(), 0);
 					System.out.println("5. New Base64 val: " + newBase64Val);
-					newHeads.put(name+"|DINNERBONE", newBase64Val);
-					newHeads.put(name, val);
+					newHeads.put(name+"|GRUMM", newBase64Val);
+					//newHeads.put(name, val);
 					try{Thread.sleep(5000);}catch(InterruptedException e1){e1.printStackTrace();}
 				}
 				catch(IOException e){e.printStackTrace();}
