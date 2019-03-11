@@ -10,6 +10,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.SkullType;
+import org.bukkit.block.Skull;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Horse;
@@ -31,6 +32,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import EvLib2.FileIO;
+
 
 @SuppressWarnings("deprecation")
 public class Utils {
@@ -108,22 +110,41 @@ public class Utils {
 				}
 				else{
 					EntityType type = EntityType.valueOf(key.substring(0, j).toUpperCase());
-					textures.put(type.name()+"|"+key.substring(j+1), texture);
+					textures.put(type.name()+key.substring(j), texture);
 					pl.getLogger().fine("Loaded: "+type.name()+" - "+key.substring(j+1));
 				}
 			}
 			catch(IllegalArgumentException ex){
-				pl.getLogger().severe("Invalid entity name '"+head.substring(0, i)+"' from head-list.txt file!");
+				pl.getLogger().warning("Invalid entity name '"+head.substring(0, i)+"' from head-list.txt file!");
 			}
 		}
 	}
 
-	private static Field profileField;
+	private static Field fieldProfileItem, fieldProfileBlock;
+//	private static RefClass classCraftWorld = ReflectionUtils.getRefClass("{cb}.CraftWorld");
+//	private static RefClass classBlockPosition = ReflectionUtils.getRefClass("{nms}.BlockPosition");
+//	private static RefClass classTileEntitySkull = ReflectionUtils.getRefClass("{nms}.TileEntitySkull");
+//	private static RefClass classWorldServer = ReflectionUtils.getRefClass("{nms}.WorldServer");
+//	private static RefMethod methodGetHandle = classCraftWorld.getMethod("getHandle");
+//	private static RefMethod methodGetTileEntity = classWorldServer.getMethod("getTileEntity");
+//	private static RefMethod methodGetGameProfile = classTileEntitySkull.getMethod("getGameProfile");
+//	private static RefConstructor cBlockPosition = classBlockPosition.getConstructor(int.class, int.class, int.class);
 	public static void setGameProfile(SkullMeta meta, GameProfile profile){
 		try{
-			if(profileField == null) profileField = meta.getClass().getDeclaredField("profile");
-			profileField.setAccessible(true);
-			profileField.set(meta, profile);
+			if(fieldProfileItem == null) fieldProfileItem = meta.getClass().getDeclaredField("profile");
+			fieldProfileItem.setAccessible(true);
+			fieldProfileItem.set(meta, profile);
+		}
+		catch(NoSuchFieldException e){e.printStackTrace();}
+		catch(SecurityException e){e.printStackTrace();}
+		catch(IllegalArgumentException e){e.printStackTrace();}
+		catch(IllegalAccessException e){e.printStackTrace();}
+	}
+	public static void setGameProfile(Skull bState, GameProfile profile){
+		try{
+			if(fieldProfileBlock == null) fieldProfileBlock = bState.getClass().getDeclaredField("profile");
+			fieldProfileBlock.setAccessible(true);
+			fieldProfileBlock.set(bState, profile);
 		}
 		catch(NoSuchFieldException e){e.printStackTrace();}
 		catch(SecurityException e){e.printStackTrace();}
@@ -132,15 +153,32 @@ public class Utils {
 	}
 	public static GameProfile getGameProfile(SkullMeta meta){
 		try{
-			if(profileField == null) profileField = meta.getClass().getDeclaredField("profile");
-			profileField.setAccessible(true);
-			return (GameProfile) profileField.get(meta);
+			if(fieldProfileItem == null) fieldProfileItem = meta.getClass().getDeclaredField("profile");
+			fieldProfileItem.setAccessible(true);
+			return (GameProfile) fieldProfileItem.get(meta);
 		}
 		catch(NoSuchFieldException e){e.printStackTrace();}
 		catch(SecurityException e){e.printStackTrace();}
 		catch(IllegalArgumentException e){e.printStackTrace();}
 		catch(IllegalAccessException e){e.printStackTrace();}
 		return null;
+	}
+	public static GameProfile getGameProfile(Skull bState){
+		try{
+			if(fieldProfileBlock == null) fieldProfileBlock = bState.getClass().getDeclaredField("profile");
+			fieldProfileBlock.setAccessible(true);
+			return (GameProfile) fieldProfileBlock.get(bState);
+		}
+		catch(NoSuchFieldException e){e.printStackTrace();}
+		catch(SecurityException e){e.printStackTrace();}
+		catch(IllegalArgumentException e){e.printStackTrace();}
+		catch(IllegalAccessException e){e.printStackTrace();}
+		return null;
+		/*return (GameProfile)methodGetGameProfile.of(//TileEntitySkull
+				methodGetTileEntity.of(//WorldServer
+						methodGetHandle.of(bState.getWorld()).call())//CraftWorld
+				.call(cBlockPosition.create(bState.getX(), bState.getY(), bState.getZ())))
+			.call();*/
 	}
 
 	public static ItemStack makeTextureSkull(String code){

@@ -1,9 +1,5 @@
 package Evil_Code_DropHeads;
 
-import net.minecraft.server.v1_13_R2.BlockPosition;
-import net.minecraft.server.v1_13_R2.TileEntitySkull;
-import org.bukkit.craftbukkit.v1_13_R2.CraftWorld;
-
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
@@ -31,10 +27,7 @@ public class BlockBreakListener implements Listener{
 				&& Utils.isPlayerHead(evt.getBlock().getType())){
 			Skull skull = (Skull) evt.getBlock().getState();
 
-			TileEntitySkull skullTile = (TileEntitySkull)((CraftWorld)skull.getWorld()).getHandle()
-					.getTileEntity(new BlockPosition(skull.getX(), skull.getY(), skull.getZ()));
-
-			GameProfile profile = skullTile.getGameProfile();
+			GameProfile profile = Utils.getGameProfile(skull);
 			if(profile != null && profile.getName() != null){
 				//
 				ItemStack skullItem;
