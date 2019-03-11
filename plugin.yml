@@ -1,7 +1,7 @@
 name: DropHeads
 main: Evil_Code_DropHeads.DropHeads
 author: EvModder/EvDoc/Evil_Witchdoctor
-version: 3.2.6
+version: 3.2.7
 api-version: 1.13
 softdepend: [EvKitPvP]
 
@@ -11,6 +11,12 @@ commands:
       usage: /gethead [name]
       aliases: [gethead,dhspawn,spawn-head,head,phspawn,skull]
       permission: evp.dropheads.spawn
+      permission-message: You do not have permission to do this.
+
+   debug_all_heads:
+      description: Place all heads into the world around the player
+      usage: /debug_all_heads
+      permission: evp.dropheads.debug
       permission-message: You do not have permission to do this.
 
 permissions:
@@ -25,3 +31,7 @@ permissions:
    evp.dropheads.spawn:
       description: Permission to spawn heads with a command
       default: op
+
+   evp.dropheads.debug:
+      description: Permission to spawn all the heads in a big cube
+      default: false

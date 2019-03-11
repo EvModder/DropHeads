@@ -2,3 +2,5 @@
 *.class
 *.un~
 .settings/
+textures/
+grumm_log.txt
