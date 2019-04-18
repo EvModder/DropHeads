@@ -1,4 +1,4 @@
-package Evil_Code_DropHeads;
+package evmodder.DropHeads;
 
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;

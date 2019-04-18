@@ -1,4 +1,4 @@
-package Evil_Code_DropHeads;
+package evmodder.DropHeads;
 
 import EvLib2.EvPlugin;
 import EvLib2.Updater;

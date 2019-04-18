@@ -1,4 +1,4 @@
-package Evil_Code_DropHeads;
+package evmodder.DropHeads;
 
 import java.io.InputStream;
 import java.util.HashMap;

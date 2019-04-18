@@ -27,9 +27,6 @@ import com.sun.org.apache.xml.internal.security.utils.Base64;
 public class Extras {
 	private final static String authserver = "https://authserver.mojang.com";
 
-	public static String getPlayerName(String... args){
-		return String.join("_", args).replace('|', ':').replace('-', ':');
-	}
 
 	public static String putReadURL(String payload, String url){
 		try{

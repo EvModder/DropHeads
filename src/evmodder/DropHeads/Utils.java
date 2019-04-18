@@ -1,11 +1,11 @@
-package Evil_Code_DropHeads;
+package evmodder.DropHeads;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Map;
 import java.util.UUID;
-
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
@@ -28,11 +28,9 @@ import org.bukkit.entity.Wolf;
 import org.bukkit.entity.ZombieVillager;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import EvLib2.FileIO;
-
 
 @SuppressWarnings("deprecation")
 public class Utils {
@@ -45,16 +43,18 @@ public class Utils {
 	private static boolean useCustomHeads, grummEnabled;
 	public static final String[] MHF_Heads = new String[]{//Standard, Mojang-Provided MHF Heads
 		"MHF_Alex", "MHF_Blaze", "MHF_CaveSpider", "MHF_Chicken", "MHF_Cow", "MHF_Creeper", "MHF_Enderman", "MHF_Ghast",
-		"MHF_Golem", "MHF_Herobrine", "MHF_LavaSlime", "MHF_MushroomCow", "MHF_Ocelot", "MHF_Pig", "MHF_PigZombie", "MHF_Sheep",
-		"MHF_Skeleton", "MHF_Slime", "MHF_Spider", "MHF_Squid", "MHF_Steve", "MHF_Villager",
+		"MHF_Golem", "MHF_Herobrine", "MHF_LavaSlime", "MHF_MushroomCow", "MHF_Ocelot", "MHF_Pig", "MHF_PigZombie",
+		"MHF_Sheep", "MHF_Skeleton", "MHF_Slime", "MHF_Spider", "MHF_Squid", "MHF_Steve", "MHF_Villager",
 		"MHF_Witch", "MHF_Wither", "MHF_WSkeleton", "MHF_Zombie",
 		
-		"MHF_Cactus", "MHF_Cake", "MHF_Chest", "MHF_CoconutB", "MHF_CoconutG", "MHF_Melon", "MHF_OakLog", "MHF_Present1", "MHF_Present2",
-		"MHF_Pumpkin", "MHF_TNT", "MHF_TNT2",
+		"MHF_Cactus", "MHF_Cake", "MHF_Chest", "MHF_CoconutB", "MHF_CoconutG", "MHF_Melon", "MHF_OakLog",
+		"MHF_Present1","MHF_Present2", "MHF_Pumpkin", "MHF_TNT", "MHF_TNT2",
 		
 		"MHF_ArrowUp", "MHF_ArrowDown", "MHF_ArrowLeft", "MHF_ArrowRight", "MHF_Exclamation", "MHF_Question",
 	};
-	public static final HashSet<String> MHF_Lookup = new HashSet<String>(Arrays.asList(MHF_Heads));
+	public static final Map<String, String> MHF_Lookup =
+			Stream.of(MHF_Heads).collect(Collectors.toMap(h -> h.toUpperCase(), h -> h));
+
 	static HashMap<String, String> textures = new HashMap<String, String>();
 	public static final HashMap<EntityType, String> customHeads;//People who have set their skins to an Entity's head
 	static{
@@ -101,14 +101,14 @@ public class Utils {
 			if(i != -1) try{
 				String texture = head.substring(i+1);
 				if(texture.isEmpty()) continue;
-				
+
 				String key = head.substring(0, i);
 				int j = key.indexOf('|');
 				if(j == -1){
 					EntityType type = EntityType.valueOf(key.toUpperCase());
 					textures.put(type.name(), texture);
 				}
-				else{
+				else/* if(grummEnabled || !key.endsWith("|GRUMM"))*/{
 					EntityType type = EntityType.valueOf(key.substring(0, j).toUpperCase());
 					textures.put(type.name()+key.substring(j), texture);
 					pl.getLogger().fine("Loaded: "+type.name()+" - "+key.substring(j+1));
@@ -182,7 +182,7 @@ public class Utils {
 	}
 
 	public static ItemStack makeTextureSkull(String code){
-		return makeTextureSkull(code, ChatColor.WHITE+"UNKNOWN Head");
+		return makeTextureSkull(code, ChatColor.YELLOW+"UNKNOWN Head");
 	}
 	public static ItemStack makeTextureSkull(String code, String headName){
 		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
@@ -208,38 +208,41 @@ public class Utils {
 		profile.getProperties().put("textures", new Property("textures", code));
 		setGameProfile(meta, profile);
 
-		meta.setDisplayName(ChatColor.WHITE+getNormalizedName(entity)+" Head");
+		meta.setDisplayName(ChatColor.YELLOW+getNormalizedName(entity)+" Head");
 		item.setItemMeta(meta);
 		return item;
 	}
 
 	public static ItemStack getHead(EntityType entity, String data){
+		if(data != null && data.isEmpty()) data = null;
 		switch(entity){
-		case WITHER_SKELETON:
-			return new ItemStack(Material.WITHER_SKELETON_SKULL);
-		case SKELETON:
-			return new ItemStack(Material.SKELETON_SKULL);
-		case ZOMBIE:
-			return new ItemStack(Material.ZOMBIE_HEAD);
-		case CREEPER:
-			return new ItemStack(Material.CREEPER_HEAD);
-		case ENDER_DRAGON:
-			return new ItemStack(Material.DRAGON_HEAD);
-		default:
-			String textureKey = entity.name()+ (data == null ? "" : "|"+data);
-			if(textures.containsKey(textureKey)) return Utils.makeTextureSkull(entity, textureKey);
+			case WITHER_SKELETON:
+				return new ItemStack(Material.WITHER_SKELETON_SKULL);
+			case SKELETON:
+				return new ItemStack(Material.SKELETON_SKULL);
+			case ENDER_DRAGON:
+				return new ItemStack(Material.DRAGON_HEAD);
+			case ZOMBIE:
+				if(data == null) return new ItemStack(Material.ZOMBIE_HEAD);
+			case CREEPER:
+				if(data == null) return new ItemStack(Material.CREEPER_HEAD);
+			default:
+				String textureKey = entity.name() + (data == null ? "" : "|"+data);
+				if(textures.containsKey(textureKey)) return Utils.makeTextureSkull(entity, textureKey);
+	
+				String normalName = ChatColor.YELLOW+getNormalizedName(entity);
+	
+				ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+				SkullMeta meta = (SkullMeta) head.getItemMeta();
 
-			String normalName = ChatColor.WHITE+getNormalizedName(entity);
-
-			ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-			SkullMeta meta = (SkullMeta) head.getItemMeta();
-			if(MHF_Lookup.contains("MHF_"+getMHFHeadName(entity))) meta.setOwner("MHF_"+getMHFHeadName(entity));
-			else if(useCustomHeads && customHeads.containsKey(entity)) meta.setOwner(customHeads.get(entity));
-			else meta.setOwner(normalName);
-			meta.setDisplayName(normalName + (meta.getOwner().startsWith("MHF_") ? "" : " Head"));
-			head.setItemMeta(meta);
-			return head;
-		}
+				String MHF_Name = getMHFHeadName(entity);
+				if(MHF_Lookup.containsKey("MHF_"+MHF_Name.toUpperCase())) meta.setOwner("MHF_"+MHF_Name);
+				else if(useCustomHeads && customHeads.containsKey(entity)) meta.setOwner(customHeads.get(entity));
+				else meta.setOwner(normalName);
+				meta.setDisplayName(normalName + (meta.getOwner().startsWith("MHF_") ? "" : " Head"));
+				head.setItemMeta(meta);
+				return head;
+			}
 	}
 
 	public static ItemStack getHead(LivingEntity entity){
@@ -313,10 +316,10 @@ public class Utils {
 		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 		SkullMeta meta = (SkullMeta) head.getItemMeta();
 
-		String normalName = ChatColor.WHITE+getNormalizedName(entity.getType());
-		String MHFName = "MHF_"+getMHFHeadName(entity.getType());
+		String normalName = ChatColor.YELLOW+getNormalizedName(entity.getType());
+		String MHF_Name = "MHF_"+getMHFHeadName(entity.getType());
 
-		if(MHF_Lookup.contains(MHFName)) meta.setOwner(MHFName);
+		if(MHF_Lookup.containsKey(MHF_Name.toUpperCase())) meta.setOwner(MHF_Name);
 		else if(useCustomHeads && customHeads.containsKey(entity)) meta.setOwner(customHeads.get(entity));
 		else meta.setOwner(normalName);
 		meta.setDisplayName(normalName + (meta.getOwner().startsWith("MHF_") ? "" : " Head"));
@@ -330,12 +333,12 @@ public class Utils {
 		GameProfile profile = new GameProfile(uuid, playerName);
 		setGameProfile(meta, profile);
 		meta.setOwner(playerName);
-		meta.setDisplayName(ChatColor.WHITE+playerName+" Head");
+		meta.setDisplayName(ChatColor.YELLOW+playerName+" Head");
 		head.setItemMeta(meta);
 		return head;
 	}
 
-	public static byte getData(SkullType type){
+	@Deprecated public static byte getData(SkullType type){
 		switch(type){
 		case SKELETON:
 			return 0;
