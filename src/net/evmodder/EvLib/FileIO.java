@@ -1,4 +1,4 @@
-package EvLib2;
+package net.evmodder.EvLib;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

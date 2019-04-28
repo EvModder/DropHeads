@@ -1,4 +1,4 @@
-package EvLib2;
+package net.evmodder.EvLib;
 
 import java.util.Vector;
 import org.bukkit.Bukkit;

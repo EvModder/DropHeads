@@ -1,4 +1,4 @@
-package evmodder.DropHeads;
+package net.evmodder.DropHeads.listeners;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -9,7 +9,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.metadata.FixedMetadataValue;
-import EvLib2.FileIO;
+import net.evmodder.DropHeads.DropHeads;
+import net.evmodder.EvLib.FileIO;
 
 public class EntitySpawnListener implements Listener{
 	private Map<SpawnReason, Float> spawnModifiers = new HashMap<SpawnReason, Float>();

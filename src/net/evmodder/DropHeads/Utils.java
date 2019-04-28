@@ -1,4 +1,4 @@
-package evmodder.DropHeads;
+package net.evmodder.DropHeads;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -35,8 +35,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import EvLib2.EvUtils;
-import EvLib2.FileIO;
+import net.evmodder.EvLib.EvUtils;
+import net.evmodder.EvLib.FileIO;
 import net.minecraft.server.v1_14_R1.EntityFox;
 
 public class Utils {

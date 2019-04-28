@@ -1,4 +1,4 @@
-package evmodder.DropHeads;
+package net.evmodder.DropHeads.commands;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -9,9 +9,11 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import EvLib2.CommandBase2;
-import EvLib2.Extras;
-import EvLib2.EvUtils;
+import net.evmodder.DropHeads.DropHeads;
+import net.evmodder.DropHeads.Utils;
+import net.evmodder.EvLib.CommandBase2;
+import net.evmodder.EvLib.EvUtils;
+import net.evmodder.EvLib.Extras;
 
 public class CommandSpawnHead extends CommandBase2{
 	final private DropHeads pl;

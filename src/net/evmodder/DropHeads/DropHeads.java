@@ -1,7 +1,9 @@
-package evmodder.DropHeads;
+package net.evmodder.DropHeads;
 
-import EvLib2.EvPlugin;
-import EvLib2.Updater;
+import net.evmodder.DropHeads.commands.*;
+import net.evmodder.DropHeads.listeners.*;
+import net.evmodder.EvLib.EvPlugin;
+import net.evmodder.EvLib.Updater;
 
 public final class DropHeads extends EvPlugin {
 	private static DropHeads instance; public static DropHeads getPlugin(){return instance;}
@@ -14,8 +16,8 @@ public final class DropHeads extends EvPlugin {
 		new Utils();
 		getServer().getPluginManager().registerEvents(new EntitySpawnListener(), this);
 		getServer().getPluginManager().registerEvents(new EntityDeathListener(), this);
-		//getServer().getPluginManager().registerEvents(new BlockBreakListener(), this);//Fixes stacking
-		getServer().getPluginManager().registerEvents(new ItemDropListener(), this);//Fixes stacking
+		getServer().getPluginManager().registerEvents(new ItemDropListener(), this);//To fix stacking
+		//getServer().getPluginManager().registerEvents(new BlockBreakListener(), this);//To fix stacking
 
 		new CommandSpawnHead(this);
 		new Commanddebug_all_heads(this);

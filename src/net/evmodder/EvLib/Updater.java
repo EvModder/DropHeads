@@ -1,4 +1,4 @@
-package EvLib2;
+package net.evmodder.EvLib;
 
 import java.io.*;
 import java.net.MalformedURLException;

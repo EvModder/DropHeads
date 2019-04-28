@@ -1,4 +1,4 @@
-package evmodder.DropHeads;
+package net.evmodder.DropHeads.listeners;
 
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -14,7 +14,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import com.mojang.authlib.GameProfile;
-import EvLib2.EvUtils;
+import net.evmodder.DropHeads.DropHeads;
+import net.evmodder.DropHeads.Utils;
+import net.evmodder.EvLib.EvUtils;
 
 public class BlockBreakListener implements Listener{
 	DropHeads pl;

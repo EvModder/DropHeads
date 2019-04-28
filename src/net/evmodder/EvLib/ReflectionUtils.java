@@ -1,4 +1,4 @@
-package EvLib2;
+package net.evmodder.EvLib;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Server;

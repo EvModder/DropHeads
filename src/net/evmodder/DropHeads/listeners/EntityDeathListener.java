@@ -1,4 +1,4 @@
-package evmodder.DropHeads;
+package net.evmodder.DropHeads.listeners;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -21,8 +21,10 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
-import EvLib2.FileIO;
 import Evil_Code_EvKits.EvKits;
+import net.evmodder.DropHeads.DropHeads;
+import net.evmodder.DropHeads.Utils;
+import net.evmodder.EvLib.FileIO;
 
 public class EntityDeathListener implements Listener{
 	final DropHeads plugin;

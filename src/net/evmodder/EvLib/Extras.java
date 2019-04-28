@@ -1,4 +1,4 @@
-package EvLib2;
+package net.evmodder.EvLib;
 
 import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
