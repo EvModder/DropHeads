@@ -11,6 +11,7 @@ import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Skull;
+import org.bukkit.craftbukkit.v1_14_R1.entity.CraftFox;
 import org.bukkit.entity.Cat;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.EntityType;
@@ -24,6 +25,7 @@ import org.bukkit.entity.Parrot;
 import org.bukkit.entity.Rabbit;
 import org.bukkit.entity.Sheep;
 import org.bukkit.entity.Shulker;
+import org.bukkit.entity.TraderLlama;
 import org.bukkit.entity.TropicalFish;
 import org.bukkit.entity.TropicalFish.Pattern;
 import org.bukkit.entity.Vex;
@@ -35,6 +37,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import EvLib2.EvUtils;
 import EvLib2.FileIO;
+import net.minecraft.server.v1_14_R1.EntityFox;
 
 public class Utils {
 	static class EntityData{
@@ -313,11 +316,13 @@ public class Utils {
 			case MUSHROOM_COW:
 				textureKey = "MUSHROOM_COW|"+((MushroomCow)entity).getVariant().name();
 			case FOX:
-				textureKey = "FOX";
-				//textureKey = "FOX|"+((Fox)entity).getVariant().name
-				//textureKey += (((Fox)entity).isSleeping() ? "|SLEEPING" : "");
+				EntityFox fox = ((CraftFox)entity).getHandle();
+				textureKey = "FOX|RED";//TODO: "FOX|SNOW"
+				if(fox.isSleeping()) textureKey += "|SLEEPING";
 			case PANDA:
 				textureKey = "PANDA|"+EvUtils.getPandaTrait((Panda)entity);
+			case TRADER_LLAMA:
+				textureKey = "TRADER_LLAMA|"+((TraderLlama)entity).getColor().name();
 			default:
 				textureKey = entity.getType().name();
 		}

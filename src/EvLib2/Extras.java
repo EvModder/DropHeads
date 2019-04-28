@@ -15,12 +15,15 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
+import org.apache.commons.lang.StringUtils;
 import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 
@@ -146,15 +149,9 @@ public class Extras {
 		return newImg;
 	}
 
-	public static void main(String... args){
-		String token = authenticate("mc.alternatecraft@gmail.com", "getcodez!");
-		String uuid = "cf49ab9298164c7fa698f84514dd7f74";
-		System.out.println("token = "+token);
-
-		FileIO.DIR = "./";
-		TreeMap<String, String> newHeads = new TreeMap<String, String>();
-		//String[] heads = FileIO.loadFile("head-list.txt", "").split("\n");
-		for(String line : new String[]{"MUSHROOM_COW|BROWN"}){
+	public static void makeUpsideDownCopies(String[] heads, Map<String, String> newHeads,
+			String outfolder, String uuid, String token){
+		for(String line : heads){
 			int idx = line.indexOf(':');
 			if(idx > -1 && idx < line.length()-1){
 				String name = line.substring(0, idx).trim();
@@ -166,27 +163,29 @@ public class Extras {
 				String url = json.substring(json.indexOf("\"url\":")+7, json.lastIndexOf('"')).trim();
 				//String textureId = url.substring(url.lastIndexOf('/')+1);
 				System.out.println("1. Got texture url from Base64 val");
-				String filename = "textures/"+name+"|GRUMM.png";
+				String filename = outfolder+"/"+name+"|GRUMM.png";
 				File outfile = new File(filename);
 				//===========================================================================================
+				try{Thread.sleep(2000);}catch(InterruptedException e1){e1.printStackTrace();}
 				HttpURLConnection conn;
 				try{
 					conn = (HttpURLConnection)new URL(url).openConnection();
 					conn.setUseCaches(false);
 					conn.setDoOutput(true);
 					conn.setDoInput(true);
-					
+
 					BufferedInputStream inImg = new BufferedInputStream(conn.getInputStream());
 					BufferedImage image = upsideDownHead(ImageIO.read(inImg));
-					
+
 					ImageIO.write(image, "png", outfile);
 					System.out.println("2. Saved upside down: "+url+" ("+name+")");
 
 					//===========================================================================================
 					try{Thread.sleep(8000);}catch(InterruptedException e1){e1.printStackTrace();}
-					conn = (HttpURLConnection)new URL("https://api.mojang.com/user/profile/"
-							+ uuid + "/skin").openConnection();
-					conn.setRequestProperty ("Authorization", "Bearer "+token);
+					conn = (HttpURLConnection)new URL("https://api.mojang.com/user/profile/" + uuid + "/skin")
+							.openConnection();
+					conn.setRequestProperty("Authorization", "Bearer "+token);
+					conn.setRequestProperty("Content-Length", "6000");
 					String boundary = "someArbitraryText";
 					conn.setRequestProperty("Content-Type", "multipart/form-data; boundary="+boundary);
 					conn.setDoInput(true);
@@ -196,9 +195,9 @@ public class Extras {
 					BufferedWriter conn_out_writer = new BufferedWriter(new OutputStreamWriter(conn_out));
 
 					conn_out_writer.write("\r\n--"+boundary+"\r\n");
-					conn_out_writer.write("Content-Disposition: form-data; name=\"model\"\r\n\r\nslim");
+					conn_out_writer.write("Content-Disposition: form-data; name=\"model\"\r\n\r\nclassic");
 					conn_out_writer.write("\r\n--"+boundary+"\r\n");
-					conn_out_writer.write("Content-Disposition: form-data; name=\"file\"; filename=\""+"yeet.png"+"\"\r\n");
+					conn_out_writer.write("Content-Disposition: form-data; name=\"file\"; filename=\"yeet.png"+"\"\r\n");
 					conn_out_writer.write("Content-Type: image/png\r\n\r\n");
 					conn_out_writer.flush();
 
@@ -208,7 +207,7 @@ public class Extras {
 					while((newBytes=ifstream.read(buffer)) != -1) conn_out.write(buffer, 0, newBytes);
 					ifstream.close();
 					conn_out.flush();
-					
+
 					conn_out_writer.write("\r\n--"+boundary+"--\r\n");
 					conn_out_writer.flush();
 					conn_out_writer.close();
@@ -229,13 +228,13 @@ public class Extras {
 					String newVal = resp.substring(resp.indexOf(textureBeg)+textureBeg.length());
 					newVal = newVal.substring(0, newVal.indexOf(textureEnd));
 					//System.out.println("new val: "+newVal);
-					
+
 					String newJson = "no workee";
 					try{newJson = new String(Base64.decode(newVal));}
 					catch(Base64DecodingException e){e.printStackTrace();}
 					//System.out.println("New Json: " + newJson);
 					//===========================================================================================
-					
+
 					String textureVal = newJson.substring(newJson.lastIndexOf("texture/")+8);
 					textureVal = textureVal.substring(0, textureVal.indexOf('"')).trim();
 					String shortJson = "{\"textures\":{\"SKIN\":{\"url\":"
@@ -251,6 +250,28 @@ public class Extras {
 				catch(IOException e){e.printStackTrace();}
 			}
 		}
+	}
+
+	public static void main(String... args){
+		String token = authenticate("mc.alternatecraft@gmail.com", "getskinz!");
+		String uuid = "cf49ab9298164c7fa698f84514dd7f74";
+		System.out.println("token = "+token);
+
+		FileIO.DIR = "./";
+		TreeMap<String, String> newHeads = new TreeMap<String, String>();
+		ArrayList<String> heads = new ArrayList<String>();
+		String[] targetHeads = new String[]{//"CAT",
+				"FOX", "PANDA", "PILLAGER", "RAVAGER", "TRADER_LLAMA"
+		};
+		for(String headData : FileIO.loadFile("head-list.txt", "").split("\n")){
+			for(String target : targetHeads) if(headData.startsWith(target) && !headData.contains("GRUMM"))
+				heads.add(headData);
+		}
+		System.out.println(StringUtils.join(heads, "\n"));
+		System.out.println("Beginning conversion...");
+		makeUpsideDownCopies(heads.toArray(new String[heads.size()]), newHeads, "textures", uuid, token);
+
+		System.out.println("Results: ");
 		for(String e : newHeads.keySet()){
 			System.out.println(e + ": " + newHeads.get(e));
 		}
