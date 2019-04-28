@@ -9,12 +9,11 @@ import java.util.stream.Stream;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
-import org.bukkit.SkullType;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Skull;
 import org.bukkit.entity.Cat;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Fox;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Llama;
@@ -212,9 +211,25 @@ public class Utils {
 		profile.getProperties().put("textures", new Property("textures", code));
 		setGameProfile(meta, profile);
 
-		meta.setDisplayName(ChatColor.YELLOW+getNormalizedName(entity)+" Head");
+		meta.setDisplayName(ChatColor.YELLOW+EvUtils.getNormalizedName(entity)+" Head");
 		item.setItemMeta(meta);
 		return item;
+	}
+
+	@SuppressWarnings("deprecation")
+	private static ItemStack makeNonTextureSkull(EntityType entity){
+		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+		SkullMeta meta = (SkullMeta) head.getItemMeta();
+
+		String normalName = ChatColor.YELLOW+EvUtils.getNormalizedName(entity);
+		String MHF_Name = "MHF_"+EvUtils.getMHFHeadName(entity);
+
+		if(MHF_Lookup.containsKey(MHF_Name.toUpperCase())) meta.setOwner(MHF_Name);
+		else if(useCustomHeads && customHeads.containsKey(entity)) meta.setOwner(customHeads.get(entity));
+		else meta.setOwner(normalName);
+		meta.setDisplayName(normalName + (meta.getOwner().startsWith("MHF_") ? "" : " Head"));
+		head.setItemMeta(meta);
+		return head;
 	}
 
 	public static ItemStack getHead(EntityType entity, String data){
@@ -233,19 +248,7 @@ public class Utils {
 			default:
 				String textureKey = entity.name() + (data == null ? "" : "|"+data);
 				if(textures.containsKey(textureKey)) return Utils.makeTextureSkull(entity, textureKey);
-	
-				String normalName = ChatColor.YELLOW+getNormalizedName(entity);
-	
-				ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-				SkullMeta meta = (SkullMeta) head.getItemMeta();
-
-				String MHF_Name = getMHFHeadName(entity);
-				if(MHF_Lookup.containsKey("MHF_"+MHF_Name.toUpperCase())) meta.setOwner("MHF_"+MHF_Name);
-				else if(useCustomHeads && customHeads.containsKey(entity)) meta.setOwner(customHeads.get(entity));
-				else meta.setOwner(normalName);
-				meta.setDisplayName(normalName + (meta.getOwner().startsWith("MHF_") ? "" : " Head"));
-				head.setItemMeta(meta);
-				return head;
+				else return makeNonTextureSkull(entity);
 			}
 	}
 
@@ -253,7 +256,7 @@ public class Utils {
 		String textureKey = "";
 		switch(entity.getType()){
 			case PLAYER:
-				return getPlayerHead(entity.getUniqueId(), entity.getName());
+				return getPlayerHead((OfflinePlayer)entity);
 			case WITHER_SKELETON:
 				return new ItemStack(Material.WITHER_SKELETON_SKULL);
 			case SKELETON:
@@ -293,7 +296,7 @@ public class Utils {
 			case TROPICAL_FISH:
 				TropicalFish f = (TropicalFish)entity;
 				String name = tropicalFishNames.get(new CCP(f.getBodyColor(), f.getPatternColor(), f.getPattern()));
-				if(name == null) name = getNormalizedName(entity.getType());
+				if(name == null) name = EvUtils.getNormalizedName(entity.getType());
 				String code = "wow i need to figure this out huh";
 				return makeTextureSkull(code, name);
 			case VEX:
@@ -324,137 +327,19 @@ public class Utils {
 			return Utils.makeTextureSkull(entity.getType(), textureKey+"|GRUMM");
 				
 		if(textures.containsKey(textureKey) || textures.containsKey(textureKey = entity.getType().name()))
-			return Utils.makeTextureSkull(entity.getType(), textureKey);
-
-		//else
-		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-		SkullMeta meta = (SkullMeta) head.getItemMeta();
-
-		String normalName = ChatColor.YELLOW+getNormalizedName(entity.getType());
-		String MHF_Name = "MHF_"+getMHFHeadName(entity.getType());
-
-		if(MHF_Lookup.containsKey(MHF_Name.toUpperCase())) meta.setOwner(MHF_Name);
-		else if(useCustomHeads && customHeads.containsKey(entity)) meta.setOwner(customHeads.get(entity));
-		else meta.setOwner(normalName);
-		meta.setDisplayName(normalName + (meta.getOwner().startsWith("MHF_") ? "" : " Head"));
-		head.setItemMeta(meta);
-		return head;
+			return makeTextureSkull(entity.getType(), textureKey);
+		else
+			return makeNonTextureSkull(entity.getType());
 	}
 
-	public static ItemStack getPlayerHead(UUID uuid, String playerName){
+	public static ItemStack getPlayerHead(OfflinePlayer player){
 		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 		SkullMeta meta = (SkullMeta) head.getItemMeta();
-		GameProfile profile = new GameProfile(uuid, playerName);
+		GameProfile profile = new GameProfile(player.getUniqueId(), player.getName());
 		setGameProfile(meta, profile);
-		meta.setOwner(playerName);
-		meta.setDisplayName(ChatColor.YELLOW+playerName+" Head");
+		meta.setOwningPlayer(player);
+		meta.setDisplayName(ChatColor.YELLOW+player.getName()+" Head");
 		head.setItemMeta(meta);
 		return head;
-	}
-
-	@Deprecated public static byte getData(SkullType type){
-		switch(type){
-		case SKELETON:
-			return 0;
-		case WITHER:
-			return 1;
-		case ZOMBIE:
-			return 2;
-		case CREEPER:
-			return 4;
-		case DRAGON:
-			return 5;
-		case PLAYER:
-		default:
-			return 3;
-		}
-	}
-
-	public static boolean isHead(Material type){
-		switch(type){
-			case PLAYER_HEAD:
-			case PLAYER_WALL_HEAD:
-			case WITHER_SKELETON_SKULL:
-			case WITHER_SKELETON_WALL_SKULL:
-			case DRAGON_HEAD:
-			case DRAGON_WALL_HEAD:
-			case SKELETON_SKULL:
-			case SKELETON_WALL_SKULL:
-			case CREEPER_HEAD:
-			case CREEPER_WALL_HEAD:
-			case ZOMBIE_HEAD:
-			case ZOMBIE_WALL_HEAD:
-				return true;
-			default:
-				return false;
-		}
-	}
-	public static boolean isPlayerHead(Material type){
-		return type == Material.PLAYER_HEAD || type == Material.PLAYER_WALL_HEAD;
-	}
-
-	public static EntityType getEntityByName(String name){
-		if(name.toUpperCase().startsWith("MHF_")) name = normalizedNameFromMHFName(name);
-		name = name.toUpperCase().replace("_", "");
-
-		try{EntityType type = EntityType.valueOf(name.toUpperCase()); return type;}
-		catch(IllegalArgumentException ex){}
-		for(EntityType t : EntityType.values()) if(t.name().replace("_", "").equals(name)) return t;
-		if(name.equals("ZOMBIEPIGMAN")) return EntityType.PIG_ZOMBIE;
-		else if(name.equals("MOOSHROOM")) return EntityType.MUSHROOM_COW;
-//		DropHeads.getPlugin().getLogger().warning("Error!! Could not find mob by name: "+name);
-		return null;
-	}
-	public static String getMHFHeadName(EntityType type){
-		//TODO: improve this algorithm / test for errors
-		switch(type){
-		case MAGMA_CUBE:
-			return "LavaSlime";
-		case IRON_GOLEM:
-			return "Golem";
-		case WITHER_SKELETON:
-			return "WSkeleton";
-		case CAVE_SPIDER:
-			return "CaveSpider";
-		default:
-			return type.name().charAt(0)+type.name().substring(1).replace("_", "").toLowerCase();
-		}
-	}
-	public static String getNormalizedName(EntityType type){
-		//TODO: improve this algorithm / test for errors
-		switch(type){
-		case PIG_ZOMBIE:
-			return "Zombie Pigman";
-		case MUSHROOM_COW:
-			return "Mooshroom";
-		case TROPICAL_FISH:
-			return "need more data";//TODO: oof
-		default:
-			StringBuilder name = new StringBuilder();
-			for(String str : type.name().split("_")){
-				name.append(str.charAt(0));
-				name.append(str.substring(1).toLowerCase());
-				name.append(" ");
-			}
-			return name.substring(0, name.length()-1);
-		}
-	}
-	public static String normalizedNameFromMHFName(String mhfName){
-		mhfName = mhfName.substring(4);
-		
-		String mhfCompact = mhfName.replace("_", "").replace(" ", "").toLowerCase();
-		if(mhfCompact.equals("lavaslime")) return "Magma Cube";
-		else if(mhfCompact.equals("golem")) return "Iron Golem";
-		else if(mhfCompact.equals("pigzombie")) return "Zombie Pigman";
-		else if(mhfCompact.equals("mushroomcow")) return "Mooshroom";
-		else{
-			char[] chars = mhfName.toCharArray();
-			StringBuilder name = new StringBuilder("").append(chars[0]);
-			for(int i=1; i<chars.length; ++i){
-				if(Character.isUpperCase(chars[i]) && chars[i-1] != ' ') name.append(' ');
-				name.append(chars[i]);
-			}
-			return name.toString();
-		}
 	}
 }

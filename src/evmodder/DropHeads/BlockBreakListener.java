@@ -14,6 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import com.mojang.authlib.GameProfile;
+import EvLib2.EvUtils;
 
 public class BlockBreakListener implements Listener{
 	DropHeads pl;
@@ -24,7 +25,7 @@ public class BlockBreakListener implements Listener{
 	@SuppressWarnings("deprecation") @EventHandler(priority = EventPriority.MONITOR)
 	public void onBlockBreakEvent(BlockBreakEvent evt){
 		if(!evt.isCancelled() && evt.getPlayer().getGameMode() != GameMode.CREATIVE
-				&& Utils.isPlayerHead(evt.getBlock().getType())){
+				&& EvUtils.isPlayerHead(evt.getBlock().getType())){
 			Skull skull = (Skull) evt.getBlock().getState();
 
 			GameProfile profile = Utils.getGameProfile(skull);
@@ -40,7 +41,7 @@ public class BlockBreakListener implements Listener{
 					OfflinePlayer p;
 					if(profile.getId() != null && (p = pl.getServer().getOfflinePlayer(profile.getId())) != null
 							&& p.getName() != null && !p.getName().equals(profile.getName())){
-						skullItem = Utils.getPlayerHead(p.getUniqueId(), p.getName());
+						skullItem = Utils.getPlayerHead(p);
 					}
 					else{
 						skullItem = new ItemStack(Material.PLAYER_HEAD);

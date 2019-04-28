@@ -11,6 +11,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import EvLib2.CommandBase2;
 import EvLib2.Extras;
+import EvLib2.EvUtils;
 
 public class CommandSpawnHead extends CommandBase2{
 	final private DropHeads pl;
@@ -51,7 +52,7 @@ public class CommandSpawnHead extends CommandBase2{
 		}
 		ItemStack head = null;
 
-		EntityType eType = Utils.getEntityByName(target.toUpperCase());
+		EntityType eType = EvUtils.getEntityByName(target.toUpperCase());
 		if(eType != null){
 			if(textureKey != null){
 				if(Utils.textures.containsKey(eType.name()+"|"+textureKey))
@@ -65,7 +66,7 @@ public class CommandSpawnHead extends CommandBase2{
 			OfflinePlayer p = pl.getServer().getOfflinePlayer(target);
 			if(p.hasPlayedBefore() || Extras.checkExists(p.getName())){
 				//sender.sendMessage("Getting head for player: "+target);
-				head = Utils.getPlayerHead(p.getUniqueId(), p.getName());;
+				head = Utils.getPlayerHead(p);
 			}
 			else if(target.startsWith("MHF_") && Utils.MHF_Lookup.containsKey(target.toUpperCase())){
 				head = new ItemStack(Material.PLAYER_HEAD);

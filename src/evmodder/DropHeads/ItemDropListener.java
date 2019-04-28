@@ -9,6 +9,7 @@ import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
+import EvLib2.EvUtils;
 
 public class ItemDropListener implements Listener{
 	DropHeads pl;
@@ -18,7 +19,7 @@ public class ItemDropListener implements Listener{
 
 	@SuppressWarnings("deprecation") @EventHandler
 	public void onBarf(ItemSpawnEvent evt){
-		if(Utils.isPlayerHead(evt.getEntity().getItemStack().getType())){
+		if(EvUtils.isPlayerHead(evt.getEntity().getItemStack().getType())){
 			ItemStack skullItem = evt.getEntity().getItemStack();
 			if(skullItem.hasItemMeta() && skullItem.getItemMeta() instanceof SkullMeta){
 				SkullMeta meta = (SkullMeta) skullItem.getItemMeta();
@@ -36,7 +37,7 @@ public class ItemDropListener implements Listener{
 						if(profile.getId() != null && (p = pl.getServer().getOfflinePlayer(profile.getId())) != null
 								&& p.getName() != null && !p.getName().equals(profile.getName())){
 							//If they have changed their name, create a new skullItem with an updated GameProfile
-							evt.getEntity().setItemStack(Utils.getPlayerHead(p.getUniqueId(), p.getName()));
+							evt.getEntity().setItemStack(Utils.getPlayerHead(p));
 						}
 						else{
 							//Properly name and drop the Player (or MHF) head
