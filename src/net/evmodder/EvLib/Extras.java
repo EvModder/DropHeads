@@ -32,7 +32,6 @@ import com.sun.org.apache.xml.internal.security.utils.Base64;
 public class Extras {
 	private final static String authserver = "https://authserver.mojang.com";
 
-
 	public static String putReadURL(String payload, String url){
 		try{
 			HttpURLConnection conn = (HttpURLConnection)new URL(url).openConnection();
@@ -168,7 +167,7 @@ public class Extras {
 				String filename = outfolder+"/"+name+"|GRUMM.png";
 				File outfile = new File(filename);
 				//===========================================================================================
-				try{Thread.sleep(2000);}catch(InterruptedException e1){e1.printStackTrace();}
+				try{Thread.sleep(2000);}catch(InterruptedException e1){e1.printStackTrace();}//2s
 				HttpURLConnection conn;
 				try{
 					conn = (HttpURLConnection)new URL(url).openConnection();
@@ -183,7 +182,7 @@ public class Extras {
 					System.out.println("2. Saved upside down: "+url+" ("+name+")");
 
 					//===========================================================================================
-					try{Thread.sleep(8000);}catch(InterruptedException e1){e1.printStackTrace();}
+					try{Thread.sleep(8000);}catch(InterruptedException e1){e1.printStackTrace();}//8s
 					conn = (HttpURLConnection)new URL("https://api.mojang.com/user/profile/" + uuid + "/skin")
 							.openConnection();
 					conn.setRequestProperty("Authorization", "Bearer "+token);
@@ -217,7 +216,7 @@ public class Extras {
 
 					conn.getInputStream();
 					System.out.println("3. Skin uploaded");
-					try{Thread.sleep(25000);}catch(InterruptedException e1){e1.printStackTrace();}
+					try{Thread.sleep(25000);}catch(InterruptedException e1){e1.printStackTrace();}//25s
 					//===========================================================================================
 					System.out.println("4. Getting new texture url");
 					conn = (HttpURLConnection)new URL(
@@ -247,7 +246,7 @@ public class Extras {
 					System.out.println("5. New Base64 val: " + newBase64Val);
 					newHeads.put(name+"|GRUMM", newBase64Val);
 					//newHeads.put(name, val);
-					try{Thread.sleep(5000);}catch(InterruptedException e1){e1.printStackTrace();}
+					try{Thread.sleep(5000);}catch(InterruptedException e1){e1.printStackTrace();}//5s
 				}
 				catch(IOException e){e.printStackTrace();}
 			}
@@ -261,15 +260,14 @@ public class Extras {
 
 		TreeMap<String, String> newHeads = new TreeMap<String, String>();
 		ArrayList<String> heads = new ArrayList<String>();
-		String[] targetHeads = new String[]{//"CAT",
-				"FOX", "PANDA", "PILLAGER", "RAVAGER", "TRADER_LLAMA"
-		};
+		String[] targetHeads = new String[]{"VILLAGER", "ZOMBIE_VILLAGER"};
 		for(String headData : FileIO.loadFile("head-list.txt", "").split("\n")){
 			for(String target : targetHeads) if(headData.startsWith(target) && !headData.contains("GRUMM"))
 				heads.add(headData);
 		}
 		System.out.println(StringUtils.join(heads, "\n"));
 		System.out.println("Beginning conversion...");
+		System.out.println("Approximate duration in minutes: "+(40*heads.size()/60));// 40s/head
 		makeUpsideDownCopies(heads.toArray(new String[heads.size()]), newHeads, "textures", uuid, token);
 
 		System.out.println("Results: ");

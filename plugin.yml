@@ -1,5 +1,5 @@
 name: DropHeads
-main: evmodder.DropHeads.DropHeads
+main: net.evmodder.DropHeads.DropHeads
 author: EvModder/EvDoc/Evil_Witchdoctor
 version: 3.2.7 #7=1.14 heads
 api-version: 1.13

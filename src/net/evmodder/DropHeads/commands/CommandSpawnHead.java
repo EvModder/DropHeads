@@ -11,11 +11,11 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.HeadUtils;
-import net.evmodder.EvLib.CommandBase2;
+import net.evmodder.EvLib.CommandBase;
 import net.evmodder.EvLib.EvUtils;
 import net.evmodder.EvLib.Extras;
 
-public class CommandSpawnHead extends CommandBase2{
+public class CommandSpawnHead extends CommandBase{
 	final private DropHeads pl;
 
 	public CommandSpawnHead(DropHeads plugin) {

@@ -6,7 +6,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public abstract class CommandBase2 implements CommandExecutor{
+public abstract class CommandBase implements CommandExecutor{
 //	protected EvPlugin plugin;
 	String commandName;
 	final static CommandExecutor disabledCmdExecutor = new CommandExecutor(){
@@ -17,13 +17,13 @@ public abstract class CommandBase2 implements CommandExecutor{
 		}
 	};
 
-	public CommandBase2(JavaPlugin pl, boolean enabled){
+	public CommandBase(JavaPlugin pl, boolean enabled){
 //		plugin = pl;
 		commandName = getClass().getSimpleName().substring(7).toLowerCase();
 		pl.getCommand(commandName).setExecutor(enabled ? this : disabledCmdExecutor);//TODO: fix? test?
 	}
 
-	public CommandBase2(JavaPlugin pl){
+	public CommandBase(JavaPlugin pl){
 		this(pl, true);
 	}
 }

@@ -22,6 +22,7 @@ import org.bukkit.entity.Shulker;
 import org.bukkit.entity.TraderLlama;
 import org.bukkit.entity.TropicalFish;
 import org.bukkit.entity.Vex;
+import org.bukkit.entity.Villager;
 import org.bukkit.entity.Wolf;
 import org.bukkit.entity.ZombieVillager;
 import org.bukkit.inventory.ItemStack;
@@ -159,21 +160,29 @@ public class HeadAPI {
 			case ZOMBIE_VILLAGER:
 				textureKey = "ZOMBIE_VILLAGER|"+((ZombieVillager)entity).getVillagerProfession().name();
 				break;
+			case VILLAGER:
+				textureKey = "VILLAGER|"+((Villager)entity).getProfession().name();
+				break;
 			case OCELOT:
 				textureKey = "OCELOT|"+((Ocelot)entity).getCatType().name();
+				break;
 			case CAT:
-				textureKey = "OCELOT|"+((Cat)entity).getCatType().name();
+				textureKey = "CAT|"+((Cat)entity).getCatType().name();
 				break;
 			case MUSHROOM_COW:
 				textureKey = "MUSHROOM_COW|"+((MushroomCow)entity).getVariant().name();
+				break;
 			case FOX:
 				EntityFox fox = ((CraftFox)entity).getHandle();
 				textureKey = "FOX|RED";//TODO: "FOX|SNOW"
 				if(fox.isSleeping()) textureKey += "|SLEEPING";
+				break;
 			case PANDA:
 				textureKey = "PANDA|"+EvUtils.getPandaTrait((Panda)entity);
+				break;
 			case TRADER_LLAMA:
 				textureKey = "TRADER_LLAMA|"+((TraderLlama)entity).getColor().name();
+				break;
 			default:
 				textureKey = entity.getType().name();
 		}
