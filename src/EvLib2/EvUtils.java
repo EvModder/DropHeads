@@ -2,6 +2,8 @@ package EvLib2;
 
 import java.util.Vector;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Panda;
+import org.bukkit.entity.Panda.Gene;
 import org.bukkit.plugin.Plugin;
 
 public class EvUtils{
@@ -17,5 +19,16 @@ public class EvUtils{
 			catch(IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e){}
 		}
 		return evPlugins;
+	}
+
+	public static Gene getPandaTrait(Panda panda){
+		if(panda.getMainGene() == panda.getHiddenGene()) return panda.getMainGene();
+		switch(panda.getMainGene()){
+			case BROWN:
+			case WEAK:
+				return Gene.NORMAL;
+			default:
+				return panda.getMainGene();
+		}
 	}
 }

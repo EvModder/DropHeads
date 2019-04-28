@@ -9,25 +9,35 @@ import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import org.apache.commons.io.FileUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import com.google.common.io.Files;
 
 public class FileIO{
 	static String DIR = "./plugins/EvFolder/";
+
+	public static void moveDirectoryContents(File srcDir, File destDir){
+		if(srcDir.isDirectory()){
+			for(File file : srcDir.listFiles()){
+				try{Files.move(file, destDir);}
+				catch(IOException e){e.printStackTrace();}
+			}
+			srcDir.delete();
+		}
+		else try{
+			Files.move(srcDir, destDir);
+		}
+		catch(IOException e){e.printStackTrace();}
+	}
 
 	static void verifyDir(JavaPlugin evPl){
 		String customDir = "./plugins/"+evPl.getName()+"/";
 		if(!new File(DIR).exists() && EvUtils.installedEvPlugins().size() < 2) DIR = customDir;//replace
 		else if(new File(customDir).exists()){//merge
 			Bukkit.getLogger().warning("Relocating data in "+customDir+", this might take a minute..");
-			try{
-				FileUtils.copyDirectory(new File(customDir), new File(DIR));
-				FileUtils.deleteDirectory(new File(customDir));
-			}
-			catch(IOException e){e.printStackTrace();}
+			moveDirectoryContents(new File(customDir), new File(DIR));
 		}
 	}
 

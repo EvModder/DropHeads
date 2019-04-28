@@ -11,12 +11,16 @@ import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.SkullType;
 import org.bukkit.block.Skull;
+import org.bukkit.entity.Cat;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Fox;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Llama;
+import org.bukkit.entity.MushroomCow;
 import org.bukkit.entity.Ocelot;
+import org.bukkit.entity.Panda;
 import org.bukkit.entity.Parrot;
 import org.bukkit.entity.Rabbit;
 import org.bukkit.entity.Sheep;
@@ -30,9 +34,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+import EvLib2.EvUtils;
 import EvLib2.FileIO;
 
-@SuppressWarnings("deprecation")
 public class Utils {
 	static class EntityData{
 		EntityType type;
@@ -300,7 +304,17 @@ public class Utils {
 				break;
 			case OCELOT:
 				textureKey = "OCELOT|"+((Ocelot)entity).getCatType().name();
+			case CAT:
+				textureKey = "OCELOT|"+((Cat)entity).getCatType().name();
 				break;
+			case MUSHROOM_COW:
+				textureKey = "MUSHROOM_COW|"+((MushroomCow)entity).getVariant().name();
+			case FOX:
+				textureKey = "FOX";
+				//textureKey = "FOX|"+((Fox)entity).getVariant().name
+				//textureKey += (((Fox)entity).isSleeping() ? "|SLEEPING" : "");
+			case PANDA:
+				textureKey = "PANDA|"+EvUtils.getPandaTrait((Panda)entity);
 			default:
 				textureKey = entity.getType().name();
 		}

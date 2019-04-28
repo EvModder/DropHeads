@@ -150,11 +150,11 @@ public class Extras {
 		String token = authenticate("mc.alternatecraft@gmail.com", "getcodez!");
 		String uuid = "cf49ab9298164c7fa698f84514dd7f74";
 		System.out.println("token = "+token);
-		
+
 		FileIO.DIR = "./";
 		TreeMap<String, String> newHeads = new TreeMap<String, String>();
-		String heads = FileIO.loadFile("head-list.txt", "");
-		for(String line : heads.split("\n")){
+		//String[] heads = FileIO.loadFile("head-list.txt", "").split("\n");
+		for(String line : new String[]{"MUSHROOM_COW|BROWN"}){
 			int idx = line.indexOf(':');
 			if(idx > -1 && idx < line.length()-1){
 				String name = line.substring(0, idx).trim();
