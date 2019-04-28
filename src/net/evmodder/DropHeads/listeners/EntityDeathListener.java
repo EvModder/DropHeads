@@ -23,11 +23,10 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import Evil_Code_EvKits.EvKits;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.DropHeads.Utils;
 import net.evmodder.EvLib.FileIO;
 
 public class EntityDeathListener implements Listener{
-	final DropHeads plugin;
+	final DropHeads pl;
 	final boolean playerKillsOnly, playerHeadsOnly, useTaylorModifiers, chargedCreepers;
 	final Set<Material> mustUseTools = new HashSet<Material>();
 	final Set<EntityType> noLootingEffectMobs = new HashSet<EntityType>();
@@ -37,36 +36,36 @@ public class EntityDeathListener implements Listener{
 	final Random rand;
 
 	public EntityDeathListener(){
-		plugin = DropHeads.getPlugin();
-		playerKillsOnly = plugin.getConfig().getBoolean("player-kills-only", true);
-		playerHeadsOnly = plugin.getConfig().getBoolean("player-heads-only", false);
-		useTaylorModifiers = plugin.getConfig().getBoolean("use-taylor-modifiers", true);
-		chargedCreepers = plugin.getConfig().getBoolean("charged-creeper-drops", true);
-		lootingBonus = plugin.getConfig().getDouble("looting-bonus", 0.4);
+		pl = DropHeads.getPlugin();
+		playerKillsOnly = pl.getConfig().getBoolean("player-kills-only", true);
+		playerHeadsOnly = pl.getConfig().getBoolean("player-heads-only", false);
+		useTaylorModifiers = pl.getConfig().getBoolean("use-taylor-modifiers", true);
+		chargedCreepers = pl.getConfig().getBoolean("charged-creeper-drops", true);
+		lootingBonus = pl.getConfig().getDouble("looting-bonus", 0.4);
 		rand = new Random();
 
-		if(plugin.getConfig().getBoolean("must-use-axe")){
+		if(pl.getConfig().getBoolean("must-use-axe")){
 			mustUseTools.add(Material.DIAMOND_AXE);
 			mustUseTools.add(Material.IRON_AXE);
 			mustUseTools.add(Material.GOLDEN_AXE);
 			mustUseTools.add(Material.STONE_AXE);
 			mustUseTools.add(Material.WOODEN_AXE);
 		}
-		else for(String toolName : plugin.getConfig().getStringList("must-use")){
+		else for(String toolName : pl.getConfig().getStringList("must-use")){
 			if(toolName.isEmpty()) continue;
 			Material mat = Material.getMaterial(toolName.toUpperCase());
 			if(mat != null) mustUseTools.add(mat);
-			else plugin.getLogger().warning("Unknown Tool \""+toolName+"\"!");
+			else pl.getLogger().warning("Unknown Tool \""+toolName+"\"!");
 		}
 
-		ConfigurationSection specificModifiers = plugin.getConfig().getConfigurationSection("specific-tool-modifiers");
+		ConfigurationSection specificModifiers = pl.getConfig().getConfigurationSection("specific-tool-modifiers");
 		if(specificModifiers != null) for(String toolName : specificModifiers.getKeys(false)){
 			Material mat = Material.getMaterial(toolName.toUpperCase());
 			if(mat != null) toolBonuses.put(mat, (float) specificModifiers.getDouble(toolName));
 		}
 
 		//Load individual mobs' drop chances
-		InputStream defaultChances = plugin.getClass().getResourceAsStream("/default chances.txt");
+		InputStream defaultChances = pl.getClass().getResourceAsStream("/default chances.txt");
 		String chances = FileIO.loadFile("drop chances.txt", defaultChances);
 
 		for(String line : chances.split("\n")){
@@ -82,13 +81,13 @@ public class EntityDeathListener implements Listener{
 					}
 					// Commented out to allow >1 because Spawn-Reason modifiers are added after this
 					/*if(dropChance > 1F){
-						plugin.getLogger().severe("Invalid value: "+parts[1]);
-						plugin.getLogger().severe("Drop chance must be between 0 and 1");
+						pl.getLogger().severe("Invalid value: "+parts[1]);
+						pl.getLogger().severe("Drop chance must be between 0 and 1");
 						mobChances.put(eType, Math.min(dropChance/10F, 1F));
 					}*/
 				}
-				catch(NumberFormatException ex){plugin.getLogger().severe("Invalid value: "+parts[1]);}
-				catch(IllegalArgumentException ex){plugin.getLogger().severe("Unknown entity type: "+parts[0]);}
+				catch(NumberFormatException ex){pl.getLogger().severe("Invalid value: "+parts[1]);}
+				catch(IllegalArgumentException ex){pl.getLogger().severe("Unknown entity type: "+parts[0]);}
 			}
 		}
 	}
@@ -96,7 +95,7 @@ public class EntityDeathListener implements Listener{
 	@EventHandler
 	public void entityDeathEvent(EntityDeathEvent evt){
 		//If in an arena, do not drop heads //TODO: NOTE: Ev-specific arena
-		EvKits evKitPVP = (EvKits) plugin.getServer().getPluginManager().getPlugin("EvKitPvP");
+		EvKits evKitPVP = (EvKits) pl.getServer().getPluginManager().getPlugin("EvKitPvP");
 		if(evKitPVP != null && evKitPVP.isEnabled()
 				&& evKitPVP.isInArena(evt.getEntity().getLocation(), false) != null) return;
 		//================================================================
@@ -145,9 +144,9 @@ public class EntityDeathListener implements Listener{
 		else dropChance += lootBonus*dropChance + toolBonus*dropChance;
 
 		if(rand.nextDouble() < dropChance){
-			evt.getEntity().getWorld().dropItem(evt.getEntity().getLocation(), Utils.getHead(evt.getEntity()));
+			evt.getEntity().getWorld().dropItem(evt.getEntity().getLocation(), pl.getAPI().getHead(evt.getEntity()));
 
-			plugin.getLogger().info("Head dropped!\nDrop chance before tool modifiers: "+rawDropChance+
+			pl.getLogger().info("Head dropped!\nDrop chance before tool modifiers: "+rawDropChance+
 									"\nDrop chance after tool modifiers: "+dropChance+
 									"\nMob killed: "+evt.getEntityType().name());
 		}

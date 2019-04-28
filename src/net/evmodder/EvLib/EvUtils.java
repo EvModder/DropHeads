@@ -3,6 +3,7 @@ package net.evmodder.EvLib;
 import java.util.Vector;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Nameable;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Panda;
 import org.bukkit.entity.Panda.Gene;
@@ -57,6 +58,10 @@ public class EvUtils{
 		return type == Material.PLAYER_HEAD || type == Material.PLAYER_WALL_HEAD;
 	}
 
+	public static boolean hasGrummName(Nameable e){
+		return e.getCustomName() != null &&
+				(e.getCustomName().equals("Dinnerbone") || e.getCustomName().equals("Grumm"));
+	}
 
 	public static EntityType getEntityByName(String name){
 		if(name.toUpperCase().startsWith("MHF_")) name = normalizedNameFromMHFName(name);

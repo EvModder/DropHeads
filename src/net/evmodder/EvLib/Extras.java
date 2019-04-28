@@ -19,11 +19,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 import org.apache.commons.lang.StringUtils;
+import org.bukkit.entity.EntityType;
 import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 
@@ -252,12 +254,11 @@ public class Extras {
 		}
 	}
 
-	public static void main(String... args){
+	public static void runGrumm(){
 		String token = authenticate("mc.alternatecraft@gmail.com", "getskinz!");
 		String uuid = "cf49ab9298164c7fa698f84514dd7f74";
 		System.out.println("token = "+token);
 
-		FileIO.DIR = "./";
 		TreeMap<String, String> newHeads = new TreeMap<String, String>();
 		ArrayList<String> heads = new ArrayList<String>();
 		String[] targetHeads = new String[]{//"CAT",
@@ -275,5 +276,26 @@ public class Extras {
 		for(String e : newHeads.keySet()){
 			System.out.println(e + ": " + newHeads.get(e));
 		}
+	}
+
+	public static void checkMissing(){
+		TreeSet<String> missing = new TreeSet<String>(), extra = new TreeSet<String>();
+		for(EntityType type : EntityType.values()){
+			if(type.isAlive()) missing.add(type.name());
+		}
+		for(String headData : FileIO.loadFile("head-list.txt", "").split("\n")){
+			int i = headData.indexOf(':'), j = headData.indexOf('|');
+			if(i != -1 && j == -1){
+				if(!missing.remove(headData.substring(0, i))) extra.add(headData.substring(0, i));
+			}
+		}
+		System.out.println("Missing textures for: "+missing);
+		System.out.println("Extra textures for: "+extra);
+	}
+
+	public static void main(String... args){
+		FileIO.DIR = "./";
+		//checkMissing();
+		runGrumm();
 	}
 }

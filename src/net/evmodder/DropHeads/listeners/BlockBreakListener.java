@@ -12,10 +12,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.DropHeads.Utils;
+import net.evmodder.DropHeads.HeadUtils;
 import net.evmodder.EvLib.EvUtils;
 
 public class BlockBreakListener implements Listener{
@@ -30,20 +29,20 @@ public class BlockBreakListener implements Listener{
 				&& EvUtils.isPlayerHead(evt.getBlock().getType())){
 			Skull skull = (Skull) evt.getBlock().getState();
 
-			GameProfile profile = Utils.getGameProfile(skull);
+			GameProfile profile = HeadUtils.getGameProfile(skull);
 			if(profile != null && profile.getName() != null){
 				//
 				ItemStack skullItem;
 				int idx = profile.getName().indexOf("|");
 				if(idx != -1){
 					EntityType type = EntityType.valueOf(profile.getName().substring(0, idx));
-					skullItem = Utils.makeTextureSkull(type, profile.getName().substring(idx+1));
+					skullItem = pl.getAPI().makeTextureSkull(type, profile.getName().substring(idx+1));
 				}
 				else{
 					OfflinePlayer p;
 					if(profile.getId() != null && (p = pl.getServer().getOfflinePlayer(profile.getId())) != null
 							&& p.getName() != null && !p.getName().equals(profile.getName())){
-						skullItem = Utils.getPlayerHead(p);
+						skullItem = HeadUtils.getPlayerHead(p);
 					}
 					else{
 						skullItem = new ItemStack(Material.PLAYER_HEAD);

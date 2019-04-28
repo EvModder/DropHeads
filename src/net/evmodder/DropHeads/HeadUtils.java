@@ -11,42 +11,15 @@ import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Skull;
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftFox;
-import org.bukkit.entity.Cat;
-import org.bukkit.entity.Creeper;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Horse;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Llama;
-import org.bukkit.entity.MushroomCow;
-import org.bukkit.entity.Ocelot;
-import org.bukkit.entity.Panda;
-import org.bukkit.entity.Parrot;
-import org.bukkit.entity.Rabbit;
-import org.bukkit.entity.Sheep;
-import org.bukkit.entity.Shulker;
-import org.bukkit.entity.TraderLlama;
-import org.bukkit.entity.TropicalFish;
 import org.bukkit.entity.TropicalFish.Pattern;
-import org.bukkit.entity.Vex;
-import org.bukkit.entity.Wolf;
-import org.bukkit.entity.ZombieVillager;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import net.evmodder.EvLib.EvUtils;
-import net.evmodder.EvLib.FileIO;
-import net.minecraft.server.v1_14_R1.EntityFox;
 
-public class Utils {
-	static class EntityData{
-		EntityType type;
-		String data;
-		EntityData(EntityType t, String d){type=t; data=d;}
-	}
-
-	private static boolean useCustomHeads, grummEnabled;
+public class HeadUtils {
 	public static final String[] MHF_Heads = new String[]{//Standard, Mojang-Provided MHF Heads
 		"MHF_Alex", "MHF_Blaze", "MHF_CaveSpider", "MHF_Chicken", "MHF_Cow", "MHF_Creeper", "MHF_Enderman", "MHF_Ghast",
 		"MHF_Golem", "MHF_Herobrine", "MHF_LavaSlime", "MHF_MushroomCow", "MHF_Ocelot", "MHF_Pig", "MHF_PigZombie",
@@ -61,7 +34,6 @@ public class Utils {
 	public static final Map<String, String> MHF_Lookup =
 			Stream.of(MHF_Heads).collect(Collectors.toMap(h -> h.toUpperCase(), h -> h));
 
-	static HashMap<String, String> textures = new HashMap<String, String>();
 	public static final HashMap<EntityType, String> customHeads;//People who have set their skins to an Entity's head
 	static{
 		customHeads = new HashMap<EntityType, String>();
@@ -93,38 +65,7 @@ public class Utils {
 	static{
 		tropicalFishNames = new HashMap<CCP, String>();
 		tropicalFishNames.put(new CCP(DyeColor.ORANGE, DyeColor.GRAY, Pattern.STRIPEY), "Anemone");
-	}
-
-	public Utils(){
-		DropHeads pl = DropHeads.getPlugin();
-		useCustomHeads = pl.getConfig().getBoolean("custom-skins-for-missing-heads", true);
-		grummEnabled = pl.getConfig().getBoolean("grumm-heads", true);
-
-		String headsList = FileIO.loadFile("head-list.txt", pl.getClass().getResourceAsStream("/head-list.txt"));
-		for(String head : headsList.split("\n")){
-			head = head.replaceAll(" ", "");
-			int i = head.indexOf(":");
-			if(i != -1) try{
-				String texture = head.substring(i+1);
-				if(texture.isEmpty()) continue;
-
-				String key = head.substring(0, i);
-				int j = key.indexOf('|');
-				if(j == -1){
-					EntityType type = EntityType.valueOf(key.toUpperCase());
-					textures.put(type.name(), texture);
-				}
-				else/* if(grummEnabled || !key.endsWith("|GRUMM"))*/{
-					EntityType type = EntityType.valueOf(key.substring(0, j).toUpperCase());
-					textures.put(type.name()+key.substring(j), texture);
-					pl.getLogger().fine("Loaded: "+type.name()+" - "+key.substring(j+1));
-				}
-			}
-			catch(IllegalArgumentException ex){
-				pl.getLogger().warning("Invalid entity name '"+head.substring(0, i)+"' from head-list.txt file!");
-			}
-		}
-	}
+}
 
 	private static Field fieldProfileItem, fieldProfileBlock;
 //	private static RefClass classCraftWorld = ReflectionUtils.getRefClass("{cb}.CraftWorld");
@@ -187,16 +128,16 @@ public class Utils {
 			.call();*/
 	}
 
-	public static ItemStack makeTextureSkull(String code){
-		return makeTextureSkull(code, ChatColor.YELLOW+"UNKNOWN Head");
+	public static ItemStack makeSkull(String textureCode){
+		return makeSkull(textureCode, ChatColor.YELLOW+"UNKNOWN Head");
 	}
-	public static ItemStack makeTextureSkull(String code, String headName){
+	public static ItemStack makeSkull(String textureCode, String headName){
 		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
-		if(code == null) return item;
+		if(textureCode == null) return item;
 		SkullMeta meta = (SkullMeta) item.getItemMeta();
 
-		GameProfile profile = new GameProfile(UUID.nameUUIDFromBytes(code.getBytes()), code);
-		profile.getProperties().put("textures", new Property("textures", code));
+		GameProfile profile = new GameProfile(UUID.nameUUIDFromBytes(textureCode.getBytes()), textureCode);
+		profile.getProperties().put("textures", new Property("textures", textureCode));
 		setGameProfile(meta, profile);
 
 		meta.setDisplayName(headName);
@@ -204,23 +145,8 @@ public class Utils {
 		return item;
 	}
 
-	public static ItemStack makeTextureSkull(EntityType entity, String textureKey){
-		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
-		String code = textures.get(textureKey);
-		if(code == null) return item;
-		SkullMeta meta = (SkullMeta) item.getItemMeta();
-
-		GameProfile profile = new GameProfile(UUID.nameUUIDFromBytes(code.getBytes()), entity.name()+"|"+textureKey);
-		profile.getProperties().put("textures", new Property("textures", code));
-		setGameProfile(meta, profile);
-
-		meta.setDisplayName(ChatColor.YELLOW+EvUtils.getNormalizedName(entity)+" Head");
-		item.setItemMeta(meta);
-		return item;
-	}
-
 	@SuppressWarnings("deprecation")
-	private static ItemStack makeNonTextureSkull(EntityType entity){
+	static ItemStack makeSkull(EntityType entity){
 		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 		SkullMeta meta = (SkullMeta) head.getItemMeta();
 
@@ -228,113 +154,10 @@ public class Utils {
 		String MHF_Name = "MHF_"+EvUtils.getMHFHeadName(entity);
 
 		if(MHF_Lookup.containsKey(MHF_Name.toUpperCase())) meta.setOwner(MHF_Name);
-		else if(useCustomHeads && customHeads.containsKey(entity)) meta.setOwner(customHeads.get(entity));
 		else meta.setOwner(normalName);
 		meta.setDisplayName(normalName + (meta.getOwner().startsWith("MHF_") ? "" : " Head"));
 		head.setItemMeta(meta);
 		return head;
-	}
-
-	public static ItemStack getHead(EntityType entity, String data){
-		if(data != null && data.isEmpty()) data = null;
-		switch(entity){
-			case WITHER_SKELETON:
-				return new ItemStack(Material.WITHER_SKELETON_SKULL);
-			case SKELETON:
-				return new ItemStack(Material.SKELETON_SKULL);
-			case ENDER_DRAGON:
-				return new ItemStack(Material.DRAGON_HEAD);
-			case ZOMBIE:
-				if(data == null) return new ItemStack(Material.ZOMBIE_HEAD);
-			case CREEPER:
-				if(data == null) return new ItemStack(Material.CREEPER_HEAD);
-			default:
-				String textureKey = entity.name() + (data == null ? "" : "|"+data);
-				if(textures.containsKey(textureKey)) return Utils.makeTextureSkull(entity, textureKey);
-				else return makeNonTextureSkull(entity);
-			}
-	}
-
-	public static ItemStack getHead(LivingEntity entity){
-		String textureKey = "";
-		switch(entity.getType()){
-			case PLAYER:
-				return getPlayerHead((OfflinePlayer)entity);
-			case WITHER_SKELETON:
-				return new ItemStack(Material.WITHER_SKELETON_SKULL);
-			case SKELETON:
-				return new ItemStack(Material.SKELETON_SKULL);
-			case ZOMBIE:
-				return new ItemStack(Material.ZOMBIE_HEAD);
-			case CREEPER:
-				if(((Creeper)entity).isPowered()) textureKey = "CREEPER|CHARGED";
-				else return new ItemStack(Material.CREEPER_HEAD);
-				break;
-			case ENDER_DRAGON:
-				return new ItemStack(Material.DRAGON_HEAD);
-			case WOLF:
-				textureKey = entity.getType().name();
-				if(((Wolf)entity).isAngry()) textureKey += "|ANGRY";
-				break;
-			case HORSE:
-				textureKey = "HORSE|"+((Horse)entity).getColor().name();
-				break;
-			case LLAMA:
-				textureKey = "LLAMA|"+((Llama)entity).getColor().name();
-				break;
-			case PARROT:
-				textureKey = "PARROT|"+((Parrot)entity).getVariant().name();
-				break;
-			case RABBIT:
-				textureKey = "RABBIT|"+((Rabbit)entity).getRabbitType().name();
-				break;
-			case SHEEP:
-				textureKey = "SHEEP|";
-				if(entity.getCustomName() != null && entity.getCustomName().equals("jeb_")) textureKey += "JEB";
-				else textureKey += ((Sheep)entity).getColor().name();
-				break;
-			case SHULKER:
-				textureKey = "SHULKER|"+((Shulker)entity).getColor().name();
-				break;
-			case TROPICAL_FISH:
-				TropicalFish f = (TropicalFish)entity;
-				String name = tropicalFishNames.get(new CCP(f.getBodyColor(), f.getPatternColor(), f.getPattern()));
-				if(name == null) name = EvUtils.getNormalizedName(entity.getType());
-				String code = "wow i need to figure this out huh";
-				return makeTextureSkull(code, name);
-			case VEX:
-				textureKey = "VEX"+(((Vex)entity).isCharging() ? "|CHARGING" : "");
-				break;
-			case ZOMBIE_VILLAGER:
-				textureKey = "ZOMBIE_VILLAGER|"+((ZombieVillager)entity).getVillagerProfession().name();
-				break;
-			case OCELOT:
-				textureKey = "OCELOT|"+((Ocelot)entity).getCatType().name();
-			case CAT:
-				textureKey = "OCELOT|"+((Cat)entity).getCatType().name();
-				break;
-			case MUSHROOM_COW:
-				textureKey = "MUSHROOM_COW|"+((MushroomCow)entity).getVariant().name();
-			case FOX:
-				EntityFox fox = ((CraftFox)entity).getHandle();
-				textureKey = "FOX|RED";//TODO: "FOX|SNOW"
-				if(fox.isSleeping()) textureKey += "|SLEEPING";
-			case PANDA:
-				textureKey = "PANDA|"+EvUtils.getPandaTrait((Panda)entity);
-			case TRADER_LLAMA:
-				textureKey = "TRADER_LLAMA|"+((TraderLlama)entity).getColor().name();
-			default:
-				textureKey = entity.getType().name();
-		}
-		if(grummEnabled && entity.getCustomName() != null
-				&& (entity.getCustomName().equals("Dinnerbone") || entity.getCustomName().equals("Grumm"))
-				&& textures.containsKey(textureKey+"|GRUMM")) 
-			return Utils.makeTextureSkull(entity.getType(), textureKey+"|GRUMM");
-				
-		if(textures.containsKey(textureKey) || textures.containsKey(textureKey = entity.getType().name()))
-			return makeTextureSkull(entity.getType(), textureKey);
-		else
-			return makeNonTextureSkull(entity.getType());
 	}
 
 	public static ItemStack getPlayerHead(OfflinePlayer player){

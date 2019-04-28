@@ -10,14 +10,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.DropHeads.Utils;
+import net.evmodder.DropHeads.HeadUtils;
 import net.evmodder.EvLib.EvUtils;
 
 public class ItemDropListener implements Listener{
-	DropHeads pl;
-	ItemDropListener(){
-		pl = DropHeads.getPlugin();
-	}
+	final DropHeads pl;
+	public ItemDropListener(){pl = DropHeads.getPlugin();}
 
 	@SuppressWarnings("deprecation") @EventHandler
 	public void onBarf(ItemSpawnEvent evt){
@@ -26,20 +24,20 @@ public class ItemDropListener implements Listener{
 			if(skullItem.hasItemMeta() && skullItem.getItemMeta() instanceof SkullMeta){
 				SkullMeta meta = (SkullMeta) skullItem.getItemMeta();
 
-				GameProfile profile = Utils.getGameProfile(meta);
+				GameProfile profile = HeadUtils.getGameProfile(meta);
 				if(profile != null){
 					int idx = profile.getName().indexOf("|");
 					if(idx != -1){
 						//Refresh entity head texture
 						EntityType type = EntityType.valueOf(profile.getName().substring(0, idx));
-						evt.getEntity().setItemStack(Utils.makeTextureSkull(type, profile.getName().substring(idx+1)));
+						evt.getEntity().setItemStack(pl.getAPI().makeTextureSkull(type, profile.getName().substring(idx+1)));
 					}
 					else{//This is a player head
 						OfflinePlayer p;
 						if(profile.getId() != null && (p = pl.getServer().getOfflinePlayer(profile.getId())) != null
 								&& p.getName() != null && !p.getName().equals(profile.getName())){
 							//If they have changed their name, create a new skullItem with an updated GameProfile
-							evt.getEntity().setItemStack(Utils.getPlayerHead(p));
+							evt.getEntity().setItemStack(HeadUtils.getPlayerHead(p));
 						}
 						else{
 							//Properly name and drop the Player (or MHF) head

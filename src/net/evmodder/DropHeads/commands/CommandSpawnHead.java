@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.DropHeads.Utils;
+import net.evmodder.DropHeads.HeadUtils;
 import net.evmodder.EvLib.CommandBase2;
 import net.evmodder.EvLib.EvUtils;
 import net.evmodder.EvLib.Extras;
@@ -57,28 +57,28 @@ public class CommandSpawnHead extends CommandBase2{
 		EntityType eType = EvUtils.getEntityByName(target.toUpperCase());
 		if(eType != null){
 			if(textureKey != null){
-				if(Utils.textures.containsKey(eType.name()+"|"+textureKey))
+				if(pl.getAPI().textureExists(eType.name()+"|"+textureKey))
 					sender.sendMessage(ChatColor.GRAY+"Getting entity head with data value: "+textureKey);
 				else
 					sender.sendMessage(ChatColor.RED+"Unknown data value for "+eType+": "+ChatColor.YELLOW+textureKey);
 			}
-			head = Utils.getHead(eType, textureKey);
+			head = pl.getAPI().getHead(eType, textureKey);
 		}
 		else{
 			OfflinePlayer p = pl.getServer().getOfflinePlayer(target);
 			if(p.hasPlayedBefore() || Extras.checkExists(p.getName())){
 				//sender.sendMessage("Getting head for player: "+target);
-				head = Utils.getPlayerHead(p);
+				head = HeadUtils.getPlayerHead(p);
 			}
-			else if(target.startsWith("MHF_") && Utils.MHF_Lookup.containsKey(target.toUpperCase())){
+			else if(target.startsWith("MHF_") && HeadUtils.MHF_Lookup.containsKey(target.toUpperCase())){
 				head = new ItemStack(Material.PLAYER_HEAD);
 				SkullMeta meta = (SkullMeta) head.getItemMeta();
 				meta.setOwner(target);
-				meta.setDisplayName(ChatColor.YELLOW+Utils.MHF_Lookup.get(target.toUpperCase()));
+				meta.setDisplayName(ChatColor.YELLOW+HeadUtils.MHF_Lookup.get(target.toUpperCase()));
 				head.setItemMeta(meta);
 			}
 			else if(target.length() > 100){
-				head = Utils.makeTextureSkull(target);
+				head = HeadUtils.makeSkull(target);
 			}
 		}
 		if(head != null){
