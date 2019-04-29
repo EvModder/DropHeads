@@ -294,7 +294,7 @@ public class Extras {
 	public static void main(String... args){
 		com.sun.org.apache.xml.internal.security.Init.init();
 		FileIO.DIR = "./";
-		//checkMissing();
-		runGrumm();
+		checkMissing();
+		//runGrumm();
 	}
 }

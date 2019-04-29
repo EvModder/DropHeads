@@ -44,7 +44,9 @@ public class HeadAPI {
 		pl = DropHeads.getPlugin();
 		grummEnabled = pl.getConfig().getBoolean("grumm-heads", true);
 
-		String headsList = FileIO.loadFile("head-list.txt", pl.getClass().getResourceAsStream("/head-list.txt"));
+		String pluginHeadList = FileIO.loadResource(pl, "head-list.txt");
+		String localHeadList = FileIO.loadFile("head-list.txt", "");
+		String headsList = pluginHeadList.concat("\n"+localHeadList);
 		for(String head : headsList.split("\n")){
 			head = head.replaceAll(" ", "");
 			int i = head.indexOf(":");
