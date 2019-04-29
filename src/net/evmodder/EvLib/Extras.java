@@ -260,7 +260,7 @@ public class Extras {
 
 		TreeMap<String, String> newHeads = new TreeMap<String, String>();
 		ArrayList<String> heads = new ArrayList<String>();
-		String[] targetHeads = new String[]{"VILLAGER", "ZOMBIE_VILLAGER"};
+		String[] targetHeads = new String[]{"MUSHROOM_COW|BROWN"};
 		for(String headData : FileIO.loadFile("head-list.txt", "").split("\n")){
 			for(String target : targetHeads) if(headData.startsWith(target) && !headData.contains("GRUMM"))
 				heads.add(headData);
@@ -292,6 +292,7 @@ public class Extras {
 	}
 
 	public static void main(String... args){
+		com.sun.org.apache.xml.internal.security.Init.init();
 		FileIO.DIR = "./";
 		//checkMissing();
 		runGrumm();

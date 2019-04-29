@@ -9,11 +9,12 @@ import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
-import com.google.common.io.Files;
 
 public class FileIO{
 	static String DIR = "./plugins/EvFolder/";
@@ -21,13 +22,13 @@ public class FileIO{
 	public static void moveDirectoryContents(File srcDir, File destDir){
 		if(srcDir.isDirectory()){
 			for(File file : srcDir.listFiles()){
-				try{Files.move(file, destDir);}
+				try{Files.move(file.toPath(), destDir.toPath(), StandardCopyOption.REPLACE_EXISTING);}
 				catch(IOException e){e.printStackTrace();}
 			}
 			srcDir.delete();
 		}
 		else try{
-			Files.move(srcDir, destDir);
+			Files.move(srcDir.toPath(), destDir.toPath(), StandardCopyOption.REPLACE_EXISTING);
 		}
 		catch(IOException e){e.printStackTrace();}
 	}

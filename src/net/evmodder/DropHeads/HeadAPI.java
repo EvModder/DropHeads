@@ -1,6 +1,6 @@
 package net.evmodder.DropHeads;
 
-import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.UUID;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -35,11 +35,13 @@ import net.evmodder.EvLib.FileIO;
 import net.minecraft.server.v1_14_R1.EntityFox;
 
 public class HeadAPI {
+	final private DropHeads pl;
 	final boolean grummEnabled;
-	final HashMap<String, String> textures = new HashMap<String, String>();
+	final TreeMap<String, String> textures;
 
 	HeadAPI(){
-		DropHeads pl = DropHeads.getPlugin();
+		textures = new TreeMap<String, String>();
+		pl = DropHeads.getPlugin();
 		grummEnabled = pl.getConfig().getBoolean("grumm-heads", true);
 
 		String headsList = FileIO.loadFile("head-list.txt", pl.getClass().getResourceAsStream("/head-list.txt"));
@@ -58,7 +60,8 @@ public class HeadAPI {
 				}
 				else/* if(grummEnabled || !key.endsWith("|GRUMM"))*/{
 					EntityType type = EntityType.valueOf(key.substring(0, j).toUpperCase());
-					textures.put(type.name()+key.substring(j), texture);
+					textures.put(key, texture);
+					//textures.put(type.name()+key.substring(j), texture);//identical
 					pl.getLogger().fine("Loaded: "+type.name()+" - "+key.substring(j+1));
 				}
 			}
@@ -69,7 +72,7 @@ public class HeadAPI {
 	}
 
 	public boolean textureExists(String textureKey){return textures.containsKey(textureKey);}
-	public HashMap<String, String> getTextures(){return textures;}
+	public TreeMap<String, String> getTextures(){return textures;}
 
 	public ItemStack makeTextureSkull(EntityType entity, String textureKey){
 		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
