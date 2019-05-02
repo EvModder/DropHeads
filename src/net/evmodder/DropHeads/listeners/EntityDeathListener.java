@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
@@ -21,7 +20,6 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
-import Evil_Code_EvKits.EvKits;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.EvLib2.FileIO;
 
@@ -97,12 +95,6 @@ public class EntityDeathListener implements Listener{
 
 	@EventHandler
 	public void entityDeathEvent(EntityDeathEvent evt){
-		//If in an arena, do not drop heads //TODO: NOTE: Ev-specific arena
-		EvKits evKitPVP = (EvKits) pl.getServer().getPluginManager().getPlugin("EvKitPvP");
-		if(evKitPVP != null && evKitPVP.isEnabled()
-				&& evKitPVP.isInArena(evt.getEntity().getLocation(), false) != null) return;
-		//================================================================
-
 		double rawDropChance, dropChance;
 		double lootBonus = 0D, toolBonus = 0D;
 		double spawnCauseModifier = evt.getEntity().hasMetadata("SpawnReason") ?
