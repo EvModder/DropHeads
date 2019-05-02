@@ -23,7 +23,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import Evil_Code_EvKits.EvKits;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.EvLib.FileIO;
+import net.evmodder.EvLib2.FileIO;
 
 public class EntityDeathListener implements Listener{
 	final DropHeads pl;
@@ -32,7 +32,7 @@ public class EntityDeathListener implements Listener{
 	final Set<EntityType> noLootingEffectMobs = new HashSet<EntityType>();
 	final Map<EntityType, Float> mobChances = new HashMap<EntityType, Float>();
 	final Map<Material, Float> toolBonuses = new HashMap<Material, Float>();
-	final double lootingBonus;
+	final double lootingBonus; double DEFAULT_CHANCE;
 	final Random rand;
 
 	public EntityDeathListener(){
@@ -65,20 +65,21 @@ public class EntityDeathListener implements Listener{
 		}
 
 		//Load individual mobs' drop chances
-		InputStream defaultChances = pl.getClass().getResourceAsStream("/default chances.txt");
-		String chances = FileIO.loadFile("drop chances.txt", defaultChances);
+		InputStream defaultChances = pl.getClass().getResourceAsStream("/head-drop-rates.txt");
+		String chances = FileIO.loadFile("head-drop-rates.txt", defaultChances);
 
 		for(String line : chances.split("\n")){
-			line = line.replace(" ", "").replace("\t", "").replace("//", "#").split("#")[0].toUpperCase();
-			String[] parts = line.split(":");
+			String[] parts = line.replace(" ", "").replace("\t", "").toUpperCase().split(":");
 			if(parts.length > 1){
 				try{
+					if(parts[0].equals("UNKNOWN")){
+						DEFAULT_CHANCE = Float.parseFloat(parts[1]);
+						continue;
+					}
 					EntityType eType = EntityType.valueOf(parts[0]);
 					float dropChance = Float.parseFloat(parts[1]);
 					mobChances.put(eType, dropChance);
-					if(parts.length > 2){
-						if(parts[2].equalsIgnoreCase("NoLooting")) noLootingEffectMobs.add(eType);
-					}
+					if(parts.length > 2 && parts[2].equals("NOLOOTING")) noLootingEffectMobs.add(eType);
 					// Commented out to allow >1 because Spawn-Reason modifiers are added after this
 					/*if(dropChance > 1F){
 						pl.getLogger().severe("Invalid value: "+parts[1]);
@@ -87,7 +88,9 @@ public class EntityDeathListener implements Listener{
 					}*/
 				}
 				catch(NumberFormatException ex){pl.getLogger().severe("Invalid value: "+parts[1]);}
-				catch(IllegalArgumentException ex){pl.getLogger().severe("Unknown entity type: "+parts[0]);}
+				catch(IllegalArgumentException ex){
+					pl.getLogger().severe("Unknown entity type: "+parts[0]);
+				}
 			}
 		}
 	}
@@ -131,7 +134,8 @@ public class EntityDeathListener implements Listener{
 			}
 		}
 		else if(playerKillsOnly) return;
-		else dropChance = mobChances.containsKey(evt.getEntityType()) ? mobChances.get(evt.getEntityType()) : 0D;
+		else dropChance = mobChances.containsKey(evt.getEntityType())
+				? mobChances.get(evt.getEntityType()) : DEFAULT_CHANCE;
 
 		rawDropChance = (dropChance *= spawnCauseModifier);
 
