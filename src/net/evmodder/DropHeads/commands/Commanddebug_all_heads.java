@@ -14,8 +14,8 @@ import org.bukkit.inventory.meta.SkullMeta;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.HeadAPI;
 import net.evmodder.DropHeads.HeadUtils;
-import net.evmodder.EvLib.CommandBase;
-import net.evmodder.EvLib.EvPlugin;
+import net.evmodder.EvLib2.CommandBase;
+import net.evmodder.EvLib2.EvPlugin;
 
 public class Commanddebug_all_heads extends CommandBase{
 //	private final EvPlugin pl;
@@ -32,9 +32,11 @@ public class Commanddebug_all_heads extends CommandBase{
 			return true;
 		}
 		final HeadAPI api = DropHeads.getPlugin().getAPI();
+		boolean noGrumm = true;
 
 		final Location loc = ((Player)sender).getLocation();
 		int numHeads = api.getTextures().size();
+		if(noGrumm) numHeads /= 2;
 		int dimX, dimY, dimZ;
 		dimX = dimY = dimZ = (int)Math.floor(Math.cbrt(numHeads));
 		if(dimX*dimY*dimZ < numHeads) if((++dimX)*dimY*dimZ < numHeads) if(dimX*dimY*(++dimZ) < numHeads) ++dimY;
@@ -54,6 +56,10 @@ public class Commanddebug_all_heads extends CommandBase{
 																				for(int y=0; y<dY && it.hasNext(); ++y){
 				Location hLoc = loc.clone().add(((dX/2)-x)*2, ((dY/2)-y)*2, ((dZ/2)-z)*2);
 				String key = it.next();
+				if(noGrumm){
+					while(key.endsWith("|GRUMM") && it.hasNext()) key = it.next();
+					if(key.endsWith("|GRUMM")) break;
+				}
 				int j = key.indexOf('|');
 				EntityType type = EntityType.valueOf(j == -1 ? key : key.substring(0, j));
 				ItemStack skullItem = api.makeTextureSkull(type, key);

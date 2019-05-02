@@ -11,7 +11,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.HeadUtils;
-import net.evmodder.EvLib.EvUtils;
+import net.evmodder.EvLib2.EvUtils;
 
 public class ItemDropListener implements Listener{
 	final DropHeads pl;
