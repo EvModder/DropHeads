@@ -1,4 +1,4 @@
-package net.evmodder.EvLib;
+package net.evmodder.EvLib2;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;

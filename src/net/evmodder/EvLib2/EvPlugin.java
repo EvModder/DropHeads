@@ -1,4 +1,4 @@
-package net.evmodder.EvLib;
+package net.evmodder.EvLib2;
 
 import java.io.InputStream;
 import org.bukkit.configuration.file.FileConfiguration;

@@ -1,4 +1,4 @@
-package net.evmodder.EvLib;
+package net.evmodder.EvLib2;
 
 import java.util.Vector;
 import org.bukkit.Bukkit;
@@ -7,6 +7,7 @@ import org.bukkit.Nameable;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Panda;
 import org.bukkit.entity.Panda.Gene;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 public class EvUtils{
@@ -59,7 +60,7 @@ public class EvUtils{
 	}
 
 	public static boolean hasGrummName(Nameable e){
-		return e.getCustomName() != null &&
+		return e.getCustomName() != null && !(e instanceof Player) &&
 				(e.getCustomName().equals("Dinnerbone") || e.getCustomName().equals("Grumm"));
 	}
 
