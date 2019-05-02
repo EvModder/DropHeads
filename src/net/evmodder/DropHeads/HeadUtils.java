@@ -17,7 +17,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import net.evmodder.EvLib.EvUtils;
+import net.evmodder.EvLib2.EvUtils;
 
 public class HeadUtils {
 	public static final String[] MHF_Heads = new String[]{//Standard, Mojang-Provided MHF Heads
