@@ -260,7 +260,7 @@ public class Extras {
 
 		TreeMap<String, String> newHeads = new TreeMap<String, String>();
 		ArrayList<String> heads = new ArrayList<String>();
-		String[] targetHeads = new String[]{"ENDER_DRAGON","CREEPER","SKELETON","WITHER_SKELETON","ZOMBIE"};
+		String[] targetHeads = new String[]{"CREEPER"};
 		for(String headData : FileIO.loadFile("head-list.txt", "").split("\n")){
 			for(String target : targetHeads) if(headData.startsWith(target) && !headData.contains("GRUMM"))
 				heads.add(headData);
@@ -277,24 +277,34 @@ public class Extras {
 	}
 
 	public static void checkMissing(){
-		TreeSet<String> missing = new TreeSet<String>(), extra = new TreeSet<String>();
+		TreeSet<String> missingTxr = new TreeSet<String>(), extraTxr = new TreeSet<String>();
+		TreeSet<String> missingDrpC = new TreeSet<String>(), extraDrpC = new TreeSet<String>();
 		for(EntityType type : EntityType.values()){
-			if(type.isAlive()) missing.add(type.name());
+			if(type.isAlive()){missingTxr.add(type.name()); missingDrpC.add(type.name());}
 		}
-		for(String headData : FileIO.loadFile("head-list.txt", "").split("\n")){
+		for(String headData : FileIO.loadFile("head-textures.txt", "").split("\n")){
 			int i = headData.indexOf(':'), j = headData.indexOf('|');
 			if(i != -1 && j == -1){
-				if(!missing.remove(headData.substring(0, i))) extra.add(headData.substring(0, i));
+				if(!missingTxr.remove(headData.substring(0, i))) extraTxr.add(headData.substring(0, i));
 			}
 		}
-		System.out.println("Missing textures for: "+missing);
-		System.out.println("Extra textures for: "+extra);
+		System.out.println("Missing textures for: "+missingTxr);
+		System.out.println("Extra textures for: "+extraTxr);
+
+		for(String headData : FileIO.loadFile("head-drop-rates.txt", "").split("\n")){
+			int i = headData.indexOf(':');
+			if(i != -1){
+				if(!missingDrpC.remove(headData.substring(0, i))) extraDrpC.add(headData.substring(0, i));
+			}
+		}
+		System.out.println("Missing drop rates for: "+missingDrpC);
+		System.out.println("Extra drop rates for: "+extraDrpC);
 	}
 
 	public static void main(String... args){
 		com.sun.org.apache.xml.internal.security.Init.init();
 		FileIO.DIR = "./";
-		//checkMissing();
-		runGrumm();
+		checkMissing();
+		//runGrumm();
 	}
 }
