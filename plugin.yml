@@ -3,7 +3,6 @@ main: net.evmodder.DropHeads.DropHeads
 author: EvModder/EvDoc/Evil_Witchdoctor
 version: 3.2.8 #8=stable 1.14 release
 api-version: 1.13
-softdepend: [EvKitPvP]
 
 commands:
    spawnhead:

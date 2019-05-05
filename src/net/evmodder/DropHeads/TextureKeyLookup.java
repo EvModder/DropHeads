@@ -90,9 +90,10 @@ public class TextureKeyLookup{
 	static String getTropicalFishName(CCP ccp){
 		String name = tropicalFishNames.get(ccp);
 		if(name == null){
-			name = fishColorNames.get(ccp.bodyColor);
-			if(ccp.bodyColor != ccp.patternColor) name += "-" + fishColorNames.get(ccp.patternColor);
-			name += " " + EvUtils.capitalizeAndSpacify(ccp.pattern.name(), '_');
+			StringBuilder builder = new StringBuilder(fishColorNames.get(ccp.bodyColor));
+			if(ccp.bodyColor != ccp.patternColor) builder.append('-').append(fishColorNames.get(ccp.patternColor));
+			builder.append(' ').append(EvUtils.capitalizeAndSpacify(ccp.pattern.name(), '_'));
+			name = builder.toString();
 			tropicalFishNames.put(ccp, name); // Cache result. Size can reach up to 2700 varieties (15*15*12)
 		}
 		return name;
@@ -165,12 +166,12 @@ public class TextureKeyLookup{
 
 	static String getNameFromKey(EntityType entity, String textureKey){
 		String[] dataFlags = textureKey.split(java.util.regex.Pattern.quote("|"));
-		if(dataFlags.length == 4 && (entity == null ?
-				textureKey.startsWith("TROPICAL_FISH|") : entity == EntityType.TROPICAL_FISH)){
+		if((entity == null ? textureKey.startsWith("TROPICAL_FISH|") : entity == EntityType.TROPICAL_FISH)){
+			if(dataFlags.length == 2) return EvUtils.capitalizeAndSpacify(dataFlags[1], '_');
 			try{
 				DyeColor bodyColor = DyeColor.valueOf(dataFlags[1]);
-				DyeColor patternColor = DyeColor.valueOf(dataFlags[2]);
-				Pattern pattern = Pattern.valueOf(dataFlags[2]);
+				DyeColor patternColor = dataFlags.length == 3 ? bodyColor : DyeColor.valueOf(dataFlags[2]);
+				Pattern pattern = Pattern.valueOf(dataFlags[dataFlags.length == 3 ? 2 : 3]);
 				return getTropicalFishName(new CCP(bodyColor, patternColor, pattern));
 			}
 			catch(IllegalArgumentException e){}
