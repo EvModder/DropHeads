@@ -5,6 +5,13 @@ player-kills-only: true
 # by making all mobs except players have a 0% chance of dropping a head)
 player-heads-only: false
 
+# Whether to keep entity heads synced with the latest vanilla textures
+refresh-textures: true
+
+# When a player changes their skin, should old heads be updated to the
+# new texture? Note: to refresh, heads must be mined or dropped
+update-on-skin-change: false
+
 # Enable the mechanic where any mob killed by a charged creeper explosion
 # will drop its head with 100% probability * the spawn-cause modifier
 # This setting will override "player-kills-only" (but not "player-heads-only")

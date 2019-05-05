@@ -42,27 +42,27 @@ public class CommandSpawnHead extends CommandBase{
 		}
 
 		String headStr = args.length == 0 ? sender.getName() : String.join("_", args).replace(':', '|');
-		String target, textureKey;
+		String target, extraData;
 		int i = headStr.indexOf('|');
 		if(i != -1){
 			target = headStr.substring(0, i);
-			textureKey = headStr.substring(i+1).toUpperCase();
+			extraData = headStr.substring(i+1).toUpperCase();
 		}
 		else{
 			target = headStr;
-			textureKey = null;
+			extraData = null;
 		}
 		ItemStack head = null;
 
 		EntityType eType = EvUtils.getEntityByName(target.toUpperCase());
 		if(eType != null){
-			if(textureKey != null){
-				if(pl.getAPI().textureExists(eType.name()+"|"+textureKey))
-					sender.sendMessage(ChatColor.GRAY+"Getting entity head with data value: "+textureKey);
+			if(extraData != null){
+				if(pl.getAPI().textureExists(eType.name()+"|"+extraData))
+					sender.sendMessage(ChatColor.GRAY+"Getting entity head with data value: "+extraData);
 				else
-					sender.sendMessage(ChatColor.RED+"Unknown data value for "+eType+": "+ChatColor.YELLOW+textureKey);
+					sender.sendMessage(ChatColor.RED+"Unknown data value for "+eType+": "+ChatColor.YELLOW+extraData);
 			}
-			head = pl.getAPI().getHead(eType, textureKey);
+			head = pl.getAPI().getHead(eType, null);
 		}
 		else{
 			OfflinePlayer p = pl.getServer().getOfflinePlayer(target);

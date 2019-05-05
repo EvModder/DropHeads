@@ -18,8 +18,10 @@ public final class DropHeads extends EvPlugin{
 		api = new HeadAPI();
 		getServer().getPluginManager().registerEvents(new EntitySpawnListener(), this);
 		getServer().getPluginManager().registerEvents(new EntityDeathListener(), this);
-		getServer().getPluginManager().registerEvents(new ItemDropListener(), this);//To fix stacking
-		//getServer().getPluginManager().registerEvents(new BlockBreakListener(), this);//To fix stacking
+		if(config.getBoolean("refresh-textures", true)){
+			getServer().getPluginManager().registerEvents(new ItemDropListener(), this);
+			getServer().getPluginManager().registerEvents(new BlockBreakListener(), this);
+		}
 
 		new CommandSpawnHead(this);
 		new Commanddebug_all_heads(this);

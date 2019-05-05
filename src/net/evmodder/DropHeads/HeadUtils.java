@@ -7,12 +7,10 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.bukkit.ChatColor;
-import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Skull;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.TropicalFish.Pattern;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
@@ -56,16 +54,6 @@ public class HeadUtils {
 		customHeads.put(EntityType.ZOMBIE_VILLAGER, "scraftbrothers11");
 		/*Need: DONKEY, LLAMA, MULE, SKELETON_HORSE ZOMBIE_HORSE, STRAY, ILLUSIONER */
 	}
-	static class CCP{
-		DyeColor bodyColor, patternColor;
-		Pattern pattern;
-		CCP(DyeColor color, DyeColor pColor, Pattern p){bodyColor = color; patternColor = pColor; pattern = p;}
-	}
-	public static final HashMap<CCP, String> tropicalFishNames;//Names for the 22 common tropical fish
-	static{
-		tropicalFishNames = new HashMap<CCP, String>();
-		tropicalFishNames.put(new CCP(DyeColor.ORANGE, DyeColor.GRAY, Pattern.STRIPEY), "Anemone");
-}
 
 	private static Field fieldProfileItem, fieldProfileBlock;
 //	private static RefClass classCraftWorld = ReflectionUtils.getRefClass("{cb}.CraftWorld");
@@ -150,24 +138,33 @@ public class HeadUtils {
 		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 		SkullMeta meta = (SkullMeta) head.getItemMeta();
 
-		String normalName = ChatColor.YELLOW+EvUtils.getNormalizedName(entity);
-		String MHF_Name = "MHF_"+EvUtils.getMHFHeadName(entity);
-
-		if(MHF_Lookup.containsKey(MHF_Name.toUpperCase())) meta.setOwner(MHF_Name);
-		else meta.setOwner(normalName);
-		meta.setDisplayName(normalName + (meta.getOwner().startsWith("MHF_") ? "" : " Head"));
+		String MHFName = EvUtils.getMHFHeadName(entity.name());
+		if(MHF_Lookup.containsKey(MHFName.toUpperCase())){
+			meta.setOwningPlayer(org.bukkit.Bukkit.getOfflinePlayer(MHFName));
+			meta.setDisplayName(ChatColor.YELLOW+MHFName);
+		}
+		else{
+			GameProfile profile = new GameProfile(UUID.nameUUIDFromBytes(entity.name().getBytes()), entity.name());
+			HeadUtils.setGameProfile(meta, profile);
+			meta.setDisplayName(ChatColor.YELLOW+EvUtils.getNormalizedName(entity.name())+" Head");
+		}
 		head.setItemMeta(meta);
 		return head;
 	}
 
-	public static ItemStack getPlayerHead(OfflinePlayer player){
+	public static ItemStack getPlayerHead(GameProfile profile){
 		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 		SkullMeta meta = (SkullMeta) head.getItemMeta();
-		GameProfile profile = new GameProfile(player.getUniqueId(), player.getName());
 		setGameProfile(meta, profile);
-		meta.setOwningPlayer(player);
-		meta.setDisplayName(ChatColor.YELLOW+player.getName()+" Head");
+		if(profile.getName() != null){
+			if(profile.getName().startsWith("MHF_")) meta.setDisplayName(ChatColor.YELLOW+profile.getName());
+			else meta.setDisplayName(ChatColor.YELLOW+profile.getName()+" Head");
+		}
 		head.setItemMeta(meta);
 		return head;
+	}
+	public static ItemStack getPlayerHead(OfflinePlayer player){
+		GameProfile profile = new GameProfile(player.getUniqueId(), player.getName());
+		return getPlayerHead(profile);
 	}
 }

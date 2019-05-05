@@ -1,5 +1,7 @@
 package net.evmodder.DropHeads;
 
+import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.UUID;
 import org.bukkit.ChatColor;
@@ -16,18 +18,23 @@ import net.evmodder.EvLib2.FileIO;
 
 public class HeadAPI {
 	final private DropHeads pl;
-	final boolean grummEnabled;
+	final boolean grummEnabled, updateOldPlayerHeads;
 	final TreeMap<String, String> textures;
 
 	HeadAPI(){
 		textures = new TreeMap<String, String>();
 		pl = DropHeads.getPlugin();
 		grummEnabled = pl.getConfig().getBoolean("grumm-heads", true);
+		updateOldPlayerHeads = pl.getConfig().getBoolean("update-on-skin-change", true);
 
-		String pluginHeadList = FileIO.loadResource(pl, "head-textures.txt");
-		String localHeadList = FileIO.loadFile("head-textures.txt",
-				pl.getClass().getResourceAsStream("/head-textures.txt"));
-		String headsList = pluginHeadList.concat("\n"+localHeadList);
+		String hardcodedList = FileIO.loadResource(pl, "head-textures.txt");
+		loadTextures(hardcodedList);
+//		String localList = FileIO.loadFile("head-textures.txt", pl.getClass().getResourceAsStream("/head-textures.txt"));
+		String localList = FileIO.loadFile("head-textures.txt", hardcodedList);
+		loadTextures(localList);
+	}
+
+	void loadTextures(String headsList){
 		for(String head : headsList.split("\n")){
 			head = head.replaceAll(" ", "");
 			int i = head.indexOf(":");
@@ -52,56 +59,51 @@ public class HeadAPI {
 				pl.getLogger().warning("Invalid entity name '"+head.substring(0, i)+"' from head-list.txt file!");
 			}
 		}
+		// Sometimes a texture value is just a reference to a different texture key
+		Iterator<Entry<String, String>> it = textures.entrySet().iterator();
+		while(it.hasNext()){
+			Entry<String, String> e = it.next();
+			String redirect = e.getValue();
+			while((redirect=textures.get(redirect)) != null) e.setValue(redirect);
+		}
 	}
 
 	public boolean textureExists(String textureKey){return textures.containsKey(textureKey);}
 	public TreeMap<String, String> getTextures(){return textures;}
 
-	public ItemStack makeTextureSkull(EntityType entity, String textureKey){
+	public ItemStack makeTextureSkull(String textureKey){
+		// Attempt to parse out an EntityType
+		EntityType eType;
+		int j = textureKey.indexOf('|');
+		String nameStr = (j == -1 ? textureKey : textureKey.substring(0, j)).toUpperCase();
+		try{eType = EntityType.valueOf(nameStr);}
+		catch(IllegalArgumentException ex){
+			pl.getLogger().warning("Unknown EntityType: "+nameStr+"!");
+			eType = null;// This is OK; we'll just use textureKey[0]
+		}
 		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
-		String code = textures.get(textureKey);
-		if(code == null) return item;
 		SkullMeta meta = (SkullMeta) item.getItemMeta();
 
-		GameProfile profile = new GameProfile(UUID.nameUUIDFromBytes(code.getBytes()), entity.name()+"|"+textureKey);
-		profile.getProperties().put("textures", new Property("textures", code));
+		UUID uuid = UUID.nameUUIDFromBytes(textureKey.getBytes());// Stable UUID for this textureKey
+		GameProfile profile = new GameProfile(uuid, textureKey);// Initialized with UUID and name
+		String code = textures.get(textureKey);
+		if(code != null) profile.getProperties().put("textures", new Property("textures", code));
 		HeadUtils.setGameProfile(meta, profile);
 
-		meta.setDisplayName(ChatColor.YELLOW+EvUtils.getNormalizedName(entity)+" Head");
+		meta.setDisplayName(ChatColor.YELLOW+TextureKeyLookup.getNameFromKey(eType, textureKey)+" Head");
 		item.setItemMeta(meta);
 		return item;
 	}
 
-	public ItemStack getHead(EntityType entity, String data){
-		if(data != null && data.isEmpty()) data = null;
-		switch(entity){
-			case WITHER_SKELETON:
-				return new ItemStack(Material.WITHER_SKELETON_SKULL);
-			case SKELETON:
-				return new ItemStack(Material.SKELETON_SKULL);
-			case ENDER_DRAGON:
-				return new ItemStack(Material.DRAGON_HEAD);
-			case ZOMBIE:
-				if(data == null) return new ItemStack(Material.ZOMBIE_HEAD);
-			case CREEPER:
-				if(data == null) return new ItemStack(Material.CREEPER_HEAD);
-			default:
-				String textureKey = entity.name() + (data == null ? "" : "|"+data);
-				if(textures.containsKey(textureKey)) return makeTextureSkull(entity, textureKey);
-				else return HeadUtils.makeSkull(entity);
-			}
-	}
-
-	public ItemStack getHead(LivingEntity entity){
-		String textureKey = TextureKeyEntityLookup.getTextureKey(entity);
-		if(grummEnabled && EvUtils.hasGrummName(entity) && textures.containsKey(textureKey+"|GRUMM")) 
-			return makeTextureSkull(entity.getType(), textureKey+"|GRUMM");
-
-		// If there is no special "texture metadata"
-		if(textureKey.indexOf('|') == -1)
-		switch(entity.getType()){
+	public ItemStack getHead(EntityType eType, String textureKey){
+		// If there is extra "texture metadata" we should return the custom
+		// skull instead of a just, say, a basic creeper head
+		if(textureKey != null && textureKey.indexOf('|') != -1 && textures.containsKey(textureKey)){
+			return makeTextureSkull(textureKey);
+		}
+		switch(eType){
 			case PLAYER:
-				return HeadUtils.getPlayerHead((OfflinePlayer)entity);
+				return new ItemStack(Material.PLAYER_HEAD);
 			case WITHER_SKELETON:
 				return new ItemStack(Material.WITHER_SKELETON_SKULL);
 			case SKELETON:
@@ -113,11 +115,30 @@ public class HeadAPI {
 			case ENDER_DRAGON:
 				return new ItemStack(Material.DRAGON_HEAD);
 			default:
-				if(textures.containsKey(textureKey)) return makeTextureSkull(entity.getType(), textureKey);
-				else return HeadUtils.makeSkull(entity.getType());
+				if(textures.containsKey(eType.name())) return makeTextureSkull(eType.name());
+				else return HeadUtils.makeSkull(eType);
+			}
+	}
+
+	public ItemStack getHead(LivingEntity entity){
+		if(entity.getType() == EntityType.PLAYER) return HeadUtils.getPlayerHead((OfflinePlayer)entity);
+		String textureKey = TextureKeyLookup.getTextureKey(entity);
+		if(grummEnabled && EvUtils.hasGrummName(entity) && textures.containsKey(textureKey+"|GRUMM")) 
+			return makeTextureSkull(textureKey+"|GRUMM");
+		return getHead(entity.getType(), textureKey);
+	}
+
+	public ItemStack getHead(GameProfile profile){
+		if(profile == null || profile.getName() == null) return null;
+		if(pl.getAPI().textureExists(profile.getName())){//Refresh this EntityHead texture
+			return makeTextureSkull(profile.getName());
 		}
-		else if(textures.containsKey(textureKey) || textures.containsKey(textureKey=entity.getType().name()))
-			return makeTextureSkull(entity.getType(), textureKey);
-		else return HeadUtils.makeSkull(entity.getType());
+		else{//Looks like a PlayerHead
+			OfflinePlayer p = pl.getServer().getOfflinePlayer(profile.getId());
+			if(p != null && p.getName() != null){
+				if(updateOldPlayerHeads || p.getName().equals(profile.getName())) return HeadUtils.getPlayerHead(p);
+			}
+		}
+		return HeadUtils.getPlayerHead(profile);
 	}
 }

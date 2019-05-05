@@ -7,7 +7,6 @@ import org.bukkit.Material;
 import org.bukkit.block.Skull;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -60,9 +59,7 @@ public class Commanddebug_all_heads extends CommandBase{
 					while(key.endsWith("|GRUMM") && it.hasNext()) key = it.next();
 					if(key.endsWith("|GRUMM")) break;
 				}
-				int j = key.indexOf('|');
-				EntityType type = EntityType.valueOf(j == -1 ? key : key.substring(0, j));
-				ItemStack skullItem = api.makeTextureSkull(type, key);
+				ItemStack skullItem = api.makeTextureSkull(key);
 				hLoc.getBlock().setType(Material.PLAYER_HEAD);
 				Skull blockState = (Skull) hLoc.getBlock().getState();
 				blockState.setType(Material.PLAYER_HEAD);
