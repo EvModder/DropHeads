@@ -31,7 +31,7 @@ public class EntitySpawnListener implements Listener{
 							Float.parseFloat(line.substring(i+1)));
 				}
 				catch(IllegalArgumentException ex){
-					plugin.getLogger().severe("Invalid SpawnReason: '"+line+"' in config file!");
+					plugin.getLogger().warning("Unknown SpawnReason: '"+line+"' in config file!");
 				}
 			}
 		}
