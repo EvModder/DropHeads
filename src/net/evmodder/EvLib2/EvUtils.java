@@ -25,6 +25,17 @@ public class EvUtils{
 		return evPlugins;
 	}
 
+	public static String capitalizeAndSpacify(String str, char toSpace){
+		StringBuilder builder = new StringBuilder("");
+		boolean lower = false;
+		for(char ch : str.toCharArray()){
+			if(ch == toSpace){builder.append(' '); lower=false;}
+			else if(lower) builder.append(Character.toLowerCase(ch));
+			else{builder.append(Character.toUpperCase(ch)); lower = true;}
+		}
+		return builder.toString();
+	}
+
 	public static Gene getPandaTrait(Panda panda){
 		if(panda.getMainGene() == panda.getHiddenGene()) return panda.getMainGene();
 		switch(panda.getMainGene()){
@@ -65,49 +76,49 @@ public class EvUtils{
 	}
 
 	public static EntityType getEntityByName(String name){
+		//TODO: improve this algorithm / test for errors
 		if(name.toUpperCase().startsWith("MHF_")) name = normalizedNameFromMHFName(name);
-		name = name.toUpperCase().replace("_", "");
+		name = name.toUpperCase().replace(' ', '_');
 
 		try{EntityType type = EntityType.valueOf(name.toUpperCase()); return type;}
 		catch(IllegalArgumentException ex){}
+		name = name.replace("_", "");
 		for(EntityType t : EntityType.values()) if(t.name().replace("_", "").equals(name)) return t;
 		if(name.equals("ZOMBIEPIGMAN")) return EntityType.PIG_ZOMBIE;
 		else if(name.equals("MOOSHROOM")) return EntityType.MUSHROOM_COW;
-//		DropHeads.getPlugin().getLogger().warning("Error!! Could not find mob by name: "+name);
-		return null;
+		return EntityType.UNKNOWN;
 	}
-	public static String getMHFHeadName(EntityType type){
-		//TODO: improve this algorithm / test for errors
-		switch(type){
-		case MAGMA_CUBE:
-			return "LavaSlime";
-		case IRON_GOLEM:
-			return "Golem";
-		case WITHER_SKELETON:
-			return "WSkeleton";
-		case CAVE_SPIDER:
-			return "CaveSpider";
+	public static String getMHFHeadName(String eType){
+		switch(eType){
+		case "MAGMA_CUBE":
+			return "MHF_LavaSlime";
+		case "IRON_GOLEM":
+			return "MHF_Golem";
+		case "MOOSHROOM":
+			return "MHF_MushroomCow";
+		case "WITHER_SKELETON":
+			return "MHF_Wither";
 		default:
-			return type.name().charAt(0)+type.name().substring(1).replace("_", "").toLowerCase();
+			StringBuilder builder = new StringBuilder("MHF_");
+			boolean lower = false;
+			for(char ch : eType.toCharArray()){
+				if(ch == '_') lower = false;
+				else if(lower) builder.append(Character.toLowerCase(ch));
+				else{builder.append(Character.toUpperCase(ch)); lower = true;}
+			}
+			return builder.toString();
 		}
 	}
-	public static String getNormalizedName(EntityType type){
+	public static String getNormalizedName(String eType){
 		//TODO: improve this algorithm / test for errors
-		switch(type){
-		case PIG_ZOMBIE:
+		switch(eType){
+		case "PIG_ZOMBIE":
 			return "Zombie Pigman";
-		case MUSHROOM_COW:
+		case "MUSHROOM_COW":
 			return "Mooshroom";
-		case TROPICAL_FISH:
-			return "need more data";//TODO: oof
+		case "TROPICAL_FISH"://TODO: 22 varieties, e.g. Clownfish
 		default:
-			StringBuilder name = new StringBuilder();
-			for(String str : type.name().split("_")){
-				name.append(str.charAt(0));
-				name.append(str.substring(1).toLowerCase());
-				name.append(" ");
-			}
-			return name.substring(0, name.length()-1);
+			return capitalizeAndSpacify(eType, '_');
 		}
 	}
 	public static String normalizedNameFromMHFName(String mhfName){
