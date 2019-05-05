@@ -3,7 +3,6 @@ package net.evmodder.DropHeads.listeners;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
@@ -26,9 +25,11 @@ public class EntitySpawnListener implements Listener{
 			line = line.replace(" ", "").replace("\t", "").toUpperCase();
 			int i = line.indexOf(":");
 			if(i != -1){
-				try{spawnModifiers.put(
-						SpawnReason.valueOf(line.substring(0, i)),
-						Float.parseFloat(line.substring(i+1)));}
+				try{
+					spawnModifiers.put(
+							SpawnReason.valueOf(line.substring(0, i)),
+							Float.parseFloat(line.substring(i+1)));
+				}
 				catch(IllegalArgumentException ex){
 					plugin.getLogger().severe("Invalid SpawnReason: '"+line+"' in config file!");
 				}

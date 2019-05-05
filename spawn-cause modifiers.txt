@@ -3,10 +3,9 @@
 # Where [modifier] is a value greater than or equal to 0.
 # if the value is 0, heads of mobs spawned this way will never drop.
 # if the value is 1, heads will drop at the same chance as normal
-# the chance of dropping a head is [modifier] * [the chance before modifier]
+# the new drop chance is [modifier] * [the chance before modifier]
 
-
-# When an animal breeds to create a child
+# When an animal breeds to create a baby
 BREEDING: 0.05
 
 # When an iron golem is spawned by being built
@@ -20,6 +19,7 @@ BUILD_WITHER: 1
 
 # When a creature spawns due to chunk generation
 CHUNK_GEN: 1.5
+
 
 # When a villager is cured from infection
 CURED: 4
@@ -35,6 +35,9 @@ DISPENSE_EGG: 0.05
 
 # When a creature spawns from an egg
 EGG: 0.05
+
+# When a endermite is spawned as a result of enderpearl usage
+ENDER_PEARL: 1
 
 # When a zombie infects a villager
 INFECTION: 1
@@ -59,6 +62,12 @@ OCELOT_BABY: 1
 
 # When an entity calls for reinforcements
 REINFORCEMENTS: 0.5
+
+# When a cow is spawned by shearing a mushroom cow
+SHEARED: 1
+
+# When a parrot disconnects from the shoulder of another creature, becoming its own entity
+SHOULDER_ENTITY: 1
 
 # When a silverfish spawns from a block
 SILVERFISH_BLOCK: 1
