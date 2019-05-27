@@ -14,10 +14,10 @@ import org.bukkit.inventory.meta.SkullMeta;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.HeadAPI;
 import net.evmodder.DropHeads.HeadUtils;
-import net.evmodder.EvLib.CommandBase;
+import net.evmodder.EvLib.EvCommand;
 import net.evmodder.EvLib.EvPlugin;
 
-public class Commanddebug_all_heads extends CommandBase{
+public class Commanddebug_all_heads extends EvCommand{
 //	private final EvPlugin pl;
 
 	public Commanddebug_all_heads(EvPlugin plugin) {
