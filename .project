@@ -3,6 +3,7 @@
 	<name>DropHeads</name>
 	<comment>Minecraft Plugin</comment>
 	<projects>
+		<project>EvLib</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
@@ -14,4 +15,11 @@
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>EvLib</name>
+			<type>2</type>
+			<location>/Users/Nate/Dropbox/Minecraft/Development/Plugins/EvLib/src</location>
+		</link>
+	</linkedResources>
 </projectDescription>

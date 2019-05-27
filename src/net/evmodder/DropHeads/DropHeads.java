@@ -2,8 +2,8 @@ package net.evmodder.DropHeads;
 
 import net.evmodder.DropHeads.commands.*;
 import net.evmodder.DropHeads.listeners.*;
-import net.evmodder.EvLib2.EvPlugin;
-import net.evmodder.EvLib2.Updater;
+import net.evmodder.EvLib.EvPlugin;
+import net.evmodder.EvLib.Updater;
 
 public final class DropHeads extends EvPlugin{
 	private static DropHeads instance; public static DropHeads getPlugin(){return instance;}

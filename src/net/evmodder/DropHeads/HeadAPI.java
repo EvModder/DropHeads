@@ -13,8 +13,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import net.evmodder.EvLib2.EvUtils;
-import net.evmodder.EvLib2.FileIO;
+import net.evmodder.EvLib.EvUtils;
+import net.evmodder.EvLib.FileIO;
 
 public class HeadAPI {
 	final private DropHeads pl;

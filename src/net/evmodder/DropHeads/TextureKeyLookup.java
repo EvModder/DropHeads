@@ -19,11 +19,11 @@ import org.bukkit.entity.Shulker;
 import org.bukkit.entity.TraderLlama;
 import org.bukkit.entity.TropicalFish;
 import org.bukkit.entity.TropicalFish.Pattern;
+import net.evmodder.EvLib.EvUtils;
 import org.bukkit.entity.Vex;
 import org.bukkit.entity.Villager;
 import org.bukkit.entity.Wolf;
 import org.bukkit.entity.ZombieVillager;
-import net.evmodder.EvLib2.EvUtils;
 
 public class TextureKeyLookup{
 	static class CCP{

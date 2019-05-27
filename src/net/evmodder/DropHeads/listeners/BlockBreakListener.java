@@ -10,7 +10,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.HeadUtils;
-import net.evmodder.EvLib2.EvUtils;
+import net.evmodder.EvLib.EvUtils;
 
 public class BlockBreakListener implements Listener{
 	@EventHandler(priority = EventPriority.MONITOR)

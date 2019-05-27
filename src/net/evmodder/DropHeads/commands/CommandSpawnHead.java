@@ -1,5 +1,7 @@
 package net.evmodder.DropHeads.commands;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -11,9 +13,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.HeadUtils;
-import net.evmodder.EvLib2.CommandBase;
-import net.evmodder.EvLib2.EvUtils;
-import net.evmodder.EvLib2.Extras;
+import net.evmodder.EvLib.CommandBase;
+import net.evmodder.EvLib.EvUtils;
 
 public class CommandSpawnHead extends CommandBase{
 	final private DropHeads pl;
@@ -23,7 +24,7 @@ public class CommandSpawnHead extends CommandBase{
 		pl = plugin;
 	}
 
-	String formatMaterialName(Material type){
+	String nameFromType(Material type){
 		StringBuilder builder = new StringBuilder("");
 		boolean lower = false;
 		for(char c : type.toString().toCharArray()){
@@ -32,6 +33,18 @@ public class CommandSpawnHead extends CommandBase{
 			else{builder.append(c); lower = true;}
 		}
 		return builder.toString();
+	}
+
+	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
+		if(args.length == 1 && sender instanceof Player && label.equalsIgnoreCase(cmd.getName())){
+			final List<String> tabCompletes = new ArrayList<String>();
+			args[0] = args[0].toUpperCase();
+			for(String key : pl.getAPI().getTextures().keySet()){
+				if(key.startsWith(args[0])) tabCompletes.add(key);
+			}
+			return tabCompletes;
+		}
+		return null;
 	}
 
 	@SuppressWarnings("deprecation") @Override
@@ -55,7 +68,7 @@ public class CommandSpawnHead extends CommandBase{
 		ItemStack head = null;
 
 		EntityType eType = EvUtils.getEntityByName(target.toUpperCase());
-		if(eType != null){
+		if((eType != null && eType != EntityType.UNKNOWN) || pl.getAPI().textureExists(eType.name()+"|"+extraData)){
 			if(extraData != null){
 				if(pl.getAPI().textureExists(eType.name()+"|"+extraData))
 					sender.sendMessage(ChatColor.GRAY+"Getting entity head with data value: "+extraData);
@@ -66,8 +79,7 @@ public class CommandSpawnHead extends CommandBase{
 		}
 		else{
 			OfflinePlayer p = pl.getServer().getOfflinePlayer(target);
-			if(p.hasPlayedBefore() || Extras.checkExists(p.getName())){
-				//sender.sendMessage("Getting head for player: "+target);
+			if(p.hasPlayedBefore() || EvUtils.checkExists(p.getName())){
 				head = HeadUtils.getPlayerHead(p);
 			}
 			else if(target.startsWith("MHF_") && HeadUtils.MHF_Lookup.containsKey(target.toUpperCase())){
@@ -83,7 +95,7 @@ public class CommandSpawnHead extends CommandBase{
 		}
 		if(head != null){
 			String headName = head.hasItemMeta() && head.getItemMeta().hasDisplayName()
-					? head.getItemMeta().getDisplayName() : formatMaterialName(head.getType());
+					? head.getItemMeta().getDisplayName() : nameFromType(head.getType());
 			((Player)sender).getInventory().addItem(head);
 			sender.sendMessage(ChatColor.GREEN+"Spawned Head: " + ChatColor.GOLD + headName);
 		}

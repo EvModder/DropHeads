@@ -1,6 +1,7 @@
 package net.evmodder.DropHeads.commands;
 
 import java.util.Iterator;
+import java.util.List;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -13,8 +14,8 @@ import org.bukkit.inventory.meta.SkullMeta;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.HeadAPI;
 import net.evmodder.DropHeads.HeadUtils;
-import net.evmodder.EvLib2.CommandBase;
-import net.evmodder.EvLib2.EvPlugin;
+import net.evmodder.EvLib.CommandBase;
+import net.evmodder.EvLib.EvPlugin;
 
 public class Commanddebug_all_heads extends CommandBase{
 //	private final EvPlugin pl;
@@ -23,6 +24,9 @@ public class Commanddebug_all_heads extends CommandBase{
 		super(plugin);
 //		pl = plugin;
 	}
+
+	@Override
+	public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){return null;}
 
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String args[]){

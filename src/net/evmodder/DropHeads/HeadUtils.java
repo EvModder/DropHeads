@@ -15,7 +15,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import net.evmodder.EvLib2.EvUtils;
+import net.evmodder.EvLib.EvUtils;
 
 public class HeadUtils {
 	public static final String[] MHF_Heads = new String[]{//Standard, Mojang-Provided MHF Heads
@@ -32,7 +32,7 @@ public class HeadUtils {
 	public static final Map<String, String> MHF_Lookup =
 			Stream.of(MHF_Heads).collect(Collectors.toMap(h -> h.toUpperCase(), h -> h));
 
-	public static final HashMap<EntityType, String> customHeads;//People who have set their skins to an Entity's head
+	public static final HashMap<EntityType, String> customHeads;//People who have set their skin to an Entity's head
 	static{
 		customHeads = new HashMap<EntityType, String>();
 		customHeads.put(EntityType.BAT, "ManBatPlaysMC");
@@ -52,7 +52,6 @@ public class HeadUtils {
 		customHeads.put(EntityType.WITCH, "MHF_Witch");//made by player
 		customHeads.put(EntityType.WOLF, "MHF_Wolf");//made by player
 		customHeads.put(EntityType.ZOMBIE_VILLAGER, "scraftbrothers11");
-		/*Need: DONKEY, LLAMA, MULE, SKELETON_HORSE ZOMBIE_HORSE, STRAY, ILLUSIONER */
 	}
 
 	private static Field fieldProfileItem, fieldProfileBlock;
