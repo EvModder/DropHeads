@@ -36,7 +36,7 @@ public class CommandSpawnHead extends EvCommand{
 	}
 
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
-		if(args.length == 1 && sender instanceof Player && label.equalsIgnoreCase(cmd.getName())){
+		if(args.length == 1 && sender instanceof Player){
 			final List<String> tabCompletes = new ArrayList<String>();
 			args[0] = args[0].toUpperCase();
 			for(String key : pl.getAPI().getTextures().keySet()){
@@ -68,14 +68,15 @@ public class CommandSpawnHead extends EvCommand{
 		ItemStack head = null;
 
 		EntityType eType = EvUtils.getEntityByName(target.toUpperCase());
-		if((eType != null && eType != EntityType.UNKNOWN) || pl.getAPI().textureExists(eType.name()+"|"+extraData)){
+		String textureKey = eType.name()+"|"+extraData;
+		if((eType != null && eType != EntityType.UNKNOWN) || pl.getAPI().textureExists(textureKey)){
 			if(extraData != null){
-				if(pl.getAPI().textureExists(eType.name()+"|"+extraData))
+				if(pl.getAPI().textureExists(textureKey))
 					sender.sendMessage(ChatColor.GRAY+"Getting entity head with data value: "+extraData);
 				else
 					sender.sendMessage(ChatColor.RED+"Unknown data value for "+eType+": "+ChatColor.YELLOW+extraData);
 			}
-			head = pl.getAPI().getHead(eType, null);
+			head = pl.getAPI().getHead(eType, textureKey);
 		}
 		else{
 			OfflinePlayer p = pl.getServer().getOfflinePlayer(target);
