@@ -19,8 +19,8 @@ public class EntitySpawnListener implements Listener{
 		plugin = DropHeads.getPlugin();
 
 		//load spawn cause modifiers
-		InputStream defaultModifiers = plugin.getClass().getResourceAsStream("/spawn-cause modifiers.txt");
-		String modifiers = FileIO.loadFile("spawn-cause modifiers.txt", defaultModifiers);
+		InputStream defaultModifiers = plugin.getClass().getResourceAsStream("/spawn-cause-modifiers.txt");
+		String modifiers = FileIO.loadFile("spawn-cause-modifiers.txt", defaultModifiers);
 		for(String line : modifiers.split("\n")){
 			line = line.replace(" ", "").replace("\t", "").toUpperCase();
 			int i = line.indexOf(":");
