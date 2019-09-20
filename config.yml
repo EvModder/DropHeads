@@ -1,6 +1,14 @@
 # Only drop heads when killed directly by a player
 player-kills-only: true
 
+# Whether to drop heads if killed by projectile weapon from a player
+# Only checked if player-kills-only is true
+drop-for-ranged-kills: false
+
+# Whether to drop heads for any death cause if last-damager is a player
+# Only checked if player-kills-only is true
+drop-for-indirect-kills: false
+
 # Only drop player heads (you can also do this in "default chances" file
 # by making all mobs except players have a 0% chance of dropping a head)
 player-heads-only: false
@@ -8,30 +16,35 @@ player-heads-only: false
 # Whether to keep entity heads synced with the latest vanilla textures
 refresh-textures: true
 
+# Whether to reset the item name for a head when refreshing its texture
+refresh-item-names: false
+
 # When a player changes their skin, should old heads be updated to the
 # new texture? Note: to refresh, heads must be mined or dropped
 update-on-skin-change: false
 
 # Enable the mechanic where any mob killed by a charged creeper explosion
 # will drop its head with 100% probability * the spawn-cause modifier
-# This setting will override "player-kills-only" (but not "player-heads-only")
+# This setting overrides "player-kills-only" (but not "player-heads-only")
 charged-creeper-drops: true
 
 # A Minecraft easter egg is that mobs named 'Dinnerbone' or 'Grumm' are
 # upside down.. If you want their heads to share this trait, set to true
 grumm-heads: true
 
-# Percent increase in drop chance per looting level
-looting-bonus: 0.4
-
-# Uses non-linear (taylor series modifiers) when calculating drop chance
-use-taylor-modifiers: true
+# Uses non-linear function when calculating drop chance looting modifier.
+# If set to 'false', each looting level will add 1% to the drop chance.
+use-taylor-modifiers: false
 
 # Only drop heads if the killer used an axe
 must-use-axe: false
 
 # Enable plugin Updater (checks for new versions with new head textures)
-update-plugin: true
+# Note: Disabled by default because some servers have reported errors
+update-plugin: false
+
+# Run in debug mode (prints extra information to console)
+debug-messages: true
 
 # (Optional) Whitelist of tools a player must be using for heads to drop
 # If "must-use-axe" is enabled, this list will be ignored
@@ -43,6 +56,7 @@ must-use:
 
 # (Optional) Let certain tools have a higher chance of beheading
 # The number is the percent increase in drop chance when using that tool
+# Eg: 3 = 3x chance, 0.8 = 80% chance increase, etc.
 specific-tool-modifiers:
   GOLD_AXE: 3
   DIAMOND_AXE: 1

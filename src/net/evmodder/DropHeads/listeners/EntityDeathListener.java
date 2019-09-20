@@ -3,9 +3,8 @@ package net.evmodder.DropHeads.listeners;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.Iterator;
 import java.util.Random;
-import java.util.Set;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
@@ -14,6 +13,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -21,27 +21,33 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import net.evmodder.DropHeads.DropHeads;
+import net.evmodder.EvLib.EvUtils;
 import net.evmodder.EvLib.FileIO;
 
 public class EntityDeathListener implements Listener{
 	final DropHeads pl;
-	final boolean playerKillsOnly, playerHeadsOnly, useTaylorModifiers, chargedCreepers;
-	final Set<Material> mustUseTools = new HashSet<Material>();
-	final Set<EntityType> noLootingEffectMobs = new HashSet<EntityType>();
-	final Map<EntityType, Float> mobChances = new HashMap<EntityType, Float>();
-	final Map<Material, Float> toolBonuses = new HashMap<Material, Float>();
-	final double lootingBonus; double DEFAULT_CHANCE;
+	final boolean playerKillsOnly, allowIndirectKills, allowProjectileKills; 
+	final boolean playerHeadsOnly, useTaylorModifiers, CHARGED_CREEPER_DROPS;
+	final HashSet<Material> mustUseTools;
+	final HashSet<EntityType> noLootingEffectMobs;
+	final HashMap<EntityType, Double> mobChances;
+	final HashMap<Material, Double> toolBonuses;
+	double DEFAULT_CHANCE;
 	final Random rand;
+	final boolean DEBUG_MODE;
 
 	public EntityDeathListener(){
 		pl = DropHeads.getPlugin();
 		playerKillsOnly = pl.getConfig().getBoolean("player-kills-only", true);
+		allowIndirectKills = pl.getConfig().getBoolean("drop-for-indirect-kills", false);
+		allowProjectileKills = pl.getConfig().getBoolean("drop-for-ranged-kills", false);
 		playerHeadsOnly = pl.getConfig().getBoolean("player-heads-only", false);
 		useTaylorModifiers = pl.getConfig().getBoolean("use-taylor-modifiers", true);
-		chargedCreepers = pl.getConfig().getBoolean("charged-creeper-drops", true);
-		lootingBonus = pl.getConfig().getDouble("looting-bonus", 0.4);
+		CHARGED_CREEPER_DROPS = pl.getConfig().getBoolean("charged-creeper-drops", true);
+		DEBUG_MODE = pl.getConfig().getBoolean("debug-messages", true);
 		rand = new Random();
 
+		mustUseTools = new HashSet<Material>();
 		if(pl.getConfig().getBoolean("must-use-axe")){
 			mustUseTools.add(Material.DIAMOND_AXE);
 			mustUseTools.add(Material.IRON_AXE);
@@ -56,95 +62,114 @@ public class EntityDeathListener implements Listener{
 			else pl.getLogger().warning("Unknown Tool \""+toolName+"\"!");
 		}
 
+		toolBonuses = new HashMap<Material, Double>();
 		ConfigurationSection specificModifiers = pl.getConfig().getConfigurationSection("specific-tool-modifiers");
 		if(specificModifiers != null) for(String toolName : specificModifiers.getKeys(false)){
 			Material mat = Material.getMaterial(toolName.toUpperCase());
-			if(mat != null) toolBonuses.put(mat, (float) specificModifiers.getDouble(toolName));
+			if(mat != null) toolBonuses.put(mat, specificModifiers.getDouble(toolName));
 		}
 
 		//Load individual mobs' drop chances
 		InputStream defaultChances = pl.getClass().getResourceAsStream("/head-drop-rates.txt");
 		String chances = FileIO.loadFile("head-drop-rates.txt", defaultChances);
 
+		mobChances = new HashMap<EntityType, Double>();
+		noLootingEffectMobs = new HashSet<EntityType>();
 		for(String line : chances.split("\n")){
 			String[] parts = line.replace(" ", "").replace("\t", "").toUpperCase().split(":");
-			if(parts.length > 1){
-				try{
-					if(parts[0].equals("UNKNOWN")){
-						DEFAULT_CHANCE = Float.parseFloat(parts[1]);
-						continue;
-					}
-					EntityType eType = EntityType.valueOf(parts[0]);
-					float dropChance = Float.parseFloat(parts[1]);
-					mobChances.put(eType, dropChance);
-					if(parts.length > 2 && parts[2].equals("NOLOOTING")) noLootingEffectMobs.add(eType);
-					// Commented out to allow >1 because Spawn-Reason modifiers are added after this
-					/*if(dropChance > 1F){
-						pl.getLogger().severe("Invalid value: "+parts[1]);
-						pl.getLogger().severe("Drop chance must be between 0 and 1");
-						mobChances.put(eType, Math.min(dropChance/10F, 1F));
-					}*/
+			if(parts.length < 2) continue;
+			try{
+				if(parts[0].equals("UNKNOWN")){
+					DEFAULT_CHANCE = Float.parseFloat(parts[1]);
+					continue;
 				}
-				catch(NumberFormatException ex){pl.getLogger().severe("Invalid value: "+parts[1]);}
-				catch(IllegalArgumentException ex){
-					pl.getLogger().severe("Unknown entity type: "+parts[0]);
-				}
+				EntityType eType = EntityType.valueOf(parts[0]);
+				double dropChance = Double.parseDouble(parts[1]);
+				mobChances.put(eType, dropChance);
+				if(parts.length > 2 && parts[2].equals("NOLOOTING")) noLootingEffectMobs.add(eType);
+				// Commented out to allow >1 because Spawn-Reason modifiers are added after this
+				/*if(dropChance > 1F){
+					pl.getLogger().severe("Invalid value: "+parts[1]);
+					pl.getLogger().severe("Drop chance must be between 0 and 1");
+					mobChances.put(eType, Math.min(dropChance/10F, 1F));
+				}*/
+			}
+			catch(NumberFormatException ex){pl.getLogger().severe("Invalid value: "+parts[1]);}
+			catch(IllegalArgumentException ex){
+				pl.getLogger().severe("Unknown entity type: "+parts[0]);
 			}
 		}
 	}
 
+	static long timeSinceLastPlayerDamage(Entity entity){
+		long lastDamage = entity.hasMetadata("PlayerDamage") ? entity.getMetadata("PlayerDamage").get(0).asLong() : 0;
+		return System.currentTimeMillis() - lastDamage;
+	}
+	static double getSpawnCauseModifier(Entity e){
+		return e.hasMetadata("SpawnReason") ? e.getMetadata("SpawnReason").get(0).asDouble() : 1D;
+	}
+
 	@EventHandler
 	public void entityDeathEvent(EntityDeathEvent evt){
-		double rawDropChance, dropChance;
-		double lootBonus = 0D, toolBonus = 0D;
-		double spawnCauseModifier = evt.getEntity().hasMetadata("SpawnReason") ?
-				evt.getEntity().getMetadata("SpawnReason").get(0).asDouble() : 1D;
-
-		if(playerHeadsOnly && evt.getEntity() instanceof Player == false) return;
-
+		LivingEntity victim = evt.getEntity();
+		if(playerHeadsOnly && victim instanceof Player == false) return;
 		Entity killer = null;
-		EntityDamageEvent lastDamage = evt.getEntity().getLastDamageCause();
+		boolean killedByChargedCreeper = false, alwaysBeheadPerm = false;
+		double lootingBonus = 0D, weaponBonus = 0D;
+		EntityDamageEvent lastDamage = victim.getLastDamageCause();
 		if(lastDamage != null && lastDamage instanceof EntityDamageByEntityEvent){
 			killer = ((EntityDamageByEntityEvent)lastDamage).getDamager();
-
-			if(chargedCreepers && killer instanceof Creeper && ((Creeper)killer).isPowered()) dropChance = 1D;
-			else if(playerKillsOnly && killer instanceof Player == false) return;
-			else if(!killer.hasPermission("evp.dropheads.canbehead")) return;
-			else{
-				ItemStack heldItem = null;
-				if(killer instanceof LivingEntity){
-					heldItem = ((LivingEntity)killer).getEquipment().getItemInMainHand();
-					if(heldItem != null){
-						lootBonus = heldItem.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS)*lootingBonus;
-						if(toolBonuses.containsKey(heldItem.getType())) toolBonus = toolBonuses.get(heldItem.getType());
-					}
-				}
-				if(!mustUseTools.isEmpty() && (heldItem == null || !mustUseTools.contains(heldItem.getType()))) return;
-
-				if(killer.hasPermission("evp.dropheads.alwaysbehead")) dropChance = spawnCauseModifier = 1D;
-				else dropChance = mobChances.containsKey(evt.getEntityType()) ? mobChances.get(evt.getEntityType()) : 0D;
+			if(killer instanceof Creeper && ((Creeper)killer).isPowered()) killedByChargedCreeper = true;
+			//"else if" - Overrides "player-kills-only" - intentional design
+			else if(playerKillsOnly && killer instanceof Player == false){
+				if(allowProjectileKills && killer instanceof Projectile
+						&& ((Projectile)killer).getShooter() instanceof Player);
+				else if(allowIndirectKills && timeSinceLastPlayerDamage(victim) < 60*1000);
+				else return;
 			}
+			if(!killer.hasPermission("dropheads.canbehead")) return;
+			alwaysBeheadPerm = killer.hasPermission("dropheads.alwaysbehead");
+
+			ItemStack itemInHand = null;
+			if(killer instanceof LivingEntity){
+				itemInHand = ((LivingEntity)killer).getEquipment().getItemInMainHand();
+				if(itemInHand != null && !noLootingEffectMobs.contains(victim.getType())){
+					lootingBonus = itemInHand.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS)*0.01D;
+					weaponBonus = toolBonuses.getOrDefault(itemInHand.getType(), 0D);
+				}
+			}
+			if(!mustUseTools.isEmpty() && (itemInHand == null || !mustUseTools.contains(itemInHand.getType()))) return;
 		}
-		else if(playerKillsOnly) return;
-		else dropChance = mobChances.containsKey(evt.getEntityType())
-				? mobChances.get(evt.getEntityType()) : DEFAULT_CHANCE;
 
-		rawDropChance = (dropChance *= spawnCauseModifier);
+		double rawDropChance = mobChances.getOrDefault(victim.getType(), DEFAULT_CHANCE);
+		double spawnCauseMod = getSpawnCauseModifier(victim);
+		double dropChanceWithSpawnMod =
+				((CHARGED_CREEPER_DROPS && killedByChargedCreeper) || alwaysBeheadPerm) ? 1D :
+				Math.min(rawDropChance*spawnCauseMod, 1D);
 
+		double dropChance = dropChanceWithSpawnMod;
 		if(useTaylorModifiers){
-			toolBonus = Math.pow(2D, toolBonus*dropChance)-1D;
-			lootBonus = Math.pow(2D, lootBonus*dropChance)-1D;
-			dropChance += (lootBonus == 0D ? 0D : (lootBonus*(1D-dropChance))/(lootBonus+1D));//apply modifiers
-			dropChance += (toolBonus == 0D ? 0D : (toolBonus*(1D-dropChance))/(toolBonus+1D));
+			lootingBonus = Math.pow(2D, 40*lootingBonus*dropChance)-1D;
+			if(lootingBonus > 0D) dropChance += (lootingBonus*(1D-dropChance))/(lootingBonus+1D);//apply modifiers
 		}
-		else dropChance += lootBonus*dropChance + toolBonus*dropChance;
+		else dropChance += lootingBonus*dropChance;
+		dropChance += weaponBonus*dropChance;
+		dropChance = Math.min(dropChance, 1D);
+
+		//Remove vanilla head drops (TODO: test this)
+		Iterator<ItemStack> it = evt.getDrops().iterator();
+		while(it.hasNext()) if(EvUtils.isHead(it.next().getType())) it.remove();
 
 		if(rand.nextDouble() < dropChance){
-			evt.getEntity().getWorld().dropItem(evt.getEntity().getLocation(), pl.getAPI().getHead(evt.getEntity()));
-
-			pl.getLogger().info("Head dropped!\nDrop chance before tool modifiers: "+rawDropChance+
-									"\nDrop chance after tool modifiers: "+dropChance+
-									"\nMob killed: "+evt.getEntityType().name());
+			victim.getWorld().dropItem(victim.getLocation(), pl.getAPI().getHead(victim));
+			if(DEBUG_MODE){
+				pl.getLogger().info("Dropped Head: "+victim.getType().name()
+					+"\nRaw chance: "+rawDropChance
+					+", SpawnReason Modifier: "+spawnCauseMod
+					+", Looting Bonus: "+lootingBonus+", Weapon Bonus: "+weaponBonus
+					+", Charged Creeper: "+killedByChargedCreeper+", Always-Behead Perm: "+alwaysBeheadPerm
+					+", Final drop chance: "+dropChance);
+			}
 		}
 	}
 }

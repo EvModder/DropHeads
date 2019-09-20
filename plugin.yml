@@ -1,7 +1,7 @@
 name: DropHeads
 main: net.evmodder.DropHeads.DropHeads
 author: EvModder/EvilWitchdoctor
-version: 3.2.8 #8=stable 1.14 release
+version: 3.2.10 #10=item renaming,wither drop rate fix
 api-version: 1.13
 
 commands:
@@ -9,28 +9,28 @@ commands:
       description: Get a player or mob head
       usage: /gethead [name]
       aliases: [gethead,dhspawn,spawn-head,head,phspawn,skull]
-      permission: evp.dropheads.spawn
+      permission: dropheads.spawn
       permission-message: You do not have permission to do this.
 
    debug_all_heads:
       description: Place all heads into the world around the player
       usage: /debug_all_heads
-      permission: evp.dropheads.debug
+      permission: dropheads.debug
       permission-message: You do not have permission to do this.
 
 permissions:
-   evp.dropheads.alwaysbehead:
+   dropheads.alwaysbehead:
       description: This player will get heads 100% of the time
       default: false
 
-   evp.dropheads.canbehead:
+   dropheads.canbehead:
       description: This player will be able to get heads
       default: true
 
-   evp.dropheads.spawn:
+   dropheads.spawn:
       description: Permission to spawn heads with a command
       default: op
 
-   evp.dropheads.debug:
+   dropheads.debug:
       description: Permission to spawn all the heads in a big cube
       default: false

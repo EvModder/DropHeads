@@ -122,7 +122,8 @@ public class TextureKeyLookup{
 				if(entity.getCustomName() != null && entity.getCustomName().equals("jeb_")) return "SHEEP|JEB";
 				else return "SHEEP|"+((Sheep)entity).getColor().name();
 			case SHULKER:
-				return "SHULKER|"+((Shulker)entity).getColor().name();
+				DyeColor color = ((Shulker)entity).getColor();
+				return color == null ? "SHULKER" : "SHULKER|"+color.name();
 			case TROPICAL_FISH:
 				TropicalFish f = (TropicalFish)entity;
 				return "TROPICAL_FISH|"+f.getBodyColor()+"|"+f.getPatternColor()+"|"+f.getPattern();
