@@ -134,7 +134,7 @@ public class HeadAPI {
 			return makeTextureSkull(profile.getName());
 		}
 		else{//Looks like a PlayerHead
-			OfflinePlayer p = pl.getServer().getOfflinePlayer(profile.getId());
+			OfflinePlayer p = profile.getId() == null ? null : pl.getServer().getOfflinePlayer(profile.getId());
 			if(p != null && p.getName() != null){
 				if(updateOldPlayerHeads || p.getName().equals(profile.getName())) return HeadUtils.getPlayerHead(p);
 			}
