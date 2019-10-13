@@ -1,7 +1,7 @@
 name: DropHeads
 main: net.evmodder.DropHeads.DropHeads
 author: EvModder/EvilWitchdoctor
-version: 3.2.10 #10=item renaming,wither drop rate fix
+version: 3.2.11 #10=NullPointerException fix, stable 1.14 release
 api-version: 1.13
 
 commands:
