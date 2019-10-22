@@ -25,14 +25,14 @@ public class ItemDropListener implements Listener{
 		SkullMeta meta = (SkullMeta) evt.getEntity().getItemStack().getItemMeta();
 		String name = !FORCE_RENAME && meta.hasDisplayName() ? meta.getDisplayName() : null;
 		GameProfile profile = HeadUtils.getGameProfile(meta);
-		if(profile != null){
-			ItemStack refreshedItem = DropHeads.getPlugin().getAPI().getHead(profile);
-			if(name != null){
-				ItemMeta newMeta = refreshedItem.getItemMeta();
-				newMeta.setDisplayName(name);
-				refreshedItem.setItemMeta(newMeta);
-			}
-			evt.getEntity().setItemStack(refreshedItem);
+		if(profile == null) return;
+		ItemStack refreshedItem = DropHeads.getPlugin().getAPI().getHead(profile);
+		if(refreshedItem == null) return;
+		if(name != null){
+			ItemMeta newMeta = refreshedItem.getItemMeta();
+			newMeta.setDisplayName(name);
+			refreshedItem.setItemMeta(newMeta);
 		}
+		evt.getEntity().setItemStack(refreshedItem);
 	}
 }
