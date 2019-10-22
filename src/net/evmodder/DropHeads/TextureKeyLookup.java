@@ -2,25 +2,22 @@ package net.evmodder.DropHeads;
 
 import java.util.HashMap;
 import org.bukkit.DyeColor;
-import org.bukkit.entity.Cat;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Fox;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Llama;
-import org.bukkit.entity.MushroomCow;
 import org.bukkit.entity.Ocelot;
-import org.bukkit.entity.Panda;
 import org.bukkit.entity.Parrot;
 import org.bukkit.entity.Rabbit;
 import org.bukkit.entity.Sheep;
 import org.bukkit.entity.Shulker;
-import org.bukkit.entity.TraderLlama;
 import org.bukkit.entity.TropicalFish;
 import org.bukkit.entity.TropicalFish.Pattern;
 import net.evmodder.EvLib.EvUtils;
-import org.bukkit.entity.Vex;
+import net.evmodder.EvLib.extras.ReflectionUtils;
+import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
+import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
 import org.bukkit.entity.Villager;
 import org.bukkit.entity.Wolf;
 import org.bukkit.entity.ZombieVillager;
@@ -102,29 +99,36 @@ public class TextureKeyLookup{
 		return getTropicalFishName(new CCP(fish.getBodyColor(), fish.getPatternColor(), fish.getPattern()));
 	}
 
+	static RefMethod mCatGetType;
+	static RefMethod mFoxGetType, mFoxIsSleeping;
+	static RefMethod mMushroomCowGetVariant;
+	static RefMethod mPandaGetMainGene, mPandaGetHiddenGene;
+	static RefMethod mTraderLlamaGetColor;
+	static RefMethod mVexIsCharging;
+	@SuppressWarnings("rawtypes")
 	static String getTextureKey(LivingEntity entity){
-		switch(entity.getType()){
-			case CREEPER:
+		switch(entity.getType().name()){
+			case "CREEPER":
 				if(((Creeper)entity).isPowered()) return "CREEPER|CHARGED";
 				else return "CREEPER";
-			case WOLF:
+			case "WOLF":
 				if(((Wolf)entity).isAngry()) return "WOLF|ANGRY";
 				else return "WOLF";
-			case HORSE:
+			case "HORSE":
 				return "HORSE|"+((Horse)entity).getColor().name();
-			case LLAMA:
+			case "LLAMA":
 				return "LLAMA|"+((Llama)entity).getColor().name();
-			case PARROT:
+			case "PARROT":
 				return "PARROT|"+((Parrot)entity).getVariant().name();
-			case RABBIT:
+			case "RABBIT":
 				return "RABBIT|"+((Rabbit)entity).getRabbitType().name();
-			case SHEEP:
+			case "SHEEP":
 				if(entity.getCustomName() != null && entity.getCustomName().equals("jeb_")) return "SHEEP|JEB";
 				else return "SHEEP|"+((Sheep)entity).getColor().name();
-			case SHULKER:
+			case "SHULKER":
 				DyeColor color = ((Shulker)entity).getColor();
 				return color == null ? "SHULKER" : "SHULKER|"+color.name();
-			case TROPICAL_FISH:
+			case "TROPICAL_FISH":
 				TropicalFish f = (TropicalFish)entity;
 				return "TROPICAL_FISH|"+f.getBodyColor()+"|"+f.getPatternColor()+"|"+f.getPattern();
 				/*CCP fishData = new CCP(f.getBodyColor(), f.getPatternColor(), f.getPattern());
@@ -132,37 +136,58 @@ public class TextureKeyLookup{
 				if(name == null) name = EvUtils.getNormalizedName(entity.getType());
 				String code = "wow i need to figure this out huh";
 				return HeadUtils.makeSkull(code, name);*/
-			case VEX:
-				if(((Vex)entity).isCharging()) return "VEX|CHARGING";
+			case "VEX":
+				if(ReflectionUtils.getServerVersionString().compareTo("v1_13_R3") < 0) return "VEX";
+				if(mVexIsCharging == null) mVexIsCharging =
+					ReflectionUtils.getRefClass("org.bukkit.entity.Vex").getMethod("isCharging");
+				if(mVexIsCharging.of(entity).call().equals(true)) return "VEX|CHARGING";
 				else return "VEX";
-			case ZOMBIE_VILLAGER:
+			case "ZOMBIE_VILLAGER":
 				return "ZOMBIE_VILLAGER|"+((ZombieVillager)entity).getVillagerProfession().name();
-			case VILLAGER:
+			case "VILLAGER":
 				return "VILLAGER|"+((Villager)entity).getProfession().name();
-			case OCELOT:
+			case "OCELOT":
 				return "OCELOT|"+((Ocelot)entity).getCatType().name();
-			case CAT:
-				switch(((Cat)entity).getCatType()){
-					case ALL_BLACK:
-						return "CAT|BLACK";
-					case BLACK:
-						return "TUXEDO";
-					default:
-						return "CAT|"+((Cat)entity).getCatType().name();
+			case "CAT":
+				if(mCatGetType == null) mCatGetType =
+					ReflectionUtils.getRefClass("org.bukkit.entity.Cat").getMethod("getCatType");
+				String catType = ((Enum)mCatGetType.of(entity).call()).name();
+				switch(catType){
+					case "ALL_BLACK": return "CAT|BLACK";
+					case "BLACK": return "TUXEDO";
+					default: return "CAT|"+catType;
 				}
-			case MUSHROOM_COW:
-				return "MUSHROOM_COW|"+((MushroomCow)entity).getVariant().name();
-			case FOX:
-				if(((Fox)entity).isSleeping()) return "FOX|"+((Fox)entity).getFoxType().name()+"|SLEEPING";
-				else return "FOX|"+((Fox)entity).getFoxType().name();
-			case PANDA:
-				return "PANDA|"+EvUtils.getPandaTrait((Panda)entity);
-			case TRADER_LLAMA:
-				return "TRADER_LLAMA|"+((TraderLlama)entity).getColor().name();
+			case "MUSHROOM_COW":
+				if(ReflectionUtils.getServerVersionString().compareTo("v1_14_R0") < 0) return "MUSHROOM_COW";
+				if(mMushroomCowGetVariant == null) mMushroomCowGetVariant =
+					ReflectionUtils.getRefClass("org.bukkit.entity.MushroomCow").getMethod("getVariant");
+				return "MUSHROOM_COW|"+((Enum)mMushroomCowGetVariant.of(entity).call()).name();
+			case "FOX":
+				if(mFoxGetType == null){
+					RefClass classFox = ReflectionUtils.getRefClass("org.bukkit.entity.Fox");
+					mFoxGetType = classFox.getMethod("getFoxType");
+					mFoxIsSleeping = classFox.getMethod("isSleeping");
+				}
+				String foxType = ((Enum)mFoxGetType.of(entity).call()).name();
+				if(mFoxIsSleeping.of(entity).call().equals(true)) return "FOX|"+foxType+"|SLEEPING";
+				else return "FOX|"+foxType;
+			case "PANDA":
+				if(mPandaGetMainGene == null){
+					RefClass classPanda = ReflectionUtils.getRefClass("org.bukkit.entity.Panda");
+					mPandaGetMainGene = classPanda.getMethod("getMainGene");
+					mPandaGetHiddenGene = classPanda.getMethod("getHiddenGene");
+				}
+				String mainGene = ((Enum)mPandaGetMainGene.of(entity).call()).name();
+				String hiddenGene = ((Enum)mPandaGetHiddenGene.of(entity).call()).name();
+				return "PANDA|"+EvUtils.getPandaTrait(mainGene, hiddenGene);
+			case "TRADER_LLAMA":
+				if(mTraderLlamaGetColor == null) mTraderLlamaGetColor =
+						ReflectionUtils.getRefClass("org.bukkit.entity.TraderLlama").getMethod("getColor");
+				return "TRADER_LLAMA|"+((Enum)mTraderLlamaGetColor.of(entity).call()).name();
 			/*case GHAST:
 				if(((Ghast)entity).isScreaming()) return "GHAST|SCREAMING";//TODO: Add this to the Bukkit API
 				else return "GHAST";*/
-			case PLAYER:
+			case "PLAYER":
 			default:
 				return entity.getType().name();
 		}
