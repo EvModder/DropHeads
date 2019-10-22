@@ -55,8 +55,9 @@ public class Commanddebug_all_heads extends EvCommand{
 		sender.sendMessage("Dimensions: "+dX+","+dY+","+dZ);
 		Iterator<String> it = api.getTextures().keySet().iterator();
 		//pl.getServer().getScheduler()(pl, new Runnable(){public void run(){
-			for(int x=0; x<dX && it.hasNext(); ++x) for(int z=0; z<dZ && it.hasNext(); ++z)
-																				for(int y=0; y<dY && it.hasNext(); ++y){
+			for(int z=dZ; z>0 && it.hasNext(); --z)
+			for(int y=dY; y>0 && it.hasNext(); --y)
+			for(int x=dX; x>0 && it.hasNext(); --x){
 				Location hLoc = loc.clone().add(((dX/2)-x)*2, ((dY/2)-y)*2, ((dZ/2)-z)*2);
 				String key = it.next();
 				if(noGrumm){

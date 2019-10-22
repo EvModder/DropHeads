@@ -159,6 +159,9 @@ public class TextureKeyLookup{
 				return "PANDA|"+EvUtils.getPandaTrait((Panda)entity);
 			case TRADER_LLAMA:
 				return "TRADER_LLAMA|"+((TraderLlama)entity).getColor().name();
+			/*case GHAST:
+				if(((Ghast)entity).isScreaming()) return "GHAST|SCREAMING";//TODO: Add this to the Bukkit API
+				else return "GHAST";*/
 			case PLAYER:
 			default:
 				return entity.getType().name();
@@ -166,7 +169,7 @@ public class TextureKeyLookup{
 	}
 
 	static String getNameFromKey(EntityType entity, String textureKey){
-		String[] dataFlags = textureKey.split(java.util.regex.Pattern.quote("|"));
+		String[] dataFlags = textureKey.split("|");
 		if((entity == null ? textureKey.startsWith("TROPICAL_FISH|") : entity == EntityType.TROPICAL_FISH)){
 			if(dataFlags.length == 2) return EvUtils.capitalizeAndSpacify(dataFlags[1], '_');
 			try{
