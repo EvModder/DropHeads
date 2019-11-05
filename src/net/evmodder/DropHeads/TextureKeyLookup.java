@@ -105,6 +105,7 @@ public class TextureKeyLookup{
 	static RefMethod mPandaGetMainGene, mPandaGetHiddenGene;
 	static RefMethod mTraderLlamaGetColor;
 	static RefMethod mVexIsCharging;
+
 	@SuppressWarnings("rawtypes")
 	static String getTextureKey(LivingEntity entity){
 		switch(entity.getType().name()){
@@ -188,13 +189,14 @@ public class TextureKeyLookup{
 				if(((Ghast)entity).isScreaming()) return "GHAST|SCREAMING";//TODO: Add this to the Bukkit API
 				else return "GHAST";*/
 			case "PLAYER":
+				/* hmm */
 			default:
 				return entity.getType().name();
 		}
 	}
 
 	static String getNameFromKey(EntityType entity, String textureKey){
-		String[] dataFlags = textureKey.split("|");
+		String[] dataFlags = textureKey.split("\\|");
 		if((entity == null ? textureKey.startsWith("TROPICAL_FISH|") : entity == EntityType.TROPICAL_FISH)){
 			if(dataFlags.length == 2) return EvUtils.capitalizeAndSpacify(dataFlags[1], '_');
 			try{

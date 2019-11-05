@@ -18,10 +18,12 @@ import net.evmodder.EvLib.EvUtils;
 
 public class CommandSpawnHead extends EvCommand{
 	final private DropHeads pl;
+	final boolean SHOW_GRUMM_IN_TAB_COMPLETE;
 
 	public CommandSpawnHead(DropHeads plugin) {
 		super(plugin);
 		pl = plugin;
+		SHOW_GRUMM_IN_TAB_COMPLETE = false;//pl.getConfig().getBoolean("grumm-heads", false);
 	}
 
 	String nameFromType(Material type){
@@ -40,7 +42,7 @@ public class CommandSpawnHead extends EvCommand{
 			final List<String> tabCompletes = new ArrayList<String>();
 			args[0] = args[0].toUpperCase();
 			for(String key : pl.getAPI().getTextures().keySet()){
-				if(key.startsWith(args[0])) tabCompletes.add(key);
+				if(key.startsWith(args[0]) && (SHOW_GRUMM_IN_TAB_COMPLETE || !key.endsWith("|GRUMM"))) tabCompletes.add(key);
 			}
 			return tabCompletes;
 		}

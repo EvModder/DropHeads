@@ -1,7 +1,7 @@
 name: DropHeads
 main: net.evmodder.DropHeads.DropHeads
 author: EvModder/EvilWitchdoctor
-version: 3.2.12 #12=Compiled using Java8
+version: 3.2.13 #13=Backwards-compatible 1.13-1.14.4
 api-version: 1.13
 
 commands:
