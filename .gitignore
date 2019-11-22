@@ -9,3 +9,5 @@ grumm_log.txt
 /bin/
 /bin/
 /bin/
+/tmp_*
+/EvLib

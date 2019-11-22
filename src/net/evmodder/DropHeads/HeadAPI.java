@@ -1,9 +1,12 @@
 package net.evmodder.DropHeads;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -28,13 +31,18 @@ public class HeadAPI {
 		updateOldPlayerHeads = pl.getConfig().getBoolean("update-on-skin-change", true);
 
 		String hardcodedList = FileIO.loadResource(pl, "head-textures.txt");
-		loadTextures(hardcodedList);
+		loadTextures(hardcodedList, false);
 //		String localList = FileIO.loadFile("head-textures.txt", pl.getClass().getResourceAsStream("/head-textures.txt"));
 		String localList = FileIO.loadFile("head-textures.txt", hardcodedList);
-		loadTextures(localList);
+		loadTextures(localList, true);
 	}
 
-	void loadTextures(String headsList){
+	void loadTextures(String headsList, boolean log){
+		HashSet<EntityType> missingHeads = new HashSet<EntityType>();
+		missingHeads.addAll(Arrays.asList(EntityType.values()).stream()
+				.filter(x -> x.isAlive()/* && x.isMeow() */).collect(Collectors.toList()));
+		missingHeads.remove(EntityType.PLAYER);
+		missingHeads.remove(EntityType.ARMOR_STAND); // These 2 are 'alive', but don't have heads
 		for(String head : headsList.split("\n")){
 			head = head.replaceAll(" ", "");
 			int i = head.indexOf(":");
@@ -53,10 +61,20 @@ public class HeadAPI {
 					textures.put(key, texture);
 					//textures.put(type.name()+key.substring(j), texture);//identical
 					pl.getLogger().fine("Loaded: "+type.name()+" - "+key.substring(j+1));
+					missingHeads.remove(type);
 				}
 			}
 			catch(IllegalArgumentException ex){
-				pl.getLogger().warning("Invalid entity name '"+head.substring(0, i)+"' from head-list.txt file!");
+				//pl.getLogger().warning("Invalid entity name '"+head.substring(0, i)+"' from head-list.txt file!");
+			}
+		}
+		if(log){
+			for(EntityType type : missingHeads){
+				pl.getLogger().warning("Missing head texture for "+type+" from head-list.txt");
+			}
+			if(!missingHeads.isEmpty()){
+				pl.getLogger().info("To update missing textures, try updating the plugin"
+						+ " and then deleting the old head-list.txt file");
 			}
 		}
 		// Sometimes a texture value is just a reference to a different texture key
