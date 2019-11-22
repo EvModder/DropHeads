@@ -196,6 +196,7 @@ public class TextureKeyLookup{
 	}
 
 	static String getNameFromKey(EntityType entity, String textureKey){
+		if(textureKey.equals("PLAYER|GRUMM")) return "Grumm";
 		String[] dataFlags = textureKey.split("\\|");
 		if((entity == null ? textureKey.startsWith("TROPICAL_FISH|") : entity == EntityType.TROPICAL_FISH)){
 			if(dataFlags.length == 2) return EvUtils.capitalizeAndSpacify(dataFlags[1], '_');
