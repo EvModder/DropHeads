@@ -27,7 +27,7 @@ public class HeadAPI {
 	HeadAPI(){
 		textures = new TreeMap<String, String>();
 		pl = DropHeads.getPlugin();
-		grummEnabled = pl.getConfig().getBoolean("grumm-heads", true);
+		grummEnabled = pl.getConfig().getBoolean("drop-grumm-heads", true);
 		updateOldPlayerHeads = pl.getConfig().getBoolean("update-on-skin-change", true);
 
 		String hardcodedList = FileIO.loadResource(pl, "head-textures.txt");
@@ -46,35 +46,37 @@ public class HeadAPI {
 		for(String head : headsList.split("\n")){
 			head = head.replaceAll(" ", "");
 			int i = head.indexOf(":");
-			if(i != -1) try{
+			if(i != -1){
 				String texture = head.substring(i+1);
 				if(texture.isEmpty()) continue;
 
-				String key = head.substring(0, i);
+				String key = head.substring(0, i).toUpperCase();
 				int j = key.indexOf('|');
-				if(j == -1){
-					EntityType type = EntityType.valueOf(key.toUpperCase());
-					textures.put(type.name(), texture);
+				try{
+					if(j == -1){
+						EntityType type = EntityType.valueOf(key);
+						textures.put(type.name(), texture);
+					}
+					else{
+						EntityType type = EntityType.valueOf(key.substring(0, j));
+						textures.put(key, texture);
+						//textures.put(type.name()+key.substring(j), texture);// equivalent
+						pl.getLogger().fine("Loaded: "+type.name()+" - "+key.substring(j+1));
+						missingHeads.remove(type);
+					}
 				}
-				else/* if(grummEnabled || !key.endsWith("|GRUMM"))*/{
-					EntityType type = EntityType.valueOf(key.substring(0, j).toUpperCase());
-					textures.put(key, texture);
-					//textures.put(type.name()+key.substring(j), texture);//identical
-					pl.getLogger().fine("Loaded: "+type.name()+" - "+key.substring(j+1));
-					missingHeads.remove(type);
+				catch(IllegalArgumentException ex){
+					pl.getLogger().warning("Invalid entity name '"+head.substring(0, i)+"' in head-textures.txt file!");
 				}
-			}
-			catch(IllegalArgumentException ex){
-				//pl.getLogger().warning("Invalid entity name '"+head.substring(0, i)+"' from head-list.txt file!");
 			}
 		}
 		if(log){
 			for(EntityType type : missingHeads){
-				pl.getLogger().warning("Missing head texture for "+type+" from head-list.txt");
+				pl.getLogger().warning("Missing head texture for "+type+" from head-textures.txt");
 			}
 			if(!missingHeads.isEmpty()){
 				pl.getLogger().info("To update missing textures, try updating the plugin"
-						+ " and then deleting the old head-list.txt file");
+						+ " and then deleting the old head-textures.txt file");
 			}
 		}
 		// Sometimes a texture value is just a reference to a different texture key

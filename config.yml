@@ -30,7 +30,8 @@ charged-creeper-drops: true
 
 # A Minecraft easter egg is that mobs named 'Dinnerbone' or 'Grumm' are
 # upside down.. If you want their heads to share this trait, set to true
-grumm-heads: true
+drop-grumm-heads: true
+show-grumm-in-tab-complete: false
 
 # Uses non-linear function when calculating drop chance looting modifier.
 # If set to 'false', each looting level will add 1% to the drop chance.

@@ -23,7 +23,7 @@ public class CommandSpawnHead extends EvCommand{
 	public CommandSpawnHead(DropHeads plugin) {
 		super(plugin);
 		pl = plugin;
-		SHOW_GRUMM_IN_TAB_COMPLETE = false;//pl.getConfig().getBoolean("grumm-heads", false);
+		SHOW_GRUMM_IN_TAB_COMPLETE = pl.getConfig().getBoolean("show-grumm-in-tab-complete", false);
 	}
 
 	String nameFromType(Material type){
