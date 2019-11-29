@@ -140,7 +140,7 @@ public class EntityDeathListener implements Listener{
 			}
 			if(!mustUseTools.isEmpty() && (itemInHand == null || !mustUseTools.contains(itemInHand.getType()))) return;
 		}
-		else if(!playerKillsOnly) return; // Not damaged by EntityDamageByEntityEvent, so not considered a by-player kill 
+		else if(playerKillsOnly) return; // Not damaged by EntityDamageByEntityEvent, so not considered a by-player kill 
 
 		double rawDropChance = mobChances.getOrDefault(victim.getType(), DEFAULT_CHANCE);
 		double spawnCauseMod = getSpawnCauseModifier(victim);
