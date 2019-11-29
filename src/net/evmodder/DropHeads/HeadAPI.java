@@ -39,6 +39,7 @@ public class HeadAPI {
 
 	void loadTextures(String headsList, boolean log){
 		HashSet<EntityType> missingHeads = new HashSet<EntityType>();
+		HashSet<String> unknownHeads = new HashSet<String>();
 		missingHeads.addAll(Arrays.asList(EntityType.values()).stream()
 				.filter(x -> x.isAlive()/* && x.isMeow() */).collect(Collectors.toList()));
 		missingHeads.remove(EntityType.PLAYER);
@@ -51,22 +52,17 @@ public class HeadAPI {
 				if(texture.isEmpty()) continue;
 
 				String key = head.substring(0, i).toUpperCase();
+				textures.put(key, texture);
+
 				int j = key.indexOf('|');
+				String typeName = (j == -1 ? key : key.substring(0, j));
 				try{
-					if(j == -1){
-						EntityType type = EntityType.valueOf(key);
-						textures.put(type.name(), texture);
-					}
-					else{
-						EntityType type = EntityType.valueOf(key.substring(0, j));
-						textures.put(key, texture);
-						//textures.put(type.name()+key.substring(j), texture);// equivalent
-						pl.getLogger().fine("Loaded: "+type.name()+" - "+key.substring(j+1));
-						missingHeads.remove(type);
-					}
+					EntityType type = EntityType.valueOf(typeName);
+					missingHeads.remove(type);
 				}
 				catch(IllegalArgumentException ex){
-					pl.getLogger().warning("Invalid entity name '"+head.substring(0, i)+"' in head-textures.txt file!");
+					if(unknownHeads.add(typeName))
+						pl.getLogger().warning("Unknown entity '"+typeName+"' in head-textures.txt");
 				}
 			}
 		}
@@ -75,8 +71,8 @@ public class HeadAPI {
 				pl.getLogger().warning("Missing head texture for "+type+" from head-textures.txt");
 			}
 			if(!missingHeads.isEmpty()){
-				pl.getLogger().info("To update missing textures, try updating the plugin"
-						+ " and then deleting the old head-textures.txt file");
+				pl.getLogger().info("To fix missing textures, try updating the plugin"
+						+ " and then deleting your old head-textures.txt file");
 			}
 		}
 		// Sometimes a texture value is just a reference to a different texture key
