@@ -62,7 +62,7 @@ public class HeadAPI {
 				}
 				catch(IllegalArgumentException ex){
 					if(unknownHeads.add(typeName))
-						pl.getLogger().warning("Unknown entity '"+typeName+"' in head-textures.txt");
+						if(log) pl.getLogger().warning("Unknown entity '"+typeName+"' in head-textures.txt");
 				}
 			}
 		}
