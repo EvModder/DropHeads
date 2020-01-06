@@ -1,7 +1,7 @@
 name: DropHeads
 main: net.evmodder.DropHeads.DropHeads
 author: EvModder/EvilWitchdoctor
-version: 3.2.13 #13=bkw compat, bees, grumm
+version: 3.2.14 #14=isSkeletal -> skull
 api-version: 1.13
 
 commands:
