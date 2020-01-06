@@ -1,7 +1,7 @@
 name: DropHeads
 main: net.evmodder.DropHeads.DropHeads
 author: EvModder/EvilWitchdoctor
-version: 3.2.14 #14=isSkeletal -> skull
+version: 3.2.15 #15=more tropical fish heads
 api-version: 1.13
 
 commands:
