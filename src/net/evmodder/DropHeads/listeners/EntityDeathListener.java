@@ -157,9 +157,14 @@ public class EntityDeathListener implements Listener{
 		dropChance += weaponBonus*dropChance;
 		dropChance = Math.min(dropChance, 1D);
 
-		//Remove vanilla head drops (TODO: test this)
-		Iterator<ItemStack> it = evt.getDrops().iterator();
-		while(it.hasNext()) if(EvUtils.isHead(it.next().getType())) it.remove();
+		//Remove vanilla charged creeper head drops & wskulls (TODO: test this)
+		if(killedByChargedCreeper || evt.getEntityType() == EntityType.WITHER_SKELETON){
+			Iterator<ItemStack> it = evt.getDrops().iterator();
+			while(it.hasNext()) if(EvUtils.isHead(it.next().getType())) it.remove();
+			for(ItemStack i : EvUtils.getEquipmentGuaranteedToDrop(evt.getEntity())){
+				if(i != null && EvUtils.isHead(i.getType())) evt.getDrops().add(i);
+			}
+		}
 
 		if(rand.nextDouble() < dropChance){
 			victim.getWorld().dropItem(victim.getLocation(), pl.getAPI().getHead(victim));
