@@ -23,6 +23,9 @@ import net.evmodder.DropHeads.listeners.*;
 import net.evmodder.EvLib.EvPlugin;
 import net.evmodder.EvLib.Updater;
 
+//TODO:
+// * Adjust drop rate based on getTicksLived()
+// * Log of head drop events
 public final class DropHeads extends EvPlugin{
 	private static DropHeads instance; public static DropHeads getPlugin(){return instance;}
 	private HeadAPI api;
