@@ -1,7 +1,7 @@
 name: DropHeads
 main: net.evmodder.DropHeads.DropHeads
 author: EvModder/EvilWitchdoctor
-version: 3.2.15 #15=more tropical fish heads
+version: 3.2.15 #15=more tropical fish heads, fixed head-drop bug
 api-version: 1.13
 
 commands:
