@@ -105,9 +105,11 @@ public class TextureKeyLookup{
 	static RefMethod mPandaGetMainGene, mPandaGetHiddenGene;
 	static RefMethod mTraderLlamaGetColor;
 	static RefMethod mVexIsCharging;
+	static RefMethod mGetHandle, mGetDataWatcher, mGet_FromDataWatcher;
+	static java.lang.reflect.Field ghastIsAttackingField;
 
 	@SuppressWarnings("rawtypes")
-	static String getTextureKey(LivingEntity entity){
+	static <T> String getTextureKey(LivingEntity entity){
 		switch(entity.getType().name()){
 			case "CREEPER":
 				if(((Creeper)entity).isPowered()) return "CREEPER|CHARGED";
@@ -155,7 +157,7 @@ public class TextureKeyLookup{
 				String catType = ((Enum)mCatGetType.of(entity).call()).name();
 				switch(catType){
 					case "ALL_BLACK": return "CAT|BLACK";
-					case "BLACK": return "TUXEDO";
+					case "BLACK": return "CAT|TUXEDO";
 					default: return "CAT|"+catType;
 				}
 			case "MUSHROOM_COW":
@@ -185,9 +187,30 @@ public class TextureKeyLookup{
 				if(mTraderLlamaGetColor == null) mTraderLlamaGetColor =
 						ReflectionUtils.getRefClass("org.bukkit.entity.TraderLlama").getMethod("getColor");
 				return "TRADER_LLAMA|"+((Enum)mTraderLlamaGetColor.of(entity).call()).name();
-			/*case GHAST:
-				if(((Ghast)entity).isScreaming()) return "GHAST|SCREAMING";//TODO: Add this to the Bukkit API
-				else return "GHAST";*/
+			case "GHAST":
+				//https://wiki.vg/Entity_metadata#Ghast => isAttacking=15="" (1.13 - 1.15)
+				boolean isScreaming = false;
+				if(ghastIsAttackingField == null){
+					mGetHandle = ReflectionUtils.getRefClass("{cb}.entity.CraftEntity").getMethod("getHandle");
+					RefClass classEntityGhast = ReflectionUtils.getRefClass("{nms}.EntityGhast");
+					RefClass classDataWatcher = ReflectionUtils.getRefClass("{nms}.DataWatcher");
+					RefClass classDataWatcherObject = ReflectionUtils.getRefClass("{nms}.DataWatcherObject");
+					mGetDataWatcher = classEntityGhast.getMethod("getDataWatcher");
+					mGet_FromDataWatcher = classDataWatcher.getMethod("get", classDataWatcherObject);
+					//TODO: monitor for change: BuildTools/work/decompile-ee3ecae0/net/minecraft/server/EntityGhast.java
+					ghastIsAttackingField = classEntityGhast.getField("b").getRealField();
+					ghastIsAttackingField.setAccessible(true);
+				}
+				try{
+					Object datawatcherobject = ghastIsAttackingField.get(null);
+					Object entityGhast = mGetHandle.of(entity).call();
+					Object dataWatcher = mGetDataWatcher.of(entityGhast).call();
+					isScreaming = mGet_FromDataWatcher.of(dataWatcher).call(datawatcherobject).equals(true);
+					org.bukkit.Bukkit.getLogger().info("Ghast isAttacking: "+isScreaming);
+				}
+				catch(IllegalArgumentException | IllegalAccessException e){}
+				if(isScreaming) return "GHAST|SCREAMING";//TODO: Add this to the Bukkit API
+				else return "GHAST";
 			case "PLAYER":
 				/* hmm */
 			default:
