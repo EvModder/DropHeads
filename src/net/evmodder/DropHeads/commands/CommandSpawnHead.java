@@ -100,7 +100,7 @@ public class CommandSpawnHead extends EvCommand{
 			String headName = head.hasItemMeta() && head.getItemMeta().hasDisplayName()
 					? head.getItemMeta().getDisplayName() : nameFromType(head.getType());
 			((Player)sender).getInventory().addItem(head);
-			sender.sendMessage(ChatColor.GREEN+"Spawned Head: " + ChatColor.GOLD + headName);
+			sender.sendMessage(ChatColor.GREEN+"Spawned Head: " + ChatColor.YELLOW + headName);
 		}
 		else sender.sendMessage(ChatColor.RED+"Head \""+target+"\" not found");
 		return true;

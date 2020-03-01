@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.UUID;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
@@ -17,10 +18,11 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 import net.evmodder.DropHeads.DropHeads;
+import net.evmodder.DropHeads.HeadUtils;
 import net.evmodder.EvLib.EvUtils;
 import net.evmodder.EvLib.FileIO;
 
@@ -32,6 +34,7 @@ public class EntityDeathListener implements Listener{
 	final HashSet<EntityType> noLootingEffectMobs;
 	final HashMap<EntityType, Double> mobChances;
 	final HashMap<Material, Double> toolBonuses;
+	final HashSet<UUID> explodingChargedCreepers;
 	double DEFAULT_CHANCE;
 	final Random rand;
 	final boolean DEBUG_MODE;
@@ -99,6 +102,7 @@ public class EntityDeathListener implements Listener{
 				pl.getLogger().severe("Unknown entity type: "+parts[0]);
 			}
 		}
+		explodingChargedCreepers = new HashSet<UUID>();
 	}
 
 	static long timeSinceLastPlayerDamage(Entity entity){
@@ -109,73 +113,82 @@ public class EntityDeathListener implements Listener{
 		return e.hasMetadata("SpawnReason") ? e.getMetadata("SpawnReason").get(0).asDouble() : 1D;
 	}
 
+	void doHeadDrop(EntityDeathEvent evt){
+		if(DEBUG_MODE) pl.getLogger().info("Dropped Head: "+evt.getEntity().getType());
+		//entity.getWorld().dropItem(entity).getLocation(), pl.getAPI().getHead(entity));
+		evt.getDrops().add(pl.getAPI().getHead(evt.getEntity()));
+	}
+
 	@EventHandler
 	public void entityDeathEvent(EntityDeathEvent evt){
-		LivingEntity victim = evt.getEntity();
+		final LivingEntity victim = evt.getEntity();
 		if(playerHeadsOnly && victim instanceof Player == false) return;
 		Entity killer = null;
-		boolean killedByChargedCreeper = false, alwaysBeheadPerm = false;
-		double lootingBonus = 0D, weaponBonus = 0D;
-		EntityDamageEvent lastDamage = victim.getLastDamageCause();
-		if(lastDamage != null && lastDamage instanceof EntityDamageByEntityEvent){
-			killer = ((EntityDamageByEntityEvent)lastDamage).getDamager();
-			if(killer instanceof Creeper && ((Creeper)killer).isPowered()) killedByChargedCreeper = true;
-			//"else if" - Overrides "player-kills-only" - intentional design
-			else if(playerKillsOnly && killer instanceof Player == false){
-				if(allowProjectileKills && killer instanceof Projectile
-						&& ((Projectile)killer).getShooter() instanceof Player);
-				else if(allowIndirectKills && timeSinceLastPlayerDamage(victim) < 60*1000);
-				else return;
-			}
+		if(victim.getLastDamageCause() != null && victim.getLastDamageCause() instanceof EntityDamageByEntityEvent){
+			killer = ((EntityDamageByEntityEvent)victim.getLastDamageCause()).getDamager();
 			if(!killer.hasPermission("dropheads.canbehead")) return;
-			alwaysBeheadPerm = killer.hasPermission("dropheads.alwaysbehead");
-
-			ItemStack itemInHand = null;
-			if(killer instanceof LivingEntity){
-				itemInHand = ((LivingEntity)killer).getEquipment().getItemInMainHand();
-				if(itemInHand != null && !noLootingEffectMobs.contains(victim.getType())){
-					lootingBonus = itemInHand.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS)*0.01D;
-					weaponBonus = toolBonuses.getOrDefault(itemInHand.getType(), 0D);
+			if(killer instanceof Creeper && ((Creeper)killer).isPowered()){
+				if(CHARGED_CREEPER_DROPS && !HeadUtils.dropsHeadFromChargedCreeper(victim.getType())
+						&& explodingChargedCreepers.add(killer.getUniqueId())){
+					if(DEBUG_MODE) pl.getLogger().info("Killed by charged creeper: "+victim.getType());
+					doHeadDrop(evt);
+					// Cleanup memory after a tick (optional)
+					final UUID creeperUUID = killer.getUniqueId();
+					new BukkitRunnable(){@Override public void run(){
+						explodingChargedCreepers.remove(creeperUUID);
+					}}.runTaskLater(pl, 1);
 				}
+				return;
 			}
-			if(!mustUseTools.isEmpty() && (itemInHand == null || !mustUseTools.contains(itemInHand.getType()))) return;
+			if(killer.hasPermission("dropheads.alwaysbehead")){
+				if(DEBUG_MODE) pl.getLogger().info("dropheads.alwaysbehead perm: "+killer.getCustomName());
+				doHeadDrop(evt);
+				return;
+			}
 		}
-		else if(playerKillsOnly) return; // Not damaged by EntityDamageByEntityEvent, so not considered a by-player kill 
+		// Check if killer is not a player.
+		if(playerKillsOnly && (killer == null ||
+			(killer instanceof Player == false &&
+				(
+					!allowProjectileKills ||
+					killer instanceof Projectile == false ||
+					((Projectile)killer).getShooter() instanceof Player == false
+				) && (
+					!allowIndirectKills ||
+					timeSinceLastPlayerDamage(victim) > 60*1000
+				)
+			)
+		)) return;
 
-		double rawDropChance = mobChances.getOrDefault(victim.getType(), DEFAULT_CHANCE);
-		double spawnCauseMod = getSpawnCauseModifier(victim);
-		double dropChanceWithSpawnMod =
-				((CHARGED_CREEPER_DROPS && killedByChargedCreeper) || alwaysBeheadPerm) ? 1D :
-				Math.min(rawDropChance*spawnCauseMod, 1D);
+		final ItemStack itemInHand = (killer != null && killer instanceof LivingEntity
+				? ((LivingEntity)killer).getEquipment().getItemInMainHand() : null);
+		if(!mustUseTools.isEmpty() && (itemInHand == null || !mustUseTools.contains(itemInHand.getType()))) return;
+		final int lootingLevel = itemInHand == null ? 0 : itemInHand.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
+		final double toolBonus = itemInHand == null ? 0D : toolBonuses.getOrDefault(itemInHand.getType(), 0D);
+		final double lootingMod = 1D + lootingLevel*0.01D;
+		final double weaponMod = 1D + toolBonus;
+		final double spawnCauseMod = getSpawnCauseModifier(victim);
+		final double rawDropChance = mobChances.getOrDefault(victim.getType(), DEFAULT_CHANCE);
+		final double dropChance = rawDropChance*spawnCauseMod*lootingMod*weaponMod;
 
-		double dropChance = dropChanceWithSpawnMod;
-		if(useTaylorModifiers){
-			lootingBonus = Math.pow(2D, 40*lootingBonus*dropChance)-1D;
-			if(lootingBonus > 0D) dropChance += (lootingBonus*(1D-dropChance))/(lootingBonus+1D);//apply modifiers
-		}
-		else dropChance += lootingBonus*dropChance;
-		dropChance += weaponBonus*dropChance;
-		dropChance = Math.min(dropChance, 1D);
-
-		//Remove vanilla charged creeper head drops & wskulls (TODO: test this)
-		if(killedByChargedCreeper || evt.getEntityType() == EntityType.WITHER_SKELETON){
+		// Remove vanilla-dropped wither skeleton skulls so they aren't dropped twice.
+		if(evt.getEntityType() == EntityType.WITHER_SKELETON){
 			Iterator<ItemStack> it = evt.getDrops().iterator();
 			while(it.hasNext()) if(EvUtils.isHead(it.next().getType())) it.remove();
+			// However, if it is wearing a head in its helmet slot, don't remove the drop.
+			// Note-to-self: Be careful with entity_equipment, heads on armor stands, etc.
 			for(ItemStack i : EvUtils.getEquipmentGuaranteedToDrop(evt.getEntity())){
 				if(i != null && EvUtils.isHead(i.getType())) evt.getDrops().add(i);
 			}
 		}
-
 		if(rand.nextDouble() < dropChance){
-			victim.getWorld().dropItem(victim.getLocation(), pl.getAPI().getHead(victim));
-			if(DEBUG_MODE){
-				pl.getLogger().info("Dropped Head: "+victim.getType().name()
-					+"\nRaw chance: "+rawDropChance
-					+", SpawnReason Modifier: "+spawnCauseMod
-					+", Looting Bonus: "+lootingBonus+", Weapon Bonus: "+weaponBonus
-					+", Charged Creeper: "+killedByChargedCreeper+", Always-Behead Perm: "+alwaysBeheadPerm
-					+", Final drop chance: "+dropChance);
-			}
+			doHeadDrop(evt);
+			if(DEBUG_MODE) pl.getLogger().info("Dropped Head: "+victim.getType().name()+"\n"
+					+"Raw chance: "+rawDropChance*100D+"%, "
+					+"SpawnReason Bonus: "+(spawnCauseMod-1D)*100D+"%, "
+					+"Looting Bonus: "+(lootingMod-1D)*100D+"%, "
+					+"Weapon Bonus: "+(weaponMod-1D)*100D+"%, "
+					+"Final drop chance: "+dropChance*100D+"%");
 		}
 	}
 }

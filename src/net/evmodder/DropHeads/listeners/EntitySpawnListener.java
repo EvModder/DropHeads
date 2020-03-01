@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
@@ -37,9 +38,9 @@ public class EntitySpawnListener implements Listener{
 		}
 	}
 
-	@EventHandler
+	@EventHandler(priority = EventPriority.HIGHEST)
 	public void entitySpawnEvent(CreatureSpawnEvent evt){
-		if(evt.getSpawnReason() != null){
+		if(!evt.isCancelled() && evt.getSpawnReason() != null){
 			Float modifier = spawnModifiers.get(evt.getSpawnReason());
 			if(modifier != null && modifier != 1){
 				evt.getEntity().setMetadata("SpawnReason", new FixedMetadataValue(plugin, modifier));

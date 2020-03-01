@@ -26,16 +26,14 @@ update-on-skin-change: false
 # Enable the mechanic where any mob killed by a charged creeper explosion
 # will drop its head with 100% probability * the spawn-cause modifier
 # This setting overrides "player-kills-only" (but not "player-heads-only")
+# Note: In vanilla, each charged creeper explosion causes only 1 head drop,
+# DropHeads mimics this behavior from version 3.2.15 onward
 charged-creeper-drops: true
 
 # A Minecraft easter egg is that mobs named 'Dinnerbone' or 'Grumm' are
 # upside down.. If you want their heads to share this trait, set to true
 drop-grumm-heads: true
 show-grumm-in-tab-complete: false
-
-# Uses non-linear function when calculating drop chance looting modifier.
-# If set to 'false', each looting level will add 1% to the drop chance.
-use-taylor-modifiers: false
 
 # Only drop heads if the killer used an axe
 must-use-axe: false

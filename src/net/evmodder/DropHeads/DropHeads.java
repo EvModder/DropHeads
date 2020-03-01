@@ -26,6 +26,7 @@ import net.evmodder.EvLib.Updater;
 //TODO:
 // * Adjust drop rate based on getTicksLived()
 // * Log of head drop events
+// * fancy stray skull
 public final class DropHeads extends EvPlugin{
 	private static DropHeads instance; public static DropHeads getPlugin(){return instance;}
 	private HeadAPI api;

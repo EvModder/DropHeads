@@ -1,14 +1,14 @@
 name: DropHeads
 main: net.evmodder.DropHeads.DropHeads
 author: EvModder/EvilWitchdoctor
-version: 3.2.14 #14=isSkeletal -> skull, more tropical fish heads, fixed head-drop bug
+version: 3.2.15 #15=only 1 head per charged creeper explosion
 api-version: 1.13
 
 commands:
    spawnhead:
       description: Get a player or mob head
       usage: /gethead [name]
-      aliases: [gethead,dhspawn,spawn-head,head,phspawn,skull]
+      aliases: [gethead,getskull,dhspawn,spawn-head,head,phspawn,skull]
       permission: dropheads.spawn
       permission-message: You do not have permission to do this.
 

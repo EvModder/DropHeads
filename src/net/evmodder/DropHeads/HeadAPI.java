@@ -99,6 +99,7 @@ public class HeadAPI {
 		}
 		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
 		SkullMeta meta = (SkullMeta) item.getItemMeta();
+		
 
 		UUID uuid = UUID.nameUUIDFromBytes(textureKey.getBytes());// Stable UUID for this textureKey
 		GameProfile profile = new GameProfile(uuid, textureKey);// Initialized with UUID and name
@@ -106,7 +107,8 @@ public class HeadAPI {
 		if(code != null) profile.getProperties().put("textures", new Property("textures", code));
 		HeadUtils.setGameProfile(meta, profile);
 
-		meta.setDisplayName(ChatColor.YELLOW+TextureKeyLookup.getNameFromKey(eType, textureKey)+" Head");
+		meta.setDisplayName(ChatColor.YELLOW+TextureKeyLookup.getNameFromKey(eType, textureKey)+
+				(eType != null && HeadUtils.isSkeletal(eType) ? " Skull" : " Head"));
 		item.setItemMeta(meta);
 		return item;
 	}

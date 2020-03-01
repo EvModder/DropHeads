@@ -144,6 +144,19 @@ public class HeadUtils {
 		}
 	}
 
+	public static boolean dropsHeadFromChargedCreeper(EntityType eType){// In vanilla.
+		switch(eType){
+			case ZOMBIE:
+			case CREEPER:
+			case SKELETON:
+			case WITHER_SKELETON:
+			//case ZOMBIE_VILLAGER: // Surprisingly not, actually.
+				return true;
+			default:
+				return false;
+		}
+	}
+
 	@SuppressWarnings("deprecation")
 	static ItemStack makeSkull(EntityType entity){
 		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
@@ -158,7 +171,7 @@ public class HeadUtils {
 			GameProfile profile = new GameProfile(UUID.nameUUIDFromBytes(entity.name().getBytes()), entity.name());
 			HeadUtils.setGameProfile(meta, profile);
 			meta.setDisplayName(ChatColor.YELLOW+EvUtils.getNormalizedName(entity.name())+
-					(isSkeletal(entity) ? " Skull " : " Head"));
+					(isSkeletal(entity) ? " Skull" : " Head"));
 		}
 		head.setItemMeta(meta);
 		return head;
