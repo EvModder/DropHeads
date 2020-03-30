@@ -65,7 +65,7 @@ public class TextureKeyLookup{
 		tropicalFishNames.put(new CCP(DyeColor.YELLOW, DyeColor.YELLOW, Pattern.STRIPEY), "Yellow Tang");
 	}
 	static{
-		fishColorNames = new HashMap<DyeColor, String>();
+		fishColorNames = new HashMap<DyeColor, String>();//TODO: use Color instead of DyeColor
 		fishColorNames.put(DyeColor.BLACK, "Black");
 		fishColorNames.put(DyeColor.BLUE, "Blue");
 		fishColorNames.put(DyeColor.BROWN, "Brown");
@@ -99,6 +99,7 @@ public class TextureKeyLookup{
 		return getTropicalFishName(new CCP(fish.getBodyColor(), fish.getPatternColor(), fish.getPattern()));
 	}
 
+	static RefMethod mVillagerType, mZombieVillagerType;
 	static RefMethod mCatGetType;
 	static RefMethod mFoxGetType, mFoxIsSleeping;
 	static RefMethod mMushroomCowGetVariant;
@@ -109,7 +110,7 @@ public class TextureKeyLookup{
 	static java.lang.reflect.Field ghastIsAttackingField;
 
 	@SuppressWarnings("rawtypes")
-	static <T> String getTextureKey(LivingEntity entity){
+	static String getTextureKey(LivingEntity entity){
 		switch(entity.getType().name()){
 			case "CREEPER":
 				if(((Creeper)entity).isPowered()) return "CREEPER|CHARGED";
@@ -141,19 +142,27 @@ public class TextureKeyLookup{
 				return HeadUtils.makeSkull(code, name);*/
 			case "VEX":
 				if(ReflectionUtils.getServerVersionString().compareTo("v1_13_R3") < 0) return "VEX";
-				if(mVexIsCharging == null) mVexIsCharging =
-					ReflectionUtils.getRefClass("org.bukkit.entity.Vex").getMethod("isCharging");
+				if(mVexIsCharging == null) mVexIsCharging = ReflectionUtils.getRefClass("org.bukkit.entity.Vex").getMethod("isCharging");
 				if(mVexIsCharging.of(entity).call().equals(true)) return "VEX|CHARGING";
 				else return "VEX";
-			case "ZOMBIE_VILLAGER":
-				return "ZOMBIE_VILLAGER|"+((ZombieVillager)entity).getVillagerProfession().name();
 			case "VILLAGER":
-				return "VILLAGER|"+((Villager)entity).getProfession().name();
+				String villagerProfession = ((Villager)entity).getProfession().name();
+				if(mVillagerType == null){
+					try{mVillagerType = ReflectionUtils.getRefClass("org.bukkit.entity.Villager").getMethod("getVillagerType");}
+					catch(RuntimeException ex){return "VILLAGER|"+villagerProfession;}
+				}
+				return "VILLAGER|"+villagerProfession+"|"+((Enum)mVillagerType.of(entity).call()).name();
+			case "ZOMBIE_VILLAGER":
+				String zombieVillagerProfession = ((ZombieVillager)entity).getVillagerProfession().name();
+				if(mZombieVillagerType == null){
+					try{mZombieVillagerType = ReflectionUtils.getRefClass("org.bukkit.entity.ZombieVillager").getMethod("getVillagerType");}
+					catch(RuntimeException ex){return "ZOMBIE_VILLAGER|"+zombieVillagerProfession;}
+				}
+				return "ZOMBIE_VILLAGER|"+zombieVillagerProfession+"|"+((Enum)mZombieVillagerType.of(entity).call()).name();
 			case "OCELOT":
 				return "OCELOT|"+((Ocelot)entity).getCatType().name();
 			case "CAT":
-				if(mCatGetType == null) mCatGetType =
-					ReflectionUtils.getRefClass("org.bukkit.entity.Cat").getMethod("getCatType");
+				if(mCatGetType == null) mCatGetType = ReflectionUtils.getRefClass("org.bukkit.entity.Cat").getMethod("getCatType");
 				String catType = ((Enum)mCatGetType.of(entity).call()).name();
 				switch(catType){
 					case "ALL_BLACK": return "CAT|BLACK";

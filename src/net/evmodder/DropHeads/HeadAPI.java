@@ -48,8 +48,8 @@ public class HeadAPI {
 			head = head.replaceAll(" ", "");
 			int i = head.indexOf(":");
 			if(i != -1){
-				String texture = head.substring(i+1);
-				if(texture.isEmpty()) continue;
+				String texture = head.substring(i+1).trim();
+				if(texture.isEmpty() || texture.equals("xxx")) continue; //TODO: note the xxx
 
 				String key = head.substring(0, i).toUpperCase();
 				textures.put(key, texture);
@@ -116,8 +116,14 @@ public class HeadAPI {
 	public ItemStack getHead(EntityType eType, String textureKey){
 		// If there is extra "texture metadata" we should return the custom
 		// skull instead of a just, say, a basic creeper head
-		if(textureKey != null && textureKey.indexOf('|') != -1 && textures.containsKey(textureKey)){
-			return makeTextureSkull(textureKey);
+		if(textureKey != null){
+			// Try successively smaller texture keys by trimming the extra data tags
+			int keyDataTagIdx=textureKey.lastIndexOf('|');
+			while(keyDataTagIdx != -1 && !textures.containsKey(textureKey)){
+				textureKey = textureKey.substring(0, keyDataTagIdx);
+				keyDataTagIdx=textureKey.lastIndexOf('|');
+			}
+			if(keyDataTagIdx != -1 && textures.containsKey(textureKey)) return makeTextureSkull(textureKey);
 		}
 		switch(eType){
 			case PLAYER:

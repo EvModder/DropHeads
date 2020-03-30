@@ -27,6 +27,7 @@ import net.evmodder.EvLib.Updater;
 // * Adjust drop rate based on getTicksLived()
 // * Log of head drop events
 // * fancy stray skull
+// * move textures from head-textures.txt to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
 public final class DropHeads extends EvPlugin{
 	private static DropHeads instance; public static DropHeads getPlugin(){return instance;}
 	private HeadAPI api;
