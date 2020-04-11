@@ -10,8 +10,8 @@ import java.util.stream.Collectors;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
@@ -95,7 +95,7 @@ public class HeadAPI {
 		try{eType = EntityType.valueOf(nameStr);}
 		catch(IllegalArgumentException ex){
 			pl.getLogger().warning("Unknown EntityType: "+nameStr+"!");
-			eType = null;// This is OK; we'll just use textureKey[0]
+			eType = null;// We will just use textureKey[0]
 		}
 		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
 		SkullMeta meta = (SkullMeta) item.getItemMeta();
@@ -107,8 +107,9 @@ public class HeadAPI {
 		if(code != null) profile.getProperties().put("textures", new Property("textures", code));
 		HeadUtils.setGameProfile(meta, profile);
 
-		meta.setDisplayName(ChatColor.YELLOW+TextureKeyLookup.getNameFromKey(eType, textureKey)+
-				(eType != null && HeadUtils.isSkeletal(eType) ? " Skull" : " Head"));
+		String eName = TextureKeyLookup.getNameFromKey(eType, textureKey);
+		String headTypeName = eType == null ? "Head" : HeadUtils.getDroppedHeadTypeName(eType);
+		meta.setDisplayName(ChatColor.YELLOW+eName+" "+headTypeName);
 		item.setItemMeta(meta);
 		return item;
 	}
@@ -144,7 +145,7 @@ public class HeadAPI {
 			}
 	}
 
-	public ItemStack getHead(LivingEntity entity){
+	public ItemStack getHead(Entity entity){
 		if(entity.getType() == EntityType.PLAYER) return HeadUtils.getPlayerHead((OfflinePlayer)entity);
 		String textureKey = TextureKeyLookup.getTextureKey(entity);
 		if(grummEnabled && EvUtils.hasGrummName(entity) && textures.containsKey(textureKey+"|GRUMM")) 
