@@ -132,7 +132,7 @@ public class HeadUtils {
 		return item;
 	}
 
-	static boolean isSkeletal(EntityType type){
+	/*static boolean isSkeletal(EntityType type){
 		switch(type){
 			case SKELETON:
 			case SKELETON_HORSE:
@@ -141,6 +141,20 @@ public class HeadUtils {
 				return true;
 			default:
 				return false;
+		}
+	}*/
+
+	protected static String getDroppedHeadTypeName(EntityType eType){
+		switch(eType){
+			case SKELETON:
+			case SKELETON_HORSE:
+			case WITHER_SKELETON:
+			case STRAY:
+				return "Skull";
+			case GIANT:
+				return "Toe";
+			default:
+				return "Head";
 		}
 	}
 
@@ -170,8 +184,7 @@ public class HeadUtils {
 		else{
 			GameProfile profile = new GameProfile(UUID.nameUUIDFromBytes(entity.name().getBytes()), entity.name());
 			HeadUtils.setGameProfile(meta, profile);
-			meta.setDisplayName(ChatColor.YELLOW+EvUtils.getNormalizedName(entity.name())+
-					(isSkeletal(entity) ? " Skull" : " Head"));
+			meta.setDisplayName(ChatColor.YELLOW+EvUtils.getNormalizedName(entity.name())+" "+getDroppedHeadTypeName(entity));
 		}
 		head.setItemMeta(meta);
 		return head;

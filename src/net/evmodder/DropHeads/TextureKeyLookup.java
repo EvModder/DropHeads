@@ -3,9 +3,9 @@ package net.evmodder.DropHeads;
 import java.util.HashMap;
 import org.bukkit.DyeColor;
 import org.bukkit.entity.Creeper;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Horse;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Llama;
 import org.bukkit.entity.Ocelot;
 import org.bukkit.entity.Parrot;
@@ -110,7 +110,7 @@ public class TextureKeyLookup{
 	static java.lang.reflect.Field ghastIsAttackingField;
 
 	@SuppressWarnings("rawtypes")
-	static String getTextureKey(LivingEntity entity){
+	static String getTextureKey(Entity entity){
 		switch(entity.getType().name()){
 			case "CREEPER":
 				if(((Creeper)entity).isPowered()) return "CREEPER|CHARGED";
@@ -220,6 +220,8 @@ public class TextureKeyLookup{
 				catch(IllegalArgumentException | IllegalAccessException e){}
 				if(isScreaming) return "GHAST|SCREAMING";//TODO: Add this to the Bukkit API
 				else return "GHAST";
+			case "STRIDER":
+				//TODO: Cold vs. Hot
 			case "PLAYER":
 				/* hmm */
 			default:
