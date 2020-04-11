@@ -1,6 +1,8 @@
 package net.evmodder.DropHeads.listeners;
 
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -21,42 +23,66 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
+import com.sun.istack.internal.NotNull;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.HeadUtils;
 import net.evmodder.EvLib.EvUtils;
 import net.evmodder.EvLib.FileIO;
+import net.evmodder.EvLib.extras.TellrawUtils;
+import net.evmodder.EvLib.extras.TextUtils;
 
 public class EntityDeathListener implements Listener{
 	final DropHeads pl;
-	final boolean playerKillsOnly, allowIndirectKills, allowProjectileKills; 
-	final boolean playerHeadsOnly, useTaylorModifiers, CHARGED_CREEPER_DROPS;
+	final boolean allowNonPlayerKills, allowIndirectKills, allowProjectileKills; 
+	final boolean PLAYER_HEADS_ONLY, CHARGED_CREEPER_DROPS;
 	final HashSet<Material> mustUseTools;
 	final HashSet<EntityType> noLootingEffectMobs;
 	final HashMap<EntityType, Double> mobChances;
 	final HashMap<Material, Double> toolBonuses;
 	final HashSet<UUID> explodingChargedCreepers;
-	double DEFAULT_CHANCE;
-	final Random rand;
+	final double DEFAULT_CHANCE;
 	final boolean DEBUG_MODE;
+	final Random rand;
+	enum AnnounceMode {GLOBAL, LOCAL, DIRECT, OFF};
+	final AnnounceMode ANNOUNCE_PLAYERS, ANNOUNCE_MOBS;
+	final String MSG_BEHEAD, MSH_BEHEAD_BY, MSH_BEHEAD_BY_WITH;
+	final String ITEM_DISPLAY_FORMAT = TextUtils.translateAlternateColorCodes('&', "&r[&b${NAME}&ex{AMOUNT}&r]");//TODO: move to config
+	final int LOCAL_RANGE = 150;//TODO: move to config
 
+	AnnounceMode parseAnnounceMode(@NotNull String value, AnnounceMode defaultMode){
+		try{return AnnounceMode.valueOf(value.toUpperCase());}
+		catch(IllegalArgumentException ex){
+			pl.getLogger().severe("Unknown announcement mode: '"+value+"'");
+			pl.getLogger().warning("Please use one of the available modes: [GLOBAL, LOCAL, OFF]");
+			return defaultMode;
+		}
+	}
 	public EntityDeathListener(){
 		pl = DropHeads.getPlugin();
-		playerKillsOnly = pl.getConfig().getBoolean("player-kills-only", true);
+		allowNonPlayerKills = pl.getConfig().getBoolean("drop-for-nonplayer-kills", false);
 		allowIndirectKills = pl.getConfig().getBoolean("drop-for-indirect-kills", false);
 		allowProjectileKills = pl.getConfig().getBoolean("drop-for-ranged-kills", false);
-		playerHeadsOnly = pl.getConfig().getBoolean("player-heads-only", false);
-		useTaylorModifiers = pl.getConfig().getBoolean("use-taylor-modifiers", true);
+		PLAYER_HEADS_ONLY = pl.getConfig().getBoolean("player-heads-only", false);
 		CHARGED_CREEPER_DROPS = pl.getConfig().getBoolean("charged-creeper-drops", true);
 		DEBUG_MODE = pl.getConfig().getBoolean("debug-messages", true);
+		ANNOUNCE_MOBS = parseAnnounceMode(pl.getConfig().getString("behead-announcement-mobs", "LOCAL"), AnnounceMode.LOCAL);
+		ANNOUNCE_PLAYERS = parseAnnounceMode(pl.getConfig().getString("behead-announcement-players", "GLOBAL"), AnnounceMode.GLOBAL);
+		String msg = pl.getConfig().getString("message-beheaded", "${VICTIM} was beheaded");
+		String msgBy = pl.getConfig().getString("message-beheaded-by-entity", "${VICTIM} was beheaded by ${KILLER}");
+		String msgByWith = pl.getConfig().getString("message-beheaded-by-entity-with-item", "${VICTIM} was beheaded by ${KILLER} using ${ITEM}");
+		MSG_BEHEAD = "{\"text\":\""+TextUtils.translateAlternateColorCodes('&', msg)+"\"}";
+		MSH_BEHEAD_BY = "{\"text\":\""+TextUtils.translateAlternateColorCodes('&', msgBy)+"\"}";
+		MSH_BEHEAD_BY_WITH = "{\"text\":\""+TextUtils.translateAlternateColorCodes('&', msgByWith)+"\"}";
 		rand = new Random();
 
 		mustUseTools = new HashSet<Material>();
 		if(pl.getConfig().getBoolean("must-use-axe")){
-			mustUseTools.add(Material.DIAMOND_AXE);
+			for(Material mat : Material.values()) if(mat.name().endsWith("_AXE")) mustUseTools.add(mat);
+			/*mustUseTools.add(Material.DIAMOND_AXE);
 			mustUseTools.add(Material.IRON_AXE);
 			mustUseTools.add(Material.GOLDEN_AXE);
 			mustUseTools.add(Material.STONE_AXE);
-			mustUseTools.add(Material.WOODEN_AXE);
+			mustUseTools.add(Material.WOODEN_AXE);*/
 		}
 		else for(String toolName : pl.getConfig().getStringList("must-use")){
 			if(toolName.isEmpty()) continue;
@@ -78,31 +104,83 @@ public class EntityDeathListener implements Listener{
 
 		mobChances = new HashMap<EntityType, Double>();
 		noLootingEffectMobs = new HashSet<EntityType>();
+		double chanceForUnknown = 0D;
 		for(String line : chances.split("\n")){
 			String[] parts = line.replace(" ", "").replace("\t", "").toUpperCase().split(":");
 			if(parts.length < 2) continue;
 			try{
+				double dropChance = Double.parseDouble(parts[1]);
 				if(parts[0].equals("UNKNOWN")){
-					DEFAULT_CHANCE = Float.parseFloat(parts[1]);
+					chanceForUnknown = dropChance;
 					continue;
 				}
 				EntityType eType = EntityType.valueOf(parts[0]);
-				double dropChance = Double.parseDouble(parts[1]);
 				mobChances.put(eType, dropChance);
 				if(parts.length > 2 && parts[2].equals("NOLOOTING")) noLootingEffectMobs.add(eType);
-				// Commented out to allow >1 because Spawn-Reason modifiers are added after this
-				/*if(dropChance > 1F){
-					pl.getLogger().severe("Invalid value: "+parts[1]);
-					pl.getLogger().severe("Drop chance must be between 0 and 1");
+				if(dropChance > 1F){
+					pl.getLogger().warning("Invalid value: "+parts[1]);
+					pl.getLogger().warning("Drop chance should be a decimal between 0 and 1");
 					mobChances.put(eType, Math.min(dropChance/10F, 1F));
-				}*/
+				}
 			}
 			catch(NumberFormatException ex){pl.getLogger().severe("Invalid value: "+parts[1]);}
-			catch(IllegalArgumentException ex){
-				pl.getLogger().severe("Unknown entity type: "+parts[0]);
-			}
+			catch(IllegalArgumentException ex){pl.getLogger().severe("Unknown entity type: "+parts[0]);}
 		}
+		DEFAULT_CHANCE = chanceForUnknown;
 		explodingChargedCreepers = new HashSet<UUID>();
+
+		// VehicleDestroyListener can handle minecarts and boats
+		boolean nonLivingEntitiesCanDropHeads = mobChances.entrySet().stream()
+				.anyMatch(entry -> !entry.getKey().isAlive() && entry.getValue() > 0);
+		if(nonLivingEntitiesCanDropHeads){
+			pl.getServer().getPluginManager().registerEvents(new VehicleDestroyListener(this), pl);
+		}
+	}
+
+	String getNormalizedName(Entity entity){
+		return entity.getCustomName() != null ? entity.getCustomName() : EvUtils.getNormalizedName(entity.getType());
+	}
+	String getItemDisplay(ItemStack item){
+		String itemName = item.hasItemMeta() && item.getItemMeta().hasDisplayName()
+				? item.getItemMeta().getDisplayName() : TextUtils.getNormalizedName(item.getType());
+		return ITEM_DISPLAY_FORMAT.replaceAll("${NAME}", itemName).replaceAll("${AMOUNT}", ""+item.getAmount());
+	}
+	void sendAnnouncement(String message, Collection<? extends Player> targets){
+		for(Player player : targets){
+			pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+player.getName()+" "+message);
+		}
+	}
+	void dropHead(Entity entity, EntityDeathEvent evt, Entity killer, ItemStack weapon){
+		if(evt == null) entity.getWorld().dropItemNaturally(entity.getLocation(), pl.getAPI().getHead(entity));
+		else evt.getDrops().add(pl.getAPI().getHead(entity));
+		String message;
+		if(killer != null){
+			if(weapon != null){
+				message = MSH_BEHEAD_BY_WITH;
+				String itemDisplay = getItemDisplay(weapon);
+				String jsonData = TellrawUtils.convertItemStackToJson(weapon);
+				String showItemTellraw = "{\"text\":\""+itemDisplay+"\",\"hoverEvent\":{\"action\":\"show_item\",\"value\":\""+jsonData+"\"}}";
+				message = message.replaceAll("${ITEM}", "\"},"+showItemTellraw+",{\"text\":\"");
+			}
+			else message = MSH_BEHEAD_BY;
+			message = message.replaceAll("${KILLER}", getNormalizedName(killer));//TODO: action:show_entity for killer
+		}
+		else message = MSG_BEHEAD;
+		message = message.replaceAll("${VICTIM}", getNormalizedName(entity));//TODO: action:show_entity for victim
+		switch(entity instanceof Player ? ANNOUNCE_PLAYERS : ANNOUNCE_MOBS){
+			case GLOBAL:
+				sendAnnouncement(message, pl.getServer().getOnlinePlayers());
+				break;
+			case LOCAL:
+				sendAnnouncement(message, EvUtils.getNearbyPlayers(entity.getLocation(), LOCAL_RANGE));
+				break;
+			case DIRECT:
+				if(killer instanceof Player) sendAnnouncement(message, Arrays.asList((Player)killer));
+				break;
+			case OFF:
+				//sendAnnouncement(message, Arrays.asList());
+				break;
+		}
 	}
 
 	static long timeSinceLastPlayerDamage(Entity entity){
@@ -113,16 +191,10 @@ public class EntityDeathListener implements Listener{
 		return e.hasMetadata("SpawnReason") ? e.getMetadata("SpawnReason").get(0).asDouble() : 1D;
 	}
 
-	void doHeadDrop(EntityDeathEvent evt){
-		if(DEBUG_MODE) pl.getLogger().info("Dropped Head: "+evt.getEntity().getType());
-		//entity.getWorld().dropItem(entity).getLocation(), pl.getAPI().getHead(entity));
-		evt.getDrops().add(pl.getAPI().getHead(evt.getEntity()));
-	}
-
 	@EventHandler
 	public void entityDeathEvent(EntityDeathEvent evt){
 		final LivingEntity victim = evt.getEntity();
-		if(playerHeadsOnly && victim instanceof Player == false) return;
+		if(PLAYER_HEADS_ONLY && victim instanceof Player == false) return;
 		Entity killer = null;
 		if(victim.getLastDamageCause() != null && victim.getLastDamageCause() instanceof EntityDamageByEntityEvent){
 			killer = ((EntityDamageByEntityEvent)victim.getLastDamageCause()).getDamager();
@@ -131,7 +203,7 @@ public class EntityDeathListener implements Listener{
 				if(CHARGED_CREEPER_DROPS && !HeadUtils.dropsHeadFromChargedCreeper(victim.getType())
 						&& explodingChargedCreepers.add(killer.getUniqueId())){
 					if(DEBUG_MODE) pl.getLogger().info("Killed by charged creeper: "+victim.getType());
-					doHeadDrop(evt);
+					dropHead(victim, evt, killer, null);
 					// Cleanup memory after a tick (optional)
 					final UUID creeperUUID = killer.getUniqueId();
 					new BukkitRunnable(){@Override public void run(){
@@ -142,12 +214,12 @@ public class EntityDeathListener implements Listener{
 			}
 			if(killer.hasPermission("dropheads.alwaysbehead")){
 				if(DEBUG_MODE) pl.getLogger().info("dropheads.alwaysbehead perm: "+killer.getCustomName());
-				doHeadDrop(evt);
+				dropHead(victim, evt, killer, killer instanceof LivingEntity ? ((LivingEntity)killer).getEquipment().getItemInMainHand() : null);
 				return;
 			}
 		}
 		// Check if killer is not a player.
-		if(playerKillsOnly && (killer == null ||
+		if(!allowNonPlayerKills && (killer == null ||
 			(killer instanceof Player == false &&
 				(
 					!allowProjectileKills ||
@@ -182,7 +254,7 @@ public class EntityDeathListener implements Listener{
 			}
 		}
 		if(rand.nextDouble() < dropChance){
-			doHeadDrop(evt);
+			dropHead(victim, evt, killer, itemInHand);
 			if(DEBUG_MODE) pl.getLogger().info("Dropped Head: "+victim.getType().name()+"\n"
 					+"Raw chance: "+rawDropChance*100D+"%, "
 					+"SpawnReason Bonus: "+(spawnCauseMod-1D)*100D+"%, "
