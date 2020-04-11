@@ -1,5 +1,15 @@
-# Only drop heads when killed directly by a player
-player-kills-only: true
+# How to announce beheadings, options are GLOBAL, LOCAL, DIRECT, or OFF
+behead-announcement-mobs: LOCAL
+behead-announcement-players: GLOBAL
+
+# The messages used to announce beheading
+message-beheaded: '&6${VICTIM}&r was decapitated'
+message-beheaded-by-entity: '&6${VICTIM}&r was decapitated by &6${KILLER}&r'
+# message-beheaded-by-entity-with-item:
+#    '&6${VICTIM}&r was decapitated by &6${KILLER}&r using &b${ITEM}'
+
+# Whether to drop heads when not killed by a player
+drop-for-nonplayer-kills: false
 
 # Whether to drop heads if killed by projectile weapon from a player
 # Only checked if player-kills-only is true
@@ -39,8 +49,8 @@ show-grumm-in-tab-complete: false
 must-use-axe: false
 
 # Enable plugin Updater (checks for new versions with new head textures)
-# Note: Disabled by default because some servers have reported errors
-update-plugin: false
+# Note: Disabled if your server console is reporting errors
+update-plugin: true
 
 # Run in debug mode (prints extra information to console)
 debug-messages: true
@@ -55,12 +65,13 @@ must-use:
 
 # (Optional) Let certain tools have a higher chance of beheading
 # The number is the percent increase in drop chance when using that tool
-# Eg: 3 = 3x chance, 0.8 = 80% chance increase, etc.
+# Eg: 3 = 3x chance, 0.8 = 80% more likely, etc.
 specific-tool-modifiers:
   GOLD_AXE: 3
   DIAMOND_AXE: 1
   IRON_AXE: 0.8
   STONE_AXE: 0.5
+  SHEARS: 2
   DIAMOND_SWORD: 0.2
   IRON_SWORD: 0.1
-  SHEARS: 0.05
+
