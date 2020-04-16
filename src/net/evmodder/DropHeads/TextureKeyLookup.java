@@ -232,15 +232,23 @@ public class TextureKeyLookup{
 	static String getNameFromKey(EntityType entity, String textureKey){
 		if(textureKey.equals("PLAYER|GRUMM")) return "Grumm";
 		String[] dataFlags = textureKey.split("\\|");
-		if((entity == null ? textureKey.startsWith("TROPICAL_FISH|") : entity == EntityType.TROPICAL_FISH)){
-			if(dataFlags.length == 2) return EvUtils.capitalizeAndSpacify(dataFlags[1], '_');
-			try{
-				DyeColor bodyColor = DyeColor.valueOf(dataFlags[1]);
-				DyeColor patternColor = dataFlags.length == 3 ? bodyColor : DyeColor.valueOf(dataFlags[2]);
-				Pattern pattern = Pattern.valueOf(dataFlags[dataFlags.length == 3 ? 2 : 3]);
-				return getTropicalFishName(new CCP(bodyColor, patternColor, pattern));
-			}
-			catch(IllegalArgumentException e){}
+		String entityName = entity == null ? dataFlags[0] : entity.name();
+		switch(entityName){
+			case "TROPICAL_FISH":
+				if(dataFlags.length == 2) return EvUtils.capitalizeAndSpacify(dataFlags[1], '_');// 22 common
+				try{
+					DyeColor bodyColor = DyeColor.valueOf(dataFlags[1]);
+					DyeColor patternColor = dataFlags.length == 3 ? bodyColor : DyeColor.valueOf(dataFlags[2]);
+					Pattern pattern = Pattern.valueOf(dataFlags[dataFlags.length == 3 ? 2 : 3]);
+					return getTropicalFishName(new CCP(bodyColor, patternColor, pattern));// C-C-P
+				}
+				catch(IllegalArgumentException e){}
+				break;
+			case "VILLAGER": case "ZOMBIE_VILLAGER":
+				if(textureKey.contains("|NONE")){
+					textureKey = textureKey.replace("|NONE", "");
+					dataFlags = textureKey.split("\\|");
+				}
 		}
 		StringBuilder builder = new StringBuilder("");
 		for(int i=dataFlags.length-1; i>0; --i){
