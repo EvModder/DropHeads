@@ -33,6 +33,9 @@ refresh-item-names: false
 # new texture? Note: to refresh, heads must be mined or dropped
 update-on-skin-change: false
 
+# Track mob spawn reasons (affects drop rates with spawn-cause-modifiers.txt)
+track-mob-spawns: true
+
 # Enable the mechanic where any mob killed by a charged creeper explosion
 # will drop its head with 100% probability * the spawn-cause modifier
 # This setting overrides "player-kills-only" (but not "player-heads-only")

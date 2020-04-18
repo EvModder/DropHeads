@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
@@ -27,14 +28,17 @@ public class EntitySpawnListener implements Listener{
 			int i = line.indexOf(":");
 			if(i != -1){
 				try{
-					spawnModifiers.put(
-							SpawnReason.valueOf(line.substring(0, i)),
-							Float.parseFloat(line.substring(i+1)));
+					SpawnReason reason = SpawnReason.valueOf(line.substring(0, i));
+					Float modifier = Float.parseFloat(line.substring(i+1));
+					if(Math.abs(1 - modifier) < 0.001) spawnModifiers.put(reason, modifier);
 				}
 				catch(IllegalArgumentException ex){
 					plugin.getLogger().warning("Unknown SpawnReason: '"+line+"' in config file!");
 				}
 			}
+		}
+		if(spawnModifiers.isEmpty()){
+			HandlerList.unregisterAll(this);
 		}
 	}
 
@@ -42,9 +46,7 @@ public class EntitySpawnListener implements Listener{
 	public void entitySpawnEvent(CreatureSpawnEvent evt){
 		if(!evt.isCancelled() && evt.getSpawnReason() != null){
 			Float modifier = spawnModifiers.get(evt.getSpawnReason());
-			if(modifier != null && modifier != 1){
-				evt.getEntity().setMetadata("SpawnReason", new FixedMetadataValue(plugin, modifier));
-			}
+			if(modifier != null) evt.getEntity().setMetadata("SpawnReason", new FixedMetadataValue(plugin, modifier));
 		}
 	}
 }

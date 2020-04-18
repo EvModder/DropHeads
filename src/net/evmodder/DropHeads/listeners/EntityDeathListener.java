@@ -1,8 +1,6 @@
 package net.evmodder.DropHeads.listeners;
 
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -46,7 +44,7 @@ public class EntityDeathListener implements Listener{
 	enum AnnounceMode {GLOBAL, LOCAL, DIRECT, OFF};
 	final AnnounceMode ANNOUNCE_PLAYERS, ANNOUNCE_MOBS;
 	final String MSG_BEHEAD, MSH_BEHEAD_BY, MSH_BEHEAD_BY_WITH;
-	final String ITEM_DISPLAY_FORMAT = TextUtils.translateAlternateColorCodes('&', "&r[&b${NAME}&ex{AMOUNT}&r]");//TODO: move to config
+	final String ITEM_DISPLAY_FORMAT = TextUtils.translateAlternateColorCodes('&', "&r[&b${NAME}&r]");//TODO: move to config
 	final int LOCAL_RANGE = 150;//TODO: move to config
 
 	AnnounceMode parseAnnounceMode(@NotNull String value, AnnounceMode defaultMode){
@@ -70,9 +68,9 @@ public class EntityDeathListener implements Listener{
 		String msg = pl.getConfig().getString("message-beheaded", "${VICTIM} was beheaded");
 		String msgBy = pl.getConfig().getString("message-beheaded-by-entity", "${VICTIM} was beheaded by ${KILLER}");
 		String msgByWith = pl.getConfig().getString("message-beheaded-by-entity-with-item", "${VICTIM} was beheaded by ${KILLER} using ${ITEM}");
-		MSG_BEHEAD = "{\"text\":\""+TextUtils.translateAlternateColorCodes('&', msg)+"\"}";
-		MSH_BEHEAD_BY = "{\"text\":\""+TextUtils.translateAlternateColorCodes('&', msgBy)+"\"}";
-		MSH_BEHEAD_BY_WITH = "{\"text\":\""+TextUtils.translateAlternateColorCodes('&', msgByWith)+"\"}";
+		MSG_BEHEAD = "[{\"text\":\""+TextUtils.translateAlternateColorCodes('&', msg)+"\"}]";
+		MSH_BEHEAD_BY = "[{\"text\":\""+TextUtils.translateAlternateColorCodes('&', msgBy)+"\"}]";
+		MSH_BEHEAD_BY_WITH = "[{\"text\":\""+TextUtils.translateAlternateColorCodes('&', msgByWith)+"\"}]";
 		rand = new Random();
 
 		mustUseTools = new HashSet<Material>();
@@ -138,17 +136,16 @@ public class EntityDeathListener implements Listener{
 	}
 
 	String getNormalizedName(Entity entity){
-		return entity.getCustomName() != null ? entity.getCustomName() : EvUtils.getNormalizedName(entity.getType());
+		if(entity instanceof Player) return ((Player)entity).getDisplayName();
+		return entity.getName() != null ? entity.getName() : EvUtils.getNormalizedName(entity.getType());
 	}
 	String getItemDisplay(ItemStack item){
 		String itemName = item.hasItemMeta() && item.getItemMeta().hasDisplayName()
 				? item.getItemMeta().getDisplayName() : TextUtils.getNormalizedName(item.getType());
-		return ITEM_DISPLAY_FORMAT.replaceAll("${NAME}", itemName).replaceAll("${AMOUNT}", ""+item.getAmount());
+		return ITEM_DISPLAY_FORMAT.replace("${NAME}", itemName).replace("${AMOUNT}", ""+item.getAmount());
 	}
-	void sendAnnouncement(String message, Collection<? extends Player> targets){
-		for(Player player : targets){
-			pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+player.getName()+" "+message);
-		}
+	void sendTellraw(String target, String message){
+		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+target+" "+message);
 	}
 	void dropHead(Entity entity, EntityDeathEvent evt, Entity killer, ItemStack weapon){
 		if(evt == null) entity.getWorld().dropItemNaturally(entity.getLocation(), pl.getAPI().getHead(entity));
@@ -159,23 +156,34 @@ public class EntityDeathListener implements Listener{
 				message = MSH_BEHEAD_BY_WITH;
 				String itemDisplay = getItemDisplay(weapon);
 				String jsonData = TellrawUtils.convertItemStackToJson(weapon);
-				String showItemTellraw = "{\"text\":\""+itemDisplay+"\",\"hoverEvent\":{\"action\":\"show_item\",\"value\":\""+jsonData+"\"}}";
-				message = message.replaceAll("${ITEM}", "\"},"+showItemTellraw+",{\"text\":\"");
+				String showItemTellraw = "{\"text\":\""+itemDisplay
+						+"\",\"hoverEvent\":{\"action\":\"show_item\",\"value\":\""+jsonData.replace("\"", "\\\"")+"\"}}";
+				message = message.replace("${ITEM}", "\"},"+showItemTellraw+",{\"text\":\"");
 			}
 			else message = MSH_BEHEAD_BY;
-			message = message.replaceAll("${KILLER}", getNormalizedName(killer));//TODO: action:show_entity for killer
+			//TODO: action:show_entity for killer and victim (but make JSON shorter...)
+			/*String killerName = getNormalizedName(killer);
+			String killerJsonData = TellrawUtils.convertEntityToJson(killer);
+			String showEntityTellraw = "{\"text\":\""+killerName
+					+"\",\"hoverEvent\":{\"action\":\"show_entity\",\"value\":\""+killerJsonData.replace("\"", "\\\"")+"\"}}";
+			message = message.replace("${KILLER}", "\"},"+showEntityTellraw+",{\"text\":\"");*/
+			message = message.replace("${KILLER}", getNormalizedName(killer));
 		}
 		else message = MSG_BEHEAD;
-		message = message.replaceAll("${VICTIM}", getNormalizedName(entity));//TODO: action:show_entity for victim
+		message = message.replace("${VICTIM}", getNormalizedName(entity));//TODO: action:show_entity for victim
+
+		if(DEBUG_MODE) pl.getLogger().info("Tellraw message: "+message);
+		if(DEBUG_MODE) pl.getLogger().info("Announce Mode: "+(entity instanceof Player ? ANNOUNCE_PLAYERS : ANNOUNCE_MOBS));
+
 		switch(entity instanceof Player ? ANNOUNCE_PLAYERS : ANNOUNCE_MOBS){
 			case GLOBAL:
-				sendAnnouncement(message, pl.getServer().getOnlinePlayers());
+				sendTellraw("@a", message);
 				break;
 			case LOCAL:
-				sendAnnouncement(message, EvUtils.getNearbyPlayers(entity.getLocation(), LOCAL_RANGE));
+				for(Player p : EvUtils.getNearbyPlayers(entity.getLocation(), LOCAL_RANGE)) sendTellraw(p.getName(), message);
 				break;
 			case DIRECT:
-				if(killer instanceof Player) sendAnnouncement(message, Arrays.asList((Player)killer));
+				if(killer instanceof Player) sendTellraw(killer.getName(), message);
 				break;
 			case OFF:
 				//sendAnnouncement(message, Arrays.asList());

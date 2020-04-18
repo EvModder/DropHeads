@@ -42,8 +42,10 @@ public final class DropHeads extends EvPlugin{
 		}
 		instance = this;
 		api = new HeadAPI();
-		getServer().getPluginManager().registerEvents(new EntitySpawnListener(), this);
 		getServer().getPluginManager().registerEvents(new EntityDeathListener(), this);
+		if(config.getBoolean("track-mob-spawns", true)){
+			getServer().getPluginManager().registerEvents(new EntitySpawnListener(), this);
+		}
 		if(config.getBoolean("drop-for-indirect-kills", false)){
 			getServer().getPluginManager().registerEvents(new EntityDamageListener(), this);
 		}
