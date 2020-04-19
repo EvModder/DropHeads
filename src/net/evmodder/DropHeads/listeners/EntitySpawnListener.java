@@ -30,7 +30,7 @@ public class EntitySpawnListener implements Listener{
 				try{
 					SpawnReason reason = SpawnReason.valueOf(line.substring(0, i));
 					Float modifier = Float.parseFloat(line.substring(i+1));
-					if(Math.abs(1 - modifier) < 0.001) spawnModifiers.put(reason, modifier);
+					if(Math.abs(1 - modifier) < 0.0001) spawnModifiers.put(reason, modifier);
 				}
 				catch(IllegalArgumentException ex){
 					plugin.getLogger().warning("Unknown SpawnReason: '"+line+"' in config file!");
