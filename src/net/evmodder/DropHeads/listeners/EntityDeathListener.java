@@ -162,23 +162,18 @@ public class EntityDeathListener implements Listener{
 		if(killer != null){
 			if(weapon != null){
 				message.addComponent(MSH_BEHEAD_BY_WITH);
-				if(DEBUG_MODE) pl.getLogger().info("Tellraw message0: "+message);
 				String itemDisplay = getItemDisplay(weapon);
 				String jsonData = TellrawUtils.convertItemStackToJson(weapon);
 				ActionTextComponent comp = new ActionTextComponent(itemDisplay, ActionEvent.SHOW_ITEM, jsonData);
 				message.replaceFirstWithComponent("${ITEM}", comp);
-				if(DEBUG_MODE) pl.getLogger().info("Tellraw message1: "+message);
 			}
 			else message.addComponent(MSH_BEHEAD_BY);
-			message.replaceFirstWithComponent("${KILLER}", new SelectorComponent(killer.getUniqueId())
-					/*new TextComponent(getNormalizedName(killer))*/);
-			if(DEBUG_MODE) pl.getLogger().info("Tellraw message2: "+message);
+			message.replaceFirstWithComponent("${KILLER}", new SelectorComponent(killer.getUniqueId()));
 		}
 		else message.addComponent(MSG_BEHEAD);
-		message.replaceFirstWithComponent("${VICTIM}", new SelectorComponent(entity.getUniqueId())
-				/*new TextComponent(getNormalizedName(entity))*/);
+		message.replaceFirstWithComponent("${VICTIM}", new SelectorComponent(entity.getUniqueId()));
 
-		if(DEBUG_MODE) pl.getLogger().info("Tellraw message3: "+message);
+//		if(DEBUG_MODE) pl.getLogger().info("Tellraw message: "+message);
 		if(DEBUG_MODE) pl.getLogger().info("Announce Mode: "+(entity instanceof Player ? ANNOUNCE_PLAYERS : ANNOUNCE_MOBS));
 
 		switch(entity instanceof Player ? ANNOUNCE_PLAYERS : ANNOUNCE_MOBS){
