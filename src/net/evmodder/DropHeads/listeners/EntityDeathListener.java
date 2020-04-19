@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.UUID;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
@@ -24,9 +25,14 @@ import org.bukkit.scheduler.BukkitRunnable;
 import com.sun.istack.internal.NotNull;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.HeadUtils;
+import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.EvLib.EvUtils;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.extras.TellrawUtils;
+import net.evmodder.EvLib.extras.TellrawUtils.ActionEvent;
+import net.evmodder.EvLib.extras.TellrawUtils.ActionTextComponent;
+import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
+import net.evmodder.EvLib.extras.TellrawUtils.TellrawBlob;
 import net.evmodder.EvLib.extras.TextUtils;
 
 public class EntityDeathListener implements Listener{
@@ -44,7 +50,8 @@ public class EntityDeathListener implements Listener{
 	enum AnnounceMode {GLOBAL, LOCAL, DIRECT, OFF};
 	final AnnounceMode ANNOUNCE_PLAYERS, ANNOUNCE_MOBS;
 	final String MSG_BEHEAD, MSH_BEHEAD_BY, MSH_BEHEAD_BY_WITH;
-	final String ITEM_DISPLAY_FORMAT = TextUtils.translateAlternateColorCodes('&', "&r[&b${NAME}&r]");//TODO: move to config
+//	final String ITEM_DISPLAY_FORMAT = TextUtils.translateAlternateColorCodes('&', "&r[&b${NAME}&r]");//TODO: move to config
+	final String ITEM_DISPLAY_FORMAT = "${NAME}";
 	final int LOCAL_RANGE = 150;//TODO: move to config
 
 	AnnounceMode parseAnnounceMode(@NotNull String value, AnnounceMode defaultMode){
@@ -68,9 +75,9 @@ public class EntityDeathListener implements Listener{
 		String msg = pl.getConfig().getString("message-beheaded", "${VICTIM} was beheaded");
 		String msgBy = pl.getConfig().getString("message-beheaded-by-entity", "${VICTIM} was beheaded by ${KILLER}");
 		String msgByWith = pl.getConfig().getString("message-beheaded-by-entity-with-item", "${VICTIM} was beheaded by ${KILLER} using ${ITEM}");
-		MSG_BEHEAD = "[{\"text\":\""+TextUtils.translateAlternateColorCodes('&', msg)+"\"}]";
-		MSH_BEHEAD_BY = "[{\"text\":\""+TextUtils.translateAlternateColorCodes('&', msgBy)+"\"}]";
-		MSH_BEHEAD_BY_WITH = "[{\"text\":\""+TextUtils.translateAlternateColorCodes('&', msgByWith)+"\"}]";
+		MSG_BEHEAD = TextUtils.translateAlternateColorCodes('&', msg);
+		MSH_BEHEAD_BY = TextUtils.translateAlternateColorCodes('&', msgBy);
+		MSH_BEHEAD_BY_WITH = TextUtils.translateAlternateColorCodes('&', msgByWith);
 		rand = new Random();
 
 		mustUseTools = new HashSet<Material>();
@@ -142,6 +149,7 @@ public class EntityDeathListener implements Listener{
 	String getItemDisplay(ItemStack item){
 		String itemName = item.hasItemMeta() && item.getItemMeta().hasDisplayName()
 				? item.getItemMeta().getDisplayName() : TextUtils.getNormalizedName(item.getType());
+		itemName = JunkUtils.getRarityColor(item, true) + itemName + ChatColor.RESET;
 		return ITEM_DISPLAY_FORMAT.replace("${NAME}", itemName).replace("${AMOUNT}", ""+item.getAmount());
 	}
 	void sendTellraw(String target, String message){
@@ -150,40 +158,38 @@ public class EntityDeathListener implements Listener{
 	void dropHead(Entity entity, EntityDeathEvent evt, Entity killer, ItemStack weapon){
 		if(evt == null) entity.getWorld().dropItemNaturally(entity.getLocation(), pl.getAPI().getHead(entity));
 		else evt.getDrops().add(pl.getAPI().getHead(entity));
-		String message;
+		TellrawBlob message = new TellrawBlob();
 		if(killer != null){
 			if(weapon != null){
-				message = MSH_BEHEAD_BY_WITH;
+				message.addComponent(MSH_BEHEAD_BY_WITH);
+				if(DEBUG_MODE) pl.getLogger().info("Tellraw message0: "+message);
 				String itemDisplay = getItemDisplay(weapon);
 				String jsonData = TellrawUtils.convertItemStackToJson(weapon);
-				String showItemTellraw = "{\"text\":\""+itemDisplay
-						+"\",\"hoverEvent\":{\"action\":\"show_item\",\"value\":\""+jsonData.replace("\"", "\\\"")+"\"}}";
-				message = message.replace("${ITEM}", "\"},"+showItemTellraw+",{\"text\":\"");
+				ActionTextComponent comp = new ActionTextComponent(itemDisplay, ActionEvent.SHOW_ITEM, jsonData);
+				message.replaceFirstWithComponent("${ITEM}", comp);
+				if(DEBUG_MODE) pl.getLogger().info("Tellraw message1: "+message);
 			}
-			else message = MSH_BEHEAD_BY;
-			//TODO: action:show_entity for killer and victim (but make JSON shorter...)
-			/*String killerName = getNormalizedName(killer);
-			String killerJsonData = TellrawUtils.convertEntityToJson(killer);
-			String showEntityTellraw = "{\"text\":\""+killerName
-					+"\",\"hoverEvent\":{\"action\":\"show_entity\",\"value\":\""+killerJsonData.replace("\"", "\\\"")+"\"}}";
-			message = message.replace("${KILLER}", "\"},"+showEntityTellraw+",{\"text\":\"");*/
-			message = message.replace("${KILLER}", getNormalizedName(killer));
+			else message.addComponent(MSH_BEHEAD_BY);
+			message.replaceFirstWithComponent("${KILLER}", new SelectorComponent(killer.getUniqueId())
+					/*new TextComponent(getNormalizedName(killer))*/);
+			if(DEBUG_MODE) pl.getLogger().info("Tellraw message2: "+message);
 		}
-		else message = MSG_BEHEAD;
-		message = message.replace("${VICTIM}", getNormalizedName(entity));//TODO: action:show_entity for victim
+		else message.addComponent(MSG_BEHEAD);
+		message.replaceFirstWithComponent("${VICTIM}", new SelectorComponent(entity.getUniqueId())
+				/*new TextComponent(getNormalizedName(entity))*/);
 
-		if(DEBUG_MODE) pl.getLogger().info("Tellraw message: "+message);
+		if(DEBUG_MODE) pl.getLogger().info("Tellraw message3: "+message);
 		if(DEBUG_MODE) pl.getLogger().info("Announce Mode: "+(entity instanceof Player ? ANNOUNCE_PLAYERS : ANNOUNCE_MOBS));
 
 		switch(entity instanceof Player ? ANNOUNCE_PLAYERS : ANNOUNCE_MOBS){
 			case GLOBAL:
-				sendTellraw("@a", message);
+				sendTellraw("@a", message.toString());
 				break;
 			case LOCAL:
-				for(Player p : EvUtils.getNearbyPlayers(entity.getLocation(), LOCAL_RANGE)) sendTellraw(p.getName(), message);
+				for(Player p : EvUtils.getNearbyPlayers(entity.getLocation(), LOCAL_RANGE)) sendTellraw(p.getName(), message.toString());
 				break;
 			case DIRECT:
-				if(killer instanceof Player) sendTellraw(killer.getName(), message);
+				if(killer instanceof Player) sendTellraw(killer.getName(), message.toString());
 				break;
 			case OFF:
 				//sendAnnouncement(message, Arrays.asList());

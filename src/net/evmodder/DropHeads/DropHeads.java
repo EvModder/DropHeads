@@ -30,7 +30,7 @@ import net.evmodder.EvLib.Updater;
 // * move textures from head-textures.txt to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
 // * using above, inside /textures/MOB_NAME.txt, set 'drop-rate: x' to modify chance for that sub-type only
 // * option in debug cmd to place heads on a pretty wall display (for plugin icon img)
-// * Multiple possible behead messages, one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
+// * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
 public final class DropHeads extends EvPlugin{
 	private static DropHeads instance; public static DropHeads getPlugin(){return instance;}
 	private HeadAPI api;
