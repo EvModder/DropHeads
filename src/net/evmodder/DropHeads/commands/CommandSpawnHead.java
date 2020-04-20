@@ -93,7 +93,7 @@ public class CommandSpawnHead extends EvCommand{
 				head.setItemMeta(meta);
 			}
 			else if(target.length() > 100){
-				head = HeadUtils.makeSkull(target);
+				head = HeadUtils.makeSkull(target, ChatColor.YELLOW+"UNKNOWN Head");
 			}
 		}
 		if(head != null){
