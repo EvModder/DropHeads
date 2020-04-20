@@ -12,9 +12,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.DropHeads.HeadUtils;
 import net.evmodder.EvLib.EvCommand;
-import net.evmodder.EvLib.EvUtils;
+import net.evmodder.EvLib.extras.HeadUtils;
+import net.evmodder.EvLib.extras.WebUtils;
 
 public class CommandSpawnHead extends EvCommand{
 	final private DropHeads pl;
@@ -69,7 +69,7 @@ public class CommandSpawnHead extends EvCommand{
 		}
 		ItemStack head = null;
 
-		EntityType eType = EvUtils.getEntityByName(target.toUpperCase());
+		EntityType eType = HeadUtils.getEntityByName(target.toUpperCase());
 		String textureKey = eType.name()+"|"+extraData;
 		if((eType != null && eType != EntityType.UNKNOWN) || pl.getAPI().textureExists(textureKey)){
 			if(extraData != null){
@@ -82,7 +82,7 @@ public class CommandSpawnHead extends EvCommand{
 		}
 		else{
 			OfflinePlayer p = pl.getServer().getOfflinePlayer(target);
-			if(p.hasPlayedBefore() || EvUtils.checkExists(p.getName())){
+			if(p.hasPlayedBefore() || WebUtils.checkExists(p.getName())){
 				head = HeadUtils.getPlayerHead(p);
 			}
 			else if(target.startsWith("MHF_") && HeadUtils.MHF_Lookup.containsKey(target.toUpperCase())){

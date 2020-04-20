@@ -13,7 +13,7 @@ import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.DropHeads.HeadUtils;
+import net.evmodder.EvLib.extras.HeadUtils;
 
 public class VehicleDestroyListener implements Listener{
 	final DropHeads pl;

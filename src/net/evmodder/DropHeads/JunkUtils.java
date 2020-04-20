@@ -1,7 +1,11 @@
 package net.evmodder.DropHeads;
 
 import org.bukkit.ChatColor;
+import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
+import net.evmodder.EvLib.extras.ReflectionUtils;
+import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
+import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
 
 // A trashy place to dump stuff that I should probably move to EvLib after ensure cross-version safety
 public class JunkUtils{
@@ -47,5 +51,52 @@ public class JunkUtils{
 			default:
 				return item.hasItemMeta() && item.getItemMeta().hasEnchants() ? ChatColor.AQUA : ChatColor.WHITE;
 		}
+	}
+
+
+	// ItemStack methods to get a net.minecraft.server.ItemStack object for serialization
+	final static RefClass craftItemStackClazz = ReflectionUtils.getRefClass("{cb}.inventory.CraftItemStack");
+	final static RefMethod asNMSCopyMethod = craftItemStackClazz.getMethod("asNMSCopy", ItemStack.class);
+
+	// NMS Method to serialize a net.minecraft.server.vX_X.ItemStack to a valid JSON string
+	final static RefClass nmsItemStackClazz = ReflectionUtils.getRefClass("{nms}.ItemStack");
+	final static RefClass nbtTagCompoundClazz = ReflectionUtils.getRefClass("{nms}.NBTTagCompound");
+	final static RefMethod saveNmsItemStackMethod = nmsItemStackClazz.getMethod("save", nbtTagCompoundClazz);
+
+	final static int JSON_LIMIT = 10000;
+
+	// https://www.spigotmc.org/threads/tut-item-tooltips-with-the-chatcomponent-api.65964/
+	/**
+	 * Converts an {@link org.bukkit.inventory.ItemStack} to a JSON string
+	 * for sending with TextAction.ITEM
+	 *
+	 * @param itemStack the item to convert
+	 * @return the JSON string representation of the item
+	 */
+	public static String convertItemStackToJson(ItemStack item){
+		Object nmsNbtTagCompoundObj = nbtTagCompoundClazz.getConstructor().create();
+		Object nmsItemStackObj = asNMSCopyMethod.of(null).call(item);
+		Object itemAsJsonObject = saveNmsItemStackMethod.of(nmsItemStackObj).call(nmsNbtTagCompoundObj);
+		String jsonString = itemAsJsonObject.toString();
+		if(jsonString.length() > JSON_LIMIT){
+			item = new ItemStack(item.getType(), item.getAmount());//TODO: Reduce item json data in a less destructive way
+			nmsNbtTagCompoundObj = nbtTagCompoundClazz.getConstructor().create();
+			nmsItemStackObj = asNMSCopyMethod.of(null).call(item);
+			itemAsJsonObject = saveNmsItemStackMethod.of(nmsItemStackObj).call(nmsNbtTagCompoundObj);
+			jsonString = itemAsJsonObject.toString();
+		}
+		return itemAsJsonObject.toString();
+	}
+
+	// Similar as above, but for Entity instead of ItemStack
+	final static RefClass craftEntityClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftEntity");
+	final static RefMethod getHandleMethod = craftEntityClazz.getMethod("getHandle");
+	final static RefClass nmsEntityClazz = ReflectionUtils.getRefClass("{nms}.Entity");
+	final static RefMethod saveNmsEntityMethod = nmsEntityClazz.getMethod("save", nbtTagCompoundClazz);
+	public static String convertEntityToJson(Entity entity){
+		Object nmsNbtTagCompoundObj = nbtTagCompoundClazz.getConstructor().create();
+		Object nmsEntityObj = getHandleMethod.of(entity).call();
+		Object entityAsJsonObject = saveNmsEntityMethod.of(nmsEntityObj).call(nmsNbtTagCompoundObj);
+		return entityAsJsonObject.toString();
 	}
 }

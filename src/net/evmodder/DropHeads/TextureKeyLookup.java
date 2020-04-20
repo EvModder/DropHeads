@@ -14,10 +14,10 @@ import org.bukkit.entity.Sheep;
 import org.bukkit.entity.Shulker;
 import org.bukkit.entity.TropicalFish;
 import org.bukkit.entity.TropicalFish.Pattern;
-import net.evmodder.EvLib.EvUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
+import net.evmodder.EvLib.extras.TextUtils;
 import org.bukkit.entity.Villager;
 import org.bukkit.entity.Wolf;
 import org.bukkit.entity.ZombieVillager;
@@ -84,12 +84,13 @@ public class TextureKeyLookup{
 		fishColorNames.put(DyeColor.YELLOW, "Yellow");
 	}
 
+	//TODO: move to TextUtils or EntityUtils?
 	static String getTropicalFishName(CCP ccp){
 		String name = tropicalFishNames.get(ccp);
 		if(name == null){
 			StringBuilder builder = new StringBuilder(fishColorNames.get(ccp.bodyColor));
 			if(ccp.bodyColor != ccp.patternColor) builder.append('-').append(fishColorNames.get(ccp.patternColor));
-			builder.append(' ').append(EvUtils.capitalizeAndSpacify(ccp.pattern.name(), '_'));
+			builder.append(' ').append(TextUtils.capitalizeAndSpacify(ccp.pattern.name(), '_'));
 			name = builder.toString();
 			tropicalFishNames.put(ccp, name); // Cache result. Size can reach up to 2700 varieties (15*15*12)
 		}
@@ -98,6 +99,59 @@ public class TextureKeyLookup{
 	static String getTropicalFishName(TropicalFish fish){
 		return getTropicalFishName(new CCP(fish.getBodyColor(), fish.getPatternColor(), fish.getPattern()));
 	}
+
+	//TODO: move to EntityUtils in EvLib
+	/*public static Gene getPandaTrait(Panda panda){
+		if(panda.getMainGene() == panda.getHiddenGene()) return panda.getMainGene();
+		switch(panda.getMainGene()){
+			case BROWN:
+			case WEAK:
+				return Gene.NORMAL;
+			default:
+				return panda.getMainGene();
+		}
+	}*/
+	public static String getPandaTrait(String mainGene, String hiddenGene){
+		if(mainGene.equals(hiddenGene)) return mainGene;
+		switch(mainGene){
+			case "BROWN":
+			case "WEAK":
+				return "NORMAL";
+			default:
+				return mainGene;
+		}
+	}
+
+	static String getNameFromKey(EntityType entity, String textureKey){
+		if(textureKey.equals("PLAYER|GRUMM")) return "Grumm";
+		String[] dataFlags = textureKey.split("\\|");
+		String entityName = entity == null ? dataFlags[0] : entity.name();
+		switch(entityName){
+			case "TROPICAL_FISH":
+				if(dataFlags.length == 2) return TextUtils.capitalizeAndSpacify(dataFlags[1], '_');// 22 common
+				try{
+					DyeColor bodyColor = DyeColor.valueOf(dataFlags[1]);
+					DyeColor patternColor = dataFlags.length == 3 ? bodyColor : DyeColor.valueOf(dataFlags[2]);
+					Pattern pattern = Pattern.valueOf(dataFlags[dataFlags.length == 3 ? 2 : 3]);
+					return getTropicalFishName(new CCP(bodyColor, patternColor, pattern));// C-C-P
+				}
+				catch(IllegalArgumentException e){}
+				break;
+			case "VILLAGER": case "ZOMBIE_VILLAGER":
+				if(textureKey.contains("|NONE")){
+					textureKey = textureKey.replace("|NONE", "");
+					dataFlags = textureKey.split("\\|");
+				}
+		}
+		StringBuilder builder = new StringBuilder("");
+		for(int i=dataFlags.length-1; i>0; --i){
+			String dataStr = TextUtils.capitalizeAndSpacify(dataFlags[i], '_');
+			builder.append(dataStr).append(' ');
+		}
+		builder.append(TextUtils.getNormalizedName(dataFlags[0]));
+		return builder.toString();
+	}
+
 
 	static RefMethod mVillagerType, mZombieVillagerType;
 	static RefMethod mCatGetType;
@@ -191,7 +245,7 @@ public class TextureKeyLookup{
 				}
 				String mainGene = ((Enum)mPandaGetMainGene.of(entity).call()).name();
 				String hiddenGene = ((Enum)mPandaGetHiddenGene.of(entity).call()).name();
-				return "PANDA|"+EvUtils.getPandaTrait(mainGene, hiddenGene);
+				return "PANDA|"+TextureKeyLookup.getPandaTrait(mainGene, hiddenGene);
 			case "TRADER_LLAMA":
 				if(mTraderLlamaGetColor == null) mTraderLlamaGetColor =
 						ReflectionUtils.getRefClass("org.bukkit.entity.TraderLlama").getMethod("getColor");
@@ -227,35 +281,5 @@ public class TextureKeyLookup{
 			default:
 				return entity.getType().name();
 		}
-	}
-
-	static String getNameFromKey(EntityType entity, String textureKey){
-		if(textureKey.equals("PLAYER|GRUMM")) return "Grumm";
-		String[] dataFlags = textureKey.split("\\|");
-		String entityName = entity == null ? dataFlags[0] : entity.name();
-		switch(entityName){
-			case "TROPICAL_FISH":
-				if(dataFlags.length == 2) return EvUtils.capitalizeAndSpacify(dataFlags[1], '_');// 22 common
-				try{
-					DyeColor bodyColor = DyeColor.valueOf(dataFlags[1]);
-					DyeColor patternColor = dataFlags.length == 3 ? bodyColor : DyeColor.valueOf(dataFlags[2]);
-					Pattern pattern = Pattern.valueOf(dataFlags[dataFlags.length == 3 ? 2 : 3]);
-					return getTropicalFishName(new CCP(bodyColor, patternColor, pattern));// C-C-P
-				}
-				catch(IllegalArgumentException e){}
-				break;
-			case "VILLAGER": case "ZOMBIE_VILLAGER":
-				if(textureKey.contains("|NONE")){
-					textureKey = textureKey.replace("|NONE", "");
-					dataFlags = textureKey.split("\\|");
-				}
-		}
-		StringBuilder builder = new StringBuilder("");
-		for(int i=dataFlags.length-1; i>0; --i){
-			String dataStr = EvUtils.capitalizeAndSpacify(dataFlags[i], '_');
-			builder.append(dataStr).append(' ');
-		}
-		builder.append(EvUtils.getNormalizedName(dataFlags[0]));
-		return builder.toString();
 	}
 }

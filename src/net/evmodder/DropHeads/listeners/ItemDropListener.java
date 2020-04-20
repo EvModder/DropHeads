@@ -8,8 +8,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.DropHeads.HeadUtils;
-import net.evmodder.EvLib.EvUtils;
+import net.evmodder.EvLib.extras.HeadUtils;
 
 public class ItemDropListener implements Listener{
 	final boolean FORCE_RENAME;
@@ -19,8 +18,7 @@ public class ItemDropListener implements Listener{
 
 	@EventHandler
 	public void onBarf(ItemSpawnEvent evt){
-		if(evt.isCancelled() || !EvUtils.isPlayerHead(evt.getEntity().getItemStack().getType())
-				|| !evt.getEntity().getItemStack().hasItemMeta()) return;
+		if(evt.isCancelled() || !HeadUtils.isPlayerHead(evt.getEntity().getItemStack().getType()) || !evt.getEntity().getItemStack().hasItemMeta()) return;
 
 		ItemStack originalItem = evt.getEntity().getItemStack();
 		SkullMeta meta = (SkullMeta) originalItem.getItemMeta();

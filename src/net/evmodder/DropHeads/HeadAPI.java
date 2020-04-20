@@ -16,8 +16,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import net.evmodder.EvLib.EvUtils;
 import net.evmodder.EvLib.FileIO;
+import net.evmodder.EvLib.extras.HeadUtils;
 
 public class HeadAPI {
 	final private DropHeads pl;
@@ -148,7 +148,7 @@ public class HeadAPI {
 	public ItemStack getHead(Entity entity){
 		if(entity.getType() == EntityType.PLAYER) return HeadUtils.getPlayerHead((OfflinePlayer)entity);
 		String textureKey = TextureKeyLookup.getTextureKey(entity);
-		if(grummEnabled && EvUtils.hasGrummName(entity) && textures.containsKey(textureKey+"|GRUMM")) 
+		if(grummEnabled && HeadUtils.hasGrummName(entity) && textures.containsKey(textureKey+"|GRUMM")) 
 			return makeTextureSkull(textureKey+"|GRUMM");
 		return getHead(entity.getType(), textureKey);
 	}

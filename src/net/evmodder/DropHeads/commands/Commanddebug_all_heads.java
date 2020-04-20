@@ -13,9 +13,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.HeadAPI;
-import net.evmodder.DropHeads.HeadUtils;
 import net.evmodder.EvLib.EvCommand;
 import net.evmodder.EvLib.EvPlugin;
+import net.evmodder.EvLib.extras.HeadUtils;
 
 public class Commanddebug_all_heads extends EvCommand{
 //	private final EvPlugin pl;
