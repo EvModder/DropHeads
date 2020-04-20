@@ -17,33 +17,34 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import com.sun.istack.internal.NotNull;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.DropHeads.HeadUtils;
 import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.EvLib.EvUtils;
 import net.evmodder.EvLib.FileIO;
-import net.evmodder.EvLib.extras.TellrawUtils;
-import net.evmodder.EvLib.extras.TellrawUtils.ActionEvent;
-import net.evmodder.EvLib.extras.TellrawUtils.ActionTextComponent;
+import net.evmodder.EvLib.extras.TellrawUtils.HoverEvent;
+import net.evmodder.EvLib.extras.TellrawUtils.ActionComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.TellrawBlob;
+import net.evmodder.EvLib.extras.HeadUtils;
 import net.evmodder.EvLib.extras.TextUtils;
 
 public class EntityDeathListener implements Listener{
 	final DropHeads pl;
 	final boolean allowNonPlayerKills, allowIndirectKills, allowProjectileKills; 
-	final boolean PLAYER_HEADS_ONLY, CHARGED_CREEPER_DROPS;
+	final boolean PLAYER_HEADS_ONLY, CHARGED_CREEPER_DROPS, REPLACE_DEATH_MESSAGE;
 	final HashSet<Material> mustUseTools;
 	final HashSet<EntityType> noLootingEffectMobs;
 	final HashMap<EntityType, Double> mobChances;
 	final HashMap<Material, Double> toolBonuses;
-	final HashSet<UUID> explodingChargedCreepers;
+	final HashSet<UUID> explodingChargedCreepers, recentlyBeheadedPlayers;
 	final double DEFAULT_CHANCE;
 	final boolean DEBUG_MODE;
 	final Random rand;
@@ -53,6 +54,7 @@ public class EntityDeathListener implements Listener{
 //	final String ITEM_DISPLAY_FORMAT = TextUtils.translateAlternateColorCodes('&', "&r[&b${NAME}&r]");//TODO: move to config
 	final String ITEM_DISPLAY_FORMAT = "${NAME}";
 	final int LOCAL_RANGE = 150;//TODO: move to config
+	final int JSON_LIMIT = 15000;//TODO: move to config
 
 	AnnounceMode parseAnnounceMode(@NotNull String value, AnnounceMode defaultMode){
 		try{return AnnounceMode.valueOf(value.toUpperCase());}
@@ -69,6 +71,7 @@ public class EntityDeathListener implements Listener{
 		allowProjectileKills = pl.getConfig().getBoolean("drop-for-ranged-kills", false);
 		PLAYER_HEADS_ONLY = pl.getConfig().getBoolean("player-heads-only", false);
 		CHARGED_CREEPER_DROPS = pl.getConfig().getBoolean("charged-creeper-drops", true);
+		REPLACE_DEATH_MESSAGE = pl.getConfig().getBoolean("behead-announcement-replaces-death-message", true);
 		DEBUG_MODE = pl.getConfig().getBoolean("debug-messages", true);
 		ANNOUNCE_MOBS = parseAnnounceMode(pl.getConfig().getString("behead-announcement-mobs", "LOCAL"), AnnounceMode.LOCAL);
 		ANNOUNCE_PLAYERS = parseAnnounceMode(pl.getConfig().getString("behead-announcement-players", "GLOBAL"), AnnounceMode.GLOBAL);
@@ -140,11 +143,21 @@ public class EntityDeathListener implements Listener{
 		if(nonLivingEntitiesCanDropHeads){
 			pl.getServer().getPluginManager().registerEvents(new VehicleDestroyListener(this), pl);
 		}
+		if(REPLACE_DEATH_MESSAGE){
+			recentlyBeheadedPlayers = new HashSet<UUID>();
+			pl.getServer().getPluginManager().registerEvents(new Listener(){
+				@EventHandler(priority = EventPriority.HIGHEST)
+				public void playerDeathEvent(PlayerDeathEvent evt){
+					if(recentlyBeheadedPlayers.remove(evt.getEntity().getUniqueId())) evt.setDeathMessage("");
+				}
+			}, pl);
+		}
+		else recentlyBeheadedPlayers = null;
 	}
 
 	String getNormalizedName(Entity entity){
 		if(entity instanceof Player) return ((Player)entity).getDisplayName();
-		return entity.getName() != null ? entity.getName() : EvUtils.getNormalizedName(entity.getType());
+		return entity.getName() != null ? entity.getName() : TextUtils.getNormalizedName(entity.getType());
 	}
 	String getItemDisplay(ItemStack item){
 		String itemName = item.hasItemMeta() && item.getItemMeta().hasDisplayName()
@@ -160,24 +173,28 @@ public class EntityDeathListener implements Listener{
 		else evt.getDrops().add(pl.getAPI().getHead(entity));
 		TellrawBlob message = new TellrawBlob();
 		if(killer != null){
-			if(weapon != null){
+			if(weapon != null && weapon.getType() != Material.AIR){
 				message.addComponent(MSH_BEHEAD_BY_WITH);
 				String itemDisplay = getItemDisplay(weapon);
-				String jsonData = TellrawUtils.convertItemStackToJson(weapon);
-				ActionTextComponent comp = new ActionTextComponent(itemDisplay, ActionEvent.SHOW_ITEM, jsonData);
-				message.replaceFirstWithComponent("${ITEM}", comp);
+				String jsonData = JunkUtils.convertItemStackToJson(weapon, JSON_LIMIT);
+				ActionComponent comp = new ActionComponent(itemDisplay, HoverEvent.SHOW_ITEM, jsonData);
+				message.replaceRawTextWithComponent("${ITEM}", comp);
 			}
 			else message.addComponent(MSH_BEHEAD_BY);
-			message.replaceFirstWithComponent("${KILLER}", new SelectorComponent(killer.getUniqueId()));
+			message.replaceRawTextWithComponent("${KILLER}", new SelectorComponent(killer.getUniqueId()));
 		}
 		else message.addComponent(MSG_BEHEAD);
-		message.replaceFirstWithComponent("${VICTIM}", new SelectorComponent(entity.getUniqueId()));
+		message.replaceRawTextWithComponent("${VICTIM}", new SelectorComponent(entity.getUniqueId()));
 
 //		if(DEBUG_MODE) pl.getLogger().info("Tellraw message: "+message);
 		if(DEBUG_MODE) pl.getLogger().info("Announce Mode: "+(entity instanceof Player ? ANNOUNCE_PLAYERS : ANNOUNCE_MOBS));
 
 		switch(entity instanceof Player ? ANNOUNCE_PLAYERS : ANNOUNCE_MOBS){
 			case GLOBAL:
+				if(entity instanceof Player && REPLACE_DEATH_MESSAGE){
+					recentlyBeheadedPlayers.add(entity.getUniqueId());
+					((PlayerDeathEvent)evt).setDeathMessage(message.toPlainText());
+				}
 				sendTellraw("@a", message.toString());
 				break;
 			case LOCAL:
@@ -200,7 +217,7 @@ public class EntityDeathListener implements Listener{
 		return e.hasMetadata("SpawnReason") ? e.getMetadata("SpawnReason").get(0).asDouble() : 1D;
 	}
 
-	@EventHandler
+	@EventHandler(priority = EventPriority.LOWEST)
 	public void entityDeathEvent(EntityDeathEvent evt){
 		final LivingEntity victim = evt.getEntity();
 		if(PLAYER_HEADS_ONLY && victim instanceof Player == false) return;
@@ -255,11 +272,11 @@ public class EntityDeathListener implements Listener{
 		// Remove vanilla-dropped wither skeleton skulls so they aren't dropped twice.
 		if(evt.getEntityType() == EntityType.WITHER_SKELETON){
 			Iterator<ItemStack> it = evt.getDrops().iterator();
-			while(it.hasNext()) if(EvUtils.isHead(it.next().getType())) it.remove();
+			while(it.hasNext()) if(HeadUtils.isHead(it.next().getType())) it.remove();
 			// However, if it is wearing a head in its helmet slot, don't remove the drop.
 			// Note-to-self: Be careful with entity_equipment, heads on armor stands, etc.
 			for(ItemStack i : EvUtils.getEquipmentGuaranteedToDrop(evt.getEntity())){
-				if(i != null && EvUtils.isHead(i.getType())) evt.getDrops().add(i);
+				if(i != null && HeadUtils.isHead(i.getType())) evt.getDrops().add(i);
 			}
 		}
 		if(rand.nextDouble() < dropChance){

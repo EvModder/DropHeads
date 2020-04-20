@@ -148,7 +148,7 @@ public class TextureKeyLookup{
 			String dataStr = TextUtils.capitalizeAndSpacify(dataFlags[i], '_');
 			builder.append(dataStr).append(' ');
 		}
-		builder.append(TextUtils.getNormalizedName(dataFlags[0]));
+		builder.append(TextUtils.getNormalizedEntityName(dataFlags[0]));
 		return builder.toString();
 	}
 

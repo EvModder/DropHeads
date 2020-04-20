@@ -2,11 +2,13 @@
 behead-announcement-mobs: LOCAL
 behead-announcement-players: GLOBAL
 
+# Replaces death messages if player behead announcement is GLOBAL
+behead-announcement-replaces-death-message: true
+
 # The messages used to announce beheading
 message-beheaded: '&6${VICTIM}&r was decapitated'
 message-beheaded-by-entity: '&6${VICTIM}&r was decapitated by &6${KILLER}&r'
-# message-beheaded-by-entity-with-item:
-#    '&6${VICTIM}&r was decapitated by &6${KILLER}&r using &b${ITEM}'
+message-beheaded-by-entity-with-item: '&6${KILLER}&r decapitated &6${VICTIM}&r using &7${ITEM}&r'
 
 # Whether to drop heads when not killed by a player
 drop-for-nonplayer-kills: false
@@ -52,8 +54,8 @@ show-grumm-in-tab-complete: false
 must-use-axe: false
 
 # Enable plugin Updater (checks for new versions with new head textures)
-# Note: Disabled if your server console is reporting errors
-update-plugin: true
+# Note: Disable if your server console reports errors
+update-plugin: false
 
 # Run in debug mode (prints extra information to console)
 debug-messages: true

@@ -63,8 +63,6 @@ public class JunkUtils{
 	final static RefClass nbtTagCompoundClazz = ReflectionUtils.getRefClass("{nms}.NBTTagCompound");
 	final static RefMethod saveNmsItemStackMethod = nmsItemStackClazz.getMethod("save", nbtTagCompoundClazz);
 
-	final static int JSON_LIMIT = 10000;
-
 	// https://www.spigotmc.org/threads/tut-item-tooltips-with-the-chatcomponent-api.65964/
 	/**
 	 * Converts an {@link org.bukkit.inventory.ItemStack} to a JSON string
@@ -73,13 +71,14 @@ public class JunkUtils{
 	 * @param itemStack the item to convert
 	 * @return the JSON string representation of the item
 	 */
-	public static String convertItemStackToJson(ItemStack item){
+	public static String convertItemStackToJson(ItemStack item, int JSON_LIMIT){
 		Object nmsNbtTagCompoundObj = nbtTagCompoundClazz.getConstructor().create();
 		Object nmsItemStackObj = asNMSCopyMethod.of(null).call(item);
 		Object itemAsJsonObject = saveNmsItemStackMethod.of(nmsItemStackObj).call(nmsNbtTagCompoundObj);
 		String jsonString = itemAsJsonObject.toString();
 		if(jsonString.length() > JSON_LIMIT){
-			item = new ItemStack(item.getType(), item.getAmount());//TODO: Reduce item json data in a less destructive way
+			item = new ItemStack(item.getType(), item.getAmount());//TODO: Reduce item json data in a less destructive way-
+			//reduceItemData() -> clear book pages, clear hidden NBT, call recursively for containers
 			nmsNbtTagCompoundObj = nbtTagCompoundClazz.getConstructor().create();
 			nmsItemStackObj = asNMSCopyMethod.of(null).call(item);
 			itemAsJsonObject = saveNmsItemStackMethod.of(nmsItemStackObj).call(nmsNbtTagCompoundObj);
@@ -93,7 +92,7 @@ public class JunkUtils{
 	final static RefMethod getHandleMethod = craftEntityClazz.getMethod("getHandle");
 	final static RefClass nmsEntityClazz = ReflectionUtils.getRefClass("{nms}.Entity");
 	final static RefMethod saveNmsEntityMethod = nmsEntityClazz.getMethod("save", nbtTagCompoundClazz);
-	public static String convertEntityToJson(Entity entity){
+	public static String convertEntityToJson(Entity entity){//TODO: not currently used
 		Object nmsNbtTagCompoundObj = nbtTagCompoundClazz.getConstructor().create();
 		Object nmsEntityObj = getHandleMethod.of(entity).call();
 		Object entityAsJsonObject = saveNmsEntityMethod.of(nmsEntityObj).call(nmsNbtTagCompoundObj);
