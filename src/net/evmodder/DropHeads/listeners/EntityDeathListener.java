@@ -180,7 +180,6 @@ public class EntityDeathListener implements Listener{
 				String itemDisplay = getItemDisplay(weapon);
 				String jsonData = JunkUtils.convertItemStackToJson(weapon, JSON_LIMIT);
 				ActionComponent comp = new ActionComponent(itemDisplay, HoverEvent.SHOW_ITEM, jsonData);
-				pl.getLogger().info("item comp: "+comp.toString());
 				message.replaceRawTextWithComponent("${ITEM}", comp);
 			}
 			else message.addComponent(MSH_BEHEAD_BY);

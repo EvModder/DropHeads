@@ -1,7 +1,7 @@
 name: DropHeads
 main: net.evmodder.DropHeads.DropHeads
 author: EvModder/EvilWitchdoctor
-#3=major rewrite, 3=VehicleDestroy+Broadcast, 2=click head for info
+#3=major rewrite, 3=VehicleDestroy+Broadcast, 2=click head for info, italicized item name in behead msg,
 version: 3.3.2
 api-version: 1.13
 
