@@ -21,7 +21,7 @@ import net.evmodder.EvLib.extras.HeadUtils;
 
 public class HeadAPI {
 	final private DropHeads pl;
-	final boolean grummEnabled, updateOldPlayerHeads;
+	final boolean grummEnabled, updateOldPlayerHeads, saveCustomLore;
 	final TreeMap<String, String> textures;
 
 	HeadAPI(){
@@ -29,6 +29,7 @@ public class HeadAPI {
 		pl = DropHeads.getPlugin();
 		grummEnabled = pl.getConfig().getBoolean("drop-grumm-heads", true);
 		updateOldPlayerHeads = pl.getConfig().getBoolean("update-on-skin-change", true);
+		saveCustomLore = pl.getConfig().getBoolean("save-custom-lore", false);
 
 		String hardcodedList = FileIO.loadResource(pl, "head-textures.txt");
 		loadTextures(hardcodedList, false);
@@ -87,7 +88,7 @@ public class HeadAPI {
 	public boolean textureExists(String textureKey){return textures.containsKey(textureKey);}
 	public TreeMap<String, String> getTextures(){return textures;}
 
-	public ItemStack makeTextureSkull(String textureKey){
+	String getHeadNameFromKey(String textureKey){
 		// Attempt to parse out an EntityType
 		EntityType eType;
 		int j = textureKey.indexOf('|');
@@ -97,9 +98,14 @@ public class HeadAPI {
 			pl.getLogger().warning("Unknown EntityType: "+nameStr+"!");
 			eType = null;// We will just use textureKey[0]
 		}
+		String entityName = TextureKeyLookup.getNameFromKey(/*eType, */textureKey);
+		String headTypeName = eType == null ? "Head" : HeadUtils.getDroppedHeadTypeName(eType);
+		return ChatColor.YELLOW + entityName + " " + headTypeName;
+	}
+
+	public ItemStack makeTextureSkull(String textureKey){
 		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
 		SkullMeta meta = (SkullMeta) item.getItemMeta();
-		
 
 		UUID uuid = UUID.nameUUIDFromBytes(textureKey.getBytes());// Stable UUID for this textureKey
 		GameProfile profile = new GameProfile(uuid, textureKey);// Initialized with UUID and name
@@ -107,13 +113,12 @@ public class HeadAPI {
 		if(code != null) profile.getProperties().put("textures", new Property("textures", code));
 		HeadUtils.setGameProfile(meta, profile);
 
-		String eName = TextureKeyLookup.getNameFromKey(eType, textureKey);
-		String headTypeName = eType == null ? "Head" : HeadUtils.getDroppedHeadTypeName(eType);
-		meta.setDisplayName(ChatColor.YELLOW+eName+" "+headTypeName);
+		meta.setDisplayName(getHeadNameFromKey(textureKey));
 		item.setItemMeta(meta);
 		return item;
 	}
 
+	@SuppressWarnings("deprecation")
 	public ItemStack getHead(EntityType eType, String textureKey){
 		// If there is extra "texture metadata" we should return the custom
 		// skull instead of a just, say, a basic creeper head
@@ -155,15 +160,33 @@ public class HeadAPI {
 
 	public ItemStack getHead(GameProfile profile){
 		if(profile == null || profile.getName() == null) return null;
-		if(pl.getAPI().textureExists(profile.getName())){//Refresh this EntityHead texture
-			return makeTextureSkull(profile.getName());
+		String profileName = profile.getName();
+		if(saveCustomLore){int idx = profileName.indexOf('|'); if(idx != -1) profileName = profileName.substring(0, idx);}
+		if(textureExists(profileName)){//Refresh this EntityHead texture
+			return makeTextureSkull(profileName);
 		}
-		else{//Looks like a PlayerHead
+		else{//Looks like a Player's Head
 			OfflinePlayer p = profile.getId() == null ? null : pl.getServer().getOfflinePlayer(profile.getId());
 			if(p != null && p.getName() != null){
-				if(updateOldPlayerHeads || p.getName().equals(profile.getName())) return HeadUtils.getPlayerHead(p);
+				if(updateOldPlayerHeads || p.getName().equals(profileName)) return HeadUtils.getPlayerHead(p);
 			}
+			return HeadUtils.getPlayerHead(profile);
 		}
-		return HeadUtils.getPlayerHead(profile);
+	}
+
+	public String getHeadName(GameProfile profile){
+		if(profile == null || profile.getName() == null) return null;
+		String profileName = profile.getName();
+		if(saveCustomLore){int idx = profileName.indexOf('|'); if(idx != -1) profileName = profileName.substring(0, idx);}
+		if(textureExists(profileName)){
+			return getHeadNameFromKey(profileName);
+		}
+		else{//Looks like a Player's Head
+			if(updateOldPlayerHeads && profile.getId() != null){
+				OfflinePlayer p = pl.getServer().getOfflinePlayer(profile.getId());
+				if(p != null) HeadUtils.getPlayerHeadName(p.getName());
+			}
+			return HeadUtils.getPlayerHeadName(profileName);
+		}
 	}
 }

@@ -42,7 +42,7 @@ track-mob-spawns: true
 # will drop its head with 100% probability * the spawn-cause modifier
 # This setting overrides "player-kills-only" (but not "player-heads-only")
 # Note: In vanilla, each charged creeper explosion causes only 1 head drop,
-# DropHeads mimics this behavior from version 3.2.15 onward
+# DropHeads mimics this behavior from version 3.3.0 onward
 charged-creeper-drops: true
 
 # A Minecraft easter egg is that mobs named 'Dinnerbone' or 'Grumm' are
@@ -59,6 +59,15 @@ update-plugin: false
 
 # Run in debug mode (prints extra information to console)
 debug-messages: true
+
+# Shows information about a head when right-clicked by a player
+head-click-listener: true
+head-click-format-mobs: "&7[&6DropHeads&7]&f That's %a% %headname% %headtype%"
+head-click-format-player: "&7[&6DropHeads&7]&f That's %headname%'s Head"
+
+# Saves lore of heads in GameProfile when placed (used by some other plugins)
+# Only works for player-type heads, eg: won't work for minecraft:creeper_head
+save-custom-lore: false
 
 # (Optional) Whitelist of tools a player must be using for heads to drop
 # If "must-use-axe" is enabled, this list will be ignored

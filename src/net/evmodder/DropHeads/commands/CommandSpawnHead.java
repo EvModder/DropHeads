@@ -37,6 +37,21 @@ public class CommandSpawnHead extends EvCommand{
 		return builder.toString();
 	}
 
+	//TODO: move to EntityUtils?
+	static EntityType getEntityByName(String name){
+		//TODO: improve this function / test for errors
+		if(name.toUpperCase().startsWith("MHF_")) name = HeadUtils.normalizedNameFromMHFName(name);
+		name = name.toUpperCase().replace(' ', '_');
+
+		try{EntityType type = EntityType.valueOf(name.toUpperCase()); return type;}
+		catch(IllegalArgumentException ex){}
+		name = name.replace("_", "");
+		for(EntityType t : EntityType.values()) if(t.name().replace("_", "").equals(name)) return t;
+		if(name.equals("ZOMBIEPIGMAN")) return EntityType.PIG_ZOMBIE;
+		else if(name.equals("MOOSHROOM")) return EntityType.MUSHROOM_COW;
+		return EntityType.UNKNOWN;
+	}
+
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
 		if(args.length == 1 && sender instanceof Player){
 			final List<String> tabCompletes = new ArrayList<String>();
@@ -69,7 +84,7 @@ public class CommandSpawnHead extends EvCommand{
 		}
 		ItemStack head = null;
 
-		EntityType eType = HeadUtils.getEntityByName(target.toUpperCase());
+		EntityType eType = getEntityByName(target.toUpperCase());
 		String textureKey = eType.name()+"|"+extraData;
 		if((eType != null && eType != EntityType.UNKNOWN) || pl.getAPI().textureExists(textureKey)){
 			if(extraData != null){

@@ -27,9 +27,9 @@ import net.evmodder.EvLib.Updater;
 // * Adjust drop rate based on getTicksLived()
 // * Log of head drop events
 // * fancy stray skull
+// * display head info when clicked
 // * move textures from head-textures.txt to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
 // * using above, inside /textures/MOB_NAME.txt, set 'drop-rate: x' to modify chance for that sub-type only
-// * option in debug cmd to place heads on a pretty wall display (for plugin icon img)
 // * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
 public final class DropHeads extends EvPlugin{
 	private static DropHeads instance; public static DropHeads getPlugin(){return instance;}
@@ -38,7 +38,7 @@ public final class DropHeads extends EvPlugin{
 
 	@Override public void onEvEnable(){
 		if(config.getBoolean("update-plugin", true)){
-			new Updater(/*plugin=*/this, /*id=*/274151, getFile(), Updater.UpdateType.DEFAULT, /*announce=*/false);
+			new Updater(/*plugin=*/this, /*id=*/274151, getFile(), Updater.UpdateType.DEFAULT, /*announce=*/true);
 		}
 		instance = this;
 		api = new HeadAPI();
@@ -51,7 +51,13 @@ public final class DropHeads extends EvPlugin{
 		}
 		if(config.getBoolean("refresh-textures", false)){
 			getServer().getPluginManager().registerEvents(new ItemDropListener(), this);
-			getServer().getPluginManager().registerEvents(new BlockBreakListener(), this);
+//			getServer().getPluginManager().registerEvents(new BlockBreakListener(), this);
+		}
+		if(config.getBoolean("head-click-listener", true)){
+			getServer().getPluginManager().registerEvents(new BlockClickListener(), this);
+		}
+		if(config.getBoolean("save-custom-lore", true)){
+			getServer().getPluginManager().registerEvents(new BlockPlaceListener(), this);
 		}
 
 		new CommandSpawnHead(this);

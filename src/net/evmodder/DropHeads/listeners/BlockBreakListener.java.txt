@@ -11,7 +11,9 @@ import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.EvLib.extras.HeadUtils;
 
+// THIS ENTIRE CLASS IS CURRENTLY UNUSED -- Instead, we are simply modifying the drop in ItemSpawnEvent
 public class BlockBreakListener implements Listener{
+	// Monitor priority since there is no way for us to replace the dropped item without cancelling and dropping manually
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onBlockBreakEvent(BlockBreakEvent evt){
 		if(evt.isCancelled() || evt.getPlayer().getGameMode() == GameMode.CREATIVE || !HeadUtils.isPlayerHead(evt.getBlock().getType())) return;

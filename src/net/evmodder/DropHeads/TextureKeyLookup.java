@@ -4,7 +4,6 @@ import java.util.HashMap;
 import org.bukkit.DyeColor;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.Llama;
 import org.bukkit.entity.Ocelot;
@@ -122,11 +121,10 @@ public class TextureKeyLookup{
 		}
 	}
 
-	static String getNameFromKey(EntityType entity, String textureKey){
+	static String getNameFromKey(/*EntityType entity, */String textureKey){
 		if(textureKey.equals("PLAYER|GRUMM")) return "Grumm";
 		String[] dataFlags = textureKey.split("\\|");
-		String entityName = entity == null ? dataFlags[0] : entity.name();
-		switch(entityName){
+		switch(/*entity != null ? entity.name() : */dataFlags[0]){
 			case "TROPICAL_FISH":
 				if(dataFlags.length == 2) return TextUtils.capitalizeAndSpacify(dataFlags[1], '_');// 22 common
 				try{

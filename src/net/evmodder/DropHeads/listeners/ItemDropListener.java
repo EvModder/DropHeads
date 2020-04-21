@@ -11,9 +11,12 @@ import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.EvLib.extras.HeadUtils;
 
 public class ItemDropListener implements Listener{
+	final DropHeads plugin;
 	final boolean FORCE_RENAME;
+
 	public ItemDropListener(){
-		FORCE_RENAME = DropHeads.getPlugin().getConfig().getBoolean("refresh-item-names", false);
+		plugin = DropHeads.getPlugin();
+		FORCE_RENAME = plugin.getConfig().getBoolean("refresh-item-names", false);
 	}
 
 	@EventHandler
@@ -25,7 +28,7 @@ public class ItemDropListener implements Listener{
 		String name = !FORCE_RENAME && meta.hasDisplayName() ? meta.getDisplayName() : null;
 		GameProfile profile = HeadUtils.getGameProfile(meta);
 		if(profile == null) return;
-		ItemStack refreshedItem = DropHeads.getPlugin().getAPI().getHead(profile);
+		ItemStack refreshedItem = plugin.getAPI().getHead(profile);
 		if(refreshedItem == null) return;
 		ItemMeta refreshedItemMeta = refreshedItem.getItemMeta();
 		if(name != null) refreshedItemMeta.setDisplayName(name);
