@@ -38,7 +38,7 @@ public final class DropHeads extends EvPlugin{
 
 	@Override public void onEvEnable(){
 		if(config.getBoolean("update-plugin", true)){
-			new Updater(this, 274151, getFile(), Updater.UpdateType.DEFAULT, false);
+			new Updater(/*plugin=*/this, /*id=*/274151, getFile(), Updater.UpdateType.DEFAULT, /*announce=*/false);
 		}
 		instance = this;
 		api = new HeadAPI();
