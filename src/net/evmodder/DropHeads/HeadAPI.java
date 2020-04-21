@@ -88,7 +88,7 @@ public class HeadAPI {
 	public boolean textureExists(String textureKey){return textures.containsKey(textureKey);}
 	public TreeMap<String, String> getTextures(){return textures;}
 
-	String getHeadNameFromKey(String textureKey){
+	public String getHeadNameFromKey(String textureKey){
 		// Attempt to parse out an EntityType
 		EntityType eType;
 		int j = textureKey.indexOf('|');
