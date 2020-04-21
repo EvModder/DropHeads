@@ -1,5 +1,6 @@
 package net.evmodder.DropHeads;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import org.bukkit.DyeColor;
 import org.bukkit.entity.Creeper;
@@ -140,6 +141,9 @@ public class TextureKeyLookup{
 					textureKey = textureKey.replace("|NONE", "");
 					dataFlags = textureKey.split("\\|");
 				}
+			case "OCELOT":
+				// "Red Cat Ocelot Head" -> "Red Cat Head"
+				if(dataFlags.length > 1) dataFlags = Arrays.copyOfRange(dataFlags, 1, dataFlags.length);
 		}
 		StringBuilder builder = new StringBuilder("");
 		for(int i=dataFlags.length-1; i>0; --i){
