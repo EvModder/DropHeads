@@ -1,6 +1,7 @@
 package net.evmodder.DropHeads.listeners;
 
 import java.io.InputStream;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -253,7 +254,7 @@ public class EntityDeathListener implements Listener{
 					((Projectile)killer).getShooter() instanceof Player == false
 				) && (
 					!allowIndirectKills ||
-					timeSinceLastPlayerDamage(victim) > 60*1000
+					timeSinceLastPlayerDamage(victim) > /*seconds=30*/30*1000
 				)
 			)
 		)) return;
@@ -281,12 +282,15 @@ public class EntityDeathListener implements Listener{
 		}
 		if(rand.nextDouble() < dropChance){
 			dropHead(victim, evt, killer, itemInHand);
-			if(DEBUG_MODE) pl.getLogger().info("Dropped Head: "+victim.getType().name()+"\n"
-					+"Raw chance: "+rawDropChance*100D+"%, "
-					+"SpawnReason Bonus: "+(spawnCauseMod-1D)*100D+"%, "
-					+"Looting Bonus: "+(lootingMod-1D)*100D+"%, "
-					+"Weapon Bonus: "+(weaponMod-1D)*100D+"%, "
-					+"Final drop chance: "+dropChance*100D+"%");
+			if(DEBUG_MODE){
+				DecimalFormat df = new DecimalFormat("0.0###");
+				pl.getLogger().info("Dropped Head: "+victim.getType().name()+"\n"
+					+"Raw chance: "+df.format(rawDropChance*100D)+"%, "
+					+"SpawnReason Bonus: "+df.format((spawnCauseMod-1D)*100D)+"%, "
+					+"Looting Bonus: "+df.format((lootingMod-1D)*100D)+"%, "
+					+"Weapon Bonus: "+df.format((weaponMod-1D)*100D)+"%, "
+					+"Final drop chance: "+df.format(dropChance*100D)+"%");
+			}
 		}
 	}
 }
