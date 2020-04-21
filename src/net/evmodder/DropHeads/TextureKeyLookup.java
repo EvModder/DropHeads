@@ -36,8 +36,8 @@ public class TextureKeyLookup{
 			return bodyColor.hashCode() + 16*(patternColor.hashCode() + 16*pattern.hashCode());
 		}
 	}
-	public static final HashMap<CCP, String> tropicalFishNames;//Names for the 22 common tropical fish
-	public static final HashMap<DyeColor, String> fishColorNames;//Names assigned by color
+	static final HashMap<CCP, String> tropicalFishNames;//Names for the 22 common tropical fish
+	static final HashMap<DyeColor, String> fishColorNames;//Names assigned by color
 	static{
 		tropicalFishNames = new HashMap<CCP, String>();
 		tropicalFishNames.put(new CCP(DyeColor.ORANGE, DyeColor.GRAY, Pattern.STRIPEY), "Anemone");
@@ -110,7 +110,7 @@ public class TextureKeyLookup{
 				return panda.getMainGene();
 		}
 	}*/
-	public static String getPandaTrait(String mainGene, String hiddenGene){
+	static String getPandaTrait(String mainGene, String hiddenGene){
 		if(mainGene.equals(hiddenGene)) return mainGene;
 		switch(mainGene){
 			case "BROWN":
@@ -162,7 +162,7 @@ public class TextureKeyLookup{
 	static java.lang.reflect.Field ghastIsAttackingField;
 
 	@SuppressWarnings("rawtypes")
-	static String getTextureKey(Entity entity){
+	public static String getTextureKey(Entity entity){
 		switch(entity.getType().name()){
 			case "CREEPER":
 				if(((Creeper)entity).isPowered()) return "CREEPER|CHARGED";
