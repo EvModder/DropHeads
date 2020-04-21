@@ -28,6 +28,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import com.sun.istack.internal.NotNull;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.JunkUtils;
+import net.evmodder.DropHeads.TextureKeyLookup;
 import net.evmodder.EvLib.EvUtils;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.extras.TellrawUtils.HoverEvent;
@@ -162,7 +163,7 @@ public class EntityDeathListener implements Listener{
 	}
 	String getItemDisplay(ItemStack item){
 		String itemName = item.hasItemMeta() && item.getItemMeta().hasDisplayName()
-				? item.getItemMeta().getDisplayName() : TextUtils.getNormalizedName(item.getType());
+				? ChatColor.ITALIC+item.getItemMeta().getDisplayName() : TextUtils.getNormalizedName(item.getType());
 		itemName = JunkUtils.getRarityColor(item, true) + itemName + ChatColor.RESET;
 		return ITEM_DISPLAY_FORMAT.replace("${NAME}", itemName).replace("${AMOUNT}", ""+item.getAmount());
 	}
@@ -179,6 +180,7 @@ public class EntityDeathListener implements Listener{
 				String itemDisplay = getItemDisplay(weapon);
 				String jsonData = JunkUtils.convertItemStackToJson(weapon, JSON_LIMIT);
 				ActionComponent comp = new ActionComponent(itemDisplay, HoverEvent.SHOW_ITEM, jsonData);
+				pl.getLogger().info("item comp: "+comp.toString());
 				message.replaceRawTextWithComponent("${ITEM}", comp);
 			}
 			else message.addComponent(MSH_BEHEAD_BY);
@@ -187,8 +189,9 @@ public class EntityDeathListener implements Listener{
 		else message.addComponent(MSG_BEHEAD);
 		message.replaceRawTextWithComponent("${VICTIM}", new SelectorComponent(entity.getUniqueId()));
 
-//		if(DEBUG_MODE) pl.getLogger().info("Tellraw message: "+message);
-		if(DEBUG_MODE) pl.getLogger().info("Announce Mode: "+(entity instanceof Player ? ANNOUNCE_PLAYERS : ANNOUNCE_MOBS));
+		if(DEBUG_MODE) pl.getLogger().info("Tellraw message: "+message);
+		if(DEBUG_MODE) pl.getLogger().info(/*"Tellraw message: "+*/message.toPlainText());
+//		if(DEBUG_MODE) pl.getLogger().info("Announce Mode: "+(entity instanceof Player ? ANNOUNCE_PLAYERS : ANNOUNCE_MOBS));
 
 		switch(entity instanceof Player ? ANNOUNCE_PLAYERS : ANNOUNCE_MOBS){
 			case GLOBAL:
@@ -284,7 +287,7 @@ public class EntityDeathListener implements Listener{
 			dropHead(victim, evt, killer, itemInHand);
 			if(DEBUG_MODE){
 				DecimalFormat df = new DecimalFormat("0.0###");
-				pl.getLogger().info("Dropped Head: "+victim.getType().name()+"\n"
+				pl.getLogger().info("Dropped Head: "+TextureKeyLookup.getTextureKey(victim)+"\n"
 					+"Raw chance: "+df.format(rawDropChance*100D)+"%, "
 					+"SpawnReason Bonus: "+df.format((spawnCauseMod-1D)*100D)+"%, "
 					+"Looting Bonus: "+df.format((lootingMod-1D)*100D)+"%, "
