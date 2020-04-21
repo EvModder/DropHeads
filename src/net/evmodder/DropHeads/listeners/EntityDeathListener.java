@@ -189,7 +189,7 @@ public class EntityDeathListener implements Listener{
 		else message.addComponent(MSG_BEHEAD);
 		message.replaceRawTextWithComponent("${VICTIM}", new SelectorComponent(entity.getUniqueId()));
 
-		if(DEBUG_MODE) pl.getLogger().info("Tellraw message: "+message);
+//		if(DEBUG_MODE) pl.getLogger().info("Tellraw message: "+message);
 		if(DEBUG_MODE) pl.getLogger().info(/*"Tellraw message: "+*/message.toPlainText());
 //		if(DEBUG_MODE) pl.getLogger().info("Announce Mode: "+(entity instanceof Player ? ANNOUNCE_PLAYERS : ANNOUNCE_MOBS));
 
