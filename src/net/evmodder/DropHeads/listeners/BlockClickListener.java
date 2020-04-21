@@ -17,8 +17,8 @@ public class BlockClickListener implements Listener{
 
 	public BlockClickListener(){
 		plugin = DropHeads.getPlugin();
-		headDisplayStrMob = plugin.getConfig().getString("head-click-format-mobs", "That's a %headname% %headtype%");
-		headDisplayStrPlayer = plugin.getConfig().getString("head-click-format-players", "That's %headname%'s Head");
+		headDisplayStrMob = plugin.getConfig().getString("head-click-format-mobs", "That's ${A} ${NAME} ${TYPE}");
+		headDisplayStrPlayer = plugin.getConfig().getString("head-click-format-players", "That's ${NAME}'s Head");
 		// That's a <Swamp Amorsmith Zombie Villager> <Head>
 		// That's <EvDoc>'s Head
 	}
@@ -39,7 +39,7 @@ public class BlockClickListener implements Listener{
 
 		// This is how we check if this is a mob head (for now)
 		String displayStr = plugin.getAPI().textureExists(profile.getName()) ? headDisplayStrMob : headDisplayStrPlayer;
-		displayStr = displayStr.replace("%headname%", entityName).replace("%headtype%", headTypeName).replace("%a%", aOrAn);
+		displayStr = displayStr.replace("${NAME}", entityName).replace("${TYPE}", headTypeName).replace("${A}", aOrAn);
 		evt.setCancelled(true);
 	}
 }

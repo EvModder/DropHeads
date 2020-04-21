@@ -62,8 +62,8 @@ debug-messages: true
 
 # Shows information about a head when right-clicked by a player
 head-click-listener: true
-head-click-format-mobs: "&7[&6DropHeads&7]&f That's %a% %headname% %headtype%"
-head-click-format-player: "&7[&6DropHeads&7]&f That's %headname%'s Head"
+head-click-format-mobs: "&7[&6DropHeads&7]&f That's ${A} ${NAME} ${TYPE}"
+head-click-format-player: "&7[&6DropHeads&7]&f That's ${NAME}'s Head"
 
 # Saves lore of heads in GameProfile when placed (used by some other plugins)
 # Only works for player-type heads, eg: won't work for minecraft:creeper_head
