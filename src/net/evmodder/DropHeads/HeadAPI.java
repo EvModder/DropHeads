@@ -32,25 +32,25 @@ public class HeadAPI {
 		saveCustomLore = pl.getConfig().getBoolean("save-custom-lore", false);
 
 		String hardcodedList = FileIO.loadResource(pl, "head-textures.txt");
-		loadTextures(hardcodedList, false);
+		loadTextures(hardcodedList, /*logMissingEntities=*/true, /*logUnknownEntities=*/false);
 //		String localList = FileIO.loadFile("head-textures.txt", pl.getClass().getResourceAsStream("/head-textures.txt"));
 		String localList = FileIO.loadFile("head-textures.txt", hardcodedList);
-		loadTextures(localList, true);
+		loadTextures(localList, /*logMissingEntities=*/false, /*logUnknownEntities=*/true);
 	}
 
-	void loadTextures(String headsList, boolean log){
+	void loadTextures(String headsList, boolean logMissingEntities, boolean logUnknownEntities){
 		HashSet<EntityType> missingHeads = new HashSet<EntityType>();
 		HashSet<String> unknownHeads = new HashSet<String>();
-		missingHeads.addAll(Arrays.asList(EntityType.values()).stream()
+		if(logMissingEntities) missingHeads.addAll(Arrays.asList(EntityType.values()).stream()
 				.filter(x -> x.isAlive()/* && x.isMeow() */).collect(Collectors.toList()));
 		missingHeads.remove(EntityType.PLAYER);
-		missingHeads.remove(EntityType.ARMOR_STAND); // These 2 are 'alive', but don't have heads
+		missingHeads.remove(EntityType.ARMOR_STAND); // These 2 are 'alive', but aren't in head-texture.txt
 		for(String head : headsList.split("\n")){
 			head = head.replaceAll(" ", "");
 			int i = head.indexOf(":");
 			if(i != -1){
 				String texture = head.substring(i+1).trim();
-				if(texture.isEmpty() || texture.equals("xxx")) continue; //TODO: note the xxx
+				if(texture.isEmpty() || texture.equals("xxx")) continue; //TODO: remove the xxx
 
 				String key = head.substring(0, i).toUpperCase();
 				textures.put(key, texture);
@@ -62,18 +62,18 @@ public class HeadAPI {
 					missingHeads.remove(type);
 				}
 				catch(IllegalArgumentException ex){
-					if(unknownHeads.add(typeName))
-						if(log) pl.getLogger().warning("Unknown entity '"+typeName+"' in head-textures.txt");
+					if(unknownHeads.add(typeName)){
+						if(logUnknownEntities) pl.getLogger().warning("Unknown entity '"+typeName+"' in head-textures.txt");
+					}
 				}
 			}
 		}
-		if(log){
+		if(logMissingEntities){
 			for(EntityType type : missingHeads){
-				pl.getLogger().warning("Missing head texture for "+type+" from head-textures.txt");
+				pl.getLogger().warning("Missing head texture(s) for "+type);
 			}
 			if(!missingHeads.isEmpty()){
-				pl.getLogger().info("To fix missing textures, try updating the plugin"
-						+ " and then deleting your old head-textures.txt file");
+				pl.getLogger().warning("To fix missing textures, try updating the plugin and then deleting the old head-textures.txt file");
 			}
 		}
 		// Sometimes a texture value is just a reference to a different texture key
