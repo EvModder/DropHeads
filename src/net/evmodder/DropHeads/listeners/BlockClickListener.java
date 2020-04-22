@@ -19,7 +19,7 @@ import net.evmodder.EvLib.extras.TextUtils;
 public class BlockClickListener implements Listener{
 	final DropHeads plugin;
 	final String headDisplayStrMob, headDisplayStrPlayer;
-	final long clickMessageDelayTicks = 40; // So they dont spam themselves
+	final long clickMessageDelayTicks = 10; // So they dont spam themselves
 	final HashSet<UUID> recentClickers;
 
 	public BlockClickListener(){
