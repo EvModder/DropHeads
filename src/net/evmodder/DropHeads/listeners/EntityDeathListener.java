@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.TreeMap;
 import java.util.UUID;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -46,6 +47,7 @@ public class EntityDeathListener implements Listener{
 	final HashSet<EntityType> noLootingEffectMobs;
 	final HashMap<EntityType, Double> mobChances;
 	final HashMap<Material, Double> toolBonuses;
+	final TreeMap<Long, Double> timeAliveBonuses;
 	final HashSet<UUID> explodingChargedCreepers, recentlyBeheadedPlayers;
 	final double DEFAULT_CHANCE;
 	final boolean DEBUG_MODE;
@@ -102,10 +104,21 @@ public class EntityDeathListener implements Listener{
 		}
 
 		toolBonuses = new HashMap<Material, Double>();
-		ConfigurationSection specificModifiers = pl.getConfig().getConfigurationSection("specific-tool-modifiers");
-		if(specificModifiers != null) for(String toolName : specificModifiers.getKeys(false)){
+		ConfigurationSection specificToolModifiers = pl.getConfig().getConfigurationSection("specific-tool-modifiers");
+		if(specificToolModifiers != null) for(String toolName : specificToolModifiers.getKeys(false)){
 			Material mat = Material.getMaterial(toolName.toUpperCase());
-			if(mat != null) toolBonuses.put(mat, specificModifiers.getDouble(toolName));
+			if(mat != null) toolBonuses.put(mat, specificToolModifiers.getDouble(toolName));
+		}
+
+		timeAliveBonuses = new TreeMap<>();
+		timeAliveBonuses.put(-1L, 1D); // So that there is always a lower entry, and it defaults to 1
+		ConfigurationSection specificTimeAliveModifiers = pl.getConfig().getConfigurationSection("time-alive-modifiers");
+		if(specificTimeAliveModifiers != null) for(String formattedTime : specificTimeAliveModifiers.getKeys(false)){
+			try{
+				long time = TextUtils.parseTime(formattedTime);
+				timeAliveBonuses.put(time, specificToolModifiers.getDouble(formattedTime));
+			}
+			catch(NumberFormatException ex){pl.getLogger().severe("Error parsing time string: \""+formattedTime+'"');}
 		}
 
 		//Load individual mobs' drop chances
@@ -219,6 +232,10 @@ public class EntityDeathListener implements Listener{
 	static double getSpawnCauseModifier(Entity e){
 		return e.hasMetadata("SpawnReason") ? e.getMetadata("SpawnReason").get(0).asDouble() : 1D;
 	}
+	double getTimeAliveBonus(Entity e){
+		long millisecondsLived = e.getTicksLived()*50L;
+		return timeAliveBonuses.floorEntry(millisecondsLived).getValue();
+	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void entityDeathEvent(EntityDeathEvent evt){
@@ -268,6 +285,7 @@ public class EntityDeathListener implements Listener{
 		final double toolBonus = itemInHand == null ? 0D : toolBonuses.getOrDefault(itemInHand.getType(), 0D);
 		final double lootingMod = 1D + lootingLevel*0.01D;
 		final double weaponMod = 1D + toolBonus;
+		final double timeAliveMod = 1D + getTimeAliveBonus(victim);
 		final double spawnCauseMod = getSpawnCauseModifier(victim);
 		final double rawDropChance = mobChances.getOrDefault(victim.getType(), DEFAULT_CHANCE);
 		final double dropChance = rawDropChance*spawnCauseMod*lootingMod*weaponMod;
@@ -289,6 +307,7 @@ public class EntityDeathListener implements Listener{
 				pl.getLogger().info("Dropped Head: "+TextureKeyLookup.getTextureKey(victim)+"\n"
 					+"Raw chance: "+df.format(rawDropChance*100D)+"%, "
 					+"SpawnReason Bonus: "+df.format((spawnCauseMod-1D)*100D)+"%, "
+					+"TimeAlive Bonus: "+df.format((timeAliveMod-1D)*100D)+"%, "
 					+"Looting Bonus: "+df.format((lootingMod-1D)*100D)+"%, "
 					+"Weapon Bonus: "+df.format((weaponMod-1D)*100D)+"%, "
 					+"Final drop chance: "+df.format(dropChance*100D)+"%");

@@ -27,7 +27,8 @@ import net.evmodder.EvLib.Updater;
 // * Adjust drop rate based on getTicksLived()
 // * Log of head drop events
 // * fancy stray skull
-// * display head info when clicked
+// * jeb_ sheep head animated phasing through colors (like the jeb_ sheep)
+// * if mob has custom name, use it in head name (configurable)
 // * move textures from head-textures.txt to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
 // * using above, inside /textures/MOB_NAME.txt, set 'drop-rate: x' to modify chance for that sub-type only
 // * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]

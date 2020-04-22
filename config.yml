@@ -79,7 +79,7 @@ must-use:
 
 # (Optional) Let certain tools have a higher chance of beheading
 # The number is the percent increase in drop chance when using that tool
-# Eg: 3 = 3x chance, 0.8 = 80% more likely, etc.
+# Eg: 0.8 = 80% more likely, -0.1 = 10% less likely, 2.0 = +200%, etc.
 specific-tool-modifiers:
   GOLD_AXE: 3
   DIAMOND_AXE: 1
@@ -89,3 +89,14 @@ specific-tool-modifiers:
   DIAMOND_SWORD: 0.2
   IRON_SWORD: 0.1
 
+# (Optional) Modify head drop chance based on how long the mob has been alive
+# Format is "X: V", where if the mob has been alive for X or more time, then
+# the drop rate is increased by V percent (similar to above; can be negative)
+time-alive-modifiers:
+  0s: -0.9
+  1m30s: -0.5
+  5m: 0
+  2h: 0.1
+  1d: 2.0
+  1w: 3.0
+  30w6d11h55m33s: 10.0
