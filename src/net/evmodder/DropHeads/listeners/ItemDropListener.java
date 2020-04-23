@@ -4,7 +4,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
@@ -24,15 +23,17 @@ public class ItemDropListener implements Listener{
 		if(evt.isCancelled() || !HeadUtils.isPlayerHead(evt.getEntity().getItemStack().getType()) || !evt.getEntity().getItemStack().hasItemMeta()) return;
 
 		ItemStack originalItem = evt.getEntity().getItemStack();
-		SkullMeta meta = (SkullMeta) originalItem.getItemMeta();
-		String name = !FORCE_RENAME && meta.hasDisplayName() ? meta.getDisplayName() : null;
-		GameProfile profile = HeadUtils.getGameProfile(meta);
-		if(profile == null) return;
-		ItemStack refreshedItem = plugin.getAPI().getHead(profile);
+		SkullMeta originalMeta = (SkullMeta) originalItem.getItemMeta();
+		GameProfile originalProfile = HeadUtils.getGameProfile(originalMeta);
+		if(originalProfile == null) return;
+		ItemStack refreshedItem = plugin.getAPI().getHead(originalProfile); // Gets a refreshed texture by textureKey (profile name)
 		if(refreshedItem == null) return;
-		ItemMeta refreshedItemMeta = refreshedItem.getItemMeta();
-		if(name != null) refreshedItemMeta.setDisplayName(name);
-		originalItem.setItemMeta(refreshedItemMeta);
-		evt.getEntity().setItemStack(originalItem);
+		GameProfile refreshedProfile = HeadUtils.getGameProfile((SkullMeta)refreshedItem.getItemMeta());
+		HeadUtils.setGameProfile(originalMeta, refreshedProfile); // This is what actually refreshes the texture
+
+		if(!originalMeta.hasDisplayName() || FORCE_RENAME) originalMeta.setDisplayName(refreshedItem.getItemMeta().getDisplayName());
+
+		originalItem.setItemMeta(originalMeta);
+		evt.getEntity().setItemStack(originalItem); // TODO: not sure if this is necessary
 	}
 }
