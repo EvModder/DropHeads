@@ -54,15 +54,18 @@ public class BlockBreakListener implements Listener{
 			evt.getBlock().getWorld().dropItemNaturally(evt.getBlock().getLocation(), itemWithAddedLore);
 		}
 	}
-	@EventHandler(priority = EventPriority.MONITOR)
+	/*@EventHandler(priority = EventPriority.MONITOR)
 	public void onBlockExplodeEvent(BlockExplodeEvent evt){
-		ItemStack itemWithAddedLore = getItemWithLore(evt.getBlock());
-		if(itemWithAddedLore != null){
-			evt.setCancelled(true);
-			evt.getBlock().setType(Material.AIR);
-			evt.getBlock().getWorld().dropItemNaturally(evt.getBlock().getLocation(), itemWithAddedLore);
+		for(Block exploded : evt.blockList()){
+			DropHeads.getPlugin().getLogger().info("block exploded: "+exploded.getType());
+			ItemStack itemWithAddedLore = getItemWithLore(exploded);
+			if(itemWithAddedLore != null){
+				evt.setCancelled(true);
+				evt.getBlock().setType(Material.AIR);
+				evt.getBlock().getWorld().dropItemNaturally(evt.getBlock().getLocation(), itemWithAddedLore);
+			}
 		}
-	}
+	}*/
 	// TODO: Does not check for blocked broken by an extending piston.
 	// Listening to that event would be expensive.
 }
