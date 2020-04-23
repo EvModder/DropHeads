@@ -1,5 +1,6 @@
 package net.evmodder.DropHeads;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -36,6 +37,12 @@ public class HeadAPI {
 //		String localList = FileIO.loadFile("head-textures.txt", pl.getClass().getResourceAsStream("/head-textures.txt"));
 		String localList = FileIO.loadFile("head-textures.txt", hardcodedList);
 		loadTextures(localList, /*logMissingEntities=*/false, /*logUnknownEntities=*/true);
+
+		// This could be optimized by passing 'simple-mob-heads-only' to loadTextures to skip adding any textures with '|'
+		if(pl.getConfig().getBoolean("simple-mob-heads-only", false)){
+			ArrayList<String> allKeys = new ArrayList<>(textures.keySet());
+			for(String key : allKeys) if(key.indexOf('|') != -1) textures.remove(key);
+		}
 	}
 
 	void loadTextures(String headsList, boolean logMissingEntities, boolean logUnknownEntities){

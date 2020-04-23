@@ -278,11 +278,15 @@ public class EntityDeathListener implements Listener{
 			)
 		)) return;
 
-		final ItemStack itemInHand = (killer != null && killer instanceof LivingEntity
-				? ((LivingEntity)killer).getEquipment().getItemInMainHand() : null);
-		if(!mustUseTools.isEmpty() && (itemInHand == null || !mustUseTools.contains(itemInHand.getType()))) return;
-		final int lootingLevel = itemInHand == null ? 0 : itemInHand.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
-		final double toolBonus = itemInHand == null ? 0D : toolBonuses.getOrDefault(itemInHand.getType(), 0D);
+		final ItemStack murderWeapon = 
+			killer != null
+				? killer instanceof LivingEntity ? ((LivingEntity)killer).getEquipment().getItemInMainHand()
+				: killer instanceof Projectile && killer.hasMetadata("ShotUsing") ? (ItemStack)killer.getMetadata("ShotUsing").get(0).value()
+				: null
+			: null;
+		if(!mustUseTools.isEmpty() && (murderWeapon == null || !mustUseTools.contains(murderWeapon.getType()))) return;
+		final int lootingLevel = murderWeapon == null ? 0 : murderWeapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
+		final double toolBonus = murderWeapon == null ? 0D : toolBonuses.getOrDefault(murderWeapon.getType(), 0D);
 		final double lootingMod = 1D + lootingLevel*0.01D;
 		final double weaponMod = 1D + toolBonus;
 		final double timeAliveMod = 1D + getTimeAliveBonus(victim);
@@ -301,7 +305,7 @@ public class EntityDeathListener implements Listener{
 			}
 		}
 		if(rand.nextDouble() < dropChance){
-			dropHead(victim, evt, killer, itemInHand);
+			dropHead(victim, evt, killer, murderWeapon);
 			if(DEBUG_MODE){
 				DecimalFormat df = new DecimalFormat("0.0###");
 				pl.getLogger().info("Dropped Head: "+TextureKeyLookup.getTextureKey(victim)+"\n"

@@ -25,6 +25,10 @@ drop-for-indirect-kills: false
 # by making all mobs except players have a 0% chance of dropping a head)
 player-heads-only: false
 
+# Only drop "simple" mob heads (one per EntityType), without any unique
+# features based on mob traits or subtype; very boring, not recommended
+simple-mob-heads-only: false
+
 # Whether to keep entity heads synced with the latest vanilla textures
 refresh-textures: true
 
@@ -35,7 +39,7 @@ refresh-item-names: false
 # new texture? Note: to refresh, heads must be mined or dropped
 update-on-skin-change: false
 
-# Track mob spawn reasons (affects drop rates with spawn-cause-modifiers.txt)
+# Track mob spawn reasons (uses rate modifiers from spawn-cause-modifiers.txt)
 track-mob-spawns: true
 
 # Enable the mechanic where any mob killed by a charged creeper explosion
@@ -67,6 +71,8 @@ head-click-format-player: "&7[&6DropHeads&7]&f That's ${NAME}'s Head"
 
 # Saves lore of heads in GameProfile when placed (used by some other plugins)
 # Only works for player-type heads, eg: won't work for minecraft:creeper_head
+# WARNING: This feature is in BETA and is relatively untested
+# NOTE: Lore currently gets lost when the head is broken by non-player means
 save-custom-lore: false
 
 # (Optional) Whitelist of tools a player must be using for heads to drop

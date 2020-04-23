@@ -2,8 +2,8 @@ name: DropHeads
 main: net.evmodder.DropHeads.DropHeads
 author: EvModder/EvilWitchdoctor
 #3=major rewrite, 3=VehicleDestroy+Broadcast,
-#2=click head for info, italicized item name in behead msg, removed console warnings for future heads, timeAlive bonus, save item lore, fixed item metadata wipeout for refreshed items
-version: 3.3.2
+#3=tool bonus for projectile sources, simple-mob-heads-only
+version: 3.3.3
 api-version: 1.13
 
 commands:
