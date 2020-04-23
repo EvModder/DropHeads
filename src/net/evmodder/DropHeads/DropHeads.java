@@ -27,6 +27,8 @@ import net.evmodder.EvLib.Updater;
 // * Adjust drop rate based on getTicksLived()
 // * Log of head drop events
 // * fancy stray skull
+// * Tool bonuses for projectiles (eg, bow)
+// * "Simple Heads" option, to not use any extra data from texture keys
 // * jeb_ sheep head animated phasing through colors (like the jeb_ sheep)
 // * if mob has custom name, use it in head name (configurable)
 // * move textures from head-textures.txt to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
@@ -52,13 +54,13 @@ public final class DropHeads extends EvPlugin{
 		}
 		if(config.getBoolean("refresh-textures", false)){
 			getServer().getPluginManager().registerEvents(new ItemDropListener(), this);
-//			getServer().getPluginManager().registerEvents(new BlockBreakListener(), this);
 		}
 		if(config.getBoolean("head-click-listener", true)){
 			getServer().getPluginManager().registerEvents(new BlockClickListener(), this);
 		}
 		if(config.getBoolean("save-custom-lore", true)){
 			getServer().getPluginManager().registerEvents(new BlockPlaceListener(), this);
+			getServer().getPluginManager().registerEvents(new BlockBreakListener(), this);
 		}
 
 		new CommandSpawnHead(this);

@@ -54,7 +54,10 @@ public class BlockClickListener implements Listener{
 				headName = plugin.getAPI().getHeadNameFromKey(EntityType.PLAYER.name());
 			}
 			else{
-				isMobHead = plugin.getAPI().textureExists(profile.getName());
+				String profileName = profile.getName();
+				int savedLoreStart = profileName.indexOf('>');
+				if(savedLoreStart != -1) profileName = profileName.substring(0, savedLoreStart);
+				isMobHead = plugin.getAPI().textureExists(profileName);
 				headName = plugin.getAPI().getHeadName(profile);
 			}
 		}
