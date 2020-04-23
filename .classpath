@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry excluding="net/evmodder/EvLib/hooks/|net/evmodder/EvLib/noteblockapi/|net/evmodder/EvLib/particles/|net/evmodder/EvLib/util/|net/evmodder/EvLib/extras/ActionBarUtils.java|net/evmodder/EvLib/extras/ButcherUtils.java|net/evmodder/EvLib/extras/CommandUtils.java|net/evmodder/EvLib/extras/DisguiseUtils.java|net/evmodder/EvLib/extras/GhostUtils.java|net/evmodder/EvLib/extras/MethodMocker.java|net/evmodder/EvLib/extras/RefNBTBase.java|net/evmodder/EvLib/extras/RefNBTTag.java|net/evmodder/EvLib/extras/RefNBTTagList.java|net/evmodder/EvLib/extras/TabText.java|net/evmodder/EvLib/extras/TypeUtils.java|net/evmodder/EvLib/extras/NBTTagUtils.java" kind="src" path="EvLib"/>
+	<classpathentry excluding="net/evmodder/EvLib/hooks/|net/evmodder/EvLib/noteblockapi/|net/evmodder/EvLib/particles/|net/evmodder/EvLib/util/|net/evmodder/EvLib/extras/ActionBarUtils.java|net/evmodder/EvLib/extras/ButcherUtils.java|net/evmodder/EvLib/extras/CommandUtils.java|net/evmodder/EvLib/extras/DisguiseUtils.java|net/evmodder/EvLib/extras/GhostUtils.java|net/evmodder/EvLib/extras/MethodMocker.java|net/evmodder/EvLib/extras/RefNBTBase.java|net/evmodder/EvLib/extras/RefNBTTag.java|net/evmodder/EvLib/extras/RefNBTTagList.java|net/evmodder/EvLib/extras/TabText.java|net/evmodder/EvLib/extras/TypeUtils.java|net/evmodder/EvLib/extras/NBTTagUtils.java|net/evmodder/EvLib/extras/SelectorUtils.java" kind="src" path="EvLib"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.launching.macosx.MacOSXType/Java SE 8 [1.8.0_162]">
 		<attributes>
 			<attribute name="module" value="true"/>
