@@ -111,12 +111,12 @@ public class EntityDeathListener implements Listener{
 		}
 
 		timeAliveBonuses = new TreeMap<>();
-		timeAliveBonuses.put(-1L, 1D); // So that there is always a lower entry, and it defaults to 1
+		timeAliveBonuses.put(-1L, 0D); // Ensure there is always a lower entry, and it defaults to 0
 		ConfigurationSection specificTimeAliveModifiers = pl.getConfig().getConfigurationSection("time-alive-modifiers");
 		if(specificTimeAliveModifiers != null) for(String formattedTime : specificTimeAliveModifiers.getKeys(false)){
 			try{
 				long time = TextUtils.parseTime(formattedTime);
-				timeAliveBonuses.put(time, specificToolModifiers.getDouble(formattedTime));
+				timeAliveBonuses.put(time, specificTimeAliveModifiers.getDouble(formattedTime));
 			}
 			catch(NumberFormatException ex){pl.getLogger().severe("Error parsing time string: \""+formattedTime+'"');}
 		}
