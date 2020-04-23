@@ -25,6 +25,8 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.projectiles.BlockProjectileSource;
+import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.scheduler.BukkitRunnable;
 import com.sun.istack.internal.NotNull;
 import net.evmodder.DropHeads.DropHeads;
@@ -34,7 +36,9 @@ import net.evmodder.EvLib.EvUtils;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.extras.TellrawUtils.HoverEvent;
 import net.evmodder.EvLib.extras.TellrawUtils.ActionComponent;
+import net.evmodder.EvLib.extras.TellrawUtils.Component;
 import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
+import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.TellrawBlob;
 import net.evmodder.EvLib.extras.HeadUtils;
 import net.evmodder.EvLib.extras.TextUtils;
@@ -188,15 +192,28 @@ public class EntityDeathListener implements Listener{
 		else evt.getDrops().add(pl.getAPI().getHead(entity));
 		TellrawBlob message = new TellrawBlob();
 		if(killer != null){
+			Component killerComp = new SelectorComponent(killer.getUniqueId());
+			Component itemComp = null;
 			if(weapon != null && weapon.getType() != Material.AIR){
-				message.addComponent(MSH_BEHEAD_BY_WITH);
 				String itemDisplay = getItemDisplay(weapon);
 				String jsonData = JunkUtils.convertItemStackToJson(weapon, JSON_LIMIT);
-				ActionComponent comp = new ActionComponent(itemDisplay, HoverEvent.SHOW_ITEM, jsonData);
-				message.replaceRawTextWithComponent("${ITEM}", comp);
+				itemComp = new ActionComponent(itemDisplay, HoverEvent.SHOW_ITEM, jsonData);
+			}
+			if(killer instanceof Projectile){
+				if(weapon == null) itemComp = new SelectorComponent(killer.getUniqueId());
+				ProjectileSource shooter = ((Projectile)killer).getShooter();
+				if(shooter instanceof Entity) killer = (Entity)shooter;
+				else if(shooter instanceof BlockProjectileSource){
+					String blockName = TextUtils.getNormalizedName(((BlockProjectileSource)shooter).getBlock().getType());
+					killerComp = new RawTextComponent(blockName);
+				}
+			}
+			if(itemComp != null){
+				message.addComponent(MSH_BEHEAD_BY_WITH);
+				message.replaceRawTextWithComponent("${ITEM}", itemComp);
 			}
 			else message.addComponent(MSH_BEHEAD_BY);
-			message.replaceRawTextWithComponent("${KILLER}", new SelectorComponent(killer.getUniqueId()));
+			message.replaceRawTextWithComponent("${KILLER}", killerComp);
 		}
 		else message.addComponent(MSG_BEHEAD);
 		message.replaceRawTextWithComponent("${VICTIM}", new SelectorComponent(entity.getUniqueId()));
@@ -279,11 +296,12 @@ public class EntityDeathListener implements Listener{
 		)) return;
 
 		final ItemStack murderWeapon = 
-			killer != null
-				? killer instanceof LivingEntity ? ((LivingEntity)killer).getEquipment().getItemInMainHand()
-				: killer instanceof Projectile && killer.hasMetadata("ShotUsing") ? (ItemStack)killer.getMetadata("ShotUsing").get(0).value()
-				: null
+			killer != null ?
+				killer instanceof LivingEntity ? ((LivingEntity)killer).getEquipment().getItemInMainHand() :
+				killer instanceof Projectile && killer.hasMetadata("ShotUsing") ? (ItemStack)killer.getMetadata("ShotUsing").get(0).value() :
+				null
 			: null;
+
 		if(!mustUseTools.isEmpty() && (murderWeapon == null || !mustUseTools.contains(murderWeapon.getType()))) return;
 		final int lootingLevel = murderWeapon == null ? 0 : murderWeapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
 		final double toolBonus = murderWeapon == null ? 0D : toolBonuses.getOrDefault(murderWeapon.getType(), 0D);
@@ -304,6 +322,7 @@ public class EntityDeathListener implements Listener{
 				if(i != null && HeadUtils.isHead(i.getType())) evt.getDrops().add(i);
 			}
 		}
+
 		if(rand.nextDouble() < dropChance){
 			dropHead(victim, evt, killer, murderWeapon);
 			if(DEBUG_MODE){

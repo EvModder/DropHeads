@@ -53,9 +53,9 @@ public class ProjectileFireListener implements Listener{
 
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onEntityShootBow(EntityShootBowEvent evt){
-		if(evt.isCancelled() || (!allowNonPlayerKills && evt.getEntity() instanceof Player)) return;
+		if(evt.isCancelled() || (!allowNonPlayerKills && evt.getEntity() instanceof Player == false)) return;
 		// This event is more reliable than ProjectileLaunchEvent, so override any existing metadata
-		evt.getEntity().removeMetadata("ShotUsing", plugin);
-		evt.getEntity().setMetadata("ShotUsing", new FixedMetadataValue(plugin, evt.getBow()));
+		evt.getProjectile().removeMetadata("ShotUsing", plugin);
+		evt.getProjectile().setMetadata("ShotUsing", new FixedMetadataValue(plugin, evt.getBow()));
 	}
 }
