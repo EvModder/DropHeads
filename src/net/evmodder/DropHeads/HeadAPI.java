@@ -21,7 +21,7 @@ import net.evmodder.EvLib.extras.HeadUtils;
 
 public class HeadAPI {
 	final private DropHeads pl;
-	final boolean grummEnabled, updateOldPlayerHeads, saveCustomLore;
+	final boolean grummEnabled, updateOldPlayerHeads;//, saveCustomLore;
 	final TreeMap<String, String> textures;
 
 	HeadAPI(){
@@ -29,7 +29,7 @@ public class HeadAPI {
 		pl = DropHeads.getPlugin();
 		grummEnabled = pl.getConfig().getBoolean("drop-grumm-heads", true);
 		updateOldPlayerHeads = pl.getConfig().getBoolean("update-on-skin-change", true);
-		saveCustomLore = pl.getConfig().getBoolean("save-custom-lore", false);
+//		saveCustomLore = pl.getConfig().getBoolean("save-custom-lore", false);
 
 		String hardcodedList = FileIO.loadResource(pl, "head-textures.txt");
 		loadTextures(hardcodedList, /*logMissingEntities=*/true, /*logUnknownEntities=*/false);
@@ -53,7 +53,7 @@ public class HeadAPI {
 				if(texture.isEmpty() || texture.equals("xxx")) continue; //TODO: remove the xxx
 
 				String key = head.substring(0, i).toUpperCase();
-				textures.put(key, texture);
+				if(textures.put(key, texture) != null) continue; // Don't bother checking EntityType if this head has already been added
 
 				int j = key.indexOf('|');
 				String typeName = (j == -1 ? key : key.substring(0, j));
@@ -161,7 +161,7 @@ public class HeadAPI {
 	public ItemStack getHead(GameProfile profile){
 		if(profile == null || profile.getName() == null) return null;
 		String profileName = profile.getName();
-		if(saveCustomLore){int idx = profileName.indexOf('|'); if(idx != -1) profileName = profileName.substring(0, idx);}
+		/*if(saveCustomLore){*/int idx = profileName.indexOf('>'); if(idx != -1) profileName = profileName.substring(0, idx);/*}*/
 		if(textureExists(profileName)){//Refresh this EntityHead texture
 			return makeTextureSkull(profileName);
 		}
@@ -177,7 +177,7 @@ public class HeadAPI {
 	public String getHeadName(GameProfile profile){
 		if(profile == null || profile.getName() == null) return null;
 		String profileName = profile.getName();
-		if(saveCustomLore){int idx = profileName.indexOf('|'); if(idx != -1) profileName = profileName.substring(0, idx);}
+		/*if(saveCustomLore){*/int idx = profileName.indexOf('>'); if(idx != -1) profileName = profileName.substring(0, idx);/*}*/
 		if(textureExists(profileName)){
 			return getHeadNameFromKey(profileName);
 		}
