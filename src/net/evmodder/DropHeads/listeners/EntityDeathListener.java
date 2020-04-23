@@ -202,7 +202,7 @@ public class EntityDeathListener implements Listener{
 			if(killer instanceof Projectile){
 				if(weapon == null) itemComp = new SelectorComponent(killer.getUniqueId());
 				ProjectileSource shooter = ((Projectile)killer).getShooter();
-				if(shooter instanceof Entity) killer = (Entity)shooter;
+				if(shooter instanceof Entity) killerComp = new SelectorComponent(((Entity)shooter).getUniqueId());
 				else if(shooter instanceof BlockProjectileSource){
 					String blockName = TextUtils.getNormalizedName(((BlockProjectileSource)shooter).getBlock().getType());
 					killerComp = new RawTextComponent(blockName);
