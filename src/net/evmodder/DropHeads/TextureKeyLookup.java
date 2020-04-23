@@ -150,11 +150,19 @@ public class TextureKeyLookup{
 					textureKey = textureKey.replace("|NONE", "");
 					dataFlags = textureKey.split("\\|");
 				}
+				break;
 			case "OCELOT":
 				// "Red Cat Ocelot Head" -> "Red Cat Head"
 				if(dataFlags.length > 1) dataFlags = Arrays.copyOfRange(dataFlags, 1, dataFlags.length);
 				// "Wild Ocelot Head" -> "Ocelot Head"
 				if(dataFlags[0].equals("WILD_OCELOT")) dataFlags[0] = "OCELOT";
+				break;
+			case "PANDA":
+				if(textureKey.contains("|NORMAL")){
+					textureKey = textureKey.replace("|NORMAL", "");
+					dataFlags = textureKey.split("\\|");
+				}
+				break;
 		}
 		StringBuilder builder = new StringBuilder("");
 		for(int i=dataFlags.length-1; i>0; --i){
