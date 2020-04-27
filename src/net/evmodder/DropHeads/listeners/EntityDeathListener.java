@@ -59,9 +59,9 @@ public class EntityDeathListener implements Listener{
 	enum AnnounceMode {GLOBAL, LOCAL, DIRECT, OFF};
 	final AnnounceMode ANNOUNCE_PLAYERS, ANNOUNCE_MOBS;
 	final String MSG_BEHEAD, MSH_BEHEAD_BY, MSH_BEHEAD_BY_WITH;
-//	final String ITEM_DISPLAY_FORMAT = TextUtils.translateAlternateColorCodes('&', "&r[&b${NAME}&r]");//TODO: move to config
-	final String ITEM_DISPLAY_FORMAT = "${NAME}";
-	final int LOCAL_RANGE = 150;//TODO: move to config
+	final String ITEM_DISPLAY_FORMAT;
+	final boolean USE_PLAYER_DISPLAYNAMES;
+	final int LOCAL_RANGE = 200;//TODO: move to config
 	final int JSON_LIMIT = 15000;//TODO: move to config
 
 	AnnounceMode parseAnnounceMode(@NotNull String value, AnnounceMode defaultMode){
@@ -84,11 +84,14 @@ public class EntityDeathListener implements Listener{
 		ANNOUNCE_MOBS = parseAnnounceMode(pl.getConfig().getString("behead-announcement-mobs", "LOCAL"), AnnounceMode.LOCAL);
 		ANNOUNCE_PLAYERS = parseAnnounceMode(pl.getConfig().getString("behead-announcement-players", "GLOBAL"), AnnounceMode.GLOBAL);
 		String msg = pl.getConfig().getString("message-beheaded", "${VICTIM} was beheaded");
-		String msgBy = pl.getConfig().getString("message-beheaded-by-entity", "${VICTIM} was beheaded by ${KILLER}");
-		String msgByWith = pl.getConfig().getString("message-beheaded-by-entity-with-item", "${VICTIM} was beheaded by ${KILLER} using ${ITEM}");
+		String msgBy = pl.getConfig().getString("message-beheaded-by-entity", "${VICTIM}&r was beheaded by ${KILLER}&r");
+		String msgByWith = pl.getConfig().getString("message-beheaded-by-entity-with-item", "${VICTIM}&r was beheaded by ${KILLER}&r using ${ITEM}&r");
+		String itemDisplayFormat = pl.getConfig().getString("message-beheaded-item-display-format", "${RARITY}[${NAME}${RARITY}]&r");
 		MSG_BEHEAD = TextUtils.translateAlternateColorCodes('&', msg);
 		MSH_BEHEAD_BY = TextUtils.translateAlternateColorCodes('&', msgBy);
 		MSH_BEHEAD_BY_WITH = TextUtils.translateAlternateColorCodes('&', msgByWith);
+		ITEM_DISPLAY_FORMAT = TextUtils.translateAlternateColorCodes('&', itemDisplayFormat);
+		USE_PLAYER_DISPLAYNAMES = pl.getConfig().getBoolean("message-beheaded-use-player-displaynames", false);
 		rand = new Random();
 
 		mustUseTools = new HashSet<Material>();
@@ -174,15 +177,14 @@ public class EntityDeathListener implements Listener{
 		else recentlyBeheadedPlayers = null;
 	}
 
-	String getNormalizedName(Entity entity){
-		if(entity instanceof Player) return ((Player)entity).getDisplayName();
-		return entity.getName() != null ? entity.getName() : TextUtils.getNormalizedName(entity.getType());
-	}
 	String getItemDisplay(ItemStack item){
 		String itemName = item.hasItemMeta() && item.getItemMeta().hasDisplayName()
 				? ChatColor.ITALIC+item.getItemMeta().getDisplayName() : TextUtils.getNormalizedName(item.getType());
-		itemName = JunkUtils.getRarityColor(item, true) + itemName + ChatColor.RESET;
-		return ITEM_DISPLAY_FORMAT.replace("${NAME}", itemName).replace("${AMOUNT}", ""+item.getAmount());
+		ChatColor rarityColor = JunkUtils.getRarityColor(item, true);
+		return ITEM_DISPLAY_FORMAT
+				.replace("${NAME}", itemName)
+				.replace("${RARITY}", ""+rarityColor)
+				.replace("${AMOUNT}", ""+item.getAmount());
 	}
 	void sendTellraw(String target, String message){
 		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+target+" "+message);
@@ -192,7 +194,7 @@ public class EntityDeathListener implements Listener{
 		else evt.getDrops().add(pl.getAPI().getHead(entity));
 		TellrawBlob message = new TellrawBlob();
 		if(killer != null){
-			Component killerComp = new SelectorComponent(killer.getUniqueId());
+			Component killerComp = new SelectorComponent(killer.getUniqueId(), USE_PLAYER_DISPLAYNAMES);
 			Component itemComp = null;
 			if(weapon != null && weapon.getType() != Material.AIR){
 				String itemDisplay = getItemDisplay(weapon);
@@ -200,9 +202,9 @@ public class EntityDeathListener implements Listener{
 				itemComp = new ActionComponent(itemDisplay, HoverEvent.SHOW_ITEM, jsonData);
 			}
 			if(killer instanceof Projectile){
-				if(weapon == null) itemComp = new SelectorComponent(killer.getUniqueId());
+				if(weapon == null) itemComp = new SelectorComponent(killer.getUniqueId(), USE_PLAYER_DISPLAYNAMES);
 				ProjectileSource shooter = ((Projectile)killer).getShooter();
-				if(shooter instanceof Entity) killerComp = new SelectorComponent(((Entity)shooter).getUniqueId());
+				if(shooter instanceof Entity) killerComp = new SelectorComponent(((Entity)shooter).getUniqueId(), USE_PLAYER_DISPLAYNAMES);
 				else if(shooter instanceof BlockProjectileSource){
 					String blockName = TextUtils.getNormalizedName(((BlockProjectileSource)shooter).getBlock().getType());
 					killerComp = new RawTextComponent(blockName);
@@ -216,7 +218,7 @@ public class EntityDeathListener implements Listener{
 			message.replaceRawTextWithComponent("${KILLER}", killerComp);
 		}
 		else message.addComponent(MSG_BEHEAD);
-		message.replaceRawTextWithComponent("${VICTIM}", new SelectorComponent(entity.getUniqueId()));
+		message.replaceRawTextWithComponent("${VICTIM}", new SelectorComponent(entity.getUniqueId(), USE_PLAYER_DISPLAYNAMES));
 
 //		if(DEBUG_MODE) pl.getLogger().info("Tellraw message: "+message);
 		if(DEBUG_MODE) pl.getLogger().info(/*"Tellraw message: "+*/message.toPlainText());
@@ -254,7 +256,7 @@ public class EntityDeathListener implements Listener{
 		return timeAliveBonuses.floorEntry(millisecondsLived).getValue();
 	}
 
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.LOW)
 	public void entityDeathEvent(EntityDeathEvent evt){
 		final LivingEntity victim = evt.getEntity();
 		if(PLAYER_HEADS_ONLY && victim instanceof Player == false) return;

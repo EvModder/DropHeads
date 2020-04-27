@@ -1,7 +1,7 @@
 /*
- * DropHeds - a Bukkit plugin for naturally dropping mob heads
+ * DropHeads - a Bukkit plugin for naturally dropping mob heads
  *
- * Copyright (C) 2017 - 2019 Nathan / EvModder
+ * Copyright (C) 2017 - 2020 Nathan / EvModder
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,8 +24,19 @@ import net.evmodder.EvLib.EvPlugin;
 import net.evmodder.EvLib.Updater;
 
 //TODO:
-// * Adjust drop rate based on getTicksLived()
+// * /gethead player:sheep, /gethead mob:sheep, /gethead hdb:334
 // * Log of head drop events
+/*
+ * log:
+ *   enable: true
+ *   filename: 'dropheads-log.txt'
+ *   log-mob-behead: true
+ *   log-player-behead: true
+ *   log-head-command: true
+ *   format-mob-behead: '${timestamp},mob decapitated,${victim},${killer},${item}'
+ *   format-player-behead: '${timestamp},player decapitated,${victim},${killer},${item}'
+ *   format-head-command: '${timestamp},gethead command,${sender},${head}'
+ */
 // * fancy stray skull
 // * "Simple Heads" option, to not use any extra data from texture keys
 // * jeb_ sheep head animated phasing through colors (like the jeb_ sheep)

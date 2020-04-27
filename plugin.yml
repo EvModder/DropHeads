@@ -2,7 +2,7 @@ name: DropHeads
 main: net.evmodder.DropHeads.DropHeads
 author: EvModder/EvilWitchdoctor
 #3=major rewrite, 3=VehicleDestroy+Broadcast,
-#3=tool bonus for projectile sources, simple-mob-heads-only
+#3=tool bonus for projectile sources, simple-mob-heads-only, used item name format config (and better matches vanilla) 
 version: 3.3.3
 api-version: 1.13
 
