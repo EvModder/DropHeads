@@ -60,7 +60,7 @@ public class EntityDeathListener implements Listener{
 	final AnnounceMode ANNOUNCE_PLAYERS, ANNOUNCE_MOBS;
 	final String MSG_BEHEAD, MSH_BEHEAD_BY, MSH_BEHEAD_BY_WITH;
 	final String ITEM_DISPLAY_FORMAT;
-	final boolean USE_PLAYER_DISPLAYNAMES;
+	final boolean USE_PLAYER_DISPLAYNAMES = false;//TODO: move to config, when possible
 	final int LOCAL_RANGE = 200;//TODO: move to config
 	final int JSON_LIMIT = 15000;//TODO: move to config
 
@@ -91,7 +91,7 @@ public class EntityDeathListener implements Listener{
 		MSH_BEHEAD_BY = TextUtils.translateAlternateColorCodes('&', msgBy);
 		MSH_BEHEAD_BY_WITH = TextUtils.translateAlternateColorCodes('&', msgByWith);
 		ITEM_DISPLAY_FORMAT = TextUtils.translateAlternateColorCodes('&', itemDisplayFormat);
-		USE_PLAYER_DISPLAYNAMES = pl.getConfig().getBoolean("message-beheaded-use-player-displaynames", false);
+//		USE_PLAYER_DISPLAYNAMES = pl.getConfig().getBoolean("message-beheaded-use-player-displaynames", false);
 		rand = new Random();
 
 		mustUseTools = new HashSet<Material>();
@@ -215,6 +215,7 @@ public class EntityDeathListener implements Listener{
 				message.replaceRawTextWithComponent("${ITEM}", itemComp);
 			}
 			else message.addComponent(MSH_BEHEAD_BY);
+			if(USE_PLAYER_DISPLAYNAMES) message.replaceRawTextWithComponent("${KILLER}", new RawTextComponent("${KILLER}"));
 			message.replaceRawTextWithComponent("${KILLER}", killerComp);
 		}
 		else message.addComponent(MSG_BEHEAD);
