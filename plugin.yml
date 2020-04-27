@@ -2,7 +2,7 @@ name: DropHeads
 main: net.evmodder.DropHeads.DropHeads
 author: EvModder/EvilWitchdoctor
 #3=major rewrite, 3=VehicleDestroy+Broadcast,
-#3=tool bonus for projectile sources, simple-mob-heads-only, used item name format config (and better matches vanilla) 
+#3=tool bonus for projectile sources, simple-mob-heads-only, used item name format config (and better matches vanilla), clickinfo perm
 version: 3.3.3
 api-version: 1.13
 
@@ -27,6 +27,10 @@ permissions:
 
    dropheads.canbehead:
       description: This player will be able to get heads
+      default: true
+
+   dropheads.clickinfo:
+      description: Permission to see info about a head by clicking it
       default: true
 
    dropheads.spawn:
