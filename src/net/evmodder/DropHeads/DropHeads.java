@@ -37,13 +37,15 @@ import net.evmodder.EvLib.Updater;
  *   format-player-behead: '${timestamp},player decapitated,${victim},${killer},${item}'
  *   format-head-command: '${timestamp},gethead command,${sender},${head}'
  */
+// * attempt-place-head-block, attempt-place-overwrite-liquids, facing-direction, place-as: KILLER/VICTIM/SERVER, what to do if blockplaceevent fails
+// * overwrite blocks: ['AIR', 'WATER, 'GRASS']
 // * fancy stray skull
-// * "Simple Heads" option, to not use any extra data from texture keys
 // * jeb_ sheep head animated phasing through colors (like the jeb_ sheep)
 // * if mob has custom name, use it in head name (configurable)
 // * move textures from head-textures.txt to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
 // * using above, inside /textures/MOB_NAME.txt, set 'drop-rate: x' to modify chance for that sub-type only
 // * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
+// * cancel behead message broadcast if death message gets changed by another plugin (check in playerdeatheven with priority monitor?)
 public final class DropHeads extends EvPlugin{
 	private static DropHeads instance; public static DropHeads getPlugin(){return instance;}
 	private HeadAPI api;

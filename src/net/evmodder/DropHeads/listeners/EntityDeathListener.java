@@ -65,7 +65,10 @@ public class EntityDeathListener implements Listener{
 	final int JSON_LIMIT = 15000;//TODO: move to config
 
 	AnnounceMode parseAnnounceMode(@NotNull String value, AnnounceMode defaultMode){
-		try{return AnnounceMode.valueOf(value.toUpperCase());}
+		value = value.toUpperCase();
+		if(value.equals("FALSE")) return AnnounceMode.OFF;
+		if(value.equals("TRUE")) return AnnounceMode.GLOBAL;
+		try{return AnnounceMode.valueOf(value);}
 		catch(IllegalArgumentException ex){
 			pl.getLogger().severe("Unknown announcement mode: '"+value+"'");
 			pl.getLogger().warning("Please use one of the available modes: [GLOBAL, LOCAL, OFF]");

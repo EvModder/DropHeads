@@ -1,6 +1,6 @@
 # How to announce beheadings, options are GLOBAL, LOCAL, DIRECT, or OFF
-behead-announcement-mobs: LOCAL
-behead-announcement-players: GLOBAL
+behead-announcement-mobs: 'LOCAL'
+behead-announcement-players: 'GLOBAL'
 
 # Replaces death messages if player behead announcement is GLOBAL
 behead-announcement-replaces-death-message: true
