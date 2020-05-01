@@ -25,9 +25,9 @@ public class BlockClickListener implements Listener{
 	public BlockClickListener(){
 		plugin = DropHeads.getPlugin();
 		headDisplayStrMob = TextUtils.translateAlternateColorCodes('&',
-				plugin.getConfig().getString("head-click-format-mobs", "That's ${A} ${NAME} ${TYPE}"));
+				plugin.getConfig().getString("head-click-format-mobs", "&7[&6DropHeads&7]&f That's ${A} ${NAME} ${TYPE}"));
 		headDisplayStrPlayer = TextUtils.translateAlternateColorCodes('&',
-				plugin.getConfig().getString("head-click-format-players", "That's ${NAME}'s Head"));
+				plugin.getConfig().getString("head-click-format-players", "&7[&6DropHeads&7]&f That's ${NAME}'s Head"));
 		// That's a <Swamp Amorsmith Zombie Villager> <Head>
 		// That's <EvDoc>'s Head
 		recentClickers = new HashSet<>();
