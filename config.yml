@@ -55,9 +55,6 @@ charged-creeper-drops: true
 drop-grumm-heads: true
 show-grumm-in-tab-complete: false
 
-# Only drop heads if the killer used an axe
-must-use-axe: false
-
 # Enable plugin Updater (checks for new versions with new head textures)
 # Note: Disable if your server console reports errors
 update-plugin: false
@@ -76,6 +73,9 @@ head-click-format-players: "&7[&6DropHeads&7]&f That's ${NAME}'s Head"
 # NOTE: Lore currently gets lost when the head is broken by non-player means
 save-custom-lore: false
 
+# Only drop heads if the killer used an axe
+must-use-axe: false
+
 # (Optional) Whitelist of tools a player must be using for heads to drop
 # If "must-use-axe" is enabled, this list will be ignored
 # If empty, no special weapon/tool will be required to get heads
@@ -88,7 +88,7 @@ must-use:
 # The number is the percent increase in drop chance when using that tool
 # Eg: 0.8 = 80% more likely, -0.1 = 10% less likely, 2.0 = +200%, etc.
 specific-tool-modifiers:
-  GOLD_AXE: 3
+  GOLDEN_AXE: 3
   DIAMOND_AXE: 1
   IRON_AXE: 0.8
   STONE_AXE: 0.5

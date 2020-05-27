@@ -2,8 +2,8 @@ name: DropHeads
 main: net.evmodder.DropHeads.DropHeads
 author: EvModder/EvilWitchdoctor
 #3=major rewrite, 3=VehicleDestroy+Broadcast,
-#3=tool bonus for projectile sources, simple-mob-heads-only, used item name format config (and better matches vanilla), clickinfo perm
-version: 3.3.3
+#4=config clickinfo for players fix, config droprates cleanup, debug command remove repeated heads
+version: 3.3.4
 api-version: 1.13
 
 commands:

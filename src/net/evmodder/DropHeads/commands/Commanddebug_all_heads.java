@@ -2,6 +2,9 @@ package net.evmodder.DropHeads.commands;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -20,6 +23,7 @@ import net.evmodder.EvLib.extras.HeadUtils;
 public class Commanddebug_all_heads extends EvCommand{
 	final HeadAPI api;
 	final boolean DISPLAY_3D = false;
+	final boolean SHOW_PLAIN_IF_HAS_DATA_TAG = false;
 
 	public Commanddebug_all_heads(DropHeads plugin){
 		super(plugin);
@@ -49,11 +53,19 @@ public class Commanddebug_all_heads extends EvCommand{
 		}
 		boolean noGrumm = args.length != 1 || !args[0].toLowerCase().equals("true");
 
-		final Location loc = ((Player)sender).getLocation();
-		long numHeads = api.getTextures().size();
+		@SuppressWarnings("unchecked")
+		Set<String> textureKeys = ((TreeMap<String, String>)api.getTextures().clone()).keySet();
+		if(noGrumm) textureKeys = textureKeys.stream().filter(k -> !k.endsWith("|GRUMM")).collect(Collectors.toSet());
+		if(!SHOW_PLAIN_IF_HAS_DATA_TAG){
+			// Don't show "FOX" if we have "FOX|RED", or "SHEEP" if we have "SHEEP|WHITE" etc
+			Set<String> hasExtraDataTag = textureKeys.stream().filter(k -> k.replace("|GRUMM", "").contains("|"))
+				.map(k -> k.substring(0, k.indexOf('|'))+(k.endsWith("|GRUMM") ? "|GRUMM" : "")).collect(Collectors.toSet());
+			textureKeys.removeAll(hasExtraDataTag);
+		}
+		long numHeads = textureKeys.size();
 		//if(noGrumm) numHeads /= 2;//TODO: Grumm heads aren't exactly half rn...
-		if(noGrumm) numHeads = api.getTextures().keySet().stream().filter(k -> !k.endsWith("|GRUMM")).count();
-		
+
+		final Location loc = ((Player)sender).getLocation();
 		if(DISPLAY_3D){
 			int dimX, dimY, dimZ;
 			dimX = dimY = dimZ = (int)Math.floor(Math.cbrt(numHeads));
@@ -68,17 +80,17 @@ public class Commanddebug_all_heads extends EvCommand{
 			}
 			sender.sendMessage("Placing "+numHeads+" heads...");
 			sender.sendMessage("Dimensions: "+dX+","+dY+","+dZ);
-			Iterator<String> it = api.getTextures().keySet().iterator();
+			Iterator<String> it = textureKeys.iterator();
 			//pl.getServer().getScheduler()(pl, new Runnable(){public void run(){
 				for(int z=dZ; z>0 && it.hasNext(); --z)
 				for(int y=dY; y>0 && it.hasNext(); --y)
 				for(int x=dX; x>0 && it.hasNext(); --x){
 					Location hLoc = loc.clone().add(((dX/2)-x)*2, ((dY/2)-y)*2, ((dZ/2)-z)*2);
 					String key = it.next();
-					if(noGrumm){
+					/*if(noGrumm){
 						while(key.endsWith("|GRUMM") && it.hasNext()) key = it.next();
 						if(key.endsWith("|GRUMM")) break;
-					}
+					}*/
 					setHead(hLoc, key, null);
 				}
 			//}});
@@ -101,10 +113,10 @@ public class Commanddebug_all_heads extends EvCommand{
 			//pl.getServer().getScheduler()(pl, new Runnable(){public void run(){
 				for(int y=dY; y>0 && it.hasNext(); --y) for(int x=dX; x>0 && it.hasNext(); --x){
 					String key = it.next();
-					if(noGrumm){
+					/*if(noGrumm){
 						while(key.endsWith("|GRUMM") && it.hasNext()) key = it.next();
 						if(key.endsWith("|GRUMM")) break;
-					}
+					}*/
 					setHead(loc.clone().add(x, y, 0), key, BlockFace.NORTH);
 				}
 			//}});
