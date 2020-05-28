@@ -5,7 +5,11 @@ EvLib/
 .settings/
 textures/
 
-.DS_Store
 *.class
 *.un~
 grumm_log.txt
+.DS_Store
+*/.DS_Store
+*/*/.DS_Store
+*/*/*/.DS_Store
+*/*/*/*/.DS_Store
