@@ -84,6 +84,15 @@ must-use:
 #  - DIAMOND_AXE
 #  - WOOD_HOE
 
+# Drop chances are multiplied by this number for each level of looting
+looting-mutliplier: 1.01
+
+# This number is added to the drop chance for each level of looting
+looting-addition: 0.0
+
+# Use vanilla behavior (overrides previous two settings) for wither skeletons
+vanilla-wither-skeleton-looting-modifier: true
+
 # (Optional) Let certain tools have a higher chance of beheading
 # The number is the percent increase in drop chance when using that tool
 # Eg: 0.8 = 80% more likely, -0.1 = 10% less likely, 2.0 = +200%, etc.

@@ -2,7 +2,7 @@ name: DropHeads
 main: net.evmodder.DropHeads.DropHeads
 author: EvModder/EvilWitchdoctor
 #3=major rewrite, 3=VehicleDestroy+Broadcast,
-#4=config clickinfo for players fix, config droprates cleanup, debug command remove repeated heads
+#4=config clickinfo for players fix, config droprates cleanup, debug command remove repeated heads, looting-multiplier, looting-addition, and vanilla-wither-skeleton-looting-modifier
 version: 3.3.4
 api-version: 1.13
 

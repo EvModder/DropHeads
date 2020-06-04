@@ -45,15 +45,15 @@ import net.evmodder.EvLib.extras.TextUtils;
 
 public class EntityDeathListener implements Listener{
 	final DropHeads pl;
-	final boolean allowNonPlayerKills, allowIndirectKills, allowProjectileKills; 
-	final boolean PLAYER_HEADS_ONLY, CHARGED_CREEPER_DROPS, REPLACE_DEATH_MESSAGE;
+	final boolean allowNonPlayerKills, allowIndirectKills, allowProjectileKills;
+	final boolean PLAYER_HEADS_ONLY, CHARGED_CREEPER_DROPS, REPLACE_DEATH_MESSAGE, VANILLA_WSKELE_LOOTING;
 	final HashSet<Material> mustUseTools;
 	final HashSet<EntityType> noLootingEffectMobs;
 	final HashMap<EntityType, Double> mobChances;
 	final HashMap<Material, Double> toolBonuses;
 	final TreeMap<Long, Double> timeAliveBonuses;
 	final HashSet<UUID> explodingChargedCreepers, recentlyBeheadedPlayers;
-	final double DEFAULT_CHANCE;
+	final double DEFAULT_CHANCE, LOOTING_ADD, LOOTING_MULT;
 	final boolean DEBUG_MODE;
 	final Random rand;
 	enum AnnounceMode {GLOBAL, LOCAL, DIRECT, OFF};
@@ -82,6 +82,11 @@ public class EntityDeathListener implements Listener{
 		allowProjectileKills = pl.getConfig().getBoolean("drop-for-ranged-kills", false);
 		PLAYER_HEADS_ONLY = pl.getConfig().getBoolean("player-heads-only", false);
 		CHARGED_CREEPER_DROPS = pl.getConfig().getBoolean("charged-creeper-drops", true);
+		VANILLA_WSKELE_LOOTING = pl.getConfig().getBoolean("vanilla-wither-skeleton-looting-modifier", true);
+		LOOTING_ADD = pl.getConfig().getDouble("looting-mutliplier", 0.01D);
+		LOOTING_MULT = pl.getConfig().getDouble("looting-mutliplier", 1D);
+		if(LOOTING_MULT < 1) pl.getLogger().warning("looting-multiplier is set below 1.0, this means looting will DECREASe the chance of head drops!");
+		if(LOOTING_ADD >= 1) pl.getLogger().warning("looting-addition is set to 1.0 or greater. This means heads will always drop when looting is used!");
 		REPLACE_DEATH_MESSAGE = pl.getConfig().getBoolean("behead-announcement-replaces-death-message", true);
 		DEBUG_MODE = pl.getConfig().getBoolean("debug-messages", true);
 		ANNOUNCE_MOBS = parseAnnounceMode(pl.getConfig().getString("behead-announcement-mobs", "LOCAL"), AnnounceMode.LOCAL);
@@ -311,21 +316,23 @@ public class EntityDeathListener implements Listener{
 		if(!mustUseTools.isEmpty() && (murderWeapon == null || !mustUseTools.contains(murderWeapon.getType()))) return;
 		final int lootingLevel = murderWeapon == null ? 0 : murderWeapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
 		final double toolBonus = murderWeapon == null ? 0D : toolBonuses.getOrDefault(murderWeapon.getType(), 0D);
-		final double lootingMod = 1D + lootingLevel*0.01D;
+		final double lootingMod = Math.pow(LOOTING_MULT, lootingLevel);
+		final double lootingAdd = LOOTING_ADD*lootingLevel;
 		final double weaponMod = 1D + toolBonus;
 		final double timeAliveMod = 1D + getTimeAliveBonus(victim);
 		final double spawnCauseMod = getSpawnCauseModifier(victim);
 		final double rawDropChance = mobChances.getOrDefault(victim.getType(), DEFAULT_CHANCE);
-		final double dropChance = rawDropChance*spawnCauseMod*lootingMod*weaponMod;
+		double dropChance = rawDropChance*spawnCauseMod*weaponMod + lootingAdd;
 
 		// Remove vanilla-dropped wither skeleton skulls so they aren't dropped twice.
 		if(evt.getEntityType() == EntityType.WITHER_SKELETON){
+			if(VANILLA_WSKELE_LOOTING) dropChance = rawDropChance*spawnCauseMod*weaponMod + 0.01D*lootingLevel;
 			Iterator<ItemStack> it = evt.getDrops().iterator();
-			while(it.hasNext()) if(HeadUtils.isHead(it.next().getType())) it.remove();
+			while(it.hasNext()) if(it.next().getType() == Material.WITHER_SKELETON_SKULL) it.remove();
 			// However, if it is wearing a head in its helmet slot, don't remove the drop.
 			// Note-to-self: Be careful with entity_equipment, heads on armor stands, etc.
 			for(ItemStack i : EvUtils.getEquipmentGuaranteedToDrop(evt.getEntity())){
-				if(i != null && HeadUtils.isHead(i.getType())) evt.getDrops().add(i);
+				if(i != null && i.getType() == Material.WITHER_SKELETON_SKULL) evt.getDrops().add(i);
 			}
 		}
 
