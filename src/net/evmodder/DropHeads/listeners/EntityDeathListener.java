@@ -82,7 +82,7 @@ public class EntityDeathListener implements Listener{
 		allowProjectileKills = pl.getConfig().getBoolean("drop-for-ranged-kills", false);
 		PLAYER_HEADS_ONLY = pl.getConfig().getBoolean("player-heads-only", false);
 		CHARGED_CREEPER_DROPS = pl.getConfig().getBoolean("charged-creeper-drops", true);
-		VANILLA_WSKELE_LOOTING = pl.getConfig().getBoolean("vanilla-wither-skeleton-looting-modifier", true);
+		VANILLA_WSKELE_LOOTING = pl.getConfig().getBoolean("vanilla-wither-skeleton-looting-behavior", true);
 		LOOTING_ADD = pl.getConfig().getDouble("looting-mutliplier", 0.01D);
 		LOOTING_MULT = pl.getConfig().getDouble("looting-mutliplier", 1D);
 		if(LOOTING_MULT < 1) pl.getLogger().warning("looting-multiplier is set below 1.0, this means looting will DECREASe the chance of head drops!");
