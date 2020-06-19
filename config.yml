@@ -91,7 +91,7 @@ looting-mutliplier: 1.01
 looting-addition: 0.0
 
 # Use vanilla behavior (overrides previous two settings) for wither skeletons
-vanilla-wither-skeleton-looting-modifier: true
+vanilla-wither-skeleton-looting-behavior: true
 
 # (Optional) Let certain tools have a higher chance of beheading
 # The number is the percent increase in drop chance when using that tool
