@@ -36,6 +36,7 @@ FOX:                0.005  // PH=0.002
 GHAST:              0.007  // PH=0.005
 GIANT:              0.050
 GUARDIAN:           0.004  // PH=0.025
+HOGLIN:             0.006
 HORSE:              0.006  // PH=0.002
 HUSK:               0.005  // PH=0.002
 ILLUSIONER:         0.050  // PH=0.005
@@ -50,6 +51,7 @@ PARROT:             0.008  // PH=0.008
 PHANTOM:            0.006  // PH=0.002
 PIG:                0.004  // PH=0.002
 PIG_ZOMBIE:         0.002  // PH=0.002
+PIGLIN:             0.005
 PILLAGER:           0.005  // PH=0.002
 POLAR_BEAR:         0.008  // PH=0.005
 PUFFERFISH:         0.004  // PH=0.002
@@ -66,6 +68,7 @@ SNOWMAN:            0.008  // PH=0.002
 SPIDER:             0.004  // PH=0.002
 SQUID:              0.005  // PH=0.005
 STRAY:              0.004  // PH=0.002
+STRIDER:            0.006
 TRADER_LLAMA:       0.007  // PH=0.005
 TROPICAL_FISH:      0.004  // PH=0.002
 TURTLE:             0.003  // PH=0.002
@@ -77,8 +80,10 @@ WITCH:              0.004  // PH=0.005
 WITHER:             0.030  // PH=0.005
 WITHER_SKELETON:    0.025  // Vanilla=PH=0.025
 WOLF:               0.007  // PH=0.002
+ZOGLIN:             0.006
 ZOMBIE:             0.004  // PH=0.002
 ZOMBIE_HORSE:       0.070  // PH=0.002
 ZOMBIE_VILLAGER:    0.019  // PH=0.002
+ZOMBIFIED_PIGLIN:   0.002
 
 # You can add custom mobs to this list, but it will only work if an EntityType is defined
