@@ -51,7 +51,7 @@ public class HeadAPI {
 		if(logMissingEntities) missingHeads.addAll(Arrays.asList(EntityType.values()).stream()
 				.filter(x -> x.isAlive()/* && x.isMeow() */).collect(Collectors.toList()));
 		missingHeads.remove(EntityType.PLAYER);
-		missingHeads.remove(EntityType.ARMOR_STAND); // These 2 are 'alive', but aren't in head-texture.txt
+		missingHeads.remove(EntityType.ARMOR_STAND); // These 2 are 'alive', but aren't in head-textures.txt
 		for(String head : headsList.split("\n")){
 			head = head.replaceAll(" ", "");
 			int i = head.indexOf(":");

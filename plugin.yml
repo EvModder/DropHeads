@@ -2,7 +2,7 @@ name: DropHeads
 main: net.evmodder.DropHeads.DropHeads
 author: EvModder/EvilWitchdoctor
 #3=major rewrite, 3=VehicleDestroy+Broadcast,
-#5=fix loading looting-addition from config
+#5=fix loading looting-addition from config, added all new 1.16 mob heads & drop rates (and grumm variants)
 version: 3.3.5
 api-version: 1.13
 

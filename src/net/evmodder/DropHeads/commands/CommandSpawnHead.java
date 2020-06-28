@@ -48,7 +48,7 @@ public class CommandSpawnHead extends EvCommand{
 		catch(IllegalArgumentException ex){}
 		name = name.replace("_", "");
 		for(EntityType t : EntityType.values()) if(t.name().replace("_", "").equals(name)) return t;
-		if(name.equals("ZOMBIEPIGMAN")) return EntityType.PIG_ZOMBIE; //TODO: ZOMBIFIED_PIGLIN ?
+		if(name.equals("ZOMBIEPIGMAN")) return EntityType.valueOf("PIG_ZOMBIE");
 		else if(name.equals("MOOSHROOM")) return EntityType.MUSHROOM_COW;
 		return EntityType.UNKNOWN;
 	}
