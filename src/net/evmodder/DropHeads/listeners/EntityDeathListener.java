@@ -58,7 +58,7 @@ public class EntityDeathListener implements Listener{
 	final Random rand;
 	enum AnnounceMode {GLOBAL, LOCAL, DIRECT, OFF};
 	final AnnounceMode ANNOUNCE_PLAYERS, ANNOUNCE_MOBS;
-	final String MSG_BEHEAD, MSH_BEHEAD_BY, MSH_BEHEAD_BY_WITH;
+	final String MSG_BEHEAD, MSH_BEHEAD_BY, MSH_BEHEAD_BY_WITH, MSH_BEHEAD_BY_WITH_NAMED;
 	final String ITEM_DISPLAY_FORMAT;
 	final boolean USE_PLAYER_DISPLAYNAMES = false;//TODO: move to config, when possible
 	final int LOCAL_RANGE = 200;//TODO: move to config
@@ -94,10 +94,13 @@ public class EntityDeathListener implements Listener{
 		String msg = pl.getConfig().getString("message-beheaded", "${VICTIM} was beheaded");
 		String msgBy = pl.getConfig().getString("message-beheaded-by-entity", "${VICTIM}&r was beheaded by ${KILLER}&r");
 		String msgByWith = pl.getConfig().getString("message-beheaded-by-entity-with-item", "${VICTIM}&r was beheaded by ${KILLER}&r using ${ITEM}&r");
+		String msgByWithNamed = pl.getConfig().getString("message-beheaded-by-entity-with-item-named",
+				"${VICTIM}&r was beheaded by ${KILLER}&r using ${ITEM}&r");
 		String itemDisplayFormat = pl.getConfig().getString("message-beheaded-item-display-format", "${RARITY}[${NAME}${RARITY}]&r");
 		MSG_BEHEAD = TextUtils.translateAlternateColorCodes('&', msg);
 		MSH_BEHEAD_BY = TextUtils.translateAlternateColorCodes('&', msgBy);
 		MSH_BEHEAD_BY_WITH = TextUtils.translateAlternateColorCodes('&', msgByWith);
+		MSH_BEHEAD_BY_WITH_NAMED = TextUtils.translateAlternateColorCodes('&', msgByWithNamed);
 		ITEM_DISPLAY_FORMAT = TextUtils.translateAlternateColorCodes('&', itemDisplayFormat);
 //		USE_PLAYER_DISPLAYNAMES = pl.getConfig().getBoolean("message-beheaded-use-player-displaynames", false);
 		rand = new Random();
@@ -219,7 +222,7 @@ public class EntityDeathListener implements Listener{
 				}
 			}
 			if(itemComp != null){
-				message.addComponent(MSH_BEHEAD_BY_WITH);
+				message.addComponent(weapon.getItemMeta().getDisplayName() != null ? MSH_BEHEAD_BY_WITH_NAMED : MSH_BEHEAD_BY_WITH);
 				message.replaceRawTextWithComponent("${ITEM}", itemComp);
 			}
 			else message.addComponent(MSH_BEHEAD_BY);
