@@ -19,6 +19,7 @@ import net.evmodder.EvLib.extras.WebUtils;
 public class CommandSpawnHead extends EvCommand{
 	final private DropHeads pl;
 	final boolean SHOW_GRUMM_IN_TAB_COMPLETE;
+	final boolean SHOW_GRUMM_IN_TAB_COMPLETE_FOR_BAR = true;
 
 	public CommandSpawnHead(DropHeads plugin) {
 		super(plugin);
@@ -47,7 +48,7 @@ public class CommandSpawnHead extends EvCommand{
 		catch(IllegalArgumentException ex){}
 		name = name.replace("_", "");
 		for(EntityType t : EntityType.values()) if(t.name().replace("_", "").equals(name)) return t;
-		if(name.equals("ZOMBIEPIGMAN")) return EntityType.PIG_ZOMBIE;
+		if(name.equals("ZOMBIEPIGMAN")) return EntityType.PIG_ZOMBIE; //TODO: ZOMBIFIED_PIGLIN ?
 		else if(name.equals("MOOSHROOM")) return EntityType.MUSHROOM_COW;
 		return EntityType.UNKNOWN;
 	}
@@ -57,7 +58,10 @@ public class CommandSpawnHead extends EvCommand{
 			final List<String> tabCompletes = new ArrayList<String>();
 			args[0] = args[0].toUpperCase();
 			for(String key : pl.getAPI().getTextures().keySet()){
-				if(key.startsWith(args[0]) && (SHOW_GRUMM_IN_TAB_COMPLETE || !key.endsWith("|GRUMM"))) tabCompletes.add(key);
+				if(key.startsWith(args[0]) &&
+						(SHOW_GRUMM_IN_TAB_COMPLETE || !key.endsWith("|GRUMM") ||
+								(SHOW_GRUMM_IN_TAB_COMPLETE_FOR_BAR && args[0].contains(key.substring(0, key.length()-5))))
+				) tabCompletes.add(key);
 			}
 			return tabCompletes;
 		}
