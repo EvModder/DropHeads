@@ -43,13 +43,13 @@ public class CommandSpawnHead extends EvCommand{
 		//TODO: improve this function / test for errors
 		if(name.toUpperCase().startsWith("MHF_")) name = HeadUtils.normalizedNameFromMHFName(name);
 		name = name.toUpperCase().replace(' ', '_');
+		String noUnderscoresName = name.replace("_", "");
+		if(noUnderscoresName.equals("ZOMBIEPIGMAN")) name = "PIG_ZOMBIE";
+		else if(noUnderscoresName.equals("MOOSHROOM")) name = "MUSHROOM_COW";
 
-		try{EntityType type = EntityType.valueOf(name.toUpperCase()); return type;}
+		try{EntityType type = EntityType.valueOf(name); return type;}
 		catch(IllegalArgumentException ex){}
-		name = name.replace("_", "");
-		for(EntityType t : EntityType.values()) if(t.name().replace("_", "").equals(name)) return t;
-		if(name.equals("ZOMBIEPIGMAN")) return EntityType.valueOf("PIG_ZOMBIE");
-		else if(name.equals("MOOSHROOM")) return EntityType.MUSHROOM_COW;
+		for(EntityType t : EntityType.values()) if(t.name().replace("_", "").equals(noUnderscoresName)) return t;
 		return EntityType.UNKNOWN;
 	}
 

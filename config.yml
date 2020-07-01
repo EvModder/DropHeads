@@ -91,8 +91,11 @@ looting-mutliplier: 1.01
 # This number is added to the drop chance for each level of looting
 looting-addition: 0.0
 
-# Use vanilla behavior (overrides previous two settings) for wither skeletons
+# Use vanilla behavior (overrides all other settings) for wither skeletons
 vanilla-wither-skeleton-looting-behavior: true
+
+# Replaces Zombie_Pigmen heads with Zombified_Piglin heads in 1.16+
+update-zombie-pigman-heads: true
 
 # (Optional) Let certain tools have a higher chance of beheading
 # The number is the percent increase in drop chance when using that tool

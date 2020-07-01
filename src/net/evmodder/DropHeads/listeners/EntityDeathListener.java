@@ -222,7 +222,8 @@ public class EntityDeathListener implements Listener{
 				}
 			}
 			if(itemComp != null){
-				message.addComponent(weapon.getItemMeta().getDisplayName() != null ? MSH_BEHEAD_BY_WITH_NAMED : MSH_BEHEAD_BY_WITH);
+				boolean hasCustomName = weapon.hasItemMeta() && weapon.getItemMeta().hasDisplayName();
+				message.addComponent(hasCustomName ? MSH_BEHEAD_BY_WITH_NAMED : MSH_BEHEAD_BY_WITH);
 				message.replaceRawTextWithComponent("${ITEM}", itemComp);
 			}
 			else message.addComponent(MSH_BEHEAD_BY);
@@ -319,13 +320,13 @@ public class EntityDeathListener implements Listener{
 		if(!mustUseTools.isEmpty() && (murderWeapon == null || !mustUseTools.contains(murderWeapon.getType()))) return;
 		final int lootingLevel = murderWeapon == null ? 0 : murderWeapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
 		final double toolBonus = murderWeapon == null ? 0D : toolBonuses.getOrDefault(murderWeapon.getType(), 0D);
-		final double lootingMod = Math.pow(LOOTING_MULT, lootingLevel);
+		final double lootingMod = Math.min(Math.pow(LOOTING_MULT, lootingLevel), LOOTING_MULT*lootingLevel);
 		final double lootingAdd = LOOTING_ADD*lootingLevel;
 		final double weaponMod = 1D + toolBonus;
 		final double timeAliveMod = 1D + getTimeAliveBonus(victim);
 		final double spawnCauseMod = getSpawnCauseModifier(victim);
 		final double rawDropChance = mobChances.getOrDefault(victim.getType(), DEFAULT_CHANCE);
-		double dropChance = rawDropChance*spawnCauseMod*weaponMod + lootingAdd;
+		double dropChance = rawDropChance*spawnCauseMod*weaponMod*lootingMod + lootingAdd;
 
 		// Remove vanilla-dropped wither skeleton skulls so they aren't dropped twice.
 		if(evt.getEntityType() == EntityType.WITHER_SKELETON){
@@ -344,12 +345,13 @@ public class EntityDeathListener implements Listener{
 			if(DEBUG_MODE){
 				DecimalFormat df = new DecimalFormat("0.0###");
 				pl.getLogger().info("Dropped Head: "+TextureKeyLookup.getTextureKey(victim)+"\n"
-					+"Raw chance: "+df.format(rawDropChance*100D)+"%, "
-					+"SpawnReason Bonus: "+df.format((spawnCauseMod-1D)*100D)+"%, "
-					+"TimeAlive Bonus: "+df.format((timeAliveMod-1D)*100D)+"%, "
-					+"Looting Bonus: "+df.format((lootingMod-1D)*100D)+"%, "
-					+"Weapon Bonus: "+df.format((weaponMod-1D)*100D)+"%, "
-					+"Final drop chance: "+df.format(dropChance*100D)+"%");
+					+"Raw chance: "+df.format(rawDropChance*100D)+"%\nMultipliers"+
+					(spawnCauseMod != 0 ? "SpawnReason: "+df.format((spawnCauseMod-1D)*100D)+"%, " : "") +
+					(timeAliveMod != 0 ? "TimeAlive: "+df.format((timeAliveMod-1D)*100D)+"%, " : "") +
+					(weaponMod != 0 ? "Weapon: "+df.format((weaponMod-1D)*100D)+"%, " : "") +
+					(lootingMod != 0 ? "Looting: "+df.format((lootingMod-1D)*100D)+"%, " : "") +
+					(lootingAdd != 0 ? "Looting (Addition): "+df.format(lootingAdd*100D)+"%, " : "") +
+					"\nFinal drop chance: "+df.format(dropChance*100D)+"%");
 			}
 		}
 	}

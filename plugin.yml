@@ -1,9 +1,11 @@
 name: DropHeads
 main: net.evmodder.DropHeads.DropHeads
-author: EvModder/EvilWitchdoctor
+author: EvModder/EvDoc
+description: Provides a wide assortment of mob heads
+website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite, 3=VehicleDestroy+Broadcast,
-#5=fix loading looting-addition from config, added all new 1.16 mob heads & drop rates (and grumm variants)
-version: 3.3.5
+#5.1 = fix looting multiplier, add config option for updating zombie pigmen heads, double item name
+version: 3.3.5.1
 api-version: 1.13
 
 commands:

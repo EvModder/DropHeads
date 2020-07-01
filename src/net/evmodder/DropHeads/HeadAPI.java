@@ -22,14 +22,17 @@ import net.evmodder.EvLib.extras.HeadUtils;
 
 public class HeadAPI {
 	final private DropHeads pl;
-	final boolean grummEnabled, updateOldPlayerHeads;//, saveCustomLore;
-	final TreeMap<String, String> textures;
+	final boolean grummEnabled, updateOldPlayerHeads, updateZombiePigmenHeads;//, saveCustomLore;
+	final TreeMap<String, String> textures; // Key="ENTITY_NAME|DATA", Value="eyJ0ZXh0dXJl..."
 
 	HeadAPI(){
 		textures = new TreeMap<String, String>();
 		pl = DropHeads.getPlugin();
 		grummEnabled = pl.getConfig().getBoolean("drop-grumm-heads", true);
 		updateOldPlayerHeads = pl.getConfig().getBoolean("update-on-skin-change", true);
+		boolean zombifiedPiglensExist = false;
+		try{EntityType.valueOf("ZOMBIFIED_PIGLIN"); zombifiedPiglensExist = true;} catch(IllegalArgumentException ex){}
+		updateZombiePigmenHeads = zombifiedPiglensExist && pl.getConfig().getBoolean("update-zombie-pigman-heads", true);
 //		saveCustomLore = pl.getConfig().getBoolean("save-custom-lore", false);
 
 		String hardcodedList = FileIO.loadResource(pl, "head-textures.txt");
@@ -170,6 +173,9 @@ public class HeadAPI {
 		String profileName = profile.getName();
 		/*if(saveCustomLore){*/int idx = profileName.indexOf('>'); if(idx != -1) profileName = profileName.substring(0, idx);/*}*/
 		if(textureExists(profileName)){//Refresh this EntityHead texture
+			if(updateZombiePigmenHeads && profileName.startsWith("PIG_ZOMBIE")){
+				profileName = profileName.replace("PIG_ZOMBIE", "ZOMBIFIED_PIGLIN");
+			}
 			return makeTextureSkull(profileName);
 		}
 		else{//Looks like a Player's Head
