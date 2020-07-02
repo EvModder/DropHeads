@@ -1,5 +1,6 @@
 package net.evmodder.DropHeads.listeners;
 
+import java.text.DecimalFormat;
 import java.util.UUID;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Creeper;
@@ -13,6 +14,7 @@ import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import net.evmodder.DropHeads.DropHeads;
+import net.evmodder.DropHeads.TextureKeyLookup;
 import net.evmodder.EvLib.extras.HeadUtils;
 
 public class VehicleDestroyListener implements Listener{
@@ -61,26 +63,38 @@ public class VehicleDestroyListener implements Listener{
 			)
 		) return;
 
-		final ItemStack itemInHand = (attacker instanceof LivingEntity
-				? ((LivingEntity)attacker).getEquipment().getItemInMainHand() : null);
+		final ItemStack murderWeapon = 
+			attacker != null ?
+				attacker instanceof LivingEntity ? ((LivingEntity)attacker).getEquipment().getItemInMainHand() :
+				attacker instanceof Projectile && attacker.hasMetadata("ShotUsing") ? (ItemStack)attacker.getMetadata("ShotUsing").get(0).value() :
+				null
+			: null;
+
 		if(!deathListener.mustUseTools.isEmpty() &&
-				(itemInHand == null || !deathListener.mustUseTools.contains(itemInHand.getType()))) return;
-		final int lootingLevel = itemInHand == null ? 0 : itemInHand.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
-		final double toolBonus = itemInHand == null ? 0D : deathListener.toolBonuses.getOrDefault(itemInHand.getType(), 0D);
-		final double lootingMod = 1D + lootingLevel*0.01D;
+				(murderWeapon == null || !deathListener.mustUseTools.contains(murderWeapon.getType()))) return;
+		final int lootingLevel = murderWeapon == null ? 0 : murderWeapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
+		final double toolBonus = murderWeapon == null ? 0D : deathListener.toolBonuses.getOrDefault(murderWeapon.getType(), 0D);
+		final double lootingMod = Math.min(Math.pow(deathListener.LOOTING_MULT, lootingLevel), deathListener.LOOTING_MULT*lootingLevel);
+		final double lootingAdd = deathListener.LOOTING_ADD*lootingLevel;
 		final double weaponMod = 1D + toolBonus;
+		final double timeAliveMod = 1D + deathListener.getTimeAliveBonus(vehicle);
 		final double spawnCauseMod = EntityDeathListener.getSpawnCauseModifier(vehicle);
 		final double rawDropChance = deathListener.mobChances.getOrDefault(vehicle.getType(), deathListener.DEFAULT_CHANCE);
-		final double dropChance = rawDropChance*spawnCauseMod*lootingMod*weaponMod;
+		double dropChance = rawDropChance*spawnCauseMod*timeAliveMod*weaponMod*lootingMod + lootingAdd;
 
 		if(deathListener.rand.nextDouble() < dropChance){
-			vehicle.getWorld().dropItemNaturally(vehicle.getLocation(), pl.getAPI().getHead(vehicle));
-			if(DEBUG_MODE) pl.getLogger().info("Dropped Head: "+vehicle.getType()+"\n"
-					+"Raw chance: "+rawDropChance*100D+"%, "
-					+"SpawnReason Bonus: "+(spawnCauseMod-1D)*100D+"%, "
-					+"Looting Bonus: "+(lootingMod-1D)*100D+"%, "
-					+"Weapon Bonus: "+(weaponMod-1D)*100D+"%, "
-					+"Final drop chance: "+dropChance*100D+"%");
+			deathListener.dropHead(vehicle, /*EntityDeathEvent=*/null, attacker, murderWeapon);
+			if(DEBUG_MODE){
+				DecimalFormat df = new DecimalFormat("0.0###");
+				pl.getLogger().info("Dropped Head: "+TextureKeyLookup.getTextureKey(vehicle)+"\n"
+					+"Raw chance: "+df.format(rawDropChance*100D)+"%\nMultipliers"+
+					(spawnCauseMod != 1 ? "SpawnReason: "+df.format((spawnCauseMod-1D)*100D)+"%, " : "") +
+					(timeAliveMod != 1 ? "TimeAlive: "+df.format((timeAliveMod-1D)*100D)+"%, " : "") +
+					(weaponMod != 1 ? "Weapon: "+df.format((weaponMod-1D)*100D)+"%, " : "") +
+					(lootingMod != 1 ? "Looting: "+df.format((lootingMod-1D)*100D)+"%, " : "") +
+					(lootingAdd != 0 ? "Looting (Addition): "+df.format(lootingAdd*100D)+"%, " : "") +
+					"\nFinal drop chance: "+df.format(dropChance*100D)+"%");
+			}
 		}
 	}
 }

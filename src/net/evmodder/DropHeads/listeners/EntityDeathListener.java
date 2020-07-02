@@ -247,7 +247,7 @@ public class EntityDeathListener implements Listener{
 
 		switch(entity instanceof Player ? ANNOUNCE_PLAYERS : ANNOUNCE_MOBS){
 			case GLOBAL:
-				if(entity instanceof Player && REPLACE_DEATH_MESSAGE){
+				if(entity instanceof Player && REPLACE_DEATH_MESSAGE && evt != null){
 					recentlyBeheadedPlayers.add(entity.getUniqueId());
 					((PlayerDeathEvent)evt).setDeathMessage(message.toPlainText());
 				}
@@ -334,7 +334,7 @@ public class EntityDeathListener implements Listener{
 		final double timeAliveMod = 1D + getTimeAliveBonus(victim);
 		final double spawnCauseMod = getSpawnCauseModifier(victim);
 		final double rawDropChance = mobChances.getOrDefault(victim.getType(), DEFAULT_CHANCE);
-		double dropChance = rawDropChance*spawnCauseMod*weaponMod*lootingMod + lootingAdd;
+		double dropChance = rawDropChance*spawnCauseMod*timeAliveMod*weaponMod*lootingMod + lootingAdd;
 
 		// Remove vanilla-dropped wither skeleton skulls so they aren't dropped twice.
 		if(evt.getEntityType() == EntityType.WITHER_SKELETON){
@@ -354,10 +354,10 @@ public class EntityDeathListener implements Listener{
 				DecimalFormat df = new DecimalFormat("0.0###");
 				pl.getLogger().info("Dropped Head: "+TextureKeyLookup.getTextureKey(victim)+"\n"
 					+"Raw chance: "+df.format(rawDropChance*100D)+"%\nMultipliers"+
-					(spawnCauseMod != 0 ? "SpawnReason: "+df.format((spawnCauseMod-1D)*100D)+"%, " : "") +
-					(timeAliveMod != 0 ? "TimeAlive: "+df.format((timeAliveMod-1D)*100D)+"%, " : "") +
-					(weaponMod != 0 ? "Weapon: "+df.format((weaponMod-1D)*100D)+"%, " : "") +
-					(lootingMod != 0 ? "Looting: "+df.format((lootingMod-1D)*100D)+"%, " : "") +
+					(spawnCauseMod != 1 ? "SpawnReason: "+df.format((spawnCauseMod-1D)*100D)+"%, " : "") +
+					(timeAliveMod != 1 ? "TimeAlive: "+df.format((timeAliveMod-1D)*100D)+"%, " : "") +
+					(weaponMod != 1 ? "Weapon: "+df.format((weaponMod-1D)*100D)+"%, " : "") +
+					(lootingMod != 1 ? "Looting: "+df.format((lootingMod-1D)*100D)+"%, " : "") +
 					(lootingAdd != 0 ? "Looting (Addition): "+df.format(lootingAdd*100D)+"%, " : "") +
 					"\nFinal drop chance: "+df.format(dropChance*100D)+"%");
 			}
