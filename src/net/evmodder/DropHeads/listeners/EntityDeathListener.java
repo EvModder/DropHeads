@@ -1,6 +1,5 @@
 package net.evmodder.DropHeads.listeners;
 
-import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,7 +44,7 @@ import net.evmodder.EvLib.extras.TextUtils;
 
 public class EntityDeathListener implements Listener{
 	final DropHeads pl;
-	final boolean allowNonPlayerKills, allowIndirectKills, allowProjectileKills;
+	final boolean ALLOW_NON_PLAYER_KILLS, ALLOW_INDIRECT_KILLS, ALLOW_PROJECTILE_KILLS;
 	final boolean PLAYER_HEADS_ONLY, CHARGED_CREEPER_DROPS, REPLACE_DEATH_MESSAGE, VANILLA_WSKELE_LOOTING;
 	final HashSet<Material> mustUseTools;
 	final HashSet<EntityType> noLootingEffectMobs;
@@ -61,6 +60,7 @@ public class EntityDeathListener implements Listener{
 	final String MSG_BEHEAD, MSH_BEHEAD_BY, MSH_BEHEAD_BY_WITH, MSH_BEHEAD_BY_WITH_NAMED;
 	final String ITEM_DISPLAY_FORMAT;
 	final boolean USE_PLAYER_DISPLAYNAMES = false;//TODO: move to config, when possible
+	final long INDIRECT_KILL_THRESHOLD_MILLIS = 30*1000;//TODO: move to config
 	final int LOCAL_RANGE = 200;//TODO: move to config
 	final int JSON_LIMIT = 15000;//TODO: move to config
 
@@ -77,9 +77,9 @@ public class EntityDeathListener implements Listener{
 	}
 	public EntityDeathListener(){
 		pl = DropHeads.getPlugin();
-		allowNonPlayerKills = pl.getConfig().getBoolean("drop-for-nonplayer-kills", false);
-		allowIndirectKills = pl.getConfig().getBoolean("drop-for-indirect-kills", false);
-		allowProjectileKills = pl.getConfig().getBoolean("drop-for-ranged-kills", false);
+		ALLOW_NON_PLAYER_KILLS = pl.getConfig().getBoolean("drop-for-nonplayer-kills", false);
+		ALLOW_INDIRECT_KILLS = pl.getConfig().getBoolean("drop-for-indirect-kills", false);
+		ALLOW_PROJECTILE_KILLS = pl.getConfig().getBoolean("drop-for-ranged-kills", false);
 		PLAYER_HEADS_ONLY = pl.getConfig().getBoolean("player-heads-only", false);
 		CHARGED_CREEPER_DROPS = pl.getConfig().getBoolean("charged-creeper-drops", true);
 		VANILLA_WSKELE_LOOTING = pl.getConfig().getBoolean("vanilla-wither-skeleton-looting-behavior", true);
@@ -140,9 +140,14 @@ public class EntityDeathListener implements Listener{
 		}
 
 		//Load individual mobs' drop chances
-		InputStream defaultChances = pl.getClass().getResourceAsStream("/head-drop-rates.txt");
+		String defaultChances = FileIO.loadResource(pl, "head-drop-rates.txt");
+		HashSet<String> defaultConfigMobs = new HashSet<>();
+		for(String line2 : defaultChances.split("\n")){
+			String[] parts2 = line2.replace(" ", "").replace("\t", "").toUpperCase().split(":");
+			if(parts2.length < 2) continue;
+			defaultConfigMobs.add(parts2[0]);
+		}
 		String chances = FileIO.loadFile("head-drop-rates.txt", defaultChances);
-
 		mobChances = new HashMap<EntityType, Double>();
 		noLootingEffectMobs = new HashSet<EntityType>();
 		double chanceForUnknown = 0D;
@@ -165,7 +170,10 @@ public class EntityDeathListener implements Listener{
 				}
 			}
 			catch(NumberFormatException ex){pl.getLogger().severe("Invalid value: "+parts[1]);}
-			catch(IllegalArgumentException ex){pl.getLogger().severe("Unknown entity type: "+parts[0]);}
+			catch(IllegalArgumentException ex){
+				// Only throw an error for mobs that aren't defined in the default config (which may be from future/past versions)
+				if(!defaultConfigMobs.contains(parts[0])) pl.getLogger().severe("Unknown entity type: "+parts[0]);
+			}
 		}
 		DEFAULT_CHANCE = chanceForUnknown;
 		explodingChargedCreepers = new HashSet<UUID>();
@@ -297,15 +305,15 @@ public class EntityDeathListener implements Listener{
 			}
 		}
 		// Check if killer is not a player.
-		if(!allowNonPlayerKills && (killer == null ||
+		if(!ALLOW_NON_PLAYER_KILLS && (killer == null ||
 			(killer instanceof Player == false &&
 				(
-					!allowProjectileKills ||
+					!ALLOW_PROJECTILE_KILLS ||
 					killer instanceof Projectile == false ||
 					((Projectile)killer).getShooter() instanceof Player == false
 				) && (
-					!allowIndirectKills ||
-					timeSinceLastPlayerDamage(victim) > /*seconds=30*/30*1000
+					!ALLOW_INDIRECT_KILLS ||
+					timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS
 				)
 			)
 		)) return;

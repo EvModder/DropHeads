@@ -50,13 +50,13 @@ public class VehicleDestroyListener implements Listener{
 			return;
 		}
 		// Check if killer is not a player.
-		if(!deathListener.allowNonPlayerKills && attacker instanceof Player == false &&
+		if(!deathListener.ALLOW_NON_PLAYER_KILLS && attacker instanceof Player == false &&
 			(
-				!deathListener.allowProjectileKills ||
+				!deathListener.ALLOW_PROJECTILE_KILLS ||
 				attacker instanceof Projectile == false ||
 				((Projectile)attacker).getShooter() instanceof Player == false
 			) && (
-				!deathListener.allowIndirectKills ||
+				!deathListener.ALLOW_INDIRECT_KILLS ||
 				EntityDeathListener.timeSinceLastPlayerDamage(vehicle) > 60*1000
 			)
 		) return;

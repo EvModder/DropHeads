@@ -75,22 +75,24 @@ public class CommandSpawnHead extends EvCommand{
 			return true;
 		}
 
-		String headStr = args.length == 0 ? sender.getName() : String.join("_", args).replace(':', '|');
+		String textureKey = args.length == 0 ? sender.getName() : String.join("_", args).replace(':', '|');
 		String target, extraData;
-		int i = headStr.indexOf('|');
+		int i = textureKey.indexOf('|');
 		if(i != -1){
-			target = headStr.substring(0, i);
-			extraData = headStr.substring(i+1).toUpperCase();
+			target = textureKey.substring(0, i);
+			extraData = textureKey.substring(i+1).toUpperCase();
 		}
 		else{
-			target = headStr;
+			target = textureKey;
 			extraData = null;
 		}
 		ItemStack head = null;
 
-		EntityType eType = getEntityByName(target.toUpperCase());
-		String textureKey = eType.name()+"|"+extraData;
-		if((eType != null && eType != EntityType.UNKNOWN) || pl.getAPI().textureExists(textureKey)){
+		if(pl.getAPI().textureExists(target.toUpperCase())){
+			EntityType eType = getEntityByName(target.toUpperCase());
+			if(eType != null && eType != EntityType.UNKNOWN){
+				textureKey = eType.name() + (extraData == null ? "" : "|"+extraData);
+			}
 			if(extraData != null){
 				if(pl.getAPI().textureExists(textureKey))
 					sender.sendMessage(ChatColor.GRAY+"Getting entity head with data value: "+extraData);

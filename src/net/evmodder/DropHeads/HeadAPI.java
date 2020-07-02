@@ -105,7 +105,7 @@ public class HeadAPI {
 		String nameStr = (j == -1 ? textureKey : textureKey.substring(0, j)).toUpperCase();
 		try{eType = EntityType.valueOf(nameStr);}
 		catch(IllegalArgumentException ex){
-			pl.getLogger().warning("Unknown EntityType: "+nameStr+"!");
+			pl.getLogger().warning("Unknown EntityType: "+nameStr+"!"); // TODO: config option to hide this? (eg: PIG_ZOMBIE)
 			eType = null;// We will just use textureKey[0]
 		}
 		String entityName = TextureKeyLookup.getNameFromKey(/*eType, */textureKey);
@@ -130,17 +130,21 @@ public class HeadAPI {
 
 	@SuppressWarnings("deprecation")
 	public ItemStack getHead(EntityType eType, String textureKey){
-		// If there is extra "texture metadata" we should return the custom
-		// skull instead of a just, say, a basic creeper head
+		// If there is extra "texture metadata" (aka '|') we should return the custom skull
 		if(textureKey != null){
-			// Try successively smaller texture keys by trimming the extra data tags
+			// Try successively smaller texture keys until we find one that exists
 			int keyDataTagIdx=textureKey.lastIndexOf('|');
 			while(keyDataTagIdx != -1 && !textures.containsKey(textureKey)){
 				textureKey = textureKey.substring(0, keyDataTagIdx);
 				keyDataTagIdx=textureKey.lastIndexOf('|');
 			}
-			if(keyDataTagIdx != -1 && textures.containsKey(textureKey)) return makeTextureSkull(textureKey);
+			// If this is a custom data head (still contains a '|') or eType is null AND the key exists, use it
+			if((keyDataTagIdx != -1 || eType == null || eType == EntityType.UNKNOWN) && textures.containsKey(textureKey)){
+				return makeTextureSkull(textureKey);
+			}
 		}
+		if(eType == null) return null;
+		// Otherwise, favor vanilla skulls
 		switch(eType){
 			case PLAYER:
 				return new ItemStack(Material.PLAYER_HEAD);
