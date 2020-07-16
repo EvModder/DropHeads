@@ -1,8 +1,11 @@
 package net.evmodder.DropHeads;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
+import net.evmodder.EvLib.extras.HeadUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
@@ -97,5 +100,46 @@ public class JunkUtils{
 		Object nmsEntityObj = getHandleMethod.of(entity).call();
 		Object entityAsJsonObject = saveNmsEntityMethod.of(nmsEntityObj).call(nmsNbtTagCompoundObj);
 		return entityAsJsonObject.toString();
+	}
+
+	public final static String nameFromType(Material type){
+		StringBuilder builder = new StringBuilder("");
+		boolean lower = false;
+		for(char c : type.toString().toCharArray()){
+			if(c == '_'){builder.append(' '); lower = false;}
+			else if(lower){builder.append(Character.toLowerCase(c));}
+			else{builder.append(c); lower = true;}
+		}
+		return builder.toString();
+	}
+
+	//TODO: move to EntityUtils?
+	public final static EntityType getEntityByName(String name){
+		//TODO: improve this function / test for errors
+		if(name.toUpperCase().startsWith("MHF_")) name = HeadUtils.normalizedNameFromMHFName(name);
+		name = name.toUpperCase().replace(' ', '_');
+		String noUnderscoresName = name.replace("_", "");
+		if(noUnderscoresName.equals("ZOMBIEPIGMAN")) name = "PIG_ZOMBIE";
+		else if(noUnderscoresName.equals("MOOSHROOM")) name = "MUSHROOM_COW";
+
+		try{EntityType type = EntityType.valueOf(name); return type;}
+		catch(IllegalArgumentException ex){}
+		for(EntityType t : EntityType.values()) if(t.name().replace("_", "").equals(noUnderscoresName)) return t;
+		return EntityType.UNKNOWN;
+	}
+
+	public interface TestFunc{boolean test(int num);}
+	public final static int binarySearch(TestFunc f, int a, int b){
+		while(a < b-1){
+			int x = (b + a)/2;
+			if(f.test(x)) a = x;
+			else b = x + 1;
+		}
+		return a;
+	}
+	public final static int exponentialSearch(TestFunc f, int a){
+		a = f.test(a) ? 2*a : 1;
+		while(f.test(a)) a *= 2;
+		return binarySearch(f, a/2, a);
 	}
 }

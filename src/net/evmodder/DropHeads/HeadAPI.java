@@ -108,6 +108,8 @@ public class HeadAPI {
 			pl.getLogger().warning("Unknown EntityType: "+nameStr+"!"); // TODO: config option to hide this? (eg: PIG_ZOMBIE)
 			eType = null;// We will just use textureKey[0]
 		}
+
+		// Actual getHeadName
 		String entityName = TextureKeyLookup.getNameFromKey(/*eType, */textureKey);
 		String headTypeName = eType == null ? "Head" : HeadUtils.getDroppedHeadTypeName(eType);
 		return ChatColor.YELLOW + entityName + " " + headTypeName;

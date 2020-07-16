@@ -9,5 +9,6 @@
 	</classpathentry>
 	<classpathentry kind="lib" path="/Users/Nate/Dropbox/Minecraft/Development/Libraries/bukkit-1.13.jar"/>
 	<classpathentry kind="lib" path="/Users/Nate/Dropbox/Minecraft/Development/Libraries/bukkit_server-1.13.jar"/>
+	<classpathentry kind="lib" path="/Users/Nate/Dropbox/Minecraft/Development/Libraries/HeadDatabaseAPI.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

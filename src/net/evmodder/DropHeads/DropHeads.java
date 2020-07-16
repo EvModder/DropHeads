@@ -24,7 +24,7 @@ import net.evmodder.EvLib.EvPlugin;
 import net.evmodder.EvLib.Updater;
 
 //TODO:
-// * /gethead player:sheep, /gethead mob:sheep, /gethead hdb:334
+// * /gethead player:ShEEp, /gethead mob:SHEEP, /gethead hdb:334
 // * Log of head drop events
 /*
  * log:
