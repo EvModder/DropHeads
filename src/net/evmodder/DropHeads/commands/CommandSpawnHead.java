@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -87,7 +88,8 @@ public class CommandSpawnHead extends EvCommand{
 //				if(MAX_HDB_ID != -1){
 //					int numResults = ((""+MAX_HDB_ID).length() - target.length())*11;
 //					tabCompletes.addAll(
-//						generateNumericCompletions(/*start=*/target, /*max=*/MAX_HDB_ID).stream().map(id -> prefix+id).collect(Collectors.toList())
+//						generateNumericCompletions(/*id_prefix=*/target, /*highest_id=*/MAX_HDB_ID,
+//								/*max_ids_shown=*/MAX_IDS_SHOWN).stream().map(id -> prefix+id).collect(Collectors.toList())
 //					);
 //				}
 			}
@@ -96,7 +98,19 @@ public class CommandSpawnHead extends EvCommand{
 		return null;
 	}
 
-	@SuppressWarnings("deprecation") @Override
+	private OfflinePlayer searchForPlayer(String target){
+		@SuppressWarnings("deprecation")
+		OfflinePlayer p = pl.getServer().getOfflinePlayer(target);
+		if(p.hasPlayedBefore() || WebUtils.checkExists(p.getName())) return p;
+		try{
+			p = pl.getServer().getOfflinePlayer(UUID.fromString(target));
+			if(p.hasPlayedBefore() || WebUtils.checkExists(p.getName())) return p;
+		}
+		catch(IllegalArgumentException ex){}
+		return null;
+	}
+
+	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args){
 		if(sender instanceof Player == false){
 			sender.sendMessage(ChatColor.RED+"This command can only be run by in-game players!");
@@ -119,15 +133,8 @@ public class CommandSpawnHead extends EvCommand{
 			extraData = null;
 		}
 		ItemStack head = null;
-		try{
-			ItemStack item = api.getItemHead("");
-			pl.getLogger().info(api.getItemID(item));
-		}
-		catch(NullPointerException nullpointer){
-			pl.getLogger().info("could not find the head you were looking for");
-		}
 
-		if(prefix.equals("mob:") || (prefix.isEmpty() && pl.getAPI().textureExists(target.toUpperCase()))){
+		if(prefix.equals("mob:") || prefix.equals("key:") || (prefix.isEmpty() && pl.getAPI().textureExists(target.toUpperCase()))){
 			if(!pl.getAPI().textureExists(target.toUpperCase())){
 				sender.sendMessage(ChatColor.RED+"Unable to find head texture for mob: "+target.toUpperCase());
 				return false;
@@ -151,41 +158,30 @@ public class CommandSpawnHead extends EvCommand{
 			}
 			try{head = api.getItemHead(target);}
 			catch(NullPointerException nullpointer){
-				/*pl.getLogger().info(ChatColor.RED+"Could not find head with id "+target);
-				 * return true;*/
+//				pl.getLogger().info(ChatColor.RED+"Could not find head with id "+target);
+//				return true;
 			}
 		}
-		else if(prefix.equals("code:") || (prefix.isEmpty() && target.length() > TextUtils.MAX_PLAYERNAME_MONO_WIDTH)){
+		else if(prefix.equals("code:") || (prefix.isEmpty() && target.length() > TextUtils.MAX_PLAYERNAME_MONO_WIDTH && searchForPlayer(target) == null)){
 			String headName = ChatColor.YELLOW+"UNKNOWN Head";
 			for(Entry<String, String> entry : pl.getAPI().getTextures().entrySet()){
 				if(entry.getValue().equals(target)) headName = pl.getAPI().getHeadNameFromKey(entry.getKey());
 			}
 			head = HeadUtils.makeSkull(target, headName);
 		}
-		else{
-			OfflinePlayer p = pl.getServer().getOfflinePlayer(target);
-			if(p.hasPlayedBefore() || WebUtils.checkExists(p.getName())){
-				head = HeadUtils.getPlayerHead(p);
-			}
-			// Already handled in HeadUtils.getPlayerHead(p); 
-			/*else if(target.startsWith("MHF_") && HeadUtils.MHF_Lookup.containsKey(target.toUpperCase())){
-				head = new ItemStack(Material.PLAYER_HEAD);
-				SkullMeta meta = (SkullMeta) head.getItemMeta();
-				meta.setOwner(target);
-				meta.setDisplayName(ChatColor.YELLOW+HeadUtils.MHF_Lookup.get(target.toUpperCase()));
-				head.setItemMeta(meta);
-			}*/
-			else if(target.length() > 100){
-				head = HeadUtils.makeSkull(target, ChatColor.YELLOW+"UNKNOWN Head");
-			}
+		else if(prefix.equals("player:") || (prefix.isEmpty()/* && ...*/)){
+			OfflinePlayer p = searchForPlayer(target);
+			if(p != null) head = HeadUtils.getPlayerHead(p);
 		}
-		if(head != null){
+
+		// Give head item
+		if(head == null) sender.sendMessage(ChatColor.RED+"Head \""+prefix+target+"\" not found");
+		else{
 			String headName = head.hasItemMeta() && head.getItemMeta().hasDisplayName()
-					? head.getItemMeta().getDisplayName() : JunkUtils.nameFromType(head.getType());
+					? head.getItemMeta().getDisplayName() : TextUtils.getNormalizedName(head.getType());
 			((Player)sender).getInventory().addItem(head);
 			sender.sendMessage(ChatColor.GREEN+"Spawned Head: " + ChatColor.YELLOW + headName);
 		}
-		else sender.sendMessage(ChatColor.RED+"Head \""+prefix+target+"\" not found");
 		return true;
 	}
 }

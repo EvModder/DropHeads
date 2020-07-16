@@ -1,7 +1,6 @@
 package net.evmodder.DropHeads;
 
 import org.bukkit.ChatColor;
-import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
@@ -100,17 +99,6 @@ public class JunkUtils{
 		Object nmsEntityObj = getHandleMethod.of(entity).call();
 		Object entityAsJsonObject = saveNmsEntityMethod.of(nmsEntityObj).call(nmsNbtTagCompoundObj);
 		return entityAsJsonObject.toString();
-	}
-
-	public final static String nameFromType(Material type){
-		StringBuilder builder = new StringBuilder("");
-		boolean lower = false;
-		for(char c : type.toString().toCharArray()){
-			if(c == '_'){builder.append(' '); lower = false;}
-			else if(lower){builder.append(Character.toLowerCase(c));}
-			else{builder.append(c); lower = true;}
-		}
-		return builder.toString();
 	}
 
 	//TODO: move to EntityUtils?
