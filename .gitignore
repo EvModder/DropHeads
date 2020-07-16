@@ -4,6 +4,9 @@ tmp_*
 EvLib/
 .settings/
 textures/
+.classpath
+.project
+
 
 *.class
 *.un~
