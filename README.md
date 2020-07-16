@@ -10,7 +10,7 @@ A light-weight, highly configurable head collecting plugin for Minecraft
 [plugins/Dropheads/head-drop-rates.txt](./head-drop-rates.txt)
 
 **Adjustments to drop-rate based on how a mob spawned (Breeding, Natural, Spawner...):**<br>
-[plugins/Dropheads/spawn-cause modifiers.txt](./spawn-cause%20modifiers.txt)
+[plugins/Dropheads/spawn-cause-modifiers.txt](./spawn-cause-modifiers.txt)
 
 **The encoded textures (from [minecraft-heads](https://minecraft-heads.com/)) for each mob head:**<br>
 [plugins/Dropheads/head-textures.txt](./head-textures.txt)
