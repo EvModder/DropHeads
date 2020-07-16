@@ -336,9 +336,9 @@ public class EntityDeathListener implements Listener{
 		final double rawDropChance = mobChances.getOrDefault(victim.getType(), DEFAULT_CHANCE);
 		double dropChance = rawDropChance*spawnCauseMod*timeAliveMod*weaponMod*lootingMod + lootingAdd;
 
-		// Remove vanilla-dropped wither skeleton skulls so they aren't dropped twice.
 		if(evt.getEntityType() == EntityType.WITHER_SKELETON){
-			if(VANILLA_WSKELE_LOOTING) dropChance = rawDropChance*spawnCauseMod*weaponMod + 0.01D*lootingLevel;
+			if(VANILLA_WSKELE_LOOTING) dropChance = ((dropChance - lootingAdd)/lootingMod) + 0.01D*lootingLevel;
+			// Remove vanilla-dropped wither skeleton skulls so they aren't dropped twice.
 			Iterator<ItemStack> it = evt.getDrops().iterator();
 			while(it.hasNext()) if(it.next().getType() == Material.WITHER_SKELETON_SKULL) it.remove();
 			// However, if it is wearing a head in its helmet slot, don't remove the drop.
