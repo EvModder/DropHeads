@@ -43,26 +43,29 @@ import net.evmodder.EvLib.extras.HeadUtils;
 import net.evmodder.EvLib.extras.TextUtils;
 
 public class EntityDeathListener implements Listener{
-	final DropHeads pl;
-	final boolean ALLOW_NON_PLAYER_KILLS, ALLOW_INDIRECT_KILLS, ALLOW_PROJECTILE_KILLS;
-	final boolean PLAYER_HEADS_ONLY, CHARGED_CREEPER_DROPS, REPLACE_DEATH_MESSAGE, VANILLA_WSKELE_LOOTING;
-	final HashSet<Material> mustUseTools;
-	final HashSet<EntityType> noLootingEffectMobs;
-	final HashMap<EntityType, Double> mobChances;
-	final HashMap<Material, Double> toolBonuses;
-	final TreeMap<Long, Double> timeAliveBonuses;
-	final HashSet<UUID> explodingChargedCreepers, recentlyBeheadedPlayers;
-	final double DEFAULT_CHANCE, LOOTING_ADD, LOOTING_MULT;
-	final boolean DEBUG_MODE;
-	final Random rand;
 	enum AnnounceMode {GLOBAL, LOCAL, DIRECT, OFF};
 	final AnnounceMode ANNOUNCE_PLAYERS, ANNOUNCE_MOBS;
+
+	final boolean ALLOW_NON_PLAYER_KILLS, ALLOW_INDIRECT_KILLS, ALLOW_PROJECTILE_KILLS;
+	final boolean PLAYER_HEADS_ONLY, CHARGED_CREEPER_DROPS, REPLACE_DEATH_MESSAGE, VANILLA_WSKELE_LOOTING;
+	final double DEFAULT_CHANCE, LOOTING_ADD, LOOTING_MULT;
+	final boolean DEBUG_MODE, LOG_PLAYER_BEHEAD, LOG_MOB_BEHEAD;
+	final String LOG_MOB_FORMAT, LOG_PLAYER_FORMAT;
 	final String MSG_BEHEAD, MSH_BEHEAD_BY, MSH_BEHEAD_BY_WITH, MSH_BEHEAD_BY_WITH_NAMED;
 	final String ITEM_DISPLAY_FORMAT;
 	final boolean USE_PLAYER_DISPLAYNAMES = false;//TODO: move to config, when possible
 	final long INDIRECT_KILL_THRESHOLD_MILLIS = 30*1000;//TODO: move to config
 	final int LOCAL_RANGE = 200;//TODO: move to config
 	final int JSON_LIMIT = 15000;//TODO: move to config
+
+	final DropHeads pl;
+	final Random rand;
+	final HashSet<Material> mustUseTools;
+	final HashSet<EntityType> noLootingEffectMobs;
+	final HashMap<EntityType, Double> mobChances;
+	final HashMap<Material, Double> toolBonuses;
+	final TreeMap<Long, Double> timeAliveBonuses;
+	final HashSet<UUID> explodingChargedCreepers, recentlyBeheadedPlayers;
 
 	AnnounceMode parseAnnounceMode(@NotNull String value, AnnounceMode defaultMode){
 		value = value.toUpperCase();
@@ -89,6 +92,14 @@ public class EntityDeathListener implements Listener{
 		if(LOOTING_MULT < 1) pl.getLogger().warning("looting-multiplier is set below 1.0, this means looting will DECREASe the chance of head drops!");
 		REPLACE_DEATH_MESSAGE = pl.getConfig().getBoolean("behead-announcement-replaces-death-message", true);
 		DEBUG_MODE = pl.getConfig().getBoolean("debug-messages", true);
+		final boolean ENABLE_LOG = pl.getConfig().getBoolean("log.enable", false);
+		LOG_MOB_BEHEAD = ENABLE_LOG && pl.getConfig().getBoolean("log.log-mob-behead", false);
+		LOG_PLAYER_BEHEAD = ENABLE_LOG && pl.getConfig().getBoolean("log.log-player-behead", false);
+		LOG_MOB_FORMAT = LOG_MOB_BEHEAD ? pl.getConfig().getString("log.log-mob-behead-format",
+				"${TIMESTAMP},mob decapitated,${VICTIM},${KILLER},${ITEM}") : null;
+		LOG_PLAYER_FORMAT = LOG_PLAYER_BEHEAD ? pl.getConfig().getString("log.log-player-behead-format",
+				"${TIMESTAMP},player decapitated,${VICTIM},${KILLER},${ITEM}") : null;
+
 		ANNOUNCE_MOBS = parseAnnounceMode(pl.getConfig().getString("behead-announcement-mobs", "LOCAL"), AnnounceMode.LOCAL);
 		ANNOUNCE_PLAYERS = parseAnnounceMode(pl.getConfig().getString("behead-announcement-players", "GLOBAL"), AnnounceMode.GLOBAL);
 		String msg = pl.getConfig().getString("message-beheaded", "${VICTIM} was beheaded");
@@ -201,9 +212,9 @@ public class EntityDeathListener implements Listener{
 				? ChatColor.ITALIC+item.getItemMeta().getDisplayName() : TextUtils.getNormalizedName(item.getType());
 		ChatColor rarityColor = JunkUtils.getRarityColor(item, true);
 		return ITEM_DISPLAY_FORMAT
-				.replace("${NAME}", itemName)
-				.replace("${RARITY}", ""+rarityColor)
-				.replace("${AMOUNT}", ""+item.getAmount());
+				.replaceAll("(?i)${NAME}", itemName)
+				.replaceAll("(?i)${RARITY}", ""+rarityColor)
+				.replaceAll("(?i)${AMOUNT}", ""+item.getAmount());
 	}
 	void sendTellraw(String target, String message){
 		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+target+" "+message);
@@ -212,9 +223,9 @@ public class EntityDeathListener implements Listener{
 		if(evt == null) entity.getWorld().dropItemNaturally(entity.getLocation(), pl.getAPI().getHead(entity));
 		else evt.getDrops().add(pl.getAPI().getHead(entity));
 		TellrawBlob message = new TellrawBlob();
+		Component killerComp = null, itemComp = null;
 		if(killer != null){
-			Component killerComp = new SelectorComponent(killer.getUniqueId(), USE_PLAYER_DISPLAYNAMES);
-			Component itemComp = null;
+			killerComp = new SelectorComponent(killer.getUniqueId(), USE_PLAYER_DISPLAYNAMES);
 			if(weapon != null && weapon.getType() != Material.AIR){
 				String itemDisplay = getItemDisplay(weapon);
 				String jsonData = JunkUtils.convertItemStackToJson(weapon, JSON_LIMIT);
@@ -235,11 +246,12 @@ public class EntityDeathListener implements Listener{
 				message.replaceRawTextWithComponent("${ITEM}", itemComp);
 			}
 			else message.addComponent(MSH_BEHEAD_BY);
-			if(USE_PLAYER_DISPLAYNAMES) message.replaceRawTextWithComponent("${KILLER}", new RawTextComponent("${KILLER}"));
+			//if(USE_PLAYER_DISPLAYNAMES) message.replaceRawTextWithComponent("${KILLER}", ...);
 			message.replaceRawTextWithComponent("${KILLER}", killerComp);
 		}
 		else message.addComponent(MSG_BEHEAD);
-		message.replaceRawTextWithComponent("${VICTIM}", new SelectorComponent(entity.getUniqueId(), USE_PLAYER_DISPLAYNAMES));
+		Component victimComp = new SelectorComponent(entity.getUniqueId(), USE_PLAYER_DISPLAYNAMES);
+		message.replaceRawTextWithComponent("${VICTIM}", victimComp);
 
 //		if(DEBUG_MODE) pl.getLogger().info("Tellraw message: "+message);
 		if(DEBUG_MODE) pl.getLogger().info(/*"Tellraw message: "+*/message.toPlainText());
@@ -262,6 +274,15 @@ public class EntityDeathListener implements Listener{
 			case OFF:
 				//sendAnnouncement(message, Arrays.asList());
 				break;
+		}
+
+		if(entity instanceof Player ? LOG_PLAYER_BEHEAD : LOG_MOB_BEHEAD){
+			String logEntry = (entity instanceof Player ? LOG_PLAYER_FORMAT : LOG_MOB_FORMAT)
+					.replaceAll("(?i)${VICTIM}", victimComp.toPlainText())
+					.replaceAll("(?i)${KILLER}", killerComp == null ? "" : killerComp.toPlainText())
+					.replaceAll("(?i)${ITEM}", itemComp == null ? "" : itemComp.toPlainText())
+					.replaceAll("(?i)${TIMESTAMP}", ""+System.currentTimeMillis());
+			pl.writeToLogFile(logEntry);
 		}
 	}
 

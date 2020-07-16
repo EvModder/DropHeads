@@ -4,41 +4,41 @@ author: EvModder/EvDoc
 description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite, 3=VehicleDestroy+Broadcast,
-#6=timeAliveMod not being respected in DeathListener, sync VehicleDestroyListener behavior to DeathListener
+#6=timeAliveMod not being respected in DeathListener, sync VehicleDestroyListener behavior to DeathListener, vanilla wskele same except looting modifiers
 version: 3.3.6
 api-version: 1.13
 
 commands:
-   spawnhead:
-      description: Get a player or mob head
-      usage: /gethead [name]
-      aliases: [gethead,getskull,dhspawn,spawn-head,head,phspawn,skull]
-      permission: dropheads.spawn
-      permission-message: You do not have permission to do this.
+  spawnhead:
+    description: Get a player or mob head
+    usage: /gethead [name]
+    aliases: [gethead,getskull,dhspawn,spawn-head,head,phspawn,skull]
+    permission: dropheads.spawn
+    permission-message: You do not have permission to do this.
 
-   debug_all_heads:
-      description: Place all heads into the world around the player
-      usage: /debug_all_heads
-      permission: dropheads.debug
-      permission-message: You do not have permission to do this.
+  debug_all_heads:
+    description: Place all heads into the world around the player
+    usage: /debug_all_heads
+    permission: dropheads.debug
+    permission-message: You do not have permission to do this.
 
 permissions:
-   dropheads.alwaysbehead:
-      description: This player will get heads 100% of the time
-      default: false
+  dropheads.alwaysbehead:
+    description: This player will get heads 100% of the time
+    default: false
 
-   dropheads.canbehead:
-      description: This player will be able to get heads
-      default: true
+  dropheads.canbehead:
+    description: This player will be able to get heads
+    default: true
 
-   dropheads.clickinfo:
-      description: Permission to see info about a head by clicking it
-      default: true
+  dropheads.clickinfo:
+    description: Permission to see info about a head by clicking it
+    default: true
 
-   dropheads.spawn:
-      description: Permission to spawn heads with a command
-      default: op
+  dropheads.spawn:
+    description: Permission to spawn heads with a command
+    default: op
 
-   dropheads.debug:
-      description: Permission to spawn all the heads in a big cube
-      default: false
+  dropheads.debug:
+    description: Permission to spawn all the heads in a big cube
+    default: false

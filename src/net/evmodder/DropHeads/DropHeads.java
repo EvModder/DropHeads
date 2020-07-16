@@ -21,11 +21,23 @@ package net.evmodder.DropHeads;
 import net.evmodder.DropHeads.commands.*;
 import net.evmodder.DropHeads.listeners.*;
 import net.evmodder.EvLib.EvPlugin;
+import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.Updater;
 
 //TODO:
-// * /gethead player:ShEeP, /gethead mob:SHEEP, /gethead hdb:334
-// * Log of head drop events
+// * /droprate - check or edit per mob (& cmd for spawn modifiers)
+// * mob type in item lore
+// * attempt-place-head-block, attempt-place-overwrite-liquids, facing-direction, place-as: KILLER/VICTIM/SERVER, what to do if blockplaceevent fails
+// * overwrite blocks: ['AIR', 'WATER, 'GRASS']
+// * fancy stray skull
+// * jeb_ sheep head animated phasing through colors (like the jeb_ sheep)
+// * if mob has custom name, use it in head name (configurable)
+// * move textures from head-textures.txt to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
+// * using above, inside /textures/MOB_NAME.txt, set 'drop-rate: x' to modify chance for that sub-type only
+// * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
+// * cancel behead message broadcast if death message gets changed by another plugin (check in playerdeathevent with priority monitor?)
+//TEST:
+//* /gethead player:ShEeP, /gethead mob:SHEEP, /gethead hdb:334
 /*
  * log:
  *   enable: true
@@ -37,19 +49,13 @@ import net.evmodder.EvLib.Updater;
  *   format-player-behead: '${timestamp},player decapitated,${victim},${killer},${item}'
  *   format-head-command: '${timestamp},gethead command,${sender},${head}'
  */
-// * attempt-place-head-block, attempt-place-overwrite-liquids, facing-direction, place-as: KILLER/VICTIM/SERVER, what to do if blockplaceevent fails
-// * overwrite blocks: ['AIR', 'WATER, 'GRASS']
-// * fancy stray skull
-// * jeb_ sheep head animated phasing through colors (like the jeb_ sheep)
-// * if mob has custom name, use it in head name (configurable)
-// * move textures from head-textures.txt to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
-// * using above, inside /textures/MOB_NAME.txt, set 'drop-rate: x' to modify chance for that sub-type only
-// * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
-// * cancel behead message broadcast if death message gets changed by another plugin (check in playerdeathevent with priority monitor?)
+
 public final class DropHeads extends EvPlugin{
 	private static DropHeads instance; public static DropHeads getPlugin(){return instance;}
 	private HeadAPI api;
 	public HeadAPI getAPI(){return api;}
+	private boolean LOGFILE_ENABLED;
+	private String LOGFILE_NAME;
 
 	@Override public void onEvEnable(){
 		if(config.getBoolean("update-plugin", true)){
@@ -80,5 +86,15 @@ public final class DropHeads extends EvPlugin{
 
 		new CommandSpawnHead(this);
 		new Commanddebug_all_heads(this);
+
+		LOGFILE_ENABLED = config.getBoolean("log.enable", false);
+		if(LOGFILE_ENABLED) LOGFILE_NAME = FileIO.DIR+config.getString("log.filename", "log.txt");
+	}
+
+	public boolean writeToLogFile(String line){
+		if(!LOGFILE_ENABLED) return false;
+		// Write to log
+		line = line.replace("\n", "")+"\n";
+		return FileIO.saveFile(LOGFILE_NAME, line, /*append=*/true);
 	}
 }

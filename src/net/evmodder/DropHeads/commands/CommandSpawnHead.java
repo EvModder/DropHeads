@@ -28,6 +28,8 @@ public class CommandSpawnHead extends EvCommand{
 	final private DropHeads pl;
 	final boolean SHOW_GRUMM_IN_TAB_COMPLETE;
 	final boolean SHOW_GRUMM_IN_TAB_COMPLETE_FOR_BAR = true;
+	final boolean ENABLE_LOG;
+	final String LOG_FORMAT;
 	private HeadDatabaseAPI api = null;
 	private int MAX_HDB_ID = -1;
 	final int MAX_IDS_SHOWN = 200;
@@ -36,6 +38,8 @@ public class CommandSpawnHead extends EvCommand{
 		super(plugin);
 		pl = plugin;
 		SHOW_GRUMM_IN_TAB_COMPLETE = pl.getConfig().getBoolean("show-grumm-in-tab-complete", false);
+		ENABLE_LOG = pl.getConfig().getBoolean("log.enable", false) && pl.getConfig().getBoolean("log.log-head-command", false);
+		LOG_FORMAT = ENABLE_LOG ? pl.getConfig().getString("log.log-head-command-format", "${TIMESTAMP},gethead command,${SENDER},${HEAD}") : null;
 
 		pl.getServer().getPluginManager().registerEvents(new Listener(){
 			@EventHandler public void onDatabaseLoad(DatabaseLoadEvent e){
@@ -135,11 +139,12 @@ public class CommandSpawnHead extends EvCommand{
 		ItemStack head = null;
 
 		if(prefix.equals("mob:") || prefix.equals("key:") || (prefix.isEmpty() && pl.getAPI().textureExists(target.toUpperCase()))){
-			if(!pl.getAPI().textureExists(target.toUpperCase())){
-				sender.sendMessage(ChatColor.RED+"Unable to find head texture for mob: "+target.toUpperCase());
+			target = target.toUpperCase();
+			if(!pl.getAPI().textureExists(target)){
+				sender.sendMessage(ChatColor.RED+"Unable to find head texture for mob: "+target);
 				return false;
 			}
-			EntityType eType = JunkUtils.getEntityByName(target.toUpperCase());
+			EntityType eType = JunkUtils.getEntityByName(target);
 			if(eType != null && eType != EntityType.UNKNOWN){
 				textureKey = eType.name() + (extraData == null ? "" : "|"+extraData);
 			}
@@ -171,7 +176,10 @@ public class CommandSpawnHead extends EvCommand{
 		}
 		else if(prefix.equals("player:") || (prefix.isEmpty()/* && ...*/)){
 			OfflinePlayer p = searchForPlayer(target);
-			if(p != null) head = HeadUtils.getPlayerHead(p);
+			if(p != null){
+				target = p.getName();
+				head = HeadUtils.getPlayerHead(p);
+			}
 		}
 
 		// Give head item
@@ -181,6 +189,14 @@ public class CommandSpawnHead extends EvCommand{
 					? head.getItemMeta().getDisplayName() : TextUtils.getNormalizedName(head.getType());
 			((Player)sender).getInventory().addItem(head);
 			sender.sendMessage(ChatColor.GREEN+"Spawned Head: " + ChatColor.YELLOW + headName);
+			if(ENABLE_LOG){
+				
+				String logEntry = LOG_FORMAT
+						.replaceAll("(?i)${HEAD}", target)
+						.replaceAll("(?i)${SENDER}", sender.getName())
+						.replaceAll("(?i)${TIMESTAMP}", ""+System.currentTimeMillis());
+				pl.writeToLogFile(logEntry);
+			}
 		}
 		return true;
 	}
