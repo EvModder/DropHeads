@@ -41,7 +41,11 @@ public class CommandSpawnHead extends EvCommand{
 		ENABLE_LOG = pl.getConfig().getBoolean("log.enable", false) && pl.getConfig().getBoolean("log.log-head-command", false);
 		LOG_FORMAT = ENABLE_LOG ? pl.getConfig().getString("log.log-head-command-format", "${TIMESTAMP},gethead command,${SENDER},${HEAD}") : null;
 
-		pl.getServer().getPluginManager().registerEvents(new Listener(){
+		boolean hdbInstalled = true;
+		try{Class.forName("me.arcaniax.hdb.api.DatabaseLoadEvent");}
+		catch(ClassNotFoundException ex){hdbInstalled = false;}
+
+		if(hdbInstalled) pl.getServer().getPluginManager().registerEvents(new Listener(){
 			@EventHandler public void onDatabaseLoad(DatabaseLoadEvent e){
 				api = new HeadDatabaseAPI();
 				MAX_HDB_ID = JunkUtils.exponentialSearch(
@@ -62,7 +66,10 @@ public class CommandSpawnHead extends EvCommand{
 				if(prefix.startsWith(args[0])) tabCompletes.add(prefix);
 			}
 			int prefixEnd = args[0].indexOf(':');
-			if(prefixEnd == -1 && !tabCompletes.isEmpty()) return tabCompletes;
+			if(prefixEnd == -1 && !tabCompletes.isEmpty()){
+				if(tabCompletes.size() == 1) args[0] = tabCompletes.get(0);
+				else return tabCompletes;
+			}
 			tabCompletes.clear();
 
 			String prefix = prefixEnd == -1 ? "mob:" : args[0].substring(0, prefixEnd + 1).toLowerCase();
