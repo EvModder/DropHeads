@@ -36,9 +36,11 @@ public class BlockBreakListener implements Listener{
 
 		GameProfile profileWithoutLore = new GameProfile(profile.getId(), textureKey);
 		ItemStack headItem = DropHeads.getPlugin().getAPI().getHead(profileWithoutLore);
-		ItemMeta meta = headItem.getItemMeta();
-		meta.setLore(lore);
-		headItem.setItemMeta(meta);
+		if(lore.size() > 1 || (lore.size() == 1 && !lore.get(0).isEmpty())){
+			ItemMeta meta = headItem.getItemMeta();
+			meta.setLore(lore);
+			headItem.setItemMeta(meta);
+		}
 		return headItem;
 	}
 	// Monitor priority since there is no way for us to replace the dropped item without cancelling and dropping manually
