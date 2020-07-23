@@ -4,7 +4,7 @@ author: EvModder/EvDoc
 description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite, 3=VehicleDestroy+Broadcast,
-#6=timeAliveMod not being respected in DeathListener, sync VehicleDestroyListener behavior to DeathListener, vanilla wskele same except looting modifiers
+#6=timeAliveMod not being respected in DeathListener, sync VehicleDestroyListener behavior to DeathListener, vanilla wskele same except looting modifiers,save-type-in-lore, HDB integration to /gethead
 version: 3.3.6
 api-version: 1.13
 
