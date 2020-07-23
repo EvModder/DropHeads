@@ -32,6 +32,7 @@ public class ItemDropListener implements Listener{
 		HeadUtils.setGameProfile(originalMeta, refreshedProfile); // This is what actually refreshes the texture
 
 		if(!originalMeta.hasDisplayName() || FORCE_RENAME) originalMeta.setDisplayName(refreshedItem.getItemMeta().getDisplayName());
+		originalMeta.setLore(refreshedItem.getItemMeta().getLore()); // Only does anything if 'show-head-type-in-lore' is true
 
 		originalItem.setItemMeta(originalMeta);
 		evt.getEntity().setItemStack(originalItem); // TODO: not sure if this is necessary
