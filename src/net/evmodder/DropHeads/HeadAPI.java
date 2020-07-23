@@ -22,7 +22,7 @@ import net.evmodder.EvLib.extras.HeadUtils;
 
 public class HeadAPI {
 	final private DropHeads pl;
-	final boolean grummEnabled, updateOldPlayerHeads, updateZombiePigmenHeads;//, saveCustomLore;
+	final boolean grummEnabled, updateOldPlayerHeads, updateZombiePigmenHeads/*, saveCustomLore*/, saveTypeInLore;
 	final TreeMap<String, String> textures; // Key="ENTITY_NAME|DATA", Value="eyJ0ZXh0dXJl..."
 
 	HeadAPI(){
@@ -34,6 +34,7 @@ public class HeadAPI {
 		try{EntityType.valueOf("ZOMBIFIED_PIGLIN"); zombifiedPiglensExist = true;} catch(IllegalArgumentException ex){}
 		updateZombiePigmenHeads = zombifiedPiglensExist && pl.getConfig().getBoolean("update-zombie-pigman-heads", true);
 //		saveCustomLore = pl.getConfig().getBoolean("save-custom-lore", false);
+		saveTypeInLore = pl.getConfig().getBoolean("show-head-type-in-lore", false);
 
 		String hardcodedList = FileIO.loadResource(pl, "head-textures.txt");
 		loadTextures(hardcodedList, /*logMissingEntities=*/true, /*logUnknownEntities=*/false);
@@ -105,17 +106,35 @@ public class HeadAPI {
 		String nameStr = (j == -1 ? textureKey : textureKey.substring(0, j)).toUpperCase();
 		try{eType = EntityType.valueOf(nameStr);}
 		catch(IllegalArgumentException ex){
-			pl.getLogger().warning("Unknown EntityType: "+nameStr+"!"); // TODO: config option to hide this? (eg: PIG_ZOMBIE)
+			if(!textures.containsKey(textureKey)){ // If loaded in textures, it probably is a mob from a future version.
+				pl.getLogger().warning("Unknown EntityType: "+nameStr+"!");
+			}
 			eType = null;// We will just use textureKey[0]
 		}
 
-		// Actual getHeadName
+		// Call the actual getNameFromKey()
 		String entityName = TextureKeyLookup.getNameFromKey(/*eType, */textureKey);
 		String headTypeName = eType == null ? "Head" : HeadUtils.getDroppedHeadTypeName(eType);
 		return ChatColor.YELLOW + entityName + " " + headTypeName;
 	}
 
-	public ItemStack makeTextureSkull(String textureKey){
+	public String getHeadName(GameProfile profile){
+		if(profile == null || profile.getName() == null) return null;
+		String profileName = profile.getName();
+		/*if(saveCustomLore){*/int idx = profileName.indexOf('>'); if(idx != -1) profileName = profileName.substring(0, idx);/*}*/
+		if(textureExists(profileName)){
+			return getHeadNameFromKey(profileName);
+		}
+		else{//Looks like a Player's Head
+			if(updateOldPlayerHeads && profile.getId() != null){
+				OfflinePlayer p = pl.getServer().getOfflinePlayer(profile.getId());
+				if(p != null) HeadUtils.getPlayerHeadName(p.getName());
+			}
+			return HeadUtils.getPlayerHeadName(profileName);
+		}
+	}
+
+	public ItemStack makeTextureSkull(String textureKey/*, boolean saveTypeInLore*/){
 		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
 		SkullMeta meta = (SkullMeta) item.getItemMeta();
 
@@ -126,12 +145,17 @@ public class HeadAPI {
 		HeadUtils.setGameProfile(meta, profile);
 
 		meta.setDisplayName(getHeadNameFromKey(textureKey));
+		if(saveTypeInLore){
+			int i = textureKey.indexOf('|');
+			String entityName = (i == -1 ? textureKey : textureKey.substring(0, i)).toLowerCase();
+			meta.setLore(Arrays.asList(ChatColor.GRAY + "mob:" + entityName));
+		}
 		item.setItemMeta(meta);
 		return item;
 	}
 
 	@SuppressWarnings("deprecation")
-	public ItemStack getHead(EntityType eType, String textureKey){
+	public ItemStack getHead(EntityType eType, String textureKey/*, boolean saveTypeInLore*/){
 		// If there is extra "texture metadata" (aka '|') we should return the custom skull
 		if(textureKey != null){
 			// Try successively smaller texture keys until we find one that exists
@@ -142,7 +166,7 @@ public class HeadAPI {
 			}
 			// If this is a custom data head (still contains a '|') or eType is null AND the key exists, use it
 			if((keyDataTagIdx != -1 || eType == null || eType == EntityType.UNKNOWN) && textures.containsKey(textureKey)){
-				return makeTextureSkull(textureKey);
+				return makeTextureSkull(textureKey/*, saveTypeInLore*/);
 			}
 		}
 		if(eType == null) return null;
@@ -162,19 +186,33 @@ public class HeadAPI {
 				return new ItemStack(Material.DRAGON_HEAD);
 			default:
 				if(textures.containsKey(eType.name())) return makeTextureSkull(eType.name());
-				else return HeadUtils.makeSkull(eType);
+				ItemStack head = HeadUtils.makeSkull(eType);
+				if(saveTypeInLore){
+					SkullMeta meta = (SkullMeta) head.getItemMeta();
+					meta.setLore(Arrays.asList(ChatColor.GRAY + "mob:" + eType.name().toLowerCase()));
+					head.setItemMeta(meta);
+				}
+				return head;
 			}
 	}
 
-	public ItemStack getHead(Entity entity){
-		if(entity.getType() == EntityType.PLAYER) return HeadUtils.getPlayerHead((OfflinePlayer)entity);
+	public ItemStack getHead(Entity entity/*, boolean saveTypeInLore*/){
+		if(entity.getType() == EntityType.PLAYER){
+			ItemStack head = HeadUtils.getPlayerHead((OfflinePlayer)entity);
+			if(saveTypeInLore){
+				SkullMeta meta = (SkullMeta) head.getItemMeta();
+				meta.setLore(Arrays.asList(ChatColor.GRAY + "player:" + entity.getName()));
+				head.setItemMeta(meta);
+			}
+			return head;
+		}
 		String textureKey = TextureKeyLookup.getTextureKey(entity);
 		if(grummEnabled && HeadUtils.hasGrummName(entity) && textures.containsKey(textureKey+"|GRUMM")) 
 			return makeTextureSkull(textureKey+"|GRUMM");
 		return getHead(entity.getType(), textureKey);
 	}
 
-	public ItemStack getHead(GameProfile profile){
+	public ItemStack getHead(GameProfile profile/*, boolean saveTypeInLore*/){
 		if(profile == null || profile.getName() == null) return null;
 		String profileName = profile.getName();
 		/*if(saveCustomLore){*/int idx = profileName.indexOf('>'); if(idx != -1) profileName = profileName.substring(0, idx);/*}*/
@@ -186,26 +224,21 @@ public class HeadAPI {
 		}
 		else{//Looks like a Player's Head
 			OfflinePlayer p = profile.getId() == null ? null : pl.getServer().getOfflinePlayer(profile.getId());
+			ItemStack head = null;
+			String name = profile.getName();
 			if(p != null && p.getName() != null){
-				if(updateOldPlayerHeads || p.getName().equals(profileName)) return HeadUtils.getPlayerHead(p);
+				if(updateOldPlayerHeads || p.getName().equals(profileName)){
+					head = HeadUtils.getPlayerHead(p);
+					name = p.getName();
+				}
 			}
-			return HeadUtils.getPlayerHead(profile);
-		}
-	}
-
-	public String getHeadName(GameProfile profile){
-		if(profile == null || profile.getName() == null) return null;
-		String profileName = profile.getName();
-		/*if(saveCustomLore){*/int idx = profileName.indexOf('>'); if(idx != -1) profileName = profileName.substring(0, idx);/*}*/
-		if(textureExists(profileName)){
-			return getHeadNameFromKey(profileName);
-		}
-		else{//Looks like a Player's Head
-			if(updateOldPlayerHeads && profile.getId() != null){
-				OfflinePlayer p = pl.getServer().getOfflinePlayer(profile.getId());
-				if(p != null) HeadUtils.getPlayerHeadName(p.getName());
+			if(head == null) head = HeadUtils.getPlayerHead(profile);
+			if(saveTypeInLore){
+				SkullMeta meta = (SkullMeta) head.getItemMeta();
+				meta.setLore(Arrays.asList(ChatColor.GRAY + "player:" + name));
+				head.setItemMeta(meta);
 			}
-			return HeadUtils.getPlayerHeadName(profileName);
+			return head;
 		}
 	}
 }

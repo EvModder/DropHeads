@@ -15,6 +15,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import me.arcaniax.hdb.api.DatabaseLoadEvent;
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import net.evmodder.DropHeads.DropHeads;
@@ -29,6 +30,7 @@ public class CommandSpawnHead extends EvCommand{
 	final boolean SHOW_GRUMM_IN_TAB_COMPLETE;
 	final boolean SHOW_GRUMM_IN_TAB_COMPLETE_FOR_BAR = true;
 	final boolean ENABLE_LOG;
+	final boolean SAVE_HEAD_TYPE_IN_LORE;
 	final String LOG_FORMAT;
 	private HeadDatabaseAPI api = null;
 	private int MAX_HDB_ID = -1;
@@ -40,6 +42,7 @@ public class CommandSpawnHead extends EvCommand{
 		SHOW_GRUMM_IN_TAB_COMPLETE = pl.getConfig().getBoolean("show-grumm-in-tab-complete", false);
 		ENABLE_LOG = pl.getConfig().getBoolean("log.enable", false) && pl.getConfig().getBoolean("log.log-head-command", false);
 		LOG_FORMAT = ENABLE_LOG ? pl.getConfig().getString("log.log-head-command-format", "${TIMESTAMP},gethead command,${SENDER},${HEAD}") : null;
+		SAVE_HEAD_TYPE_IN_LORE = pl.getConfig().getBoolean("show-head-type-in-lore", false);
 
 		boolean hdbInstalled = true;
 		try{Class.forName("me.arcaniax.hdb.api.DatabaseLoadEvent");}
@@ -168,24 +171,44 @@ public class CommandSpawnHead extends EvCommand{
 				sender.sendMessage(ChatColor.RED+"HeadDatabase plugin needs to be installed to enable ID lookup");
 				return true;
 			}
-			try{head = api.getItemHead(target);}
+			try{
+				head = api.getItemHead(target);
+				if(SAVE_HEAD_TYPE_IN_LORE){
+					ItemMeta meta = head.getItemMeta();
+					meta.setLore(Arrays.asList(ChatColor.GRAY+"hdb:"+target));
+					head.setItemMeta(meta);
+				}
+			}
 			catch(NullPointerException nullpointer){
 //				pl.getLogger().info(ChatColor.RED+"Could not find head with id "+target);
 //				return true;
 			}
 		}
 		else if(prefix.equals("code:") || (prefix.isEmpty() && target.length() > TextUtils.MAX_PLAYERNAME_MONO_WIDTH && searchForPlayer(target) == null)){
-			String headName = ChatColor.YELLOW+"UNKNOWN Head";
 			for(Entry<String, String> entry : pl.getAPI().getTextures().entrySet()){
-				if(entry.getValue().equals(target)) headName = pl.getAPI().getHeadNameFromKey(entry.getKey());
+				if(entry.getValue().equals(target)){
+					head = pl.getAPI().getHead(null, textureKey);
+				}
 			}
-			head = HeadUtils.makeSkull(target, headName);
+			if(head == null){
+				head = HeadUtils.makeSkull(target, /*headName=*/ChatColor.YELLOW+"UNKNOWN Head");
+				if(SAVE_HEAD_TYPE_IN_LORE){
+					ItemMeta meta = head.getItemMeta();
+					meta.setLore(Arrays.asList(ChatColor.GRAY+"code:"+target));
+					head.setItemMeta(meta);
+				}
+			}
 		}
 		else if(prefix.equals("player:") || (prefix.isEmpty()/* && ...*/)){
 			OfflinePlayer p = searchForPlayer(target);
 			if(p != null){
 				target = p.getName();
 				head = HeadUtils.getPlayerHead(p);
+				if(SAVE_HEAD_TYPE_IN_LORE){
+					ItemMeta meta = head.getItemMeta();
+					meta.setLore(Arrays.asList(ChatColor.GRAY+"player:"+p.getName()));
+					head.setItemMeta(meta);
+				}
 			}
 		}
 

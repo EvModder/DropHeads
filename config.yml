@@ -71,8 +71,12 @@ head-click-format-players: "&7[&6DropHeads&7]&f That's ${NAME}'s Head"
 # Saves lore of heads in GameProfile when placed (used by some other plugins)
 # Only works for player-type heads, eg: won't work for minecraft:creeper_head
 # WARNING: This feature is in BETA and is relatively untested
-# NOTE: Lore currently gets lost when the head is broken by non-player means
+# NOTE: Lore currently is lost when the head is broken by a non-player
 save-custom-lore: false
+
+# Displays the type of head (eg: player, mob, HDB) in the head item's lore
+# Note: Applies to custom player/mob heads, but not to WITHER_SKULL etc.
+show-head-type-in-lore: true
 
 # Only drop heads if the killer used an axe
 must-use-axe: false
