@@ -70,7 +70,10 @@ public class CommandSpawnHead extends EvCommand{
 			}
 			int prefixEnd = args[0].indexOf(':');
 			if(prefixEnd == -1 && !tabCompletes.isEmpty()){
-				if(tabCompletes.size() == 1) args[0] = tabCompletes.get(0);
+				if(tabCompletes.size() == 1){
+					args[0] = tabCompletes.get(0);
+					prefixEnd = args[0].length() - 1;
+				}
 				else return tabCompletes;
 			}
 			tabCompletes.clear();
@@ -87,12 +90,10 @@ public class CommandSpawnHead extends EvCommand{
 				}
 			}
 			else if(prefix.equals("player:")){
-				tabCompletes.addAll(
-						pl.getServer().getOnlinePlayers().stream()
+				return pl.getServer().getOnlinePlayers().stream()
 						.filter(p -> p.getName().toUpperCase().startsWith(target))
 						.map(p -> prefix+p.getName())
-						.collect(Collectors.toList())
-				);
+						.collect(Collectors.toList());
 			}
 			else if(prefix.equals("hdb:")){
 				if(MAX_HDB_ID == -1) return null;
@@ -175,7 +176,7 @@ public class CommandSpawnHead extends EvCommand{
 				head = api.getItemHead(target);
 				if(SAVE_HEAD_TYPE_IN_LORE){
 					ItemMeta meta = head.getItemMeta();
-					meta.setLore(Arrays.asList(ChatColor.GRAY+"hdb:"+target));
+					meta.setLore(Arrays.asList(ChatColor.DARK_GRAY+"hdb:"+target));
 					head.setItemMeta(meta);
 				}
 			}
@@ -194,7 +195,7 @@ public class CommandSpawnHead extends EvCommand{
 				head = HeadUtils.makeSkull(target, /*headName=*/ChatColor.YELLOW+"UNKNOWN Head");
 				if(SAVE_HEAD_TYPE_IN_LORE){
 					ItemMeta meta = head.getItemMeta();
-					meta.setLore(Arrays.asList(ChatColor.GRAY+"code:"+target));
+					meta.setLore(Arrays.asList(ChatColor.DARK_GRAY+"code:"+target));
 					head.setItemMeta(meta);
 				}
 			}
@@ -206,7 +207,7 @@ public class CommandSpawnHead extends EvCommand{
 				head = HeadUtils.getPlayerHead(p);
 				if(SAVE_HEAD_TYPE_IN_LORE){
 					ItemMeta meta = head.getItemMeta();
-					meta.setLore(Arrays.asList(ChatColor.GRAY+"player:"+p.getName()));
+					meta.setLore(Arrays.asList(ChatColor.DARK_GRAY+"player:"+p.getName()));
 					head.setItemMeta(meta);
 				}
 			}
@@ -222,9 +223,9 @@ public class CommandSpawnHead extends EvCommand{
 			if(ENABLE_LOG){
 				
 				String logEntry = LOG_FORMAT
-						.replaceAll("(?i)${HEAD}", target)
-						.replaceAll("(?i)${SENDER}", sender.getName())
-						.replaceAll("(?i)${TIMESTAMP}", ""+System.currentTimeMillis());
+						.replaceAll("(?i)$\\{HEAD\\}", target)
+						.replaceAll("(?i)$\\{SENDER\\}", sender.getName())
+						.replaceAll("(?i)$\\{TIMESTAMP\\}", ""+System.currentTimeMillis());
 				pl.writeToLogFile(logEntry);
 			}
 		}

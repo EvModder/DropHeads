@@ -148,7 +148,7 @@ public class HeadAPI {
 		if(saveTypeInLore){
 			int i = textureKey.indexOf('|');
 			String entityName = (i == -1 ? textureKey : textureKey.substring(0, i)).toLowerCase();
-			meta.setLore(Arrays.asList(ChatColor.GRAY + "mob:" + entityName));
+			meta.setLore(Arrays.asList(ChatColor.DARK_GRAY + "mob:" + entityName));
 		}
 		item.setItemMeta(meta);
 		return item;
@@ -189,7 +189,7 @@ public class HeadAPI {
 				ItemStack head = HeadUtils.makeSkull(eType);
 				if(saveTypeInLore){
 					SkullMeta meta = (SkullMeta) head.getItemMeta();
-					meta.setLore(Arrays.asList(ChatColor.GRAY + "mob:" + eType.name().toLowerCase()));
+					meta.setLore(Arrays.asList(ChatColor.DARK_GRAY + "mob:" + eType.name().toLowerCase()));
 					head.setItemMeta(meta);
 				}
 				return head;
@@ -201,7 +201,7 @@ public class HeadAPI {
 			ItemStack head = HeadUtils.getPlayerHead((OfflinePlayer)entity);
 			if(saveTypeInLore){
 				SkullMeta meta = (SkullMeta) head.getItemMeta();
-				meta.setLore(Arrays.asList(ChatColor.GRAY + "player:" + entity.getName()));
+				meta.setLore(Arrays.asList(ChatColor.DARK_GRAY + "player:" + entity.getName()));
 				head.setItemMeta(meta);
 			}
 			return head;
@@ -235,7 +235,7 @@ public class HeadAPI {
 			if(head == null) head = HeadUtils.getPlayerHead(profile);
 			if(saveTypeInLore){
 				SkullMeta meta = (SkullMeta) head.getItemMeta();
-				meta.setLore(Arrays.asList(ChatColor.GRAY + "player:" + name));
+				meta.setLore(Arrays.asList(ChatColor.DARK_GRAY + "player:" + name));
 				head.setItemMeta(meta);
 			}
 			return head;
