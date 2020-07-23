@@ -96,6 +96,7 @@ public final class DropHeads extends EvPlugin{
 		if(!LOGFILE_ENABLED) return false;
 		// Write to log
 		line = line.replace("\n", "")+"\n";
+		getLogger().info("Writting line to logfile: "+line);
 		return FileIO.saveFile(LOGFILE_NAME, line, /*append=*/true);
 	}
 }

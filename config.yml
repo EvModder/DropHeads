@@ -119,7 +119,7 @@ specific-tool-modifiers:
 time-alive-modifiers:
 #  0s: -0.9
 #  1m30s: -0.5
-  5m: 0
+#  5m: 0
   2h: 0.1
   1d: 2.0
   1w: 3.0

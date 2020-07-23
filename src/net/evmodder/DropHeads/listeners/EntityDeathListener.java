@@ -374,12 +374,13 @@ public class EntityDeathListener implements Listener{
 			if(DEBUG_MODE){
 				DecimalFormat df = new DecimalFormat("0.0###");
 				pl.getLogger().info("Dropped Head: "+TextureKeyLookup.getTextureKey(victim)+"\n"
-					+"Raw chance: "+df.format(rawDropChance*100D)+"%\nMultipliers"+
+					+"Raw chance: "+df.format(rawDropChance*100D)+"%\nMultipliers >> "+
 					(spawnCauseMod != 1 ? "SpawnReason: "+df.format((spawnCauseMod-1D)*100D)+"%, " : "") +
 					(timeAliveMod != 1 ? "TimeAlive: "+df.format((timeAliveMod-1D)*100D)+"%, " : "") +
 					(weaponMod != 1 ? "Weapon: "+df.format((weaponMod-1D)*100D)+"%, " : "") +
 					(lootingMod != 1 ? "Looting: "+df.format((lootingMod-1D)*100D)+"%, " : "") +
 					(lootingAdd != 0 ? "Looting (Addition): "+df.format(lootingAdd*100D)+"%, " : "") +
+					"\nTimeAlive: "+TextUtils.formatTime(victim.getTicksLived()*50L) +//TODO: delete this line after verifying TimeAlive works
 					"\nFinal drop chance: "+df.format(dropChance*100D)+"%");
 			}
 		}
