@@ -212,9 +212,9 @@ public class EntityDeathListener implements Listener{
 				? ChatColor.ITALIC+item.getItemMeta().getDisplayName() : TextUtils.getNormalizedName(item.getType());
 		ChatColor rarityColor = JunkUtils.getRarityColor(item, true);
 		return ITEM_DISPLAY_FORMAT
-				.replaceAll("(?i)$\\{NAME\\}", itemName)
-				.replaceAll("(?i)$\\{RARITY\\}", ""+rarityColor)
-				.replaceAll("(?i)$\\{AMOUNT\\}", ""+item.getAmount());
+				.replaceAll("(?i)\\$\\{NAME\\}", itemName)
+				.replaceAll("(?i)\\$\\{RARITY\\}", ""+rarityColor)
+				.replaceAll("(?i)\\$\\{AMOUNT\\}", ""+item.getAmount());
 	}
 	void sendTellraw(String target, String message){
 		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+target+" "+message);
@@ -278,10 +278,10 @@ public class EntityDeathListener implements Listener{
 
 		if(entity instanceof Player ? LOG_PLAYER_BEHEAD : LOG_MOB_BEHEAD){
 			String logEntry = (entity instanceof Player ? LOG_PLAYER_FORMAT : LOG_MOB_FORMAT)
-					.replaceAll("(?i)$\\{VICTIM\\}", victimComp.toPlainText())
-					.replaceAll("(?i)$\\{KILLER\\}", killerComp == null ? "" : killerComp.toPlainText())
-					.replaceAll("(?i)$\\{ITEM\\}", itemComp == null ? "" : itemComp.toPlainText())
-					.replaceAll("(?i)$\\{TIMESTAMP\\}", ""+System.currentTimeMillis());
+					.replaceAll("(?i)\\$\\{VICTIM\\}", victimComp.toPlainText())
+					.replaceAll("(?i)\\$\\{KILLER\\}", killerComp == null ? "" : killerComp.toPlainText())
+					.replaceAll("(?i)\\$\\{ITEM\\}", itemComp == null ? "" : itemComp.toPlainText())
+					.replaceAll("(?i)\\$\\{TIMESTAMP\\}", ""+System.currentTimeMillis());
 			pl.writeToLogFile(logEntry);
 		}
 	}
@@ -380,7 +380,6 @@ public class EntityDeathListener implements Listener{
 					(weaponMod != 1 ? "Weapon: "+df.format((weaponMod-1D)*100D)+"%, " : "") +
 					(lootingMod != 1 ? "Looting: "+df.format((lootingMod-1D)*100D)+"%, " : "") +
 					(lootingAdd != 0 ? "Looting (Addition): "+df.format(lootingAdd*100D)+"%, " : "") +
-					"\nTimeAlive: "+TextUtils.formatTime(victim.getTicksLived()*50L) +//TODO: delete this line after verifying TimeAlive works
 					"\nFinal drop chance: "+df.format(dropChance*100D)+"%");
 			}
 		}

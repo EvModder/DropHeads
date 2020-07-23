@@ -223,9 +223,9 @@ public class CommandSpawnHead extends EvCommand{
 			if(ENABLE_LOG){
 				
 				String logEntry = LOG_FORMAT
-						.replaceAll("(?i)$\\{HEAD\\}", target)
-						.replaceAll("(?i)$\\{SENDER\\}", sender.getName())
-						.replaceAll("(?i)$\\{TIMESTAMP\\}", ""+System.currentTimeMillis());
+						.replaceAll("(?i)\\$\\{HEAD\\}", target)
+						.replaceAll("(?i)\\$\\{SENDER\\}", sender.getName())
+						.replaceAll("(?i)\\$\\{TIMESTAMP\\}", ""+System.currentTimeMillis());
 				pl.writeToLogFile(logEntry);
 			}
 		}

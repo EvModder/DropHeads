@@ -89,14 +89,14 @@ public final class DropHeads extends EvPlugin{
 		new Commanddebug_all_heads(this);
 
 		LOGFILE_ENABLED = config.getBoolean("log.enable", false);
-		if(LOGFILE_ENABLED) LOGFILE_NAME = FileIO.DIR+config.getString("log.filename", "log.txt");
+		if(LOGFILE_ENABLED) LOGFILE_NAME = config.getString("log.filename", "log.txt");
 	}
 
 	public boolean writeToLogFile(String line){
 		if(!LOGFILE_ENABLED) return false;
 		// Write to log
 		line = line.replace("\n", "")+"\n";
-		getLogger().info("Writting line to logfile: "+line);
+		getLogger().fine("Writing line to logfile: "+line);
 		return FileIO.saveFile(LOGFILE_NAME, line, /*append=*/true);
 	}
 }
