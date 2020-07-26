@@ -80,7 +80,7 @@ public class EntityDeathListener implements Listener{
 	}
 	public EntityDeathListener(){
 		pl = DropHeads.getPlugin();
-		ALLOW_NON_PLAYER_KILLS = pl.getConfig().getBoolean("drop-for-nonplayer-kills", false);
+		ALLOW_NON_PLAYER_KILLS = pl.getConfig().getBoolean("drop-for-nonplayer-kills", !pl.getConfig().getBoolean("player-kills-only", true));
 		ALLOW_INDIRECT_KILLS = pl.getConfig().getBoolean("drop-for-indirect-kills", false);
 		ALLOW_PROJECTILE_KILLS = pl.getConfig().getBoolean("drop-for-ranged-kills", false);
 		PLAYER_HEADS_ONLY = pl.getConfig().getBoolean("player-heads-only", false);

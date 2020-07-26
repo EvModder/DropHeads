@@ -16,39 +16,37 @@ message-beheaded-item-display-format: '${RARITY}[${NAME}${RARITY}]'
 drop-for-nonplayer-kills: false
 
 # Whether to drop heads if killed by projectile weapon from a player
-# Only checked if player-kills-only is true
+# Only checked if 'drop-for-nonplayer-kills' is false
 drop-for-ranged-kills: false
 
 # Whether to drop heads for any death cause if last-damager is a player
-# Only checked if player-kills-only is true
+# Only checked if 'drop-for-nonplayer-kills' is false
 drop-for-indirect-kills: false
 
-# Only drop player heads (you can also do this in "default chances" file
-# by making all mobs except players have a 0% chance of dropping a head)
+# Only drop player heads (you can also do this in 'head-drop-rates.txt'
+# by making all mobs except players have a 0% chance of dropping heads)
 player-heads-only: false
 
 # Only drop "simple" mob heads (one per EntityType), without any unique
 # features based on mob traits or subtype; very boring, not recommended
 simple-mob-heads-only: false
 
-# Whether to keep entity heads synced with the latest vanilla textures
+# Whether to keep entity heads updated with the latest vanilla textures
 refresh-textures: true
 
 # Whether to reset the item name for a head when refreshing its texture
 refresh-item-names: false
 
 # When a player changes their skin, should old heads be updated to the
-# new texture? Note: to refresh, heads must be mined or dropped
+# new texture? Note: to trigger refresh, heads must be mined or dropped
 update-on-skin-change: false
 
-# Track mob spawn reasons (uses rate modifiers from spawn-cause-modifiers.txt)
+# Track mob spawn reasons, edits drop rates using 'spawn-cause-modifiers.txt'
 track-mob-spawns: true
 
-# Enable the mechanic where any mob killed by a charged creeper explosion
-# will drop its head with 100% probability * the spawn-cause modifier
-# This setting overrides "player-kills-only" (but not "player-heads-only")
-# Note: In vanilla, each charged creeper explosion causes only 1 head drop,
-# DropHeads mimics this behavior from version 3.3.0 onward
+# Enable the mechanic where the first mob killed by a charged creeper's
+# explosion will drop its head with 100% probability
+# Note: This overrides 'drop-for-nonplayer-kills', but not 'player-heads-only'
 charged-creeper-drops: true
 
 # A Minecraft easter egg is that mobs named 'Dinnerbone' or 'Grumm' are
@@ -56,9 +54,9 @@ charged-creeper-drops: true
 drop-grumm-heads: true
 show-grumm-in-tab-complete: false
 
-# Enable plugin Updater (checks for new versions with new head textures)
-# Note: Disable if your server console reports errors
-update-plugin: false
+# Enable plugin auto-updates (checks for new versions and head textures)
+# Note: Disable if your console shows DropHeads errors on startup
+update-plugin: true
 
 # Run in debug mode (prints extra information to console)
 debug-messages: true
@@ -78,12 +76,11 @@ save-custom-lore: false
 # Note: Applies to custom player/mob heads, but not to WITHER_SKULL etc.
 show-head-type-in-lore: true
 
-# Only drop heads if the killer used an axe
+# Only drop heads if the killer used an axe; overrides 'must-use'
 must-use-axe: false
 
-# (Optional) Whitelist of tools a player must be using for heads to drop
-# If "must-use-axe" is enabled, this list will be ignored
-# If empty, no special weapon/tool will be required to get heads
+# (Optional) Select weapons required to be used in order to get heads to drop
+# If this list is empty, any weapon can be used to get heads
 must-use:
 #  - IRON_SWORD
 #  - DIAMOND_AXE
@@ -95,10 +92,10 @@ looting-mutliplier: 1.01
 # This number is added to the drop chance for each level of looting
 looting-addition: 0.0
 
-# Use vanilla behavior (overrides all other settings) for wither skeletons
+# Use vanilla behavior (overrides 'looting-mult/add') for wither skeletons
 vanilla-wither-skeleton-looting-behavior: true
 
-# Replaces Zombie_Pigmen heads with Zombified_Piglin heads in 1.16+
+# Replace Zombie_Pigman heads with Zombified_Piglin heads in 1.16+
 update-zombie-pigman-heads: true
 
 # (Optional) Let certain tools have a higher chance of beheading
@@ -113,7 +110,7 @@ specific-tool-modifiers:
   DIAMOND_SWORD: 0.2
   IRON_SWORD: 0.1
 
-# (Optional) Modify head drop chance based on how long the mob has been alive
+# (Optional) Modify head drop chance based on how long a mob has been alive
 # Format is "X: V", where if the mob has been alive for X or more time, then
 # the drop rate is increased by V percent (similar to above; can be negative)
 time-alive-modifiers:
@@ -125,6 +122,7 @@ time-alive-modifiers:
   1w: 3.0
   30w6d11h55m33s: 10.0
 
+# Whether to enable logging for certain events
 log:
   enable: true
   filename: 'dropheads-log.txt'
