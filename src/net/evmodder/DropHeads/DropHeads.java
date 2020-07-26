@@ -26,7 +26,6 @@ import net.evmodder.EvLib.Updater;
 
 //TODO:
 // * /droprate - check or edit per mob (& cmd for spawn modifiers)
-// * mob type in item lore
 // * attempt-place-head-block, attempt-place-overwrite-liquids, facing-direction, place-as: KILLER/VICTIM/SERVER, what to do if blockplaceevent fails
 // * overwrite blocks: ['AIR', 'WATER, 'GRASS']
 // * jeb_ sheep head animated phasing through colors (like the jeb_ sheep)
@@ -38,7 +37,8 @@ import net.evmodder.EvLib.Updater;
 // * stray texture skull match mob colors
 // * hollow stray skull using Ev resource pack? (custom model data or head tag)
 //TEST:
-//* /gethead player:ShEeP, /gethead mob:SHEEP, /gethead hdb:334
+// * mob type in item lore
+// * /gethead player:ShEeP, /gethead mob:SHEEP, /gethead hdb:334
 /*
  * log:
  *   enable: true

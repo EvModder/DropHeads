@@ -307,20 +307,28 @@ public class EntityDeathListener implements Listener{
 			killer = ((EntityDamageByEntityEvent)victim.getLastDamageCause()).getDamager();
 			if(!killer.hasPermission("dropheads.canbehead")) return;
 			if(killer instanceof Creeper && ((Creeper)killer).isPowered()){
-				if(CHARGED_CREEPER_DROPS && !HeadUtils.dropsHeadFromChargedCreeper(victim.getType())
-						&& explodingChargedCreepers.add(killer.getUniqueId())){
-					if(DEBUG_MODE) pl.getLogger().info("Killed by charged creeper: "+victim.getType());
-					dropHead(victim, evt, killer, null);
-					// Cleanup memory after a tick (optional)
+				if(CHARGED_CREEPER_DROPS){
+					if(!victim.hasPermission("dropheads.canlosehead")){
+						if(DEBUG_MODE) pl.getLogger().info("dropheads.canlosehead=false: "+victim.getCustomName());
+						return;
+					}
+					// Limit to 1 head per charged creeper explosion (mimics vanilla) //TODO: add config option
 					final UUID creeperUUID = killer.getUniqueId();
-					new BukkitRunnable(){@Override public void run(){
-						explodingChargedCreepers.remove(creeperUUID);
-					}}.runTaskLater(pl, 1);
+					if(explodingChargedCreepers.add(creeperUUID) && !HeadUtils.dropsHeadFromChargedCreeper(victim.getType())){
+						if(DEBUG_MODE) pl.getLogger().info("Killed by charged creeper: "+victim.getType());
+						dropHead(victim, evt, killer, null);
+						// Free up memory after a tick (optional)
+						new BukkitRunnable(){@Override public void run(){explodingChargedCreepers.remove(creeperUUID);}}.runTaskLater(pl, 1);
+						return;
+					}
 				}
-				return;
 			}
 			if(killer.hasPermission("dropheads.alwaysbehead")){
-				if(DEBUG_MODE) pl.getLogger().info("dropheads.alwaysbehead perm: "+killer.getCustomName());
+				if(DEBUG_MODE) pl.getLogger().info("dropheads.alwaysbehead=true: "+killer.getCustomName());
+				if(!victim.hasPermission("dropheads.canlosehead")){
+					if(DEBUG_MODE) pl.getLogger().info("dropheads.canlosehead=false: "+victim.getCustomName());
+					return;
+				}
 				dropHead(victim, evt, killer, killer instanceof LivingEntity ? ((LivingEntity)killer).getEquipment().getItemInMainHand() : null);
 				return;
 			}
@@ -370,6 +378,10 @@ public class EntityDeathListener implements Listener{
 		}
 
 		if(rand.nextDouble() < dropChance){
+			if(!victim.hasPermission("dropheads.canlosehead")){
+				if(DEBUG_MODE) pl.getLogger().info("dropheads.canlosehead=false: "+victim.getCustomName());
+				return;
+			}
 			dropHead(victim, evt, killer, murderWeapon);
 			if(DEBUG_MODE){
 				DecimalFormat df = new DecimalFormat("0.0###");
