@@ -16,6 +16,13 @@ commands:
     permission: dropheads.spawn
     permission-message: You do not have permission to do this.
 
+  droprate:
+    description: Check the drop rate for a head
+    usage: /droprate <mob type>
+    aliases: [headrate,headdropchance,dhrate,headchance]
+    permission: dropheads.droprate
+    permission-message: You do not have permission to do this.
+
   debug_all_heads:
     description: Place all heads into the world around the player
     usage: /debug_all_heads
@@ -23,17 +30,19 @@ commands:
     permission-message: You do not have permission to do this.
 
 permissions:
-  dropheads.alwaysbehead:
-    description: This player will get heads 100% of the time
-    default: false
+  dropheads.canlosehead:
+    description: Killing this entity can cause their head to drop
+    default: true
 
   dropheads.canbehead:
-    description: This player will be able to get heads
+    description: This entity will be able to get heads
     default: true
 
-  dropheads.canlosehead:
-    description: Killing this player can cause their head to drop. Overrides alwaysbehead
-    default: true
+  dropheads.alwaysbehead:
+    description: This entity will get heads 100% of the time, unless canlosehead is false
+    default: false
+    children:
+      dropheads.canbehead: true
 
   dropheads.clickinfo:
     description: Permission to see info about a head by clicking it
@@ -41,6 +50,10 @@ permissions:
 
   dropheads.spawn:
     description: Permission to spawn heads with a command
+    default: op
+
+  dropheads.droprate:
+    description: Permission to check head drop rates with a command
     default: op
 
   dropheads.debug:
