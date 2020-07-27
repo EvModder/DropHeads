@@ -60,6 +60,9 @@ public class CommandDropRate extends EvCommand{
 
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args){
+		if(args.length == 0){
+			return false;
+		}
 		String target = args[0].toLowerCase();
 		DecimalFormat df = new DecimalFormat("0.0###");
 
@@ -67,29 +70,36 @@ public class CommandDropRate extends EvCommand{
 		Player player = pl.getServer().getPlayer(target);
 		if(player != null){
 			if(!player.hasPermission("dropheads.canlosehead")){
-				sender.sendMessage(ChatColor.GOLD+"Drop chance for \""+player.getName()+"\": 0% "
-					+ChatColor.GRAY+"(dropheads.canlosehead="+ChatColor.RED+"false"+ChatColor.GRAY+")");
+				sender.sendMessage(ChatColor.GOLD+"Drop chance for \""+ChatColor.GRAY+player.getName()+ChatColor.GOLD+"\": "
+						+ChatColor.AQUA+"0% "+ChatColor.GRAY+"(dropheads.canlosehead="+ChatColor.RED+"false"+ChatColor.GRAY+")");
+				return true;
 			}
-			double rawChance = dropChances.getOrDefault("PLAYER", DEFAULT_DROP_CHANCE);
-			sender.sendMessage(ChatColor.GOLD+"Drop chance for \""+player.getName()+"\": "+df.format(rawChance*100D));
-			return true;
+			double rawChance = dropChances.getOrDefault("player", DEFAULT_DROP_CHANCE);
+			sender.sendMessage(ChatColor.GOLD+"Drop chance for \""+ChatColor.GRAY+player.getName()+ChatColor.GOLD+"\": "
+					+ChatColor.AQUA+df.format(rawChance*100D)+"%");
+		}
+		else{
+			Double rawChance = dropChances.get(target);
+			if(rawChance != null) sender.sendMessage(ChatColor.GOLD+"Drop chance for "+ChatColor.YELLOW+target+ChatColor.GOLD+": "
+					+ChatColor.AQUA+df.format(rawChance*100D)+"%");
+			else{
+				sender.sendMessage(ChatColor.RED+"Drop chance for \""+target+"\" not found! (unknown mobs default to 0%)");
+				return false;
+			}
 		}
 
-		Double rawChance = dropChances.get(target);
-		if(rawChance != null) sender.sendMessage(ChatColor.GOLD+"Drop chance for "+target+": "+df.format(rawChance*100D));
-		else sender.sendMessage(ChatColor.RED+"Drop chance for \""+target+"\" not found! (unknown mobs default to 0%)");
-
 		StringBuilder builder = new StringBuilder(ChatColor.GRAY+"Other things that can affect droprate: ");
-		if(target.equals("player")) builder.append("\nVictim must have the 'dropheads.canlosehead' permission (default=true)");
-		builder.append("\nKiller must have the 'dropheads.canbehead' permission (default=true)");
-		builder.append("\nIf killer has 'dropheads.alwaysbehead', chance is raised to 100%");
+		if(target.equals("player")) builder.append("\nVictim must have 'dropheads.canlosehead' perm (default=true)");
+		builder.append("\nKiller must have 'dropheads.canbehead' perm (default=true)");
+		builder.append("\nIf killer has 'dropheads.alwaysbehead', rate is raised to 100%");
 		if(USING_REQUIRED_TOOLS) builder.append("\nSpecific murder weapons are required"/* {IRON_AXE, ...}*/);
-		builder.append("\nOther modifiers: ");
-		if(USING_SPAWN_MODIFIERS && !target.equals("player")) builder.append("Spawn-reason, "/* <red>-XX% to <green>+YY% */);
-		if(USING_TIME_ALIVE_MODIFIERS) builder.append("Time-alive, "/* <red>-XX% to <green>+YY% */);
-		if(USING_TOOL_MODIFIERS) builder.append("Weapon-used, "/* <red>-XX% to <green>+YY% */);
+		builder.append("\nRate modifiers: ");
+		if(USING_SPAWN_MODIFIERS && !target.equals("player")) builder.append("SpawnReason, "/* <red>-XX% to <green>+YY% */);
+		if(USING_TIME_ALIVE_MODIFIERS) builder.append("TimeAlive, "/* <red>-XX% to <green>+YY% */);
+		if(USING_TOOL_MODIFIERS) builder.append("WeaponType, "/* <red>-XX% to <green>+YY% */);
 		if(VANILLA_WITHER_SKELETON_LOOTING && target.equals("wither_skeleton")) builder.append("\nVanilla wither_skeleton looting rate is enabled");
 		else if(USING_LOOTING_MODIFIERS) builder.append("Looting"/* (level 3: <green>+XX%) */);
+		sender.sendMessage(builder.toString());
 		return true;
 	}
 }

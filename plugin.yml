@@ -4,8 +4,8 @@ author: EvModder/EvDoc
 description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite, 3=VehicleDestroy+Broadcast,
-#7=canlosehead, no heads dropping when looting level=0
-version: 3.3.7
+#8=/droprate <playername> upgrade
+version: 3.3.8
 api-version: 1.13
 
 commands:
