@@ -33,7 +33,7 @@ import net.evmodder.EvLib.Updater;
 // * move textures from head-textures.txt to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
 // * using above, inside /textures/MOB_NAME.txt, set 'drop-rate: x' to modify chance for that sub-type only
 // * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
-// * cancel behead message broadcast if death message gets changed by another plugin (check in playerdeathevent with priority monitor?)
+// * send behead message broadcast if modified death message gets changed by another plugin (check in playerdeathevent with priority monitor?)
 // * stray texture skull match mob colors
 // * hollow stray skull using Ev resource pack? (custom model data or head tag)
 //TEST:
@@ -64,7 +64,8 @@ public final class DropHeads extends EvPlugin{
 		}
 		instance = this;
 		api = new HeadAPI();
-		getServer().getPluginManager().registerEvents(new EntityDeathListener(), this);
+		EntityDeathListener deathListener = new EntityDeathListener();
+		getServer().getPluginManager().registerEvents(deathListener, this);
 		if(config.getBoolean("track-mob-spawns", true)){
 			getServer().getPluginManager().registerEvents(new EntitySpawnListener(), this);
 		}
@@ -86,7 +87,7 @@ public final class DropHeads extends EvPlugin{
 		}
 
 		new CommandSpawnHead(this);
-		new CommandDropRate(this);
+		new CommandDropRate(this, deathListener);
 		new Commanddebug_all_heads(this);
 
 		LOGFILE_ENABLED = config.getBoolean("log.enable", false);

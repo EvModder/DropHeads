@@ -290,10 +290,10 @@ public class EntityDeathListener implements Listener{
 		long lastDamage = entity.hasMetadata("PlayerDamage") ? entity.getMetadata("PlayerDamage").get(0).asLong() : 0;
 		return System.currentTimeMillis() - lastDamage;
 	}
-	static double getSpawnCauseModifier(Entity e){
+	public static double getSpawnCauseModifier(Entity e){
 		return e.hasMetadata("SpawnReason") ? e.getMetadata("SpawnReason").get(0).asDouble() : 1D;
 	}
-	double getTimeAliveBonus(Entity e){
+	public double getTimeAliveBonus(Entity e){
 		long millisecondsLived = e.getTicksLived()*50L;
 		return timeAliveBonuses.floorEntry(millisecondsLived).getValue();
 	}
