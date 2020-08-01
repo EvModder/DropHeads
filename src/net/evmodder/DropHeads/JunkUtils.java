@@ -121,7 +121,7 @@ public class JunkUtils{
 		while(a < b-1){
 			int x = (b + a)/2;
 			if(f.test(x)) a = x;
-			else b = x + 1;
+			else b = x;
 		}
 		return a;
 	}

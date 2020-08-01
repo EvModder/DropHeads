@@ -25,6 +25,7 @@ import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.Updater;
 
 //TODO:
+// * middle-click copy with correct item name
 // * /droprate - check or edit per mob (& cmd for spawn modifiers)
 // * attempt-place-head-block, attempt-place-overwrite-liquids, facing-direction, place-as: KILLER/VICTIM/SERVER, what to do if blockplaceevent fails
 // * overwrite blocks: ['AIR', 'WATER, 'GRASS']
@@ -37,6 +38,7 @@ import net.evmodder.EvLib.Updater;
 // * stray texture skull match mob colors
 // * hollow stray skull using Ev resource pack? (custom model data or head tag)
 //TEST:
+// * unstackable heads
 // * mob type in item lore
 // * /gethead player:ShEeP, /gethead mob:SHEEP, /gethead hdb:334
 /*
@@ -59,8 +61,9 @@ public final class DropHeads extends EvPlugin{
 	private String LOGFILE_NAME;
 
 	@Override public void onEvEnable(){
-		if(config.getBoolean("update-plugin", true)){
+		if(config.getBoolean("update-plugin", false)){
 			new Updater(/*plugin=*/this, /*id=*/274151, getFile(), Updater.UpdateType.DEFAULT, /*announce=*/true);
+			//todo: if 'update-textures', trigger overwrite in HeadAPI
 		}
 		instance = this;
 		api = new HeadAPI();

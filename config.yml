@@ -41,6 +41,10 @@ refresh-item-names: false
 # new texture? Note: to trigger refresh, heads must be mined or dropped
 update-on-skin-change: false
 
+# Whether to disable head item stacking (stack to 1 instead of 64)
+# Note: Currently only affects custom (non-vanilla) heads
+make-heads-unstackable: false
+
 # Track mob spawn reasons, edits drop rates using 'spawn-cause-modifiers.txt'
 track-mob-spawns: true
 
@@ -58,12 +62,16 @@ show-grumm-in-tab-complete: false
 # Note: Disable if your console shows DropHeads errors on startup
 update-plugin: true
 
+# If this is true, head-textures.txt will be overwritten each plugin update
+# Set to false if you want to manually update textures (or set your own)
+update-textures: true #TODO: implement
+
 # Run in debug mode (prints extra information to console)
 debug-messages: true
 
 # Shows information about a head when right-clicked by a player
 head-click-listener: true
-head-click-format-mobs: "&7[&6DropHeads&7]&f That's ${A} ${NAME} ${TYPE}"
+head-click-format-mobs: "&7[&6DropHeads&7]&f That's ${A} ${NAME}&f ${TYPE}"
 head-click-format-players: "&7[&6DropHeads&7]&f That's ${NAME}'s Head"
 
 # Saves lore of heads in GameProfile when placed (used by some other plugins)

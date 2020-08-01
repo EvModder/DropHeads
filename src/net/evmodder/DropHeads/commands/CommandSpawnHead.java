@@ -12,16 +12,10 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import me.arcaniax.hdb.api.DatabaseLoadEvent;
-import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.EvLib.EvCommand;
-import net.evmodder.EvLib.extras.HeadUtils;
 import net.evmodder.EvLib.extras.TextUtils;
 import net.evmodder.EvLib.extras.WebUtils;
 
@@ -30,10 +24,7 @@ public class CommandSpawnHead extends EvCommand{
 	final boolean SHOW_GRUMM_IN_TAB_COMPLETE;
 	final boolean SHOW_GRUMM_IN_TAB_COMPLETE_FOR_BAR = true;
 	final boolean ENABLE_LOG;
-	final boolean SAVE_HEAD_TYPE_IN_LORE;
 	final String LOG_FORMAT;
-	private HeadDatabaseAPI api = null;
-	private int MAX_HDB_ID = -1;
 	final int MAX_IDS_SHOWN = 200;
 
 	public CommandSpawnHead(DropHeads plugin) {
@@ -42,24 +33,6 @@ public class CommandSpawnHead extends EvCommand{
 		SHOW_GRUMM_IN_TAB_COMPLETE = pl.getConfig().getBoolean("show-grumm-in-tab-complete", false);
 		ENABLE_LOG = pl.getConfig().getBoolean("log.enable", false) && pl.getConfig().getBoolean("log.log-head-command", false);
 		LOG_FORMAT = ENABLE_LOG ? pl.getConfig().getString("log.log-head-command-format", "${TIMESTAMP},gethead command,${SENDER},${HEAD}") : null;
-		SAVE_HEAD_TYPE_IN_LORE = pl.getConfig().getBoolean("show-head-type-in-lore", false);
-
-		boolean hdbInstalled = true;
-		try{Class.forName("me.arcaniax.hdb.api.DatabaseLoadEvent");}
-		catch(ClassNotFoundException ex){hdbInstalled = false;}
-
-		if(hdbInstalled) pl.getServer().getPluginManager().registerEvents(new Listener(){
-			@EventHandler public void onDatabaseLoad(DatabaseLoadEvent e){
-				api = new HeadDatabaseAPI();
-				MAX_HDB_ID = JunkUtils.exponentialSearch(
-					id -> {
-						try{return api.getItemHead(""+id) != null;}
-						catch(NullPointerException nullpointer){return false;}
-					},
-					20000
-				);
-			}
-		}, pl);
 	}
 
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
@@ -96,9 +69,9 @@ public class CommandSpawnHead extends EvCommand{
 						.collect(Collectors.toList());
 			}
 			else if(prefix.equals("hdb:")){
-				if(MAX_HDB_ID == -1) return null;
-				try{if(Integer.parseInt(target) > MAX_HDB_ID) return null;}
-				catch(NumberFormatException ex){return null;}
+				if(pl.getAPI().getHeadDatabaseAPI() == null/*MAX_HDB_ID == -1*/) return null;
+				//try{if(Integer.parseInt(target) > MAX_HDB_ID) return null;}
+				//catch(NumberFormatException ex){return null;}
 				return Arrays.asList(prefix+target);
 //				if(MAX_HDB_ID != -1){
 //					int numResults = ((""+MAX_HDB_ID).length() - target.length())*11;
@@ -168,22 +141,15 @@ public class CommandSpawnHead extends EvCommand{
 			head = pl.getAPI().getHead(eType, textureKey);
 		}
 		else if(prefix.equals("hdb:")){
-			if(api == null){
+			if(pl.getAPI().getHeadDatabaseAPI() == null){
 				sender.sendMessage(ChatColor.RED+"HeadDatabase plugin needs to be installed to enable ID lookup");
 				return true;
 			}
-			try{
-				head = api.getItemHead(target);
-				if(SAVE_HEAD_TYPE_IN_LORE){
-					ItemMeta meta = head.getItemMeta();
-					meta.setLore(Arrays.asList(ChatColor.DARK_GRAY+"hdb:"+target));
-					head.setItemMeta(meta);
-				}
+			if(!pl.getAPI().getHeadDatabaseAPI().isHead(target)){
+				sender.sendMessage(ChatColor.RED+"Could not find head with HDB id: "+target);
+				return true;
 			}
-			catch(NullPointerException nullpointer){
-//				pl.getLogger().info(ChatColor.RED+"Could not find head with id "+target);
-//				return true;
-			}
+			head = pl.getAPI().getItemHead_wrapper(target);
 		}
 		else if(prefix.equals("code:") || (prefix.isEmpty() && target.length() > TextUtils.MAX_PLAYERNAME_MONO_WIDTH && searchForPlayer(target) == null)){
 			for(Entry<String, String> entry : pl.getAPI().getTextures().entrySet()){
@@ -192,24 +158,14 @@ public class CommandSpawnHead extends EvCommand{
 				}
 			}
 			if(head == null){
-				head = HeadUtils.makeSkull(target, /*headName=*/ChatColor.YELLOW+"UNKNOWN Head");
-				if(SAVE_HEAD_TYPE_IN_LORE){
-					ItemMeta meta = head.getItemMeta();
-					meta.setLore(Arrays.asList(ChatColor.DARK_GRAY+"code:"+target));
-					head.setItemMeta(meta);
-				}
+				head = pl.getAPI().makeSkull_wrapper(target, /*headName=*/ChatColor.YELLOW+"UNKNOWN Head");
 			}
 		}
 		else if(prefix.equals("player:") || (prefix.isEmpty()/* && ...*/)){
 			OfflinePlayer p = searchForPlayer(target);
 			if(p != null){
 				target = p.getName();
-				head = HeadUtils.getPlayerHead(p);
-				if(SAVE_HEAD_TYPE_IN_LORE){
-					ItemMeta meta = head.getItemMeta();
-					meta.setLore(Arrays.asList(ChatColor.DARK_GRAY+"player:"+p.getName()));
-					head.setItemMeta(meta);
-				}
+				head = pl.getAPI().getPlayerHead_wrapper(p);
 			}
 		}
 

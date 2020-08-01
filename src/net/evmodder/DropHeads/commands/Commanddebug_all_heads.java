@@ -32,7 +32,7 @@ public class Commanddebug_all_heads extends EvCommand{
 
 	@SuppressWarnings("deprecation")
 	private void setHead(Location loc, String textureKey, BlockFace facing){
-		ItemStack skullItem = api.makeTextureSkull(textureKey);
+		ItemStack skullItem = api.getHead(/*eType=*/null, textureKey);
 		loc.getBlock().setType(facing == null ? Material.PLAYER_HEAD : Material.PLAYER_WALL_HEAD);
 		Skull blockState = (Skull) loc.getBlock().getState();
 		blockState.setType(facing == null ? Material.PLAYER_HEAD : Material.PLAYER_WALL_HEAD);

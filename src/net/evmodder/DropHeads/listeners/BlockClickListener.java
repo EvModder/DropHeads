@@ -50,15 +50,18 @@ public class BlockClickListener implements Listener{
 		if(HeadUtils.isPlayerHead(evt.getClickedBlock().getType())){
 			Skull skull = (Skull) evt.getClickedBlock().getState();
 			GameProfile profile = HeadUtils.getGameProfile(skull);
-			if(profile == null || profile.getName() == null){
+			if(profile == null){
 				isMobHead = true;
 				headName = plugin.getAPI().getHeadNameFromKey(EntityType.PLAYER.name());
 			}
 			else{
-				String profileName = profile.getName();
-				int savedLoreStart = profileName.indexOf('>');
-				if(savedLoreStart != -1) profileName = profileName.substring(0, savedLoreStart);
-				isMobHead = plugin.getAPI().textureExists(profileName);
+				if(profile.getName() == null) isMobHead = true;
+				else{
+					String profileName = profile.getName();
+					int savedLoreStart = profileName.indexOf('>');
+					if(savedLoreStart != -1) profileName = profileName.substring(0, savedLoreStart);
+					isMobHead = plugin.getAPI().textureExists(profileName);
+				}
 				headName = plugin.getAPI().getHeadName(profile);
 			}
 		}
@@ -67,9 +70,10 @@ public class BlockClickListener implements Listener{
 			EntityType entity = HeadUtils.getEntityFromHead(evt.getClickedBlock().getType());
 			headName = plugin.getAPI().getHeadNameFromKey(entity.name());
 		}
+		DropHeads.getPlugin().getLogger().info("head name: "+headName);
 		int idx = headName.lastIndexOf(' ');
-		final String entityName = ChatColor.stripColor(headName.substring(0, idx));
-		final String headTypeName = ChatColor.stripColor(headName.substring(idx+1));
+		final String entityName = idx == -1 ? headName : ChatColor.stripColor(headName.substring(0, idx));
+		final String headTypeName = idx == -1 ? "Head" : ChatColor.stripColor(headName.substring(idx+1));
 		final String aOrAn = entityName.matches("[aeiouAEIOU].*") ? "an" : "a"; // Yes, an imperfect solution, I know. :l
 
 		final String displayStr = (isMobHead ? headDisplayStrMob : headDisplayStrPlayer)
