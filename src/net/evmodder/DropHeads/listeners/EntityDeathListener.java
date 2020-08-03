@@ -355,18 +355,19 @@ public class EntityDeathListener implements Listener{
 			: null;
 
 		if(!mustUseTools.isEmpty() && (murderWeapon == null || !mustUseTools.contains(murderWeapon.getType()))) return;
-		final int lootingLevel = murderWeapon == null ? 0 : murderWeapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
+
 		final double toolBonus = murderWeapon == null ? 0D : toolBonuses.getOrDefault(murderWeapon.getType(), 0D);
-		final double lootingMod = lootingLevel == 0 ? 1D : Math.min(Math.pow(LOOTING_MULT, lootingLevel), LOOTING_MULT*lootingLevel);
-		final double lootingAdd = LOOTING_ADD*lootingLevel;
+		final int lootingLevel = murderWeapon == null ? 0 : murderWeapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
+		final boolean VANILLA_LOOTING = evt.getEntityType() == EntityType.WITHER_SKELETON && VANILLA_WSKELE_LOOTING;
+		final double lootingMod = (lootingLevel == 0 || VANILLA_LOOTING) ? 1D : Math.min(Math.pow(LOOTING_MULT, lootingLevel), LOOTING_MULT*lootingLevel);
+		final double lootingAdd = (VANILLA_LOOTING ? 0.01D : LOOTING_ADD)*lootingLevel;
 		final double weaponMod = 1D + toolBonus;
 		final double timeAliveMod = 1D + getTimeAliveBonus(victim);
 		final double spawnCauseMod = getSpawnCauseModifier(victim);
 		final double rawDropChance = mobChances.getOrDefault(victim.getType(), DEFAULT_CHANCE);
-		double dropChance = rawDropChance*spawnCauseMod*timeAliveMod*weaponMod*lootingMod + lootingAdd;
+		final double dropChance = rawDropChance*spawnCauseMod*timeAliveMod*weaponMod*lootingMod + lootingAdd;
 
 		if(evt.getEntityType() == EntityType.WITHER_SKELETON){
-			if(VANILLA_WSKELE_LOOTING) dropChance = ((dropChance - lootingAdd)/lootingMod) + 0.01D*lootingLevel;
 			// Remove vanilla-dropped wither skeleton skulls so they aren't dropped twice.
 			Iterator<ItemStack> it = evt.getDrops().iterator();
 			while(it.hasNext()) if(it.next().getType() == Material.WITHER_SKELETON_SKULL) it.remove();
