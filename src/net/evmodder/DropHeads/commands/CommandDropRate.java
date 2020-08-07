@@ -67,7 +67,7 @@ public class CommandDropRate extends EvCommand{
 	Entity getTargetEntity(Entity looker, int range){
 		Entity closestEntity = null;
 		double closestDistSq = Double.MAX_VALUE;
-		final double threshold = 1;
+		final double threshold = 10;
 		for(Entity entity : looker.getNearbyEntities(range, range, range)){
 			Vector n = entity.getLocation().toVector().subtract(looker.getLocation().toVector());
 			if(entity.getLocation().getDirection().normalize().crossProduct(n).lengthSquared() < threshold
@@ -89,14 +89,13 @@ public class CommandDropRate extends EvCommand{
 			if(sender instanceof Player) entity = getTargetEntity((Player)sender, /*range=*/10);
 			if(entity == null) return false;
 		}
-		String target = args[0].toLowerCase();
+		final String target = entity == null ? args[0].toLowerCase() : entity.getType().name().toLowerCase();
 
 		if(entity == null) entity = pl.getServer().getPlayer(target);
 		if(entity != null){
-			target = entity.getType().name().toLowerCase();
 			if(!entity.hasPermission("dropheads.canlosehead")){
 				sender.sendMessage("§6Drop chance for "
-						+(entity instanceof Player ? "\"§7"+entity.getName()+"§6\"" : "§e"+target+"§6")
+						+(entity instanceof Player ? "\"§e"+entity.getName()+"§6\"" : "§e"+target+"§6")
 						+": §b0% §7(dropheads.canlosehead=§cfalse§7)");
 			}
 			else{
@@ -104,7 +103,7 @@ public class CommandDropRate extends EvCommand{
 				if(USING_SPAWN_MODIFIERS) dropChance *= EntityDeathListener.getSpawnCauseModifier(entity);
 				if(USING_TIME_ALIVE_MODIFIERS) dropChance *= (1D + deathListener.getTimeAliveBonus(entity));
 				sender.sendMessage("§6Drop chance for "
-						+(entity instanceof Player ? "\"§7"+entity.getName()+"§6\"" : "§e"+target+"§6")
+						+(entity instanceof Player ? "\"§e"+entity.getName()+"§6\"" : "§e"+target+"§6")
 						+": §b"+df.format(dropChance*100D)+"%");
 			}
 		}
@@ -118,16 +117,19 @@ public class CommandDropRate extends EvCommand{
 		}
 
 		StringBuilder builder = new StringBuilder("§7Other things that can affect droprate: ");
-		if(entity == null && target.equals("player")) builder.append("\nVictim must have 'dropheads.canlosehead' perm (default=true)");
-		builder.append("\nKiller must have 'dropheads.canbehead' perm (default=true)");// (true/fase for you)
-		builder.append("\nIf killer has 'dropheads.alwaysbehead', rate is raised to 100%");// (true/false for you)
+		if(entity == null && target.equals("player")) builder.append("\nVictim must have '§fdropheads.canlosehead§7' perm (default=true)");
+		if(!sender.hasPermission("dropheads.canbehead")) builder.append("\nYou must have the '§fdropheads.canbehead§7' perm");// (true/fase for you)
+		if(sender.hasPermission("dropheads.alwaysbehead")) builder.append("\nPerm '§fdropheads.alwaysbehead§7' raises rate to 100%");// (true/false for you)
 		if(USING_REQUIRED_TOOLS) builder.append("\nSpecific murder weapons are required"/* {IRON_AXE, ...}*/);
 		builder.append("\nRate modifiers: ");
-		if(USING_SPAWN_MODIFIERS && entity == null && !target.equals("player")) builder.append("SpawnReason, "/* <red>-XX% to <green>+YY% */);
-		if(USING_TIME_ALIVE_MODIFIERS && entity == null) builder.append("TimeAlive, "/* <red>-XX% to <green>+YY% */);
-		if(USING_TOOL_MODIFIERS) builder.append("WeaponType, "/* <red>-XX% to <green>+YY% */);
+		if(USING_SPAWN_MODIFIERS && !target.equals("player") && (entity == null ||
+				Math.abs(1F - EntityDeathListener.getSpawnCauseModifier(entity)) > 0.001F))
+			builder.append("§fSpawnReason§7, "/* <red>-XX% to <green>+YY% */);
+		if(USING_TIME_ALIVE_MODIFIERS && (entity == null || Math.abs(deathListener.getTimeAliveBonus(entity)) > 0.001))
+			builder.append("§fTimeAlive§7, "/* <red>-XX% to <green>+YY% */);
+		if(USING_TOOL_MODIFIERS) builder.append("§fWeaponType§7, "/* <red>-XX% to <green>+YY% */);
 		if(VANILLA_WITHER_SKELETON_LOOTING && target.equals("wither_skeleton")) builder.append("\nVanilla wither_skeleton looting rate is enabled");
-		else if(USING_LOOTING_MODIFIERS) builder.append("Looting"/* (level 3: <green>+XX%) */);
+		else if(USING_LOOTING_MODIFIERS) builder.append("§fLooting§7"/* (level 3: <green>+XX%) */);
 		sender.sendMessage(builder.toString());
 		return true;
 	}

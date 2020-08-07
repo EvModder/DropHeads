@@ -4,8 +4,7 @@ author: EvModder/EvDoc
 description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite, 3=VehicleDestroy+Broadcast,
-#8=/droprate <playername> upgrade, unstackable-heads, update-textures, getHead() optimization (for player heads), better HDB integration support
-version: 3.3.8
+version: 3.3.9=update-textures TODO
 api-version: 1.13
 softdepend: [HeadDatabase]
 

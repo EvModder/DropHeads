@@ -25,6 +25,7 @@ import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.Updater;
 
 //TODO:
+// * DeathChest bypass (perhaps as addon?)
 // * middle-click copy with correct item name
 // * /droprate - check or edit per mob (& cmd for spawn modifiers)
 // * attempt-place-head-block, attempt-place-overwrite-liquids, facing-direction, place-as: KILLER/VICTIM/SERVER, what to do if blockplaceevent fails
@@ -38,6 +39,7 @@ import net.evmodder.EvLib.Updater;
 // * stray texture skull match mob colors
 // * hollow stray skull using Ev resource pack? (custom model data or head tag)
 //TEST:
+// * Fix HDB crash
 // * unstackable heads
 // * mob type in item lore
 // * /gethead player:ShEeP, /gethead mob:SHEEP, /gethead hdb:334

@@ -312,7 +312,7 @@ public class EntityDeathListener implements Listener{
 						if(DEBUG_MODE) pl.getLogger().info("dropheads.canlosehead=false: "+victim.getCustomName());
 						return;
 					}
-					// Limit to 1 head per charged creeper explosion (mimics vanilla) //TODO: add config option
+					// Limit to 1 head per charged creeper explosion (mimics vanilla)
 					final UUID creeperUUID = killer.getUniqueId();
 					if(explodingChargedCreepers.add(creeperUUID) && !HeadUtils.dropsHeadFromChargedCreeper(victim.getType())){
 						if(DEBUG_MODE) pl.getLogger().info("Killed by charged creeper: "+victim.getType());

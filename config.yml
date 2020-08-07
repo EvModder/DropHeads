@@ -64,7 +64,7 @@ update-plugin: true
 
 # If this is true, head-textures.txt will be overwritten each plugin update
 # Set to false if you want to manually update textures (or set your own)
-update-textures: true #TODO: implement
+update-textures: true #TODO: This feature will be added in v3.3.9+
 
 # Run in debug mode (prints extra information to console)
 debug-messages: true
