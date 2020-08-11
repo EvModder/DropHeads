@@ -137,7 +137,7 @@ public class TextureKeyLookup{
 		switch(/*entity != null ? entity.name() : */dataFlags[0]){
 			case "TROPICAL_FISH":
 				if(dataFlags.length == 2) return TextUtils.capitalizeAndSpacify(dataFlags[1], '_');// 22 common
-				try{
+				else if(dataFlags.length > 2) try{
 					DyeColor bodyColor = DyeColor.valueOf(dataFlags[1]);
 					DyeColor patternColor = dataFlags.length == 3 ? bodyColor : DyeColor.valueOf(dataFlags[2]);
 					Pattern pattern = Pattern.valueOf(dataFlags[dataFlags.length == 3 ? 2 : 3]);
