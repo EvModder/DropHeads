@@ -1,5 +1,7 @@
 package net.evmodder.DropHeads;
 
+import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -52,6 +54,19 @@ public class HeadAPI {
 //		String localList = FileIO.loadFile("head-textures.txt", pl.getClass().getResourceAsStream("/head-textures.txt"));
 		String localList = FileIO.loadFile("head-textures.txt", hardcodedList);
 		loadTextures(localList, /*logMissingEntities=*/false, /*logUnknownEntities=*/true);
+
+		//TODO: decide whether this feature is worth keeping
+		if(pl.getConfig().getBoolean("update-textures", false) && hardcodedList.length() > localList.length()){
+			long oldTextureTime = new File(FileIO.DIR+"/head-textures.txt").lastModified();
+			long newTextureTime = 0;
+			try{
+				java.lang.reflect.Method getFileMethod = pl.getClass().getDeclaredMethod("getFile");
+				getFileMethod.setAccessible(true);
+				newTextureTime = ((File)getFileMethod.invoke(pl)).lastModified();
+			}
+			catch(NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e1){}
+			if(newTextureTime > oldTextureTime) FileIO.saveFile("head-textures.txt", hardcodedList);
+		}
 
 		// This could be optimized by passing 'simple-mob-heads-only' to loadTextures to skip adding any textures with '|'
 		if(pl.getConfig().getBoolean("simple-mob-heads-only", false)){
