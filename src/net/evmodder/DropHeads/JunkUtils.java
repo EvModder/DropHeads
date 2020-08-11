@@ -1,9 +1,14 @@
 package net.evmodder.DropHeads;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.event.EventPriority;
 import org.bukkit.inventory.ItemStack;
+import com.sun.istack.internal.NotNull;
+import net.evmodder.DropHeads.listeners.EntityDeathListener.AnnounceMode;
 import net.evmodder.EvLib.extras.HeadUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
@@ -11,7 +16,7 @@ import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
 
 // A trashy place to dump stuff that I should probably move to EvLib after ensure cross-version safety
 public class JunkUtils{
-	public static ChatColor getRarityColor(ItemStack item, boolean checkCustomName){
+	public final static ChatColor getRarityColor(ItemStack item, boolean checkCustomName){
 		if(checkCustomName && item.hasItemMeta() && item.getItemMeta().hasDisplayName()){
 			String displayName = item.getItemMeta().getDisplayName();
 			ChatColor color = null;
@@ -52,6 +57,28 @@ public class JunkUtils{
 			// COMMON:
 			default:
 				return item.hasItemMeta() && item.getItemMeta().hasEnchants() ? ChatColor.AQUA : ChatColor.WHITE;
+		}
+	}
+
+	public final static AnnounceMode parseAnnounceMode(@NotNull String value, AnnounceMode defaultMode){
+		value = value.toUpperCase();
+		if(value.equals("FALSE")) return AnnounceMode.OFF;
+		if(value.equals("TRUE")) return AnnounceMode.GLOBAL;
+		try{return AnnounceMode.valueOf(value);}
+		catch(IllegalArgumentException ex){
+			DropHeads.getPlugin().getLogger().severe("Unknown announcement mode: '"+value+"'");
+			DropHeads.getPlugin().getLogger().warning("Please use one of the available modes: [GLOBAL, LOCAL, OFF]");
+			return defaultMode;
+		}
+	}
+	public final static EventPriority parseEventPriority(@NotNull String value, EventPriority defaultPriority){
+		value = value.toUpperCase();
+		try{return EventPriority.valueOf(value);}
+		catch(IllegalArgumentException ex){
+			DropHeads.getPlugin().getLogger().severe("Unknown EventPriority: '"+value+"'");
+			DropHeads.getPlugin().getLogger().warning("Please use one of: "+String.join(", ",
+					Arrays.asList(EventPriority.values()).stream().map(p -> p.name()).collect(Collectors.toList())));
+			return defaultPriority;
 		}
 	}
 

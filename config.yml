@@ -106,6 +106,11 @@ vanilla-wither-skeleton-looting-behavior: true
 # Replace Zombie_Pigman heads with Zombified_Piglin heads in 1.16+
 update-zombie-pigman-heads: true
 
+# Changes the death "Event Priority" that DropHeads registers at
+# Low values => DropHeads runs BEFORE other plugins; high values => runs AFTER
+# Possible values: [LOWEST, LOW, NORMAL, HIGH, HIGHEST, MONITOR]
+death-listener-priority: LOW
+
 # (Optional) Let certain tools have a higher chance of beheading
 # The number is the percent increase in drop chance when using that tool
 # Eg: 0.8 = 80% more likely, -0.1 = 10% less likely, 2.0 = +200%, etc.

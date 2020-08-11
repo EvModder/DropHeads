@@ -3,8 +3,8 @@ main: net.evmodder.DropHeads.DropHeads
 author: EvModder/EvDoc
 description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
-#3=major rewrite, 3=VehicleDestroy+Broadcast,
-version: 3.3.9=update-textures TODO
+#3=major rewrite, 3=VehicleDestroy+Broadcast, 9=added grumms, collared dogs, listener priority
+version: 3.3.9
 api-version: 1.13
 softdepend: [HeadDatabase]
 

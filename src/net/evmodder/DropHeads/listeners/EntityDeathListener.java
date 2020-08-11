@@ -17,6 +17,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -24,10 +25,10 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.EventExecutor;
 import org.bukkit.projectiles.BlockProjectileSource;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.scheduler.BukkitRunnable;
-import com.sun.istack.internal.NotNull;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.DropHeads.TextureKeyLookup;
@@ -43,8 +44,9 @@ import net.evmodder.EvLib.extras.HeadUtils;
 import net.evmodder.EvLib.extras.TextUtils;
 
 public class EntityDeathListener implements Listener{
-	enum AnnounceMode {GLOBAL, LOCAL, DIRECT, OFF};
+	public enum AnnounceMode {GLOBAL, LOCAL, DIRECT, OFF};
 	final AnnounceMode ANNOUNCE_PLAYERS, ANNOUNCE_MOBS;
+	final EventPriority PRIORITY;
 
 	final boolean ALLOW_NON_PLAYER_KILLS, ALLOW_INDIRECT_KILLS, ALLOW_PROJECTILE_KILLS;
 	final boolean PLAYER_HEADS_ONLY, CHARGED_CREEPER_DROPS, REPLACE_DEATH_MESSAGE, VANILLA_WSKELE_LOOTING;
@@ -67,17 +69,6 @@ public class EntityDeathListener implements Listener{
 	final TreeMap<Long, Double> timeAliveBonuses;
 	final HashSet<UUID> explodingChargedCreepers, recentlyBeheadedPlayers;
 
-	AnnounceMode parseAnnounceMode(@NotNull String value, AnnounceMode defaultMode){
-		value = value.toUpperCase();
-		if(value.equals("FALSE")) return AnnounceMode.OFF;
-		if(value.equals("TRUE")) return AnnounceMode.GLOBAL;
-		try{return AnnounceMode.valueOf(value);}
-		catch(IllegalArgumentException ex){
-			pl.getLogger().severe("Unknown announcement mode: '"+value+"'");
-			pl.getLogger().warning("Please use one of the available modes: [GLOBAL, LOCAL, OFF]");
-			return defaultMode;
-		}
-	}
 	public EntityDeathListener(){
 		pl = DropHeads.getPlugin();
 		ALLOW_NON_PLAYER_KILLS = pl.getConfig().getBoolean("drop-for-nonplayer-kills", !pl.getConfig().getBoolean("player-kills-only", true));
@@ -91,6 +82,7 @@ public class EntityDeathListener implements Listener{
 		if(LOOTING_ADD >= 1) pl.getLogger().warning("looting-addition is set to 1.0 or greater. This means heads will always drop when looting is used!");
 		if(LOOTING_MULT < 1) pl.getLogger().warning("looting-multiplier is set below 1.0, this means looting will DECREASe the chance of head drops!");
 		REPLACE_DEATH_MESSAGE = pl.getConfig().getBoolean("behead-announcement-replaces-death-message", true);
+		PRIORITY = JunkUtils.parseEventPriority(pl.getConfig().getString("death-listener-priority", "LOW"), EventPriority.LOW);
 		DEBUG_MODE = pl.getConfig().getBoolean("debug-messages", true);
 		final boolean ENABLE_LOG = pl.getConfig().getBoolean("log.enable", false);
 		LOG_MOB_BEHEAD = ENABLE_LOG && pl.getConfig().getBoolean("log.log-mob-behead", false);
@@ -100,8 +92,8 @@ public class EntityDeathListener implements Listener{
 		LOG_PLAYER_FORMAT = LOG_PLAYER_BEHEAD ? pl.getConfig().getString("log.log-player-behead-format",
 				"${TIMESTAMP},player decapitated,${VICTIM},${KILLER},${ITEM}") : null;
 
-		ANNOUNCE_MOBS = parseAnnounceMode(pl.getConfig().getString("behead-announcement-mobs", "LOCAL"), AnnounceMode.LOCAL);
-		ANNOUNCE_PLAYERS = parseAnnounceMode(pl.getConfig().getString("behead-announcement-players", "GLOBAL"), AnnounceMode.GLOBAL);
+		ANNOUNCE_MOBS = JunkUtils.parseAnnounceMode(pl.getConfig().getString("behead-announcement-mobs", "LOCAL"), AnnounceMode.LOCAL);
+		ANNOUNCE_PLAYERS = JunkUtils.parseAnnounceMode(pl.getConfig().getString("behead-announcement-players", "GLOBAL"), AnnounceMode.GLOBAL);
 		String msg = pl.getConfig().getString("message-beheaded", "${VICTIM} was beheaded");
 		String msgBy = pl.getConfig().getString("message-beheaded-by-entity", "${VICTIM}&r was beheaded by ${KILLER}&r");
 		String msgByWith = pl.getConfig().getString("message-beheaded-by-entity-with-item", "${VICTIM}&r was beheaded by ${KILLER}&r using ${ITEM}&r");
@@ -189,12 +181,6 @@ public class EntityDeathListener implements Listener{
 		DEFAULT_CHANCE = chanceForUnknown;
 		explodingChargedCreepers = new HashSet<UUID>();
 
-		// VehicleDestroyListener can handle minecarts and boats
-		boolean nonLivingEntitiesCanDropHeads = mobChances.entrySet().stream()
-				.anyMatch(entry -> !entry.getKey().isAlive() && entry.getValue() > 0);
-		if(nonLivingEntitiesCanDropHeads){
-			pl.getServer().getPluginManager().registerEvents(new VehicleDestroyListener(this), pl);
-		}
 		if(REPLACE_DEATH_MESSAGE){
 			recentlyBeheadedPlayers = new HashSet<UUID>();
 			pl.getServer().getPluginManager().registerEvents(new Listener(){
@@ -205,6 +191,14 @@ public class EntityDeathListener implements Listener{
 			}, pl);
 		}
 		else recentlyBeheadedPlayers = null;
+
+		// VehicleDestroyListener can handle minecarts and boats
+		boolean nonLivingEntitiesCanDropHeads = mobChances.entrySet().stream()
+				.anyMatch(entry -> !entry.getKey().isAlive() && entry.getValue() > 0);
+		if(nonLivingEntitiesCanDropHeads){
+			pl.getServer().getPluginManager().registerEvents(new VehicleDestroyListener(this), pl);
+		}
+		pl.getServer().getPluginManager().registerEvent(EntityDeathEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
 	}
 
 	String getItemDisplay(ItemStack item){
@@ -298,102 +292,106 @@ public class EntityDeathListener implements Listener{
 		return timeAliveBonuses.floorEntry(millisecondsLived).getValue();
 	}
 
-	@EventHandler(priority = EventPriority.LOW)
-	public void entityDeathEvent(EntityDeathEvent evt){
-		final LivingEntity victim = evt.getEntity();
-		if(PLAYER_HEADS_ONLY && victim instanceof Player == false) return;
-		Entity killer = null;
-		if(victim.getLastDamageCause() != null && victim.getLastDamageCause() instanceof EntityDamageByEntityEvent){
-			killer = ((EntityDamageByEntityEvent)victim.getLastDamageCause()).getDamager();
-			if(!killer.hasPermission("dropheads.canbehead")) return;
-			if(killer instanceof Creeper && ((Creeper)killer).isPowered()){
-				if(CHARGED_CREEPER_DROPS){
+	class DeathEventExecutor implements EventExecutor{
+		@Override public void execute(Listener listener, Event originalEvent){
+			if(!(originalEvent instanceof EntityDeathEvent)) return;
+			final EntityDeathEvent evt = (EntityDeathEvent) originalEvent;
+			final LivingEntity victim = evt.getEntity();
+
+			if(PLAYER_HEADS_ONLY && victim instanceof Player == false) return;
+			Entity killer = null;
+			if(victim.getLastDamageCause() != null && victim.getLastDamageCause() instanceof EntityDamageByEntityEvent){
+				killer = ((EntityDamageByEntityEvent)victim.getLastDamageCause()).getDamager();
+				if(!killer.hasPermission("dropheads.canbehead")) return;
+				if(killer instanceof Creeper && ((Creeper)killer).isPowered()){
+					if(CHARGED_CREEPER_DROPS){
+						if(!victim.hasPermission("dropheads.canlosehead")){
+							if(DEBUG_MODE) pl.getLogger().info("dropheads.canlosehead=false: "+victim.getCustomName());
+							return;
+						}
+						// Limit to 1 head per charged creeper explosion (mimics vanilla)
+						final UUID creeperUUID = killer.getUniqueId();
+						if(explodingChargedCreepers.add(creeperUUID) && !HeadUtils.dropsHeadFromChargedCreeper(victim.getType())){
+							if(DEBUG_MODE) pl.getLogger().info("Killed by charged creeper: "+victim.getType());
+							dropHead(victim, evt, killer, null);
+							// Free up memory after a tick (optional)
+							new BukkitRunnable(){@Override public void run(){explodingChargedCreepers.remove(creeperUUID);}}.runTaskLater(pl, 1);
+							return;
+						}
+					}
+				}
+				if(killer.hasPermission("dropheads.alwaysbehead")){
+					if(DEBUG_MODE) pl.getLogger().info("dropheads.alwaysbehead=true: "+killer.getCustomName());
 					if(!victim.hasPermission("dropheads.canlosehead")){
 						if(DEBUG_MODE) pl.getLogger().info("dropheads.canlosehead=false: "+victim.getCustomName());
 						return;
 					}
-					// Limit to 1 head per charged creeper explosion (mimics vanilla)
-					final UUID creeperUUID = killer.getUniqueId();
-					if(explodingChargedCreepers.add(creeperUUID) && !HeadUtils.dropsHeadFromChargedCreeper(victim.getType())){
-						if(DEBUG_MODE) pl.getLogger().info("Killed by charged creeper: "+victim.getType());
-						dropHead(victim, evt, killer, null);
-						// Free up memory after a tick (optional)
-						new BukkitRunnable(){@Override public void run(){explodingChargedCreepers.remove(creeperUUID);}}.runTaskLater(pl, 1);
-						return;
-					}
+					dropHead(victim, evt, killer, killer instanceof LivingEntity ? ((LivingEntity)killer).getEquipment().getItemInMainHand() : null);
+					return;
 				}
 			}
-			if(killer.hasPermission("dropheads.alwaysbehead")){
-				if(DEBUG_MODE) pl.getLogger().info("dropheads.alwaysbehead=true: "+killer.getCustomName());
+			// Check if killer is not a player.
+			if(!ALLOW_NON_PLAYER_KILLS && (killer == null ||
+				(killer instanceof Player == false &&
+					(
+						!ALLOW_PROJECTILE_KILLS ||
+						killer instanceof Projectile == false ||
+						((Projectile)killer).getShooter() instanceof Player == false
+					) && (
+						!ALLOW_INDIRECT_KILLS ||
+						timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS
+					)
+				)
+			)) return;
+	
+			final ItemStack murderWeapon = 
+				killer != null ?
+					killer instanceof LivingEntity ? ((LivingEntity)killer).getEquipment().getItemInMainHand() :
+					killer instanceof Projectile && killer.hasMetadata("ShotUsing") ? (ItemStack)killer.getMetadata("ShotUsing").get(0).value() :
+					null
+				: null;
+	
+			if(!mustUseTools.isEmpty() && (murderWeapon == null || !mustUseTools.contains(murderWeapon.getType()))) return;
+	
+			final double toolBonus = murderWeapon == null ? 0D : toolBonuses.getOrDefault(murderWeapon.getType(), 0D);
+			final int lootingLevel = murderWeapon == null ? 0 : murderWeapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
+			final boolean VANILLA_LOOTING = evt.getEntityType() == EntityType.WITHER_SKELETON && VANILLA_WSKELE_LOOTING;
+			final double lootingMod = (lootingLevel == 0 || VANILLA_LOOTING) ? 1D : Math.min(Math.pow(LOOTING_MULT, lootingLevel), LOOTING_MULT*lootingLevel);
+			final double lootingAdd = (VANILLA_LOOTING ? 0.01D : LOOTING_ADD)*lootingLevel;
+			final double weaponMod = 1D + toolBonus;
+			final double timeAliveMod = 1D + getTimeAliveBonus(victim);
+			final double spawnCauseMod = getSpawnCauseModifier(victim);
+			final double rawDropChance = mobChances.getOrDefault(victim.getType(), DEFAULT_CHANCE);
+			final double dropChance = rawDropChance*spawnCauseMod*timeAliveMod*weaponMod*lootingMod + lootingAdd;
+	
+			if(evt.getEntityType() == EntityType.WITHER_SKELETON){
+				// Remove vanilla-dropped wither skeleton skulls so they aren't dropped twice.
+				Iterator<ItemStack> it = evt.getDrops().iterator();
+				while(it.hasNext()) if(it.next().getType() == Material.WITHER_SKELETON_SKULL) it.remove();
+				// However, if it is wearing a head in its helmet slot, don't remove the drop.
+				// Note-to-self: Be careful with entity_equipment, heads on armor stands, etc.
+				for(ItemStack i : EvUtils.getEquipmentGuaranteedToDrop(evt.getEntity())){
+					if(i != null && i.getType() == Material.WITHER_SKELETON_SKULL) evt.getDrops().add(i);
+				}
+			}
+	
+			if(rand.nextDouble() < dropChance){
 				if(!victim.hasPermission("dropheads.canlosehead")){
 					if(DEBUG_MODE) pl.getLogger().info("dropheads.canlosehead=false: "+victim.getCustomName());
 					return;
 				}
-				dropHead(victim, evt, killer, killer instanceof LivingEntity ? ((LivingEntity)killer).getEquipment().getItemInMainHand() : null);
-				return;
-			}
-		}
-		// Check if killer is not a player.
-		if(!ALLOW_NON_PLAYER_KILLS && (killer == null ||
-			(killer instanceof Player == false &&
-				(
-					!ALLOW_PROJECTILE_KILLS ||
-					killer instanceof Projectile == false ||
-					((Projectile)killer).getShooter() instanceof Player == false
-				) && (
-					!ALLOW_INDIRECT_KILLS ||
-					timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS
-				)
-			)
-		)) return;
-
-		final ItemStack murderWeapon = 
-			killer != null ?
-				killer instanceof LivingEntity ? ((LivingEntity)killer).getEquipment().getItemInMainHand() :
-				killer instanceof Projectile && killer.hasMetadata("ShotUsing") ? (ItemStack)killer.getMetadata("ShotUsing").get(0).value() :
-				null
-			: null;
-
-		if(!mustUseTools.isEmpty() && (murderWeapon == null || !mustUseTools.contains(murderWeapon.getType()))) return;
-
-		final double toolBonus = murderWeapon == null ? 0D : toolBonuses.getOrDefault(murderWeapon.getType(), 0D);
-		final int lootingLevel = murderWeapon == null ? 0 : murderWeapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
-		final boolean VANILLA_LOOTING = evt.getEntityType() == EntityType.WITHER_SKELETON && VANILLA_WSKELE_LOOTING;
-		final double lootingMod = (lootingLevel == 0 || VANILLA_LOOTING) ? 1D : Math.min(Math.pow(LOOTING_MULT, lootingLevel), LOOTING_MULT*lootingLevel);
-		final double lootingAdd = (VANILLA_LOOTING ? 0.01D : LOOTING_ADD)*lootingLevel;
-		final double weaponMod = 1D + toolBonus;
-		final double timeAliveMod = 1D + getTimeAliveBonus(victim);
-		final double spawnCauseMod = getSpawnCauseModifier(victim);
-		final double rawDropChance = mobChances.getOrDefault(victim.getType(), DEFAULT_CHANCE);
-		final double dropChance = rawDropChance*spawnCauseMod*timeAliveMod*weaponMod*lootingMod + lootingAdd;
-
-		if(evt.getEntityType() == EntityType.WITHER_SKELETON){
-			// Remove vanilla-dropped wither skeleton skulls so they aren't dropped twice.
-			Iterator<ItemStack> it = evt.getDrops().iterator();
-			while(it.hasNext()) if(it.next().getType() == Material.WITHER_SKELETON_SKULL) it.remove();
-			// However, if it is wearing a head in its helmet slot, don't remove the drop.
-			// Note-to-self: Be careful with entity_equipment, heads on armor stands, etc.
-			for(ItemStack i : EvUtils.getEquipmentGuaranteedToDrop(evt.getEntity())){
-				if(i != null && i.getType() == Material.WITHER_SKELETON_SKULL) evt.getDrops().add(i);
-			}
-		}
-
-		if(rand.nextDouble() < dropChance){
-			if(!victim.hasPermission("dropheads.canlosehead")){
-				if(DEBUG_MODE) pl.getLogger().info("dropheads.canlosehead=false: "+victim.getCustomName());
-				return;
-			}
-			dropHead(victim, evt, killer, murderWeapon);
-			if(DEBUG_MODE){
-				DecimalFormat df = new DecimalFormat("0.0###");
-				pl.getLogger().info("Dropped Head: "+TextureKeyLookup.getTextureKey(victim)+"\n"
-					+"Raw chance: "+df.format(rawDropChance*100D)+"%\nMultipliers >> "+
-					(spawnCauseMod != 1 ? "SpawnReason: "+df.format((spawnCauseMod-1D)*100D)+"%, " : "") +
-					(timeAliveMod != 1 ? "TimeAlive: "+df.format((timeAliveMod-1D)*100D)+"%, " : "") +
-					(weaponMod != 1 ? "Weapon: "+df.format((weaponMod-1D)*100D)+"%, " : "") +
-					(lootingMod != 1 ? "Looting: "+df.format((lootingMod-1D)*100D)+"%, " : "") +
-					(lootingAdd != 0 ? "Looting (Addition): "+df.format(lootingAdd*100D)+"%, " : "") +
-					"\nFinal drop chance: "+df.format(dropChance*100D)+"%");
+				dropHead(victim, evt, killer, murderWeapon);
+				if(DEBUG_MODE){
+					DecimalFormat df = new DecimalFormat("0.0###");
+					pl.getLogger().info("Dropped Head: "+TextureKeyLookup.getTextureKey(victim)+"\n"
+						+"Raw chance: "+df.format(rawDropChance*100D)+"%\nMultipliers >> "+
+						(spawnCauseMod != 1 ? "SpawnReason: "+df.format((spawnCauseMod-1D)*100D)+"%, " : "") +
+						(timeAliveMod != 1 ? "TimeAlive: "+df.format((timeAliveMod-1D)*100D)+"%, " : "") +
+						(weaponMod != 1 ? "Weapon: "+df.format((weaponMod-1D)*100D)+"%, " : "") +
+						(lootingMod != 1 ? "Looting: "+df.format((lootingMod-1D)*100D)+"%, " : "") +
+						(lootingAdd != 0 ? "Looting (Addition): "+df.format(lootingAdd*100D)+"%, " : "") +
+						"\nFinal drop chance: "+df.format(dropChance*100D)+"%");
+				}
 			}
 		}
 	}

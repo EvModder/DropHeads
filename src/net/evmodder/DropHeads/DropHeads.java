@@ -26,10 +26,10 @@ import net.evmodder.EvLib.Updater;
 
 //TODO:
 // * DeathChest bypass (perhaps as addon?)
-// * middle-click copy with correct item name
-// * /droprate - check or edit per mob (& cmd for spawn modifiers)
 // * attempt-place-head-block, attempt-place-overwrite-liquids, facing-direction, place-as: KILLER/VICTIM/SERVER, what to do if blockplaceevent fails
 // * overwrite blocks: ['AIR', 'WATER, 'GRASS']
+// * middle-click copy with correct item name
+// * /droprate - check or edit per mob (& cmd for spawn modifiers)
 // * jeb_ sheep head animated phasing through colors (like the jeb_ sheep)
 // * if mob has custom name, use it in head name (configurable)
 // * move textures from head-textures.txt to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
@@ -70,7 +70,6 @@ public final class DropHeads extends EvPlugin{
 		instance = this;
 		api = new HeadAPI();
 		EntityDeathListener deathListener = new EntityDeathListener();
-		getServer().getPluginManager().registerEvents(deathListener, this);
 		if(config.getBoolean("track-mob-spawns", true)){
 			getServer().getPluginManager().registerEvents(new EntitySpawnListener(), this);
 		}

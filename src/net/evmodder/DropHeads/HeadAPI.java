@@ -90,7 +90,7 @@ public class HeadAPI {
 			int i = head.indexOf(":");
 			if(i != -1){
 				String texture = head.substring(i+1).trim();
-				if(texture.isEmpty() || texture.equals("xxx")) continue; //TODO: remove the xxx
+				if(texture.replace("xxx", "").trim().isEmpty()) continue; //TODO: remove the xxx's
 
 				String key = head.substring(0, i).toUpperCase();
 				if(textures.put(key, texture) != null) continue; // Don't bother checking EntityType if this head has already been added
