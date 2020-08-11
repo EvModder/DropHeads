@@ -38,11 +38,14 @@ import net.evmodder.EvLib.Updater;
 // * send behead message broadcast if modified death message gets changed by another plugin (check in playerdeathevent with priority monitor?)
 // * stray texture skull match mob colors
 // * hollow stray skull using Ev resource pack? (custom model data or head tag)
+// * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
 //TEST:
 // * Fix HDB crash
 // * unstackable heads
 // * mob type in item lore
 // * /gethead player:ShEeP, /gethead mob:SHEEP, /gethead hdb:334
+// * persistent spawn cause modifiers
+// * /gethead mob:PLAYER|ALEX
 /*
  * log:
  *   enable: true

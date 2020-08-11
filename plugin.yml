@@ -3,7 +3,7 @@ main: net.evmodder.DropHeads.DropHeads
 author: EvModder/EvDoc
 description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
-#3=major rewrite, 3=VehicleDestroy+Broadcast, 9=added grumms, collared dogs, listener priority
+#3=major rewrite, 3=VehicleDestroy+Broadcast, 9=added grumms, collared dogs, listener priority, vehicle-head-dedupe, persistent spawn reason modifier, indirect kill threshold 0 instead of Long.MAX_VALUE bug
 version: 3.3.9
 api-version: 1.13
 softdepend: [HeadDatabase]

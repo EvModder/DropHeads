@@ -11,6 +11,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 import net.evmodder.DropHeads.DropHeads;
+import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.DropHeads.listeners.EntityDeathListener;
 import net.evmodder.EvLib.EvCommand;
 import net.evmodder.EvLib.FileIO;
@@ -100,7 +101,7 @@ public class CommandDropRate extends EvCommand{
 			}
 			else{
 				double dropChance = dropChances.getOrDefault(target, DEFAULT_DROP_CHANCE);
-				if(USING_SPAWN_MODIFIERS) dropChance *= EntityDeathListener.getSpawnCauseModifier(entity);
+				if(USING_SPAWN_MODIFIERS) dropChance *= JunkUtils.getSpawnCauseModifier(entity);
 				if(USING_TIME_ALIVE_MODIFIERS) dropChance *= (1D + deathListener.getTimeAliveBonus(entity));
 				sender.sendMessage("§6Drop chance for "
 						+(entity instanceof Player ? "\"§e"+entity.getName()+"§6\"" : "§e"+target+"§6")
@@ -123,7 +124,7 @@ public class CommandDropRate extends EvCommand{
 		if(USING_REQUIRED_TOOLS) builder.append("\nSpecific murder weapons are required"/* {IRON_AXE, ...}*/);
 		builder.append("\nRate modifiers: ");
 		if(USING_SPAWN_MODIFIERS && !target.equals("player") && (entity == null ||
-				Math.abs(1F - EntityDeathListener.getSpawnCauseModifier(entity)) > 0.001F))
+				Math.abs(1F - JunkUtils.getSpawnCauseModifier(entity)) > 0.001F))
 			builder.append("§fSpawnReason§7, "/* <red>-XX% to <green>+YY% */);
 		if(USING_TIME_ALIVE_MODIFIERS && (entity == null || Math.abs(deathListener.getTimeAliveBonus(entity)) > 0.001))
 			builder.append("§fTimeAlive§7, "/* <red>-XX% to <green>+YY% */);

@@ -82,6 +82,16 @@ public class JunkUtils{
 		}
 	}
 
+	public final static long timeSinceLastPlayerDamage(Entity entity){
+		long lastDamage = entity.hasMetadata("PlayerDamage") ? entity.getMetadata("PlayerDamage").get(0).asLong() : Long.MAX_VALUE;
+		return System.currentTimeMillis() - lastDamage;
+	}
+	public final static double getSpawnCauseModifier(Entity e){
+		//return e.hasMetadata("SpawnReason") ? e.getMetadata("SpawnReason").get(0).asDouble() : 1D;
+		if(e.hasMetadata("SpawnReason")) return e.getMetadata("SpawnReason").get(0).asDouble();
+		for(String tag : e.getScoreboardTags()) if(tag.startsWith("SpawnReasonModifier:")) return Float.parseFloat(tag.substring(20));
+		return 1D;
+	}
 
 	// ItemStack methods to get a net.minecraft.server.ItemStack object for serialization
 	final static RefClass craftItemStackClazz = ReflectionUtils.getRefClass("{cb}.inventory.CraftItemStack");
