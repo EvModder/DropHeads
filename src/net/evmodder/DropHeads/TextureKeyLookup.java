@@ -191,8 +191,9 @@ public class TextureKeyLookup{
 				if(((Creeper)entity).isPowered()) return "CREEPER|CHARGED";
 				else return "CREEPER";
 			case "WOLF":
+				if(((Wolf)entity).isTamed()) return "WOLF|"+((Wolf)entity).getCollarColor()+"_COLLARED";
 				if(((Wolf)entity).isAngry()) return "WOLF|ANGRY";
-				else return "WOLF";
+				return "WOLF";
 			case "HORSE":
 				return "HORSE|"+((Horse)entity).getColor().name();
 			case "LLAMA":
@@ -236,6 +237,7 @@ public class TextureKeyLookup{
 			case "OCELOT":
 				return "OCELOT|"+((Ocelot)entity).getCatType().name();
 			case "CAT":
+				//TODO: collared cat
 				if(mCatGetType == null) mCatGetType = ReflectionUtils.getRefClass("org.bukkit.entity.Cat").getMethod("getCatType");
 				String catType = ((Enum)mCatGetType.of(entity).call()).name();
 				switch(catType){
