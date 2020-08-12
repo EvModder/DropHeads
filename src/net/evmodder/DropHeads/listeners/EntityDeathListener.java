@@ -20,7 +20,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.event.Event;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -201,10 +200,11 @@ public class EntityDeathListener implements Listener{
 		explodingChargedCreepers = new HashSet<UUID>();
 		recentlyBeheadedEntities = new HashSet<UUID>();
 
-		if(REPLACE_DEATH_MESSAGE){
-			pl.getServer().getPluginManager().registerEvents(new Listener(){
-				@EventHandler(priority = EventPriority.MONITOR) // TODO: set this to highest, EXCEPT when priority=highest or monitor
-				public void playerDeathEvent(PlayerDeathEvent evt){
+		if(REPLACE_DEATH_MESSAGE && PRIORITY != EventPriority.MONITOR){
+			EventPriority replacePriority = (PRIORITY == EventPriority.HIGHEST ? EventPriority.MONITOR : EventPriority.HIGHEST);
+			pl.getServer().getPluginManager().registerEvent(PlayerDeathEvent.class, this, replacePriority, new EventExecutor(){
+				@Override public void execute(Listener listener, Event originalEvent){
+					PlayerDeathEvent evt = (PlayerDeathEvent) originalEvent;
 					if(recentlyBeheadedEntities.remove(evt.getEntity().getUniqueId())) evt.setDeathMessage("");
 				}
 			}, pl);
@@ -279,7 +279,7 @@ public class EntityDeathListener implements Listener{
 
 		switch(entity instanceof Player ? ANNOUNCE_PLAYERS : ANNOUNCE_MOBS){
 			case GLOBAL:
-				if(entity instanceof Player && REPLACE_DEATH_MESSAGE && evt != null){
+				if(entity instanceof Player && REPLACE_DEATH_MESSAGE && evt != null && PRIORITY != EventPriority.MONITOR){
 					((PlayerDeathEvent)evt).setDeathMessage(message.toPlainText());  // is cleared later
 				}
 				sendTellraw("@a", message.toString());
