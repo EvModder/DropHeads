@@ -1362,6 +1362,6 @@ ZOMBIE_VILLAGER|TOOLSMITH|TAIGA|GRUMM: eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0d
 ZOMBIE_VILLAGER|WEAPONSMITH|TAIGA|GRUMM: eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTYwZTZjYmFlNmE1ZjRjNjFmZGJlNmRkMWMwNzFkY2I2MmYzNmNmOTY5OTZiMjZlYjYzODczN2RhMjA0Y2YwYyJ9fX0=
 
 //
-//TODO: TropicalFish, DamagedIronGolem(?)
 //TEST: Cat, Wolf, Villager, ZombieVillager
 //IMPROVE: Clownfish, Goatfish, Queen_Angelfish, Tomato_Clownfish
+//ADD: Carpeted llamas and grumm versions
