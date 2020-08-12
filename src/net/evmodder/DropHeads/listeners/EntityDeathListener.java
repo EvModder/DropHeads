@@ -62,6 +62,7 @@ public class EntityDeathListener implements Listener{
 	final boolean USE_PLAYER_DISPLAYNAMES = false;//TODO: move to config, when possible
 	final long INDIRECT_KILL_THRESHOLD_MILLIS = 30*1000;//TODO: move to config
 	final int LOCAL_RANGE = 200;//TODO: move to config
+	final boolean CROSS_DIMENSIONAL_BROADCAST = true;//TODO: move to config
 	final int JSON_LIMIT = 15000;//TODO: move to config
 
 	final DropHeads pl;
@@ -285,7 +286,9 @@ public class EntityDeathListener implements Listener{
 				sendTellraw("@a", message.toString());
 				break;
 			case LOCAL:
-				for(Player p : EvUtils.getNearbyPlayers(entity.getLocation(), LOCAL_RANGE)) sendTellraw(p.getName(), message.toString());
+				for(Player p : EvUtils.getNearbyPlayers(entity.getLocation(), LOCAL_RANGE, CROSS_DIMENSIONAL_BROADCAST)){
+					sendTellraw(p.getName(), message.toString());
+				}
 				break;
 			case DIRECT:
 				if(killer instanceof Player) sendTellraw(killer.getName(), message.toString());
