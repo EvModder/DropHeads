@@ -240,10 +240,11 @@ public class TextureKeyLookup{
 			case "CAT":
 				if(mCatGetType == null) mCatGetType = ReflectionUtils.getRefClass("org.bukkit.entity.Cat").getMethod("getCatType");
 				String catType = ((Enum)mCatGetType.of(entity).call()).name();
+				if(catType.equals("RED")) catType = "GINGER";
 				if(catType.equals("BLACK")) catType = "TUXEDO";
 				if(catType.equals("ALL_BLACK")) catType = "BLACK";
 				if(((Tameable)entity).isTamed()){
-					if(mCatGetCollarColor == null) mCatGetType = ReflectionUtils.getRefClass("org.bukkit.entity.Cat").getMethod("getCollarColor");
+					if(mCatGetCollarColor == null) mCatGetCollarColor = ReflectionUtils.getRefClass("org.bukkit.entity.Cat").getMethod("getCollarColor");
 					return "CAT|"+catType+"|"+((DyeColor)mCatGetCollarColor.of(entity).call()).name()+"_COLLARED";
 				}
 				return "CAT|"+catType;
