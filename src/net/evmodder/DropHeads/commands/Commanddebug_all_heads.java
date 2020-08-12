@@ -1,10 +1,10 @@
 package net.evmodder.DropHeads.commands;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
+import java.util.TreeSet;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -52,18 +52,33 @@ public class Commanddebug_all_heads extends EvCommand{
 			return true;
 		}
 		boolean noGrumm = args.length != 1 || !args[0].toLowerCase().equals("true");
+		sender.sendMessage("Skipping Grumm heads: "+noGrumm);
 
-		@SuppressWarnings("unchecked")
-		Set<String> textureKeys = ((TreeMap<String, String>)api.getTextures().clone()).keySet();
-		if(noGrumm) textureKeys = textureKeys.stream().filter(k -> !k.endsWith("|GRUMM")).collect(Collectors.toSet());
+		Set<String> textureKeys = new TreeSet<>();
+		textureKeys.addAll(api.getTextures().keySet());
+		sender.sendMessage("Total # texture keys: "+textureKeys.size());
+		if(noGrumm) textureKeys.removeIf(key -> key.endsWith("|GRUMM"));
 		if(!SHOW_PLAIN_IF_HAS_DATA_TAG){
 			// Don't show "FOX" if we have "FOX|RED", or "SHEEP" if we have "SHEEP|WHITE" etc
-			Set<String> hasExtraDataTag = textureKeys.stream().filter(k -> k.replace("|GRUMM", "").contains("|"))
-				.map(k -> k.substring(0, k.indexOf('|'))+(k.endsWith("|GRUMM") ? "|GRUMM" : "")).collect(Collectors.toSet());
-			textureKeys.removeAll(hasExtraDataTag);
+			HashSet<String> hasSubKey = new HashSet<>();
+			HashSet<String> hasMultipleSubKeys = new HashSet<>();
+			for(String key : textureKeys){
+				int i = key.lastIndexOf('|');
+				if(i != -1){
+					String badKey;
+					if(key.endsWith("|GRUMM")){
+						if((i = key.substring(0, i).lastIndexOf('|')) == -1) continue;
+						badKey = key.substring(0, i) + "|GRUMM";
+					}
+					else badKey = key.substring(0, i);
+					// Only remove if we have 2+ sub categories for a key
+					if(!hasSubKey.add(badKey)) hasMultipleSubKeys.add(badKey);
+				}
+			}
+			textureKeys.removeAll(hasMultipleSubKeys);
 		}
-		long numHeads = textureKeys.size();
-		//if(noGrumm) numHeads /= 2;//TODO: Grumm heads aren't exactly half rn...
+		final long numHeads = textureKeys.size();
+		sender.sendMessage("Placing "+numHeads+" heads...");
 
 		final Location loc = ((Player)sender).getLocation();
 		if(DISPLAY_3D){
@@ -78,7 +93,6 @@ public class Commanddebug_all_heads extends EvCommand{
 					return true;
 				}
 			}
-			sender.sendMessage("Placing "+numHeads+" heads...");
 			sender.sendMessage("Dimensions: "+dX+","+dY+","+dZ);
 			Iterator<String> it = textureKeys.iterator();
 			//pl.getServer().getScheduler()(pl, new Runnable(){public void run(){
@@ -107,9 +121,8 @@ public class Commanddebug_all_heads extends EvCommand{
 					return true;
 				}
 			}
-			sender.sendMessage("Placing "+numHeads+" heads...");
 			sender.sendMessage("Dimensions: "+dX+","+dY);
-			Iterator<String> it = api.getTextures().keySet().iterator();
+			Iterator<String> it = textureKeys.iterator();
 			//pl.getServer().getScheduler()(pl, new Runnable(){public void run(){
 				for(int y=dY; y>0 && it.hasNext(); --y) for(int x=dX; x>0 && it.hasNext(); --x){
 					String key = it.next();
