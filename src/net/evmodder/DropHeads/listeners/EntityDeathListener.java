@@ -205,6 +205,7 @@ public class EntityDeathListener implements Listener{
 			EventPriority replacePriority = (PRIORITY == EventPriority.HIGHEST ? EventPriority.MONITOR : EventPriority.HIGHEST);
 			pl.getServer().getPluginManager().registerEvent(PlayerDeathEvent.class, this, replacePriority, new EventExecutor(){
 				@Override public void execute(Listener listener, Event originalEvent){
+					if(originalEvent instanceof PlayerDeathEvent == false) return;
 					PlayerDeathEvent evt = (PlayerDeathEvent) originalEvent;
 					if(recentlyBeheadedEntities.remove(evt.getEntity().getUniqueId())) evt.setDeathMessage("");
 				}
