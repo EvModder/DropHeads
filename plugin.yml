@@ -3,7 +3,7 @@ main: net.evmodder.DropHeads.DropHeads
 author: EvModder/EvDoc
 description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
-#3=major rewrite, 4.0=added grumms, collared cats, collared dogs, listener priority, hanging entity listener, vehicle-head-dedupe, persistent spawn reason modifier, indirect kill threshold 0 instead of Long.MAX_VALUE bug, cross-dimensional broadcast
+#3=major rewrite, 4=vill/zom & grumm, collars, priority, hanging listener, cross-dim msgs, 1=
 version: 3.4.0
 api-version: 1.13
 softdepend: [HeadDatabase]
