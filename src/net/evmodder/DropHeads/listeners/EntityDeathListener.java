@@ -230,7 +230,7 @@ public class EntityDeathListener implements Listener{
 	String getItemDisplay(ItemStack item){
 		String itemName = item.hasItemMeta() && item.getItemMeta().hasDisplayName()
 				? ChatColor.ITALIC+item.getItemMeta().getDisplayName() : TextUtils.getNormalizedName(item.getType());
-		ChatColor rarityColor = JunkUtils.getRarityColor(item, true);
+		ChatColor rarityColor = JunkUtils.getRarityColor(item, /*checkCustomName=*/false);
 		return ITEM_DISPLAY_FORMAT
 				.replaceAll("(?i)\\$\\{NAME\\}", itemName)
 				.replaceAll("(?i)\\$\\{RARITY\\}", ""+rarityColor)
