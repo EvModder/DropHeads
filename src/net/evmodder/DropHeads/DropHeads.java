@@ -26,6 +26,7 @@ import net.evmodder.EvLib.Updater;
 
 //TODO:
 // * DeathChest bypass (perhaps as addon?)
+// * Cracked iron golem head (repair with ingot?)
 // * attempt-place-head-block, attempt-place-overwrite-liquids, facing-direction, place-as: KILLER/VICTIM/SERVER, what to do if blockplaceevent fails
 // * overwrite blocks: ['AIR', 'WATER, 'GRASS']
 // * middle-click copy with correct item name
