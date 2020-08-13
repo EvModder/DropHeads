@@ -236,10 +236,11 @@ public class TextureKeyLookup{
 				}
 				return "ZOMBIE_VILLAGER|"+zombieVillagerProfession+"|"+((Enum)mZombieVillagerType.of(entity).call()).name();
 			case "OCELOT":
-				return "OCELOT|"+((Ocelot)entity).getCatType().name();
+				String catType = ((Ocelot)entity).getCatType().name();
+				return catType.equals("WILD_OCELOT") ? "OCELOT" : "OCELOT|"+catType;
 			case "CAT":
 				if(mCatGetType == null) mCatGetType = ReflectionUtils.getRefClass("org.bukkit.entity.Cat").getMethod("getCatType");
-				String catType = ((Enum)mCatGetType.of(entity).call()).name();
+				catType = ((Enum)mCatGetType.of(entity).call()).name();
 				if(catType.equals("RED")) catType = "GINGER";
 				if(catType.equals("BLACK")) catType = "TUXEDO";
 				if(catType.equals("ALL_BLACK")) catType = "BLACK";

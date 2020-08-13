@@ -338,6 +338,7 @@ public class HeadAPI {
 				if(UPDATE_ZOMBIE_PIGMEN_HEADS && profileName.startsWith("PIG_ZOMBIE")){
 					profileName = profileName.replace("PIG_ZOMBIE", "ZOMBIFIED_PIGLIN");
 				}
+				if(profileName.equals("OCELOT|WILD_OCELOT")) profileName = "OCELOT";
 				return makeTextureSkull(profileName);
 			}
 		}
