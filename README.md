@@ -10,9 +10,9 @@ A light-weight, highly configurable head collecting plugin for Minecraft
 [head-drop-rates.txt](./head-drop-rates.txt)
 <br>
 <br>
-**Drop rate adjustment based on SpawnReason** (e.g., breeding, spawn_egg, natural, /summon, ...):<br>
+**Drop rate adjustment based on SpawnReason** (e.g., breeding, spawn_egg, natural, /summon, ...)**:**<br>
 [spawn-cause-modifiers.txt](./spawn-cause-modifiers.txt)
 <br>
 <br>
-**Texture codes (from [minecraft-heads](https://minecraft-heads.com/)) for each head:**<br>
+**Texture codes for each head** (from [minecraft-heads](https://minecraft-heads.com/))**:**<br>
 [head-textures.txt](./head-textures.txt)
