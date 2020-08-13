@@ -98,8 +98,8 @@ public class HeadAPI {
 		HashSet<String> unknownHeads = new HashSet<String>();
 		if(logMissingEntities) missingHeads.addAll(Arrays.asList(EntityType.values()).stream()
 				.filter(x -> x.isAlive()/* && x.isMeow() */).collect(Collectors.toList()));
-//		missingHeads.remove(EntityType.PLAYER);
-//		missingHeads.remove(EntityType.ARMOR_STAND); // These 2 are 'alive', but weren't in head-textures.txt
+		missingHeads.remove(EntityType.PLAYER);
+		missingHeads.remove(EntityType.ARMOR_STAND); // These 2 are 'alive', but aren't in head-textures.txt
 		for(String head : headsList.split("\n")){
 			head = head.replaceAll(" ", "");
 			int i = head.indexOf(":");
@@ -338,6 +338,7 @@ public class HeadAPI {
 				if(UPDATE_ZOMBIE_PIGMEN_HEADS && profileName.startsWith("PIG_ZOMBIE")){
 					profileName = profileName.replace("PIG_ZOMBIE", "ZOMBIFIED_PIGLIN");
 				}
+				if(profileName.equals("OCELOT|WILD_OCELOT")) profileName = "OCELOT";
 				return makeTextureSkull(profileName);
 			}
 		}

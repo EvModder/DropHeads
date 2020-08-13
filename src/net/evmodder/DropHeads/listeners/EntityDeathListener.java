@@ -20,7 +20,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.event.Event;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -63,6 +62,7 @@ public class EntityDeathListener implements Listener{
 	final boolean USE_PLAYER_DISPLAYNAMES = false;//TODO: move to config, when possible
 	final long INDIRECT_KILL_THRESHOLD_MILLIS = 30*1000;//TODO: move to config
 	final int LOCAL_RANGE = 200;//TODO: move to config
+	final boolean CROSS_DIMENSIONAL_BROADCAST = true;//TODO: move to config
 	final int JSON_LIMIT = 15000;//TODO: move to config
 
 	final DropHeads pl;
@@ -201,10 +201,12 @@ public class EntityDeathListener implements Listener{
 		explodingChargedCreepers = new HashSet<UUID>();
 		recentlyBeheadedEntities = new HashSet<UUID>();
 
-		if(REPLACE_DEATH_MESSAGE){
-			pl.getServer().getPluginManager().registerEvents(new Listener(){
-				@EventHandler(priority = EventPriority.MONITOR) // TODO: set this to highest, EXCEPT when priority=highest or monitor
-				public void playerDeathEvent(PlayerDeathEvent evt){
+		if(REPLACE_DEATH_MESSAGE && PRIORITY != EventPriority.MONITOR){
+			EventPriority replacePriority = (PRIORITY == EventPriority.HIGHEST ? EventPriority.MONITOR : EventPriority.HIGHEST);
+			pl.getServer().getPluginManager().registerEvent(PlayerDeathEvent.class, this, replacePriority, new EventExecutor(){
+				@Override public void execute(Listener listener, Event originalEvent){
+					if(originalEvent instanceof PlayerDeathEvent == false) return;
+					PlayerDeathEvent evt = (PlayerDeathEvent) originalEvent;
 					if(recentlyBeheadedEntities.remove(evt.getEntity().getUniqueId())) evt.setDeathMessage("");
 				}
 			}, pl);
@@ -228,7 +230,7 @@ public class EntityDeathListener implements Listener{
 	String getItemDisplay(ItemStack item){
 		String itemName = item.hasItemMeta() && item.getItemMeta().hasDisplayName()
 				? ChatColor.ITALIC+item.getItemMeta().getDisplayName() : TextUtils.getNormalizedName(item.getType());
-		ChatColor rarityColor = JunkUtils.getRarityColor(item, true);
+		ChatColor rarityColor = JunkUtils.getRarityColor(item, /*checkCustomName=*/false);
 		return ITEM_DISPLAY_FORMAT
 				.replaceAll("(?i)\\$\\{NAME\\}", itemName)
 				.replaceAll("(?i)\\$\\{RARITY\\}", ""+rarityColor)
@@ -279,13 +281,15 @@ public class EntityDeathListener implements Listener{
 
 		switch(entity instanceof Player ? ANNOUNCE_PLAYERS : ANNOUNCE_MOBS){
 			case GLOBAL:
-				if(entity instanceof Player && REPLACE_DEATH_MESSAGE && evt != null){
+				if(entity instanceof Player && REPLACE_DEATH_MESSAGE && evt != null && PRIORITY != EventPriority.MONITOR){
 					((PlayerDeathEvent)evt).setDeathMessage(message.toPlainText());  // is cleared later
 				}
 				sendTellraw("@a", message.toString());
 				break;
 			case LOCAL:
-				for(Player p : EvUtils.getNearbyPlayers(entity.getLocation(), LOCAL_RANGE)) sendTellraw(p.getName(), message.toString());
+				for(Player p : EvUtils.getNearbyPlayers(entity.getLocation(), LOCAL_RANGE, CROSS_DIMENSIONAL_BROADCAST)){
+					sendTellraw(p.getName(), message.toString());
+				}
 				break;
 			case DIRECT:
 				if(killer instanceof Player) sendTellraw(killer.getName(), message.toString());
