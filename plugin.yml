@@ -3,8 +3,9 @@ main: net.evmodder.DropHeads.DropHeads
 author: EvModder/EvDoc
 description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
-#3=major rewrite, 4=vill/zom & grumm, collars, priority, hanging listener, cross-dim msgs, 1=
-version: 3.4.0
+#3=major rewrite, 4=vill/zom & grumm, collars, priority, hanging listener, cross-dim msgs,
+#1=per-mob behead announce, !indirect kills=>require killer!=null, !projecile kills=>require killer !instanceof projectile
+version: 3.4.1
 api-version: 1.13
 softdepend: [HeadDatabase]
 

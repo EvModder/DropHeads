@@ -1,6 +1,8 @@
 # How to announce beheadings, options are GLOBAL, LOCAL, DIRECT, or OFF
-behead-announcement-mobs: 'LOCAL'
-behead-announcement-players: 'GLOBAL'
+behead-announcement:
+  default: 'LOCAL'
+  player: 'GLOBAL'
+#  wither_skeleton: 'OFF'
 
 # Replaces death messages if player behead announcement is GLOBAL
 behead-announcement-replaces-death-message: true
@@ -12,15 +14,13 @@ message-beheaded-by-entity-with-item: '&6${VICTIM}&r was decapitated by &6${KILL
 message-beheaded-by-entity-with-item-named: '&6${KILLER}&r decapitated &6${VICTIM}&r using &7${ITEM}&r'
 message-beheaded-item-display-format: '${RARITY}[${NAME}${RARITY}]'
 
-# Whether to drop heads when not killed by a player
+# Whether to drop heads if not killed by a player
 drop-for-nonplayer-kills: false
 
-# Whether to drop heads if killed by projectile weapon from a player
-# Only checked if 'drop-for-nonplayer-kills' is false
+# Whether to drop heads if killed by a projectile weapon
 drop-for-ranged-kills: false
 
-# Whether to drop heads for any death cause if last-damager is a player
-# Only checked if 'drop-for-nonplayer-kills' is false
+# Whether to drop heads if last-damage-cause is not a valid player or mob
 drop-for-indirect-kills: false
 
 # Only drop player heads (you can also do this in 'head-drop-rates.txt'
@@ -116,9 +116,11 @@ death-listener-priority: LOW
 # Eg: 0.8 = 80% more likely, -0.1 = 10% less likely, 2.0 = +200%, etc.
 specific-tool-modifiers:
   GOLDEN_AXE: 3
-  DIAMOND_AXE: 1
-  IRON_AXE: 0.8
-  STONE_AXE: 0.5
+  NETHERITE_AXE: 1
+  DIAMOND_AXE: 0.8
+  IRON_AXE: 0.6
+  STONE_AXE: 0.4
+  WOODEN_AXE: 0.2
   SHEARS: 2
   DIAMOND_SWORD: 0.2
   IRON_SWORD: 0.1
