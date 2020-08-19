@@ -119,7 +119,7 @@ public class EntityDeathListener implements Listener{
 				pl.getConfig().getString("behead-announcement-players", "GLOBAL"), AnnounceMode.GLOBAL));
 		ConfigurationSection announceModes = pl.getConfig().getConfigurationSection("behead-announcement");
 		AnnounceMode tempDefaultAnnounce = mobAnnounceModes.get(EntityType.UNKNOWN);
-		for(String mobName : announceModes.getKeys(false)){
+		if(announceModes != null) for(String mobName : announceModes.getKeys(false)){
 			try{
 				EntityType eType = EntityType.valueOf(mobName.toUpperCase().replace("DEFAULT", "UNKNOWN"));
 				mobAnnounceModes.put(eType, JunkUtils.parseAnnounceMode(announceModes.getString(mobName), tempDefaultAnnounce));
