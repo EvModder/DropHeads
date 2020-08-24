@@ -58,6 +58,9 @@ charged-creeper-drops: true
 drop-grumm-heads: true
 show-grumm-in-tab-complete: false
 
+# Should heads of saddled mobs have altered textures (when applicable)?
+drop-saddled-heads: false
+
 # Enable plugin auto-updates (checks for new versions and head textures)
 # Note: Disable if your console shows DropHeads errors on startup
 update-plugin: true

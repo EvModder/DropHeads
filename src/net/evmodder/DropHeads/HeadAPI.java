@@ -32,13 +32,15 @@ public class HeadAPI {
 	final private DropHeads pl;
 	private HeadDatabaseAPI hdbAPI = null;
 //	private int MAX_HDB_ID = -1;
-	final boolean GRUM_ENABLED, UPDATE_PLAYER_HEADS, UPDATE_ZOMBIE_PIGMEN_HEADS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE;
+	final boolean GRUM_ENABLED, SADDLES_ENABLED;
+	final boolean UPDATE_PLAYER_HEADS, UPDATE_ZOMBIE_PIGMEN_HEADS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE;
 	final TreeMap<String, String> textures; // Key="ENTITY_NAME|DATA", Value="eyJ0ZXh0dXJl..."
 
 	HeadAPI(){
 		textures = new TreeMap<String, String>();
 		pl = DropHeads.getPlugin();
 		GRUM_ENABLED = pl.getConfig().getBoolean("drop-grumm-heads", true);
+		SADDLES_ENABLED = pl.getConfig().getBoolean("drop-saddled-heads", true);
 		UPDATE_PLAYER_HEADS = pl.getConfig().getBoolean("update-on-skin-change", true);
 		boolean zombifiedPiglensExist = false;
 		try{EntityType.valueOf("ZOMBIFIED_PIGLIN"); zombifiedPiglensExist = true;} catch(IllegalArgumentException ex){}
@@ -324,6 +326,7 @@ public class HeadAPI {
 			return getPlayerHead_wrapper((OfflinePlayer)entity);
 		}
 		String textureKey = TextureKeyLookup.getTextureKey(entity);
+		if(!SADDLES_ENABLED && textureKey.endsWith("|SADDLED")) textureKey = textureKey.substring(0, textureKey.length()-8);
 		if(GRUM_ENABLED && HeadUtils.hasGrummName(entity) && textures.containsKey(textureKey+"|GRUMM")) 
 			return makeTextureSkull(textureKey+"|GRUMM");
 		return getHead(entity.getType(), textureKey);
@@ -336,7 +339,7 @@ public class HeadAPI {
 			/*if(SAVE_CUSTOM_LORE){*/int idx = profileName.indexOf('>'); if(idx != -1) profileName = profileName.substring(0, idx);/*}*/
 			if(textureExists(profileName)){//Refresh this EntityHead texture
 				if(UPDATE_ZOMBIE_PIGMEN_HEADS && profileName.startsWith("PIG_ZOMBIE")){
-					profileName = profileName.replace("PIG_ZOMBIE", "ZOMBIFIED_PIGLIN");
+					profileName = /*profileName.replace("PIG_ZOMBIE", */"ZOMBIFIED_PIGLIN"/*)*/;
 				}
 				if(profileName.equals("OCELOT|WILD_OCELOT")) profileName = "OCELOT";
 				return makeTextureSkull(profileName);

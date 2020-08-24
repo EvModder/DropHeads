@@ -21,6 +21,7 @@ import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
 import net.evmodder.EvLib.extras.TextUtils;
 import org.bukkit.entity.Villager;
 import org.bukkit.entity.Wolf;
+import org.bukkit.entity.Zombie;
 import org.bukkit.entity.ZombieVillager;
 
 public class TextureKeyLookup{
@@ -182,6 +183,7 @@ public class TextureKeyLookup{
 	static RefMethod mPandaGetMainGene, mPandaGetHiddenGene;
 	static RefMethod mTraderLlamaGetColor;
 	static RefMethod mVexIsCharging;
+	static RefMethod mStriderIsShivering, mStriderHasSaddle;
 	static RefMethod mGetHandle, mGetDataWatcher, mGet_FromDataWatcher;
 	static java.lang.reflect.Field ghastIsAttackingField;
 
@@ -196,8 +198,13 @@ public class TextureKeyLookup{
 				if(((Wolf)entity).isAngry()) return "WOLF|ANGRY";
 				return "WOLF";
 			case "HORSE":
+				//TODO: isSaddled
 				return "HORSE|"+((Horse)entity).getColor().name();
+			case "DONKEY": case "MULE": case "PIG":
+				//TODO: isSaddled
+				return entity.getType().name();
 			case "LLAMA":
+				//TODO: getCarpetColor
 				return "LLAMA|"+((Llama)entity).getColor().name();
 			case "PARROT":
 				return "PARROT|"+((Parrot)entity).getVariant().name();
@@ -304,9 +311,19 @@ public class TextureKeyLookup{
 				if(isScreaming) return "GHAST|SCREAMING";//TODO: Add this to the Bukkit API
 				else return "GHAST";
 			case "STRIDER":
-				//TODO: Cold vs. Hot
+				if(mStriderIsShivering == null){
+					RefClass classStrider = ReflectionUtils.getRefClass("org.bukkit.entity.Strider");
+					mStriderIsShivering = classStrider.getMethod("isShivering");
+					mStriderHasSaddle = classStrider.getMethod("hasSaddle");
+				}
+				boolean isShivering = mStriderIsShivering.of(entity).call().equals(true);
+				boolean hasSaddle = mStriderHasSaddle.of(entity).call().equals(true);
+				return "STRIDER|"+(isShivering ? "COLD" : "WARM")+(hasSaddle ? "|SADDLED" : "");
 			case "PLAYER":
 				/* hmm */
+			case "PIG_ZOMBIE":
+				if(((Zombie)entity).isBaby()) return "PIG_ZOMBIE|BABY";
+				else return "PIG_ZOMBIE";
 			default:
 				return entity.getType().name();
 		}
