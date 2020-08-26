@@ -163,7 +163,10 @@ public class EntityDeathListener implements Listener{
 		mobChances = new HashMap<EntityType, Double>();
 		noLootingEffectMobs = new HashSet<EntityType>();
 		//double chanceForUnknown = 0D;
-		if(!PLAYER_HEADS_ONLY){
+		if(PLAYER_HEADS_ONLY){
+			pl.getServer().getPluginManager().registerEvent(PlayerDeathEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
+		}
+		else{
 			String defaultChances = FileIO.loadResource(pl, "head-drop-rates.txt");
 			HashSet<String> defaultConfigMobs = new HashSet<>();
 			for(String line2 : defaultChances.split("\n")){
@@ -195,6 +198,11 @@ public class EntityDeathListener implements Listener{
 			// No need storing 0-chance mobs if the default drop chance is 0
 			if(mobChances.getOrDefault(EntityType.UNKNOWN, 0D) == 0D) mobChances.entrySet().removeIf(entry -> entry.getValue() == 0D);
 
+			boolean entityHeads = mobChances.entrySet().stream().anyMatch(
+					entry -> entry.getKey().isAlive() && entry.getKey() != EntityType.PLAYER && entry.getValue() > 0D);
+			if(entityHeads){
+				pl.getServer().getPluginManager().registerEvent(EntityDeathEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
+			}
 			boolean nonLivingVehicleHeads = mobChances.entrySet().stream().anyMatch(  // Applies for: Boat, Minecart
 					entry -> !entry.getKey().isAlive() && entry.getValue() > 0D && Vehicle.class.isAssignableFrom(entry.getKey().getEntityClass()));
 			if(nonLivingVehicleHeads){
