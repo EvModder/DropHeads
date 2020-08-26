@@ -319,11 +319,11 @@ public class TextureKeyLookup{
 				boolean isShivering = mStriderIsShivering.of(entity).call().equals(true);
 				boolean hasSaddle = mStriderHasSaddle.of(entity).call().equals(true);
 				return "STRIDER|"+(isShivering ? "COLD" : "WARM")+(hasSaddle ? "|SADDLED" : "");
-			case "PLAYER":
-				/* hmm */
 			case "PIG_ZOMBIE":
 				if(((Zombie)entity).isBaby()) return "PIG_ZOMBIE|BABY";
 				else return "PIG_ZOMBIE";
+			case "PLAYER":
+				/* hmm */
 			default:
 				return entity.getType().name();
 		}
