@@ -83,7 +83,7 @@ public class JunkUtils{
 	}
 
 	public final static long timeSinceLastPlayerDamage(Entity entity){
-		long lastDamage = entity.hasMetadata("PlayerDamage") ? entity.getMetadata("PlayerDamage").get(0).asLong() : Long.MAX_VALUE;
+		long lastDamage = entity.hasMetadata("PlayerDamage") ? entity.getMetadata("PlayerDamage").get(0).asLong() : 0;
 		return System.currentTimeMillis() - lastDamage;
 	}
 	public final static double getSpawnCauseModifier(Entity e){
