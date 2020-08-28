@@ -355,7 +355,7 @@ public class EntityDeathListener implements Listener{
 				// Note: Can't use timeSinceLastEntityDamage()... it would be expensive to keep track of
 				&& JunkUtils.timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS) ||
 			(!ALLOW_PROJECTILE_KILLS && killer != null && killer instanceof Projectile) ||
-			!ALLOW_NON_PLAYER_KILLS && killer != null ? (
+			(!ALLOW_NON_PLAYER_KILLS && killer != null ? (
 				killer instanceof Player == false &&
 				(
 					!ALLOW_PROJECTILE_KILLS ||
@@ -363,7 +363,7 @@ public class EntityDeathListener implements Listener{
 					((Projectile)killer).getShooter() instanceof Player == false
 				)
 				
-			) : JunkUtils.timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS
+			) : JunkUtils.timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS)
 		) return;
 
 		final ItemStack murderWeapon = 
@@ -404,8 +404,10 @@ public class EntityDeathListener implements Listener{
 			dropHead(victim, evt, killer, murderWeapon);
 			if(DEBUG_MODE){
 				DecimalFormat df = new DecimalFormat("0.0###");
-				pl.getLogger().info("Dropped Head: "+TextureKeyLookup.getTextureKey(victim)+"\n"
-					+"Raw chance: "+df.format(rawDropChance*100D)+"%\nMultipliers >> "+
+				pl.getLogger().info("Dropped Head: "+TextureKeyLookup.getTextureKey(victim)
+					+"\nKiller: "+(killer != null ? killer.getType() : "none")
+					+", Weapon: "+(murderWeapon != null ? murderWeapon.getType() : "none")
+					+"\nRaw chance: "+df.format(rawDropChance*100D)+"%\nMultipliers >> "+
 					(spawnCauseMod != 1 ? "SpawnReason: "+df.format((spawnCauseMod-1D)*100D)+"%, " : "") +
 					(timeAliveMod != 1 ? "TimeAlive: "+df.format((timeAliveMod-1D)*100D)+"%, " : "") +
 					(weaponMod != 1 ? "Weapon: "+df.format((weaponMod-1D)*100D)+"%, " : "") +
