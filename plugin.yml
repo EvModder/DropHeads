@@ -5,7 +5,7 @@ description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite, 4=vill/zom & grumm, collars, priority, hanging listener, cross-dim msgs,
 #2=fix bug with heads not dropping, fix EvLib loading issue, fix UNKNOWN != 0,
-version: 3.4.2
+version: 3.4.3
 api-version: 1.13
 softdepend: [HeadDatabase]
 

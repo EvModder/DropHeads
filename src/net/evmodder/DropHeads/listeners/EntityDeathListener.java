@@ -196,20 +196,24 @@ public class EntityDeathListener implements Listener{
 				}
 			}
 			// No need storing 0-chance mobs if the default drop chance is 0
-			if(mobChances.getOrDefault(EntityType.UNKNOWN, 0D) == 0D) mobChances.entrySet().removeIf(entry -> entry.getValue() == 0D);
+			boolean nonZeroDefault = mobChances.getOrDefault(EntityType.UNKNOWN, 0D) > 0D;
+			if(!nonZeroDefault) mobChances.entrySet().removeIf(entry -> entry.getValue() == 0D);
 
-			boolean entityHeads = mobChances.entrySet().stream().anyMatch(
+			boolean entityHeads = nonZeroDefault || mobChances.entrySet().stream().anyMatch(  // Applies for: All non-Player living entities
 					entry -> entry.getKey().isAlive() && entry.getKey() != EntityType.PLAYER && entry.getValue() > 0D);
 			if(entityHeads){
 				pl.getServer().getPluginManager().registerEvent(EntityDeathEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
 			}
-			boolean nonLivingVehicleHeads = mobChances.entrySet().stream().anyMatch(  // Applies for: Boat, Minecart
+			else if(mobChances.getOrDefault(EntityType.PLAYER, 0D) > 0D){
+				pl.getServer().getPluginManager().registerEvent(PlayerDeathEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
+			}
+			boolean nonLivingVehicleHeads = nonZeroDefault || mobChances.entrySet().stream().anyMatch(  // Applies for: Boat, Minecart
 					entry -> !entry.getKey().isAlive() && entry.getValue() > 0D &&
 					entry.getKey().getEntityClass() != null && Vehicle.class.isAssignableFrom(entry.getKey().getEntityClass()));
 			if(nonLivingVehicleHeads){
 				pl.getServer().getPluginManager().registerEvent(VehicleDestroyEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
 			}
-			boolean nonLivingHangingHeads = mobChances.entrySet().stream().anyMatch(  // Applies for: Painting, LeashHitch, ItemFrame
+			boolean nonLivingHangingHeads = nonZeroDefault || mobChances.entrySet().stream().anyMatch(  // Applies for: Painting, LeashHitch, ItemFrame
 					entry -> !entry.getKey().isAlive() && entry.getValue() > 0D &&
 					entry.getKey().getEntityClass() != null && Hanging.class.isAssignableFrom(entry.getKey().getEntityClass()));
 			if(nonLivingHangingHeads){
