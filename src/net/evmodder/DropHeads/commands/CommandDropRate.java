@@ -45,6 +45,7 @@ public class CommandDropRate extends EvCommand{
 			String[] parts = line.replace(" ", "").replace("\t", "").toUpperCase().split(":");
 			if(parts.length < 2) continue;
 			try{
+				parts[0] = parts[0].replace("DEFAULT", "UNKNOWN");
 				double dropChance = Double.parseDouble(parts[1]);
 				if(parts[0].equals("UNKNOWN")) chanceForUnknown = dropChance;
 				if(ONLY_SHOW_VALID_ENTITIES) EntityType.valueOf(parts[0]); // If entity does not exist, this drops to the catch below

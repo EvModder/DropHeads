@@ -180,7 +180,7 @@ public class EntityDeathListener implements Listener{
 				if(parts.length < 2) continue;
 				try{
 					double dropChance = Double.parseDouble(parts[1]);
-					EntityType eType = EntityType.valueOf(parts[0]);
+					EntityType eType = EntityType.valueOf(parts[0].replace("DEFAULT", "UNKNOWN"));
 					mobChances.put(eType, dropChance);
 					if(parts.length > 2 && parts[2].equals("NOLOOTING")) noLootingEffectMobs.add(eType);
 					if(dropChance < 0D || dropChance > 1D){
@@ -204,12 +204,14 @@ public class EntityDeathListener implements Listener{
 				pl.getServer().getPluginManager().registerEvent(EntityDeathEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
 			}
 			boolean nonLivingVehicleHeads = mobChances.entrySet().stream().anyMatch(  // Applies for: Boat, Minecart
-					entry -> !entry.getKey().isAlive() && entry.getValue() > 0D && Vehicle.class.isAssignableFrom(entry.getKey().getEntityClass()));
+					entry -> !entry.getKey().isAlive() && entry.getValue() > 0D &&
+					entry.getKey().getEntityClass() != null && Vehicle.class.isAssignableFrom(entry.getKey().getEntityClass()));
 			if(nonLivingVehicleHeads){
 				pl.getServer().getPluginManager().registerEvent(VehicleDestroyEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
 			}
 			boolean nonLivingHangingHeads = mobChances.entrySet().stream().anyMatch(  // Applies for: Painting, LeashHitch, ItemFrame
-					entry -> !entry.getKey().isAlive() && entry.getValue() > 0D && Hanging.class.isAssignableFrom(entry.getKey().getEntityClass()));
+					entry -> !entry.getKey().isAlive() && entry.getValue() > 0D &&
+					entry.getKey().getEntityClass() != null && Hanging.class.isAssignableFrom(entry.getKey().getEntityClass()));
 			if(nonLivingHangingHeads){
 				pl.getServer().getPluginManager().registerEvent(HangingBreakByEntityEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
 			}
