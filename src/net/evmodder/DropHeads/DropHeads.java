@@ -25,12 +25,12 @@ import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.Updater;
 
 //TODO:
+// * /dropheads reload
 // * DeathChest bypass (perhaps as addon?)
 // * Cracked iron golem head (repair with ingot?)
 // * attempt-place-head-block, attempt-place-overwrite-liquids, facing-direction, place-as: KILLER/VICTIM/SERVER, what to do if blockplaceevent fails
 // * overwrite blocks: ['AIR', 'WATER, 'GRASS']
 // * middle-click copy with correct item name
-// * /droprate - check or edit per mob (& cmd for spawn modifiers)
 // * jeb_ sheep head animated phasing through colors (like the jeb_ sheep)
 // * if mob has custom name, use it in head name (configurable)
 // * move textures from head-textures.txt to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
@@ -42,10 +42,8 @@ import net.evmodder.EvLib.Updater;
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
 //TEST:
 // * Fix HDB crash
-// * unstackable heads
-// * mob type in item lore
 // * /gethead player:ShEeP, /gethead mob:SHEEP, /gethead hdb:334
-// * persistent spawn cause modifiers
+// * /droprate - check (TODO: or edit) per mob (& cmd for spawn modifiers)
 // * /gethead mob:PLAYER|ALEX
 /*
  * log:
