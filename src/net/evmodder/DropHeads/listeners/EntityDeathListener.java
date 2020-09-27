@@ -289,25 +289,27 @@ public class EntityDeathListener implements Listener{
 		Component victimComp = new SelectorComponent(entity.getUniqueId(), USE_PLAYER_DISPLAYNAMES);
 		message.replaceRawTextWithComponent("${VICTIM}", victimComp);
 
-		if(DEBUG_MODE) pl.getLogger().info(/*"Tellraw message: "+*/message.toPlainText());
-
-		switch(mobAnnounceModes.getOrDefault(entity.getType(), DEFAULT_ANNOUNCE)){
-			case GLOBAL:
-				if(entity instanceof Player && REPLACE_DEATH_MESSAGE && evt != null && PRIORITY != EventPriority.MONITOR){
-					((PlayerDeathEvent)evt).setDeathMessage(message.toPlainText());  // is cleared later
-				}
-				sendTellraw("@a", message.toString());
-				break;
-			case LOCAL:
-				for(Player p : EvUtils.getNearbyPlayers(entity.getLocation(), LOCAL_RANGE, CROSS_DIMENSIONAL_BROADCAST)){
-					sendTellraw(p.getName(), message.toString());
-				}
-				break;
-			case DIRECT:
-				if(killer instanceof Player) sendTellraw(killer.getName(), message.toString());
-				break;
-			case OFF:
-				break;
+		if(!message.toPlainText().replaceAll(" ", "").isEmpty()){
+			if(DEBUG_MODE) pl.getLogger().info(/*"Tellraw message: "+*/message.toPlainText());
+	
+			switch(mobAnnounceModes.getOrDefault(entity.getType(), DEFAULT_ANNOUNCE)){
+				case GLOBAL:
+					if(entity instanceof Player && REPLACE_DEATH_MESSAGE && evt != null && PRIORITY != EventPriority.MONITOR){
+						((PlayerDeathEvent)evt).setDeathMessage(message.toPlainText());  // is cleared later
+					}
+					sendTellraw("@a", message.toString());
+					break;
+				case LOCAL:
+					for(Player p : EvUtils.getNearbyPlayers(entity.getLocation(), LOCAL_RANGE, CROSS_DIMENSIONAL_BROADCAST)){
+						sendTellraw(p.getName(), message.toString());
+					}
+					break;
+				case DIRECT:
+					if(killer instanceof Player) sendTellraw(killer.getName(), message.toString());
+					break;
+				case OFF:
+					break;
+			}
 		}
 
 		if(entity instanceof Player ? LOG_PLAYER_BEHEAD : LOG_MOB_BEHEAD){
