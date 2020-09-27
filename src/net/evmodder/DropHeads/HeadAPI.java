@@ -166,13 +166,13 @@ public class HeadAPI {
 	}
 
 	public String getHeadName(GameProfile profile){
-		if(profile == null) return null;
+		if(profile == null) return getHeadNameFromKey(EntityType.PLAYER.name());;
 		if(hdbAPI != null){
 			String id = hdbAPI.getItemID(HeadUtils.getPlayerHead(profile));
 			if(id != null && hdbAPI.isHead(id)) return hdbAPI.getItemHead(id).getItemMeta().getDisplayName();
 		}
 		String profileName = profile.getName();
-		if(profileName == null) return null;
+		if(profileName == null) return getHeadNameFromKey(EntityType.PLAYER.name());;
 		/*if(SAVE_CUSTOM_LORE){*/int idx = profileName.indexOf('>'); if(idx != -1) profileName = profileName.substring(0, idx);/*}*/
 		if(textureExists(profileName)){
 			return getHeadNameFromKey(profileName);
