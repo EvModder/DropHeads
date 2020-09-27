@@ -36,7 +36,6 @@ import net.evmodder.EvLib.Updater;
 // * move textures from head-textures.txt to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
 // * using above, inside /textures/MOB_NAME.txt, set 'drop-rate: x' to modify chance for that sub-type only
 // * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
-// * send behead message broadcast if modified death message gets changed by another plugin (check in playerdeathevent with priority monitor?)
 // * stray texture skull match mob colors
 // * hollow stray skull using Ev resource pack? (custom model data or head tag)
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
