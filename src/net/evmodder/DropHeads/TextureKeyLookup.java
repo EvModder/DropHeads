@@ -153,6 +153,12 @@ public class TextureKeyLookup{
 					dataFlags = textureKey.split("\\|");
 				}
 				break;
+			case "SHEEP":
+				if(textureKey.contains("|WHITE")){
+					textureKey = textureKey.replace("|WHITE", "");
+					dataFlags = textureKey.split("\\|");
+				}
+				break;
 			case "OCELOT":
 				// "Red Cat Ocelot Head" -> "Red Cat Head"
 				if(dataFlags.length > 1) dataFlags = Arrays.copyOfRange(dataFlags, 1, dataFlags.length);
