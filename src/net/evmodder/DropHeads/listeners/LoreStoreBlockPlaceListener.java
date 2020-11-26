@@ -11,7 +11,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.EvLib.extras.HeadUtils;
 
-public class BlockPlaceListener implements Listener{
+public class LoreStoreBlockPlaceListener implements Listener{
 	// This listener is only registered when 'save-custom-lore' = true
 	// Monitor priority since there is no way for us to replace the placed block without cancelling and setting manually
 	@EventHandler(priority = EventPriority.MONITOR)

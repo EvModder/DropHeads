@@ -16,7 +16,7 @@ import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.EvLib.extras.HeadUtils;
 
-public class BlockBreakListener implements Listener{
+public class LoreStoreBlockBreakListener implements Listener{
 	// This listener is only registered when 'save-custom-lore' = true
 
 	// Returns null unless the block is a skull that contains encodes lore text

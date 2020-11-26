@@ -44,6 +44,7 @@ import net.evmodder.EvLib.Updater;
 // * /gethead player:ShEeP, /gethead mob:SHEEP, /gethead hdb:334
 // * /droprate - check (TODO: or edit) per mob (& cmd for spawn modifiers)
 // * /gethead mob:PLAYER|ALEX
+// * prevent placing heads
 /*
  * log:
  *   enable: true
@@ -87,8 +88,11 @@ public final class DropHeads extends EvPlugin{
 			getServer().getPluginManager().registerEvents(new BlockClickListener(), this);
 		}
 		if(config.getBoolean("save-custom-lore", true)){
-			getServer().getPluginManager().registerEvents(new BlockPlaceListener(), this);
-			getServer().getPluginManager().registerEvents(new BlockBreakListener(), this);
+			getServer().getPluginManager().registerEvents(new LoreStoreBlockPlaceListener(), this);
+			getServer().getPluginManager().registerEvents(new LoreStoreBlockBreakListener(), this);
+		}
+		if(config.getBoolean("prevent-head-placement", false)){
+			getServer().getPluginManager().registerEvents(new PreventBlockPlaceListener(), this);
 		}
 
 		new CommandSpawnHead(this);

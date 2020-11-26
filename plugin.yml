@@ -4,7 +4,7 @@ author: EvModder/EvDoc
 description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite, 4=vill/zom & grumm, collars, priority, hanging listener, cross-dim msgs,
-#6=merge "sheep head" and "white sheep head"
+#6=merge "sheep head" and "white sheep head", prevent-head-placement
 version: 3.4.6
 api-version: 1.13
 softdepend: [HeadDatabase]
@@ -44,6 +44,10 @@ permissions:
     default: false
     children:
       dropheads.canbehead: true
+
+  dropheads.canplacehead:
+    description: Permission to place down a head block, if disabled by default in the config
+    default: op
 
   dropheads.clickinfo:
     description: Permission to see info about a head by clicking it

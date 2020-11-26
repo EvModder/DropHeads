@@ -73,6 +73,11 @@ update-textures: true
 # Run in debug mode (prints extra information to console)
 debug-messages: true
 
+# If this is set to true, players will not be able to place down head blocks
+# unless they are given the 'dropheads.canplacehead' permission
+prevent-head-placement: false
+prevent-head-placement-message: '&7[&6DropHeads&7]&c No permission to place head blocks'
+
 # Shows information about a head when right-clicked by a player
 head-click-listener: true
 head-click-format-mobs: "&7[&6DropHeads&7]&f That's ${A} ${NAME}&f ${TYPE}"
