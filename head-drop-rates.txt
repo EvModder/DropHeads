@@ -16,7 +16,7 @@ MINECART_MOB_SPAWNER: 0
 MINECART_TNT: 0
 
 BAT:                0.010  // PH=0.005
-BEE:                0.006
+BEE:                0.006  // PH=0.002
 BLAZE:              0.005  // PH=0.002
 CAT:                0.004  // PH=0.002
 CAVE_SPIDER:        0.001  // PH=0.002
@@ -36,7 +36,7 @@ FOX:                0.005  // PH=0.002
 GHAST:              0.007  // PH=0.005
 GIANT:              0.050
 GUARDIAN:           0.004  // PH=0.025
-HOGLIN:             0.006
+HOGLIN:             0.004  // PH=0.002
 HORSE:              0.006  // PH=0.002
 HUSK:               0.005  // PH=0.002
 ILLUSIONER:         0.050  // PH=0.005
@@ -51,7 +51,8 @@ PARROT:             0.008  // PH=0.008
 PHANTOM:            0.006  // PH=0.002
 PIG:                0.004  // PH=0.002
 PIG_ZOMBIE:         0.002  // PH=0.002
-PIGLIN:             0.005
+PIGLIN:             0.004  // PH=0.002
+PIGLIN_BRUTE:       0.009  // PH=0.002
 PILLAGER:           0.005  // PH=0.002
 POLAR_BEAR:         0.008  // PH=0.005
 PUFFERFISH:         0.004  // PH=0.002
@@ -60,6 +61,7 @@ RAVAGER:            0.006  // PH=0.005
 SALMON:             0.004  // PH=0.002
 SHEEP:              0.005  // PH=0.002
 SHULKER:            0.015  // PH=0.002
+SHULKER|RED:        0.014
 SILVERFISH:         0.005  // PH=0.005
 SKELETON:           0.003  // PH=0.002
 SKELETON_HORSE:     0.009  // PH=0.002
@@ -68,7 +70,7 @@ SNOWMAN:            0.008  // PH=0.002
 SPIDER:             0.004  // PH=0.002
 SQUID:              0.005  // PH=0.005
 STRAY:              0.004  // PH=0.002
-STRIDER:            0.006
+STRIDER:            0.003  // PH=0.002
 TRADER_LLAMA:       0.007  // PH=0.005
 TROPICAL_FISH:      0.004  // PH=0.002
 TURTLE:             0.003  // PH=0.002
@@ -78,12 +80,12 @@ VINDICATOR:         0.003  // PH=0.005
 WANDERING_TRADER:   0.009  // PH=0.005
 WITCH:              0.004  // PH=0.005
 WITHER:             0.030  // PH=0.005
-WITHER_SKELETON:    0.025  // Vanilla=PH=0.025
+WITHER_SKELETON:    0.025  // PH=Vanilla=0.025
 WOLF:               0.007  // PH=0.002
-ZOGLIN:             0.006
+ZOGLIN:             0.006  // PH=0.002
 ZOMBIE:             0.004  // PH=0.002
 ZOMBIE_HORSE:       0.070  // PH=0.002
 ZOMBIE_VILLAGER:    0.019  // PH=0.002
-ZOMBIFIED_PIGLIN:   0.002
+ZOMBIFIED_PIGLIN:   0.002  // PH=0.002
 
 # You can add custom mobs to this list, but it will only work if an EntityType is defined
