@@ -20,7 +20,7 @@ public class LoreStoreBlockBreakListener implements Listener{
 	// This listener is only registered when 'save-custom-lore' = true
 
 	// Returns null unless the block is a skull that contains encodes lore text
-	private ItemStack getItemWithLore(Block block){
+	static ItemStack getItemWithLore(Block block){
 		if(!HeadUtils.isPlayerHead(block.getType())) return null;
 
 		Skull skull = (Skull) block.getState();
