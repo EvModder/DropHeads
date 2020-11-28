@@ -11,11 +11,12 @@ import net.evmodder.EvLib.extras.HeadUtils;
 
 public class ItemDropListener implements Listener{
 	final DropHeads plugin;
-	final boolean FORCE_RENAME;
+	final boolean FORCE_NAME_UPDATE, FORCE_LORE_UPDATE;
 
 	public ItemDropListener(){
 		plugin = DropHeads.getPlugin();
-		FORCE_RENAME = plugin.getConfig().getBoolean("refresh-item-names", false);
+		FORCE_NAME_UPDATE = plugin.getConfig().getBoolean("refresh-item-names", false);
+		FORCE_LORE_UPDATE = plugin.getConfig().getBoolean("refresh-item-lores", false);
 	}
 
 	@EventHandler(ignoreCancelled = true)
@@ -31,8 +32,8 @@ public class ItemDropListener implements Listener{
 		GameProfile refreshedProfile = HeadUtils.getGameProfile((SkullMeta)refreshedItem.getItemMeta());
 		HeadUtils.setGameProfile(originalMeta, refreshedProfile); // This is what actually refreshes the texture
 
-		if(!originalMeta.hasDisplayName() || FORCE_RENAME) originalMeta.setDisplayName(refreshedItem.getItemMeta().getDisplayName());
-		originalMeta.setLore(refreshedItem.getItemMeta().getLore()); // Only does anything if 'show-head-type-in-lore' is true
+		if(!originalMeta.hasDisplayName() || FORCE_NAME_UPDATE) originalMeta.setDisplayName(refreshedItem.getItemMeta().getDisplayName());
+		if(!originalMeta.hasLore() || FORCE_LORE_UPDATE) originalMeta.setLore(refreshedItem.getItemMeta().getLore());
 
 		originalItem.setItemMeta(originalMeta);
 		evt.getEntity().setItemStack(originalItem); // TODO: not sure if this is necessary
