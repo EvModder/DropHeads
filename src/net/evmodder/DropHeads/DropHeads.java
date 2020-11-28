@@ -28,23 +28,23 @@ import net.evmodder.EvLib.Updater;
 // * /dropheads reload
 // * DeathChest bypass (perhaps as addon?)
 // * Cracked iron golem head (repair with ingot?)
-// * attempt-place-head-block, attempt-place-overwrite-liquids, facing-direction, place-as: KILLER/VICTIM/SERVER, what to do if blockplaceevent fails
+// * attempt-place-head-block, attempt-place-overwrite-liquids, facing-direction, place-as: KILLER/VICTIM/SERVER, what to do if BlockPlaceEvent fails
 // * overwrite blocks: ['AIR', 'WATER, 'GRASS']
-// * middle-click copy with correct item name
 // * jeb_ sheep head animated phasing through colors (like the jeb_ sheep)
 // * if mob has custom name, use it in head name (configurable)
 // * move textures from head-textures.txt to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
-// * using above, inside /textures/MOB_NAME.txt, set 'drop-rate: x' to modify chance for that sub-type only
 // * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
-// * stray texture skull match mob colors
-// * hollow stray skull using Ev resource pack? (custom model data or head tag)
+// * stray & wskele skull texture needs to match mob more accurately
+// * Hollow Grumms: need to be created manually
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
 //TEST:
-// * Fix HDB crash
-// * /gethead player:ShEeP, /gethead mob:SHEEP, /gethead hdb:334
+// * middle-click copy with correct item name
+// * hollow skeletal skulls
 // * /droprate - check (TODO: or edit) per mob (& cmd for spawn modifiers)
 // * /gethead mob:PLAYER|ALEX
 // * prevent placing heads
+// * custom drop rate for sub-types
+// * update-textures=true (head-textures.txt file overwritten when plugin is updated)
 /*
  * log:
  *   enable: true
@@ -59,8 +59,7 @@ import net.evmodder.EvLib.Updater;
 
 public final class DropHeads extends EvPlugin{
 	private static DropHeads instance; public static DropHeads getPlugin(){return instance;}
-	private HeadAPI api;
-	public HeadAPI getAPI(){return api;}
+	private HeadAPI api; public HeadAPI getAPI(){return api;}
 	private boolean LOGFILE_ENABLED;
 	private String LOGFILE_NAME;
 
@@ -90,6 +89,9 @@ public final class DropHeads extends EvPlugin{
 		if(config.getBoolean("save-custom-lore", true)){
 			getServer().getPluginManager().registerEvents(new LoreStoreBlockPlaceListener(), this);
 			getServer().getPluginManager().registerEvents(new LoreStoreBlockBreakListener(), this);
+		}
+		if(config.getBoolean("fix-creative-nbt-copy", true)){
+			getServer().getPluginManager().registerEvents(new CreativeMiddleClickListener(), this);
 		}
 		if(config.getBoolean("prevent-head-placement", false)){
 			getServer().getPluginManager().registerEvents(new PreventBlockPlaceListener(), this);

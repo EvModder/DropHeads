@@ -3,9 +3,9 @@ main: net.evmodder.DropHeads.DropHeads
 author: EvModder/EvDoc
 description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
-#3=major rewrite, 4=vill/zom & grumm, collars, priority, hanging listener, cross-dim msgs,
-#6=merge "sheep head" and "white sheep head", prevent-head-placement
-version: 3.4.6
+#3=major rewrite,
+#5=merge "sheep head" and "white sheep head", prevent-head-placement, custom drop rate for mob sub-types, prefer-vanilla-heads, hollow-skeletal-skulls, nbt-copy-click, custom lore save + show mob type in lore fix
+version: 3.5
 api-version: 1.13
 softdepend: [HeadDatabase]
 
