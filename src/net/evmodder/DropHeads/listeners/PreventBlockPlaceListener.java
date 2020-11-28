@@ -18,9 +18,9 @@ public class PreventBlockPlaceListener implements Listener{
 	}
 
 	// This listener is only registered when 'prevent-head-placement' = true
-	@EventHandler
+	@EventHandler(ignoreCancelled = true)
 	public void onBlockPlaceEvent(BlockPlaceEvent evt){
-		if(evt.isCancelled() || !HeadUtils.isPlayerHead(evt.getBlockPlaced().getType())) return;
+		if(!HeadUtils.isPlayerHead(evt.getBlockPlaced().getType())) return;
 		ItemStack headItem = evt.getHand() == EquipmentSlot.HAND
 				? evt.getPlayer().getInventory().getItemInMainHand()
 				: evt.getPlayer().getInventory().getItemInOffHand();

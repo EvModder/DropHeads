@@ -45,9 +45,9 @@ public class LoreStoreBlockBreakListener implements Listener{
 	}
 	// Monitor priority since there is no way for us to replace the dropped item without cancelling and dropping manually
 	// TODO: Switch to BlockDropItemEvent once it is fully supported.
-	@EventHandler(priority = EventPriority.MONITOR)
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onBlockBreakByPlayerEvent(BlockBreakEvent evt){
-		if(evt.isCancelled() || evt.getPlayer().getGameMode() == GameMode.CREATIVE) return;
+		if(evt.getPlayer().getGameMode() == GameMode.CREATIVE) return;
 		ItemStack itemWithAddedLore = getItemWithLore(evt.getBlock());
 		if(itemWithAddedLore != null){
 			evt.setCancelled(true);

@@ -18,9 +18,9 @@ public class ItemDropListener implements Listener{
 		FORCE_RENAME = plugin.getConfig().getBoolean("refresh-item-names", false);
 	}
 
-	@EventHandler
+	@EventHandler(ignoreCancelled = true)
 	public void onBarf(ItemSpawnEvent evt){
-		if(evt.isCancelled() || !HeadUtils.isPlayerHead(evt.getEntity().getItemStack().getType()) || !evt.getEntity().getItemStack().hasItemMeta()) return;
+		if(!HeadUtils.isPlayerHead(evt.getEntity().getItemStack().getType()) || !evt.getEntity().getItemStack().hasItemMeta()) return;
 
 		ItemStack originalItem = evt.getEntity().getItemStack();
 		SkullMeta originalMeta = (SkullMeta) originalItem.getItemMeta();

@@ -18,9 +18,8 @@ public class EntityDamageListener implements Listener{
 		pl = DropHeads.getPlugin();
 		allowProjectileKills = pl.getConfig().getBoolean("drop-for-ranged-kills", false);
 	}
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void entityDamageEvent(EntityDamageByEntityEvent evt){
-		if(evt.isCancelled()) return;
 		if(evt.getDamager() instanceof Player || (allowProjectileKills && evt.getDamager() instanceof Projectile
 				&& ((Projectile)evt.getDamager()).getShooter() instanceof Player)){
 			evt.getEntity().setMetadata("PlayerDamage", new FixedMetadataValue(pl, System.currentTimeMillis()));

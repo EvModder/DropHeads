@@ -39,10 +39,10 @@ public class ProjectileFireListener implements Listener{
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onProjectileLaunch(ProjectileLaunchEvent evt){
 		// Skip if already has metadata (defers to EntityShootBowEvent)
-		if(evt.isCancelled() || evt.getEntity().hasMetadata("ShotUsing") || evt.getEntity().getShooter() instanceof LivingEntity == false
+		if(evt.getEntity().hasMetadata("ShotUsing") || evt.getEntity().getShooter() instanceof LivingEntity == false
 				|| (!allowNonPlayerKills && evt.getEntity() instanceof Player == false)) return;
 
 		LivingEntity shooter = (LivingEntity) evt.getEntity().getShooter();
@@ -51,9 +51,9 @@ public class ProjectileFireListener implements Listener{
 		if(shotUsingItem != null) evt.getEntity().setMetadata("ShotUsing", new FixedMetadataValue(plugin, shotUsingItem));
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onEntityShootBow(EntityShootBowEvent evt){
-		if(evt.isCancelled() || (!allowNonPlayerKills && evt.getEntity() instanceof Player == false)) return;
+		if(!allowNonPlayerKills && evt.getEntity() instanceof Player == false) return;
 		// This event is more reliable than ProjectileLaunchEvent, so override any existing metadata
 		evt.getProjectile().removeMetadata("ShotUsing", plugin);
 		evt.getProjectile().setMetadata("ShotUsing", new FixedMetadataValue(plugin, evt.getBow()));

@@ -14,7 +14,7 @@ import net.evmodder.EvLib.extras.HeadUtils;
 public class LoreStoreBlockPlaceListener implements Listener{
 	// This listener is only registered when 'save-custom-lore' = true
 	// Monitor priority since there is no way for us to replace the placed block without cancelling and setting manually
-	@EventHandler(priority = EventPriority.MONITOR)
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onBlockPlaceEvent(BlockPlaceEvent evt){
 		if(evt.isCancelled() || !HeadUtils.isPlayerHead(evt.getBlockPlaced().getType())) return;
 		ItemStack headItem = evt.getHand() == EquipmentSlot.HAND
