@@ -70,6 +70,7 @@ public class EntityDeathListener implements Listener{
 	final HashSet<Material> mustUseTools;
 	final HashSet<EntityType> noLootingEffectMobs;
 	final HashMap<EntityType, Double> mobChances;
+	final HashMap<EntityType, HashMap<String, Double>> subtypeMobChances;
 	final HashMap<EntityType, AnnounceMode> mobAnnounceModes;
 	final HashMap<Material, Double> toolBonuses;
 	final TreeMap<Long, Double> timeAliveBonuses;
@@ -161,6 +162,7 @@ public class EntityDeathListener implements Listener{
 
 		//Load individual mobs' drop chances
 		mobChances = new HashMap<EntityType, Double>();
+		subtypeMobChances = new HashMap<EntityType, HashMap<String, Double>>();
 		noLootingEffectMobs = new HashSet<EntityType>();
 		//double chanceForUnknown = 0D;
 		if(PLAYER_HEADS_ONLY){
@@ -179,21 +181,32 @@ public class EntityDeathListener implements Listener{
 			for(String line : chances.split("\n")){
 				String[] parts = line.replace(" ", "").replace("\t", "").toUpperCase().split(":");
 				if(parts.length < 2) continue;
+				int dataTagSep = parts[0].indexOf('|');
+				String eName = dataTagSep == -1 ? parts[0] : parts[0].substring(0, dataTagSep);
 				try{
 					double dropChance = Double.parseDouble(parts[1]);
-					EntityType eType = EntityType.valueOf(parts[0].replace("DEFAULT", "UNKNOWN"));
-					mobChances.put(eType, dropChance);
-					if(parts.length > 2 && parts[2].equals("NOLOOTING")) noLootingEffectMobs.add(eType);
 					if(dropChance < 0D || dropChance > 1D){
 						pl.getLogger().warning("Invalid value: "+parts[1]);
 						pl.getLogger().warning("Drop chance should be a decimal between 0 and 1");
-						if(dropChance > 0D && dropChance <= 100D) mobChances.put(eType, dropChance/100D);
+						if(dropChance > 1D && dropChance <= 100D) dropChance /= 100D;
+						else continue;
+					}
+					EntityType eType = EntityType.valueOf(eName.replace("DEFAULT", "UNKNOWN"));
+					if(parts.length > 2 && parts[2].equals("NOLOOTING")) noLootingEffectMobs.add(eType);
+					if(dataTagSep == -1) mobChances.put(eType, dropChance);
+					else if(pl.getAPI().textureExists(parts[0])){
+						HashMap<String, Double> eTypeChances = subtypeMobChances.getOrDefault(eType, new HashMap<String, Double>());
+						eTypeChances.put(parts[0], dropChance);
+						subtypeMobChances.put(eType, eTypeChances);
+					}
+					else{
+						pl.getLogger().severe("Unknown entity sub-type: "+parts[0]);
 					}
 				}
 				catch(NumberFormatException ex){pl.getLogger().severe("Invalid value: "+parts[1]);}
 				catch(IllegalArgumentException ex){
 					// Only throw an error for mobs that aren't defined in the default config (which may be from future/past versions)
-					if(!defaultConfigMobs.contains(parts[0])) pl.getLogger().severe("Unknown entity type: "+parts[0]);
+					if(!defaultConfigMobs.contains(eName)) pl.getLogger().severe("Unknown entity type: "+eName);
 				}
 			}
 			// No need storing 0-chance mobs if the default drop chance is 0
@@ -236,7 +249,19 @@ public class EntityDeathListener implements Listener{
 		}
 	}
 
-
+	public double getRawDropChance(Entity e){
+		HashMap<String, Double> eTypeChances = subtypeMobChances.get(e.getType());
+		if(eTypeChances != null){
+			String textureKey = TextureKeyLookup.getTextureKey(e);
+			int keyDataTagIdx = textureKey.lastIndexOf('|');
+			while(keyDataTagIdx != -1 && !eTypeChances.containsKey(textureKey)){
+				textureKey = textureKey.substring(0, keyDataTagIdx);
+				keyDataTagIdx = textureKey.lastIndexOf('|');
+			}
+			if(eTypeChances.containsKey(textureKey)) return eTypeChances.get(textureKey);
+		}
+		return mobChances.getOrDefault(e.getType(), DEFAULT_CHANCE);
+	}
 	public double getTimeAliveBonus(Entity e){
 		long millisecondsLived = e.getTicksLived()*50L;
 		return timeAliveBonuses.floorEntry(millisecondsLived).getValue();
@@ -391,7 +416,7 @@ public class EntityDeathListener implements Listener{
 		final double weaponMod = 1D + toolBonus;
 		final double timeAliveMod = 1D + getTimeAliveBonus(victim);
 		final double spawnCauseMod = JunkUtils.getSpawnCauseModifier(victim);
-		final double rawDropChance = mobChances.getOrDefault(victim.getType(), DEFAULT_CHANCE);
+		final double rawDropChance = getRawDropChance(victim);
 		final double dropChance = rawDropChance*spawnCauseMod*timeAliveMod*weaponMod*lootingMod + lootingAdd;
 
 		if(rand.nextDouble() < dropChance){
@@ -449,11 +474,11 @@ public class EntityDeathListener implements Listener{
 			}
 			if(originalEvent instanceof VehicleDestroyEvent){
 				final VehicleDestroyEvent evt = (VehicleDestroyEvent) originalEvent;
-				onEntityDeath(evt.getVehicle(), evt.getAttacker(), evt);
+				onEntityDeath(/*victim=*/evt.getVehicle(), /*killer=*/evt.getAttacker(), evt);
 			}
 			if(originalEvent instanceof HangingBreakByEntityEvent){
 				final HangingBreakByEntityEvent evt = (HangingBreakByEntityEvent) originalEvent;
-				onEntityDeath(evt.getEntity(), evt.getRemover(), evt);
+				onEntityDeath(/*victim=*/evt.getEntity(), /*killer=*/evt.getRemover(), evt);
 			}
 		}
 	}
