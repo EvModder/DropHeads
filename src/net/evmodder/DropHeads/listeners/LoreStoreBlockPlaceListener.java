@@ -1,5 +1,6 @@
 package net.evmodder.DropHeads.listeners;
 
+import java.util.List;
 import org.bukkit.block.Skull;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -9,6 +10,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
+import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.EvLib.extras.HeadUtils;
 
 public class LoreStoreBlockPlaceListener implements Listener{
@@ -16,7 +18,7 @@ public class LoreStoreBlockPlaceListener implements Listener{
 	// Monitor priority since there is no way for us to replace the placed block without cancelling and setting manually
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onBlockPlaceEvent(BlockPlaceEvent evt){
-		if(evt.isCancelled() || !HeadUtils.isPlayerHead(evt.getBlockPlaced().getType())) return;
+		if(!HeadUtils.isPlayerHead(evt.getBlockPlaced().getType())) return;
 		ItemStack headItem = evt.getHand() == EquipmentSlot.HAND
 				? evt.getPlayer().getInventory().getItemInMainHand()
 				: evt.getPlayer().getInventory().getItemInOffHand();
@@ -25,6 +27,9 @@ public class LoreStoreBlockPlaceListener implements Listener{
 		SkullMeta meta = (SkullMeta) headItem.getItemMeta();
 		GameProfile profile = HeadUtils.getGameProfile(meta);
 		if(profile == null || profile.getName() == null) return; // We can't append lore to an invalid GameProfile...
+		
+		List<String> defaultLore = DropHeads.getPlugin().getAPI().getHead(profile).getItemMeta().getLore();
+		if(defaultLore.equals(meta.getLore())) return; // Nothing to save!
 
 		final String texturekey = profile.getName();
 		final String combinedLore = String.join("\n", meta.getLore());
