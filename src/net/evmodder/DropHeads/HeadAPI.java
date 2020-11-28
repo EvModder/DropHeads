@@ -21,6 +21,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.plugin.java.JavaPlugin;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import me.arcaniax.hdb.api.DatabaseLoadEvent;
@@ -32,8 +33,8 @@ public class HeadAPI {
 	final private DropHeads pl;
 	private HeadDatabaseAPI hdbAPI = null;
 //	private int MAX_HDB_ID = -1;
-	final boolean GRUM_ENABLED, SADDLES_ENABLED;
-	final boolean UPDATE_PLAYER_HEADS, UPDATE_ZOMBIE_PIGMEN_HEADS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE;
+	final boolean GRUM_ENABLED, SADDLES_ENABLED, HOLLOW_SKULLS_ENABLED;
+	final boolean UPDATE_PLAYER_HEADS, UPDATE_ZOMBIE_PIGMEN_HEADS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_VANILLA_HEADS;
 	final TreeMap<String, String> textures; // Key="ENTITY_NAME|DATA", Value="eyJ0ZXh0dXJl..."
 
 	HeadAPI(){
@@ -41,6 +42,7 @@ public class HeadAPI {
 		pl = DropHeads.getPlugin();
 		GRUM_ENABLED = pl.getConfig().getBoolean("drop-grumm-heads", true);
 		SADDLES_ENABLED = pl.getConfig().getBoolean("drop-saddled-heads", true);
+		HOLLOW_SKULLS_ENABLED = pl.getConfig().getBoolean("hollow-skeletal-skulls", false);
 		UPDATE_PLAYER_HEADS = pl.getConfig().getBoolean("update-on-skin-change", true);
 		boolean zombifiedPiglensExist = false;
 		try{EntityType.valueOf("ZOMBIFIED_PIGLIN"); zombifiedPiglensExist = true;} catch(IllegalArgumentException ex){}
@@ -50,6 +52,7 @@ public class HeadAPI {
 //		SAVE_CUSTOM_LORE = pl.getConfig().getBoolean("save-custom-lore", false);
 		SAVE_TYPE_IN_LORE = pl.getConfig().getBoolean("show-head-type-in-lore", false);
 		MAKE_UNSTACKABLE = pl.getConfig().getBoolean("make-heads-unstackable", false);
+		PREFER_VANILLA_HEADS = pl.getConfig().getBoolean("prefer-vanilla-heads", true);
 
 		String hardcodedList = FileIO.loadResource(pl, "head-textures.txt");
 		loadTextures(hardcodedList, /*logMissingEntities=*/true, /*logUnknownEntities=*/false);
@@ -62,7 +65,7 @@ public class HeadAPI {
 			long oldTextureTime = new File(FileIO.DIR+"/head-textures.txt").lastModified();
 			long newTextureTime = 0;
 			try{
-				java.lang.reflect.Method getFileMethod = pl.getClass().getDeclaredMethod("getFile");
+				java.lang.reflect.Method getFileMethod = JavaPlugin.class.getDeclaredMethod("getFile");
 				getFileMethod.setAccessible(true);
 				newTextureTime = ((File)getFileMethod.invoke(pl)).lastModified();
 			}
@@ -296,12 +299,13 @@ public class HeadAPI {
 				keyDataTagIdx=textureKey.lastIndexOf('|');
 			}
 			// If this is a custom data head (still contains a '|') or eType is null AND the key exists, use it
-			if((keyDataTagIdx != -1 || eType == null || eType == EntityType.UNKNOWN) && textures.containsKey(textureKey)){
+			if((keyDataTagIdx != -1 || eType == null || eType == EntityType.UNKNOWN || !PREFER_VANILLA_HEADS) && textures.containsKey(textureKey)){
 				return makeTextureSkull(textureKey/*, saveTypeInLore*/);
 			}
 		}
 		if(eType == null) return null;
 		// Otherwise, favor vanilla skulls
+		if(!PREFER_VANILLA_HEADS && eType != EntityType.PLAYER) return null;
 		switch(eType){
 			case PLAYER:
 				return new ItemStack(Material.PLAYER_HEAD);
@@ -327,8 +331,8 @@ public class HeadAPI {
 		}
 		String textureKey = TextureKeyLookup.getTextureKey(entity);
 		if(!SADDLES_ENABLED && textureKey.endsWith("|SADDLED")) textureKey = textureKey.substring(0, textureKey.length()-8);
-		if(GRUM_ENABLED && HeadUtils.hasGrummName(entity) && textures.containsKey(textureKey+"|GRUMM")) 
-			return makeTextureSkull(textureKey+"|GRUMM");
+		if(HOLLOW_SKULLS_ENABLED && JunkUtils.isSkeletal(entity.getType())) textureKey += "|HOLLOW";
+		if(GRUM_ENABLED && HeadUtils.hasGrummName(entity)) textureKey += "|GRUMM";
 		return getHead(entity.getType(), textureKey);
 	}
 
