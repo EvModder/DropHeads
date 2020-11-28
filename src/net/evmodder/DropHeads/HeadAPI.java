@@ -56,8 +56,8 @@ public class HeadAPI {
 
 		String hardcodedList = FileIO.loadResource(pl, "head-textures.txt");
 		loadTextures(hardcodedList, /*logMissingEntities=*/true, /*logUnknownEntities=*/false);
-//		String localList = FileIO.loadFile("head-textures.txt", pl.getClass().getResourceAsStream("/head-textures.txt"));
-		String localList = FileIO.loadFile("head-textures.txt", hardcodedList);
+//		String localList = FileIO.loadFile("head-textures.txt", hardcodedList);  // This version does not preserve comments
+		String localList = FileIO.loadFile("head-textures.txt", getClass().getResourceAsStream("/head-textures.txt"));
 		loadTextures(localList, /*logMissingEntities=*/false, /*logUnknownEntities=*/true);
 
 		//TODO: decide whether this feature is worth keeping
