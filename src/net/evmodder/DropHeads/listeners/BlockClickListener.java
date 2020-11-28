@@ -33,9 +33,9 @@ public class BlockClickListener implements Listener{
 		recentClickers = new HashSet<>();
 	}
 
-	@EventHandler
+	@EventHandler(ignoreCancelled = true)
 	public void onBlockClickEvent(PlayerInteractEvent evt){
-		if(evt.isCancelled() || evt.useInteractedBlock() == Result.DENY || evt.getAction() != Action.RIGHT_CLICK_BLOCK
+		if(evt.useInteractedBlock() == Result.DENY || evt.getAction() != Action.RIGHT_CLICK_BLOCK
 			|| evt.getPlayer().isSneaking() || !HeadUtils.isHead(evt.getClickedBlock().getType())
 			|| !evt.getPlayer().hasPermission("dropheads.clickinfo")) return;
 		evt.setCancelled(true);
