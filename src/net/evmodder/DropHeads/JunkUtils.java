@@ -152,6 +152,17 @@ public class JunkUtils{
 		for(EntityType t : EntityType.values()) if(t.name().replace("_", "").equals(noUnderscoresName)) return t;
 		return EntityType.UNKNOWN;
 	}
+	static boolean isSkeletal(EntityType eType){
+		switch(eType){
+			case SKELETON:
+			case SKELETON_HORSE:
+			case WITHER_SKELETON:
+			case STRAY:
+				return true;
+			default:
+				return false;
+		}
+	}
 
 	public interface TestFunc{boolean test(int num);}
 	public final static int binarySearch(TestFunc f, int a, int b){
