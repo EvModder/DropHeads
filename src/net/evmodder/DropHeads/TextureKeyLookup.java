@@ -171,6 +171,12 @@ public class TextureKeyLookup{
 					dataFlags = textureKey.split("\\|");
 				}
 				break;
+			case "SKELETON": case "WITHER_SKELETON": case "SKELETON_HORSE": case "STRAY":
+				if(textureKey.contains("|HOLLOW")){
+					textureKey = textureKey.replace("|HOLLOW", "");
+					dataFlags = textureKey.split("\\|");
+				}
+				break;
 		}
 		StringBuilder builder = new StringBuilder("");
 		for(int i=dataFlags.length-1; i>0; --i){
