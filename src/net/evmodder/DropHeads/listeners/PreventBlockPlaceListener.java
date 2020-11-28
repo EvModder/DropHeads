@@ -9,12 +9,13 @@ import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.EvLib.extras.HeadUtils;
+import net.evmodder.EvLib.extras.TextUtils;
 
 public class PreventBlockPlaceListener implements Listener{
 	final String PREVENT_PLACE_MSG;
 	public PreventBlockPlaceListener(){
-		PREVENT_PLACE_MSG = DropHeads.getPlugin().getConfig()
-				.getString("prevent-head-placement-message", "&7[&6DropHeads&7]&c No permission to place head blocks");
+		PREVENT_PLACE_MSG = TextUtils.translateAlternateColorCodes('&', DropHeads.getPlugin().getConfig()
+				.getString("prevent-head-placement-message", "&7[&6DropHeads&7]&c No permission to place head blocks"));
 	}
 
 	// This listener is only registered when 'prevent-head-placement' = true
