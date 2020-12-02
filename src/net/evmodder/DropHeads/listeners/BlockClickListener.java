@@ -51,11 +51,11 @@ public class BlockClickListener implements Listener{
 		if(HeadUtils.isPlayerHead(evt.getClickedBlock().getType())){
 			Skull skull = (Skull) evt.getClickedBlock().getState();
 			GameProfile profile = HeadUtils.getGameProfile(skull);
-			data = plugin.getAPI().GetHeadNameData(profile);
+			data = plugin.getAPI().getHeadNameData(profile);
 		}
 		else{
 			EntityType entityType = HeadUtils.getEntityFromHead(evt.getClickedBlock().getType());
-			data = plugin.getAPI().GetHeadNameData(null);
+			data = plugin.getAPI().getHeadNameData(null);
 			data.textureKey = entityType.name();
 			data.headTypeName = HeadUtils.getDroppedHeadTypeName(entityType);
 			data.entityName = data.headName = TextUtils.getNormalizedEntityName(entityType.name());

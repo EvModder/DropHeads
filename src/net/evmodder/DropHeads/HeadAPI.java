@@ -174,7 +174,7 @@ public class HeadAPI {
 		public OfflinePlayer player;
 		public String entityName, headName, headTypeName;
 	}
-	public HeadNameData GetHeadNameData(GameProfile profile){
+	public HeadNameData getHeadNameData(GameProfile profile){
 		HeadNameData data = new HeadNameData();
 		if(profile == null){
 			data.textureKey = EntityType.PLAYER.name();  // This is considered a mob head
