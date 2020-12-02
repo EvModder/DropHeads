@@ -4,7 +4,7 @@ author: EvModder/EvDoc
 description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite,
-#5=merge "sheep head" and "white sheep head", prevent-head-placement, custom drop rate for mob sub-types, prefer-vanilla-heads, hollow-skeletal-skulls, nbt-copy-click, custom lore save + show mob type in lore fix, preserve comments in head-textures.txt, sub-perms for /spawnhead
+#5=merge "sheep head" and "white sheep head", prevent-head-placement, custom drop rate for mob sub-types, prefer-vanilla-heads, hollow-skeletal-skulls, nbt-copy-click, custom lore save + show mob type in lore fix, preserve comments in head-textures.txt, sub-perms for /spawnhead, HDB/unknown-click-info
 version: 3.5
 api-version: 1.13
 softdepend: [HeadDatabase]
@@ -52,6 +52,27 @@ permissions:
   dropheads.clickinfo:
     description: Permission to see info about a head by clicking it
     default: true
+    children:
+      dropheads.clickinfo.mobs: true
+      dropheads.clickinfo.players: true
+      dropheads.clickinfo.hdb: true
+#     dropheads.clickinfo.unknown: true
+
+  dropheads.clickinfo.mobs:
+    description: Permission to see info about a mob head by clicking it
+    default: false
+
+  dropheads.clickinfo.players:
+    description: Permission to see info about a player head by clicking it
+    default: false
+
+  dropheads.clickinfo.hdb:
+    description: Permission to see info about a HeadDatabase head by clicking it
+    default: false
+
+  dropheads.clickinfo.unknown:
+    description: Permission to see info about an unknown type head by clicking it
+    default: false
 
   dropheads.spawn:
     description: Permission to use /spawnhead
@@ -65,23 +86,23 @@ permissions:
 
   dropheads.spawn.mobs:
     description: Permission to spawn in mob heads
-    default: op
+    default: false
 
   dropheads.spawn.players:
     description: Permission to spawn in other players' heads
-    default: op
+    default: false
 
   dropheads.spawn.self:
     description: Permission to spawn in your own head
-    default: op
+    default: false
 
   dropheads.spawn.code:
     description: Permission to spawn in heads with custom texture codes
-    default: op
+    default: false
 
   dropheads.spawn.hdb:
     description: Permission to spawn in HeadDatabase heads
-    default: op
+    default: false
 
   dropheads.droprate:
     description: Permission to check head drop rates with a command

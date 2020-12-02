@@ -45,6 +45,7 @@ import net.evmodder.EvLib.Updater;
 // * prevent placing heads
 // * custom drop rate for sub-types
 // * update-textures=true (head-textures.txt file overwritten when plugin is updated)
+// * new permissions for head click-info
 /*
  * log:
  *   enable: true

@@ -168,23 +168,51 @@ public class HeadAPI {
 		return ChatColor.YELLOW + entityName + " " + headTypeName;
 	}
 
-	public String getHeadName(GameProfile profile){
-		if(profile == null) return getHeadNameFromKey(EntityType.PLAYER.name());;
-		if(hdbAPI != null){
-			String id = hdbAPI.getItemID(HeadUtils.getPlayerHead(profile));
-			if(id != null && hdbAPI.isHead(id)) return hdbAPI.getItemHead(id).getItemMeta().getDisplayName();
+	// TODO: Redo this part of the API (head naming)!
+	public class HeadNameData{
+		public String hdbId, textureKey;
+		public OfflinePlayer player;
+		public String entityName, headName, headTypeName;
+	}
+	public HeadNameData GetHeadNameData(GameProfile profile){
+		HeadNameData data = new HeadNameData();
+		if(profile == null){
+			data.textureKey = EntityType.PLAYER.name();  // This is considered a mob head
+			data.headTypeName = HeadUtils.getDroppedHeadTypeName(EntityType.PLAYER);  // "Head"
+			data.entityName = data.headName = TextureKeyLookup.getNameFromKey(EntityType.PLAYER.name());  // "Player"
+			return data;
 		}
-		String profileName = profile.getName();
-		if(profileName == null) return getHeadNameFromKey(EntityType.PLAYER.name());;
-		/*if(SAVE_CUSTOM_LORE){*/int idx = profileName.indexOf('>'); if(idx != -1) profileName = profileName.substring(0, idx);/*}*/
-		if(textureExists(profileName)){
-			return getHeadNameFromKey(profileName);
+		String fullProfileName = profile.getName();
+		if(fullProfileName != null/* && SAVE_CUSTOM_LORE*/){
+			int idx = fullProfileName.indexOf('>');
+			if(idx != -1) profile = new GameProfile(profile.getId(), fullProfileName.substring(0, idx));
 		}
-		if(UPDATE_PLAYER_HEADS && profile.getId() != null){
-			OfflinePlayer p = pl.getServer().getOfflinePlayer(profile.getId());
-			if(p != null && p.getName() != null) return HeadUtils.getPlayerHeadName(p.getName());
+		if(hdbAPI != null && (data.hdbId = hdbAPI.getItemID(HeadUtils.getPlayerHead(profile))) != null && hdbAPI.isHead(data.hdbId)){
+			data.headTypeName = HeadUtils.getDroppedHeadTypeName(EntityType.UNKNOWN);  // "Head"
+			data.entityName = TextureKeyLookup.getNameFromKey(EntityType.UNKNOWN.name());  // "Unknown"
+			String hdbHeadName = hdbAPI.getItemHead(data.hdbId).getItemMeta().getDisplayName();
+			int idx = hdbHeadName.lastIndexOf(' ');
+			data.headName = idx == -1 ? hdbHeadName : hdbHeadName.substring(0, idx);
 		}
-		return HeadUtils.getPlayerHeadName(profileName);
+		else if(profile.getId() != null && (data.player = pl.getServer().getOfflinePlayer(profile.getId())) != null && data.player.getName() != null){
+			data.headTypeName = HeadUtils.getDroppedHeadTypeName(EntityType.PLAYER);  // "Head"
+			data.entityName = TextureKeyLookup.getNameFromKey(EntityType.PLAYER.name());  // "Player"
+			data.headName = UPDATE_PLAYER_HEADS || profile.getName() == null ? data.player.getName() : profile.getName();
+		}
+		else if((data.textureKey = textures.get(profile.getName())) != null){
+			int idx = data.textureKey.indexOf('|');
+			String eTypeName = (idx == -1 ? data.textureKey : data.textureKey.substring(0, idx)).toUpperCase();
+			try{data.headTypeName = HeadUtils.getDroppedHeadTypeName(EntityType.valueOf(eTypeName));}
+			catch(IllegalArgumentException ex){data.headTypeName = HeadUtils.getDroppedHeadTypeName(EntityType.UNKNOWN);}  // "Head"
+			data.entityName = TextureKeyLookup.getNameFromKey(data.textureKey);
+			data.headName = profile.getName() != null ? profile.getName() : data.entityName;
+		}
+		else{
+			data.headTypeName = HeadUtils.getDroppedHeadTypeName(EntityType.UNKNOWN);  // "Head"
+			data.entityName = TextureKeyLookup.getNameFromKey(EntityType.UNKNOWN.name());  // "Unknown"
+			data.headName = profile.getName() != null ? profile.getName() : data.entityName;
+		}
+		return data;
 	}
 
 	ItemStack makeTextureSkull(String textureKey/*, boolean saveTypeInLore, boolean unstackable*/){
@@ -341,7 +369,7 @@ public class HeadAPI {
 		String profileName = profile.getName();
 		if(profileName != null){
 			/*if(SAVE_CUSTOM_LORE){*/int idx = profileName.indexOf('>'); if(idx != -1) profileName = profileName.substring(0, idx);/*}*/
-			if(textureExists(profileName)){//Refresh this EntityHead texture
+			if(textures.containsKey(profileName)){//Refresh this EntityHead texture
 				if(UPDATE_ZOMBIE_PIGMEN_HEADS && profileName.startsWith("PIG_ZOMBIE")){
 					profileName = /*profileName.replace("PIG_ZOMBIE", */"ZOMBIFIED_PIGLIN"/*)*/;
 				}
