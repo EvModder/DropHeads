@@ -58,7 +58,7 @@ public class BlockClickListener implements Listener{
 			data = plugin.getAPI().GetHeadNameData(null);
 			data.textureKey = entityType.name();
 			data.headTypeName = HeadUtils.getDroppedHeadTypeName(entityType);
-			data.entityName = data.headName = plugin.getAPI().getHeadNameFromKey(entityType.name());
+			data.entityName = data.headName = TextUtils.getNormalizedEntityName(entityType.name());
 		}
 		final String aOrAn = data.headName.matches("[aeiouAEIOU].*") ? "an" : "a"; // Yes, an imperfect solution, I know. :/
 

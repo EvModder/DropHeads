@@ -199,19 +199,22 @@ public class HeadAPI {
 			data.entityName = TextureKeyLookup.getNameFromKey(EntityType.PLAYER.name());  // "Player"
 			data.headName = UPDATE_PLAYER_HEADS || profile.getName() == null ? data.player.getName() : profile.getName();
 		}
-		else if((data.textureKey = textures.get(profile.getName())) != null){
+		else if(textures.containsKey(profile.getName())){
+			data.textureKey = profile.getName();
 			int idx = data.textureKey.indexOf('|');
 			String eTypeName = (idx == -1 ? data.textureKey : data.textureKey.substring(0, idx)).toUpperCase();
 			try{data.headTypeName = HeadUtils.getDroppedHeadTypeName(EntityType.valueOf(eTypeName));}
 			catch(IllegalArgumentException ex){data.headTypeName = HeadUtils.getDroppedHeadTypeName(EntityType.UNKNOWN);}  // "Head"
 			data.entityName = TextureKeyLookup.getNameFromKey(data.textureKey);
-			data.headName = profile.getName() != null ? profile.getName() : data.entityName;
+			data.headName = profile.getName();
 		}
 		else{
 			data.headTypeName = HeadUtils.getDroppedHeadTypeName(EntityType.UNKNOWN);  // "Head"
 			data.entityName = TextureKeyLookup.getNameFromKey(EntityType.UNKNOWN.name());  // "Unknown"
 			data.headName = profile.getName() != null ? profile.getName() : data.entityName;
 		}
+		if(data.hdbId != null && !hdbAPI.isHead(data.hdbId)) data.hdbId = null;
+		if(data.player != null && data.player.getName() == null) data.player = null;
 		return data;
 	}
 
