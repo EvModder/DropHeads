@@ -4,7 +4,7 @@ author: EvModder/EvDoc
 description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite,
-#5=merge "sheep head" and "white sheep head", prevent-head-placement, custom drop rate for mob sub-types, prefer-vanilla-heads, hollow-skeletal-skulls, nbt-copy-click, custom lore save + show mob type in lore fix, preserve comments in head-textures.txt
+#5=merge "sheep head" and "white sheep head", prevent-head-placement, custom drop rate for mob sub-types, prefer-vanilla-heads, hollow-skeletal-skulls, nbt-copy-click, custom lore save + show mob type in lore fix, preserve comments in head-textures.txt, sub-perms for /spawnhead
 version: 3.5
 api-version: 1.13
 softdepend: [HeadDatabase]
@@ -54,7 +54,33 @@ permissions:
     default: true
 
   dropheads.spawn:
-    description: Permission to spawn heads with a command
+    description: Permission to use /spawnhead
+    default: op
+    children:
+      dropheads.spawn.mobs: true
+      dropheads.spawn.players: true
+      dropheads.spawn.self: true
+      dropheads.spawn.code: true
+      dropheads.spawn.hdb: true
+
+  dropheads.spawn.mobs:
+    description: Permission to spawn in mob heads
+    default: op
+
+  dropheads.spawn.players:
+    description: Permission to spawn in other players' heads
+    default: op
+
+  dropheads.spawn.self:
+    description: Permission to spawn in your own head
+    default: op
+
+  dropheads.spawn.code:
+    description: Permission to spawn in heads with custom texture codes
+    default: op
+
+  dropheads.spawn.hdb:
+    description: Permission to spawn in HeadDatabase heads
     default: op
 
   dropheads.droprate:
