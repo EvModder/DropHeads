@@ -39,6 +39,7 @@ import net.evmodder.EvLib.Updater;
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
 //TEST:
 // * middle-click copy with correct item name
+// * head-item-drop-mode
 // * hollow skeletal skulls
 // * /droprate - check (TODO: or edit) per mob (& cmd for spawn modifiers)
 // * /gethead mob:PLAYER|ALEX

@@ -9,6 +9,10 @@ import java.util.TreeMap;
 import java.util.UUID;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.Skull;
+import org.bukkit.block.data.Rotatable;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Creeper;
@@ -28,10 +32,12 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.EventExecutor;
 import org.bukkit.projectiles.BlockProjectileSource;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
 import com.sun.istack.internal.NotNull;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.JunkUtils;
@@ -51,6 +57,8 @@ public class EntityDeathListener implements Listener{
 	public enum AnnounceMode {GLOBAL, LOCAL, DIRECT, OFF};
 	final AnnounceMode DEFAULT_ANNOUNCE;
 	final EventPriority PRIORITY;
+	public enum DropMode {EVENT, SPAWN, PLACE, GIVE, GIVE_NEVER_DROP};
+	final DropMode DROP_MODE;//TODO: final HashMap<EntityType, DropMode> mobDropModes
 
 	final boolean ALLOW_NON_PLAYER_KILLS, ALLOW_INDIRECT_KILLS, ALLOW_PROJECTILE_KILLS;
 	final boolean PLAYER_HEADS_ONLY, CHARGED_CREEPER_DROPS, REPLACE_DEATH_MESSAGE, VANILLA_WSKELE_LOOTING;
@@ -64,9 +72,16 @@ public class EntityDeathListener implements Listener{
 	final boolean CROSS_DIMENSIONAL_BROADCAST = true;//TODO: move to config
 	final int LOCAL_RANGE = 200;//TODO: move to config
 	final int JSON_LIMIT = 15000;//TODO: move to config
+	final BlockFace[] possibleHeadRotations = new BlockFace[]{
+			BlockFace.NORTH, BlockFace.NORTH_EAST, BlockFace.NORTH_WEST,
+			BlockFace.SOUTH, BlockFace.SOUTH_EAST, BlockFace.SOUTH_WEST,
+			BlockFace.NORTH_NORTH_EAST, BlockFace.NORTH_NORTH_WEST,
+			BlockFace.SOUTH_SOUTH_EAST, BlockFace.SOUTH_SOUTH_WEST
+	};
 
 	final DropHeads pl;
 	final Random rand;
+	final HashSet<Material> headOverwriteBlocks;
 	final HashSet<Material> mustUseTools;
 	final HashSet<EntityType> noLootingEffectMobs;
 	final HashMap<EntityType, Double> mobChances;
@@ -90,7 +105,7 @@ public class EntityDeathListener implements Listener{
 		if(LOOTING_ADD >= 1) pl.getLogger().warning("looting-addition is set to 1.0 or greater. This means heads will always drop when looting is used!");
 		if(LOOTING_MULT < 1) pl.getLogger().warning("looting-multiplier is set below 1.0, this means looting will DECREASe the chance of head drops!");
 		REPLACE_DEATH_MESSAGE = pl.getConfig().getBoolean("behead-announcement-replaces-death-message", true);
-		PRIORITY = JunkUtils.parseEventPriority(pl.getConfig().getString("death-listener-priority", "LOW"), EventPriority.LOW);
+		PRIORITY = JunkUtils.parseEnumOrDefault(pl.getConfig().getString("death-listener-priority", "LOW"), EventPriority.LOW);
 		DEBUG_MODE = pl.getConfig().getBoolean("debug-messages", true);
 		final boolean ENABLE_LOG = pl.getConfig().getBoolean("log.enable", false);
 		LOG_MOB_BEHEAD = ENABLE_LOG && pl.getConfig().getBoolean("log.log-mob-behead", false);
@@ -112,6 +127,14 @@ public class EntityDeathListener implements Listener{
 		MSH_BEHEAD_BY_WITH_NAMED = TextUtils.translateAlternateColorCodes('&', msgByWithNamed);
 		ITEM_DISPLAY_FORMAT = TextUtils.translateAlternateColorCodes('&', itemDisplayFormat);
 //		USE_PLAYER_DISPLAYNAMES = pl.getConfig().getBoolean("message-beheaded-use-player-displaynames", false);
+
+		DROP_MODE = JunkUtils.parseEnumOrDefault(pl.getConfig().getString("head-item-drop-mode", "EVENT"), DropMode.EVENT);
+		headOverwriteBlocks = new HashSet<>();
+		if(pl.getConfig().contains("")) for(String matName : pl.getConfig().getStringList("head-place-overwrite-blocks")){
+			try{headOverwriteBlocks.add(Material.valueOf(matName.toUpperCase()));}
+			catch(IllegalArgumentException ex){pl.getLogger().severe("Unknown material in 'head-place-overwrite-blocks': "+matName);}
+		}
+		else headOverwriteBlocks.add(Material.AIR);
 
 		mobAnnounceModes = new HashMap<>();
 		mobAnnounceModes.put(EntityType.UNKNOWN, JunkUtils.parseAnnounceMode(
@@ -279,8 +302,34 @@ public class EntityDeathListener implements Listener{
 		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+target+" "+message);
 	}
 	void dropHead(Entity entity, Event evt, Entity killer, ItemStack weapon){
-		if(evt instanceof EntityDeathEvent) ((EntityDeathEvent)evt).getDrops().add(pl.getAPI().getHead(entity));
-		else entity.getWorld().dropItemNaturally(entity.getLocation(), pl.getAPI().getHead(entity));
+		ItemStack headItem = pl.getAPI().getHead(entity);
+		switch(DROP_MODE){
+			case EVENT:
+				if(evt instanceof EntityDeathEvent) ((EntityDeathEvent)evt).getDrops().add(headItem);
+				else entity.getWorld().dropItemNaturally(entity.getLocation(), headItem);
+				break;
+			case PLACE:
+				Block headBlock = EvUtils.getClosestBlock(entity.getLocation(), 5, b -> headOverwriteBlocks.contains(b.getType())).getBlock();
+				headBlock.setType(headItem.getType());
+				Vector facingVector = entity.getLocation().getDirection(); facingVector.setY(0);  // loc.setPitch(0F)
+				Rotatable data = (Rotatable)headBlock.getBlockData();
+				data.setRotation(JunkUtils.getClosestBlockFace(facingVector, possibleHeadRotations).getOppositeFace());
+				headBlock.setBlockData(data);
+				if(headItem.getType() == Material.PLAYER_HEAD){
+					Skull skull = (Skull)headBlock.getState();
+					HeadUtils.setGameProfile(skull, HeadUtils.getGameProfile((SkullMeta)headItem.getItemMeta()));
+					skull.update(true);
+				}
+				break;
+			case GIVE_NEVER_DROP:
+				JunkUtils.giveItemToEntity(entity, headItem);
+				break;
+			case GIVE:
+				headItem = JunkUtils.giveItemToEntity(entity, headItem);
+			case SPAWN:
+				entity.getWorld().dropItemNaturally(entity.getLocation(), headItem);
+				break;
+		}
 		recentlyBeheadedEntities.add(entity.getUniqueId());
 
 		TellrawBlob message = new TellrawBlob();

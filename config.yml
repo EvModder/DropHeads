@@ -78,7 +78,7 @@ update-plugin: true
 update-textures: true
 
 # Run in debug mode (prints extra information to console)
-debug-messages: true
+debug-messages: false
 
 # If this is set to true, players will not be able to place down head blocks
 # unless they are given the 'dropheads.canplacehead' permission
@@ -107,6 +107,16 @@ show-head-type-in-lore: true
 
 # Only drop heads if the killer used an axe; overrides 'must-use'
 must-use-axe: false
+
+# How the head item from a beheading should be handled, options are:
+# EVENT - add the head to normally dropped loot,
+# SPAWN - spawn the head separately from the event,
+# PLACE - place the head on the ground if spot is available (within 3 blocks)
+# GIVE_NEVER_DROP - try to put the head directly into the killer's inventory
+# GIVE - same as above, but drops the head on the ground if it fails
+head-item-drop-mode: 'EVENT'
+
+head-place-overwrite-blocks: ['AIR', 'WATER', 'GRASS']
 
 # (Optional) Select weapons required to be used in order to get heads to drop
 # If this list is empty, any weapon can be used to get heads
