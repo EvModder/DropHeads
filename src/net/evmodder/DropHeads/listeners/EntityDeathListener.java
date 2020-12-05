@@ -433,8 +433,9 @@ public class EntityDeathListener implements Listener{
 			}
 		}
 		// Check if killer qualifies to trigger a behead.
-		if((!ALLOW_INDIRECT_KILLS && killer == null
-				// Note: Can't use timeSinceLastEntityDamage()... it would be expensive to keep track of
+		if((!VANILLA_WSKELE_LOOTING || victim.getType() != EntityType.WITHER_SKELETON) &&
+			(!ALLOW_INDIRECT_KILLS && killer == null
+				// Note: Won't use timeSinceLastEntityDamage()... it would be expensive to keep track of
 				&& JunkUtils.timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS) ||
 			(!ALLOW_PROJECTILE_KILLS && killer != null && killer instanceof Projectile) ||
 			(!ALLOW_NON_PLAYER_KILLS && killer != null ? (

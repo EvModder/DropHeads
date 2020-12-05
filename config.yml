@@ -131,7 +131,8 @@ looting-mutliplier: 1.01
 # This number is added to the drop chance for each level of looting
 looting-addition: 0.0
 
-# Use vanilla behavior (overrides 'looting-mult/add') for wither skeletons
+# Use vanilla looting modifiers and drop conditions for wither skeletons
+# Overrides 'looting-mult/add' and 'drop-for-nonplayer-kills'
 vanilla-wither-skeleton-looting-behavior: true
 
 # Replace Zombie_Pigman heads with Zombified_Piglin heads in 1.16+
