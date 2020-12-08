@@ -10,17 +10,17 @@ import org.bukkit.metadata.FixedMetadataValue;
 import net.evmodder.DropHeads.DropHeads;
 
 public class EntityDamageListener implements Listener{
-	final DropHeads pl;
-	final boolean allowProjectileKills;
+	final private DropHeads pl;
+	final boolean ALLOW_PROJECTILE_KILLS;
 
-	// Only enabled if drop-for-indirect-kills is TRUE
+	// Only enabled if drop-for-indirect-kills:TRUE && drop-for-nonplayer-kills:FALSE
 	public EntityDamageListener(){
 		pl = DropHeads.getPlugin();
-		allowProjectileKills = pl.getConfig().getBoolean("drop-for-ranged-kills", false);
+		ALLOW_PROJECTILE_KILLS = pl.getConfig().getBoolean("drop-for-ranged-kills", false);
 	}
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void entityDamageEvent(EntityDamageByEntityEvent evt){
-		if(evt.getDamager() instanceof Player || (allowProjectileKills && evt.getDamager() instanceof Projectile
+		if(evt.getDamager() instanceof Player || (ALLOW_PROJECTILE_KILLS && evt.getDamager() instanceof Projectile
 				&& ((Projectile)evt.getDamager()).getShooter() instanceof Player)){
 			evt.getEntity().setMetadata("PlayerDamage", new FixedMetadataValue(pl, System.currentTimeMillis()));
 		}

@@ -17,7 +17,7 @@ import net.evmodder.EvLib.EvCommand;
 import net.evmodder.EvLib.FileIO;
 
 public class CommandDropRate extends EvCommand{
-	final DropHeads pl;
+	final private DropHeads pl;
 	EntityDeathListener deathListener;
 	final DecimalFormat df;
 	final boolean ONLY_SHOW_VALID_ENTITIES = true;

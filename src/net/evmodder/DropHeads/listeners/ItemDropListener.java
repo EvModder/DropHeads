@@ -10,13 +10,13 @@ import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.EvLib.extras.HeadUtils;
 
 public class ItemDropListener implements Listener{
-	final DropHeads plugin;
+	final private DropHeads pl;
 	final boolean FORCE_NAME_UPDATE, FORCE_LORE_UPDATE;
 
 	public ItemDropListener(){
-		plugin = DropHeads.getPlugin();
-		FORCE_NAME_UPDATE = plugin.getConfig().getBoolean("refresh-item-names", false);
-		FORCE_LORE_UPDATE = plugin.getConfig().getBoolean("refresh-item-lores", false);
+		pl = DropHeads.getPlugin();
+		FORCE_NAME_UPDATE = pl.getConfig().getBoolean("refresh-item-names", false);
+		FORCE_LORE_UPDATE = pl.getConfig().getBoolean("refresh-item-lores", false);
 	}
 
 	@EventHandler(ignoreCancelled = true)
@@ -27,7 +27,7 @@ public class ItemDropListener implements Listener{
 		SkullMeta originalMeta = (SkullMeta) originalItem.getItemMeta();
 		GameProfile originalProfile = HeadUtils.getGameProfile(originalMeta);
 		if(originalProfile == null) return;
-		ItemStack refreshedItem = plugin.getAPI().getHead(originalProfile); // Gets a refreshed texture by textureKey (profile name)
+		ItemStack refreshedItem = pl.getAPI().getHead(originalProfile); // Gets a refreshed texture by textureKey (profile name)
 		if(refreshedItem == null) return;
 		GameProfile refreshedProfile = HeadUtils.getGameProfile((SkullMeta)refreshedItem.getItemMeta());
 		HeadUtils.setGameProfile(originalMeta, refreshedProfile); // This is what actually refreshes the texture

@@ -21,7 +21,7 @@ drop-for-nonplayer-kills: false
 # Whether to drop heads if killed by a projectile weapon
 drop-for-ranged-kills: false
 
-# Whether to drop heads if last-damage-cause is not a valid player or mob
+# Whether to drop heads if last-damage-cause is not a valid entity
 drop-for-indirect-kills: false
 
 # Only drop player heads (you can also do this in 'head-drop-rates.txt'

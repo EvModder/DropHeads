@@ -13,6 +13,7 @@ import net.evmodder.EvLib.extras.TextUtils;
 
 public class PreventBlockPlaceListener implements Listener{
 	final String PREVENT_PLACE_MSG;
+
 	public PreventBlockPlaceListener(){
 		PREVENT_PLACE_MSG = TextUtils.translateAlternateColorCodes('&', DropHeads.getPlugin().getConfig()
 				.getString("prevent-head-placement-message", "&7[&6DropHeads&7]&c No permission to place head blocks"));

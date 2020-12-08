@@ -14,14 +14,14 @@ import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.EvLib.FileIO;
 
 public class EntitySpawnListener implements Listener{
-	private Map<SpawnReason, Float> spawnModifiers = new HashMap<SpawnReason, Float>();
-	private DropHeads plugin;
+	final private DropHeads pl;
+	final private Map<SpawnReason, Float> spawnModifiers = new HashMap<SpawnReason, Float>();
 	
 	public EntitySpawnListener(){
-		plugin = DropHeads.getPlugin();
+		pl = DropHeads.getPlugin();
 
 		//load spawn cause modifiers
-		InputStream defaultModifiers = plugin.getClass().getResourceAsStream("/spawn-cause-modifiers.txt");
+		InputStream defaultModifiers = pl.getClass().getResourceAsStream("/spawn-cause-modifiers.txt");
 		String modifiers = FileIO.loadFile("spawn-cause-modifiers.txt", defaultModifiers);
 		for(String line : modifiers.split("\n")){
 			line = line.replace(" ", "").replace("\t", "").toUpperCase();
@@ -33,7 +33,7 @@ public class EntitySpawnListener implements Listener{
 					if(Math.abs(1F - modifier) > 0.0001) spawnModifiers.put(reason, modifier);
 				}
 				catch(IllegalArgumentException ex){
-					plugin.getLogger().warning("Unknown SpawnReason: '"+line+"' in config file!");
+					pl.getLogger().warning("Unknown SpawnReason: '"+line+"' in config file!");
 				}
 			}
 		}
@@ -47,7 +47,7 @@ public class EntitySpawnListener implements Listener{
 		if(evt.getSpawnReason() != null){
 			Float modifier = spawnModifiers.get(evt.getSpawnReason());
 			if(modifier != null){
-				evt.getEntity().setMetadata("SpawnReason", new FixedMetadataValue(plugin, modifier));
+				evt.getEntity().setMetadata("SpawnReason", new FixedMetadataValue(pl, modifier));
 				evt.getEntity().addScoreboardTag("SpawnReasonModifier:"+modifier);
 			}
 		}

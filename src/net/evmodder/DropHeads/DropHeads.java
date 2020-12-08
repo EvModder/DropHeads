@@ -26,10 +26,7 @@ import net.evmodder.EvLib.Updater;
 
 //TODO:
 // * /dropheads reload
-// * DeathChest bypass (perhaps as addon?)
 // * Cracked iron golem head (repair with ingot?)
-// * attempt-place-head-block, attempt-place-overwrite-liquids, facing-direction, place-as: KILLER/VICTIM/SERVER, what to do if BlockPlaceEvent fails
-// * overwrite blocks: ['AIR', 'WATER, 'GRASS']
 // * jeb_ sheep head animated phasing through colors (like the jeb_ sheep)
 // * if mob has custom name, use it in head name (configurable)
 // * move textures from head-textures.txt to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
@@ -38,6 +35,7 @@ import net.evmodder.EvLib.Updater;
 // * Hollow Grumms: need to be created manually
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
 //TEST:
+// * place-head-block, overwrite-blocks, facing-direction, place-as: KILLER/VICTIM/SERVER
 // * middle-click copy with correct item name
 // * head-item-drop-mode
 // * hollow skeletal skulls
@@ -79,7 +77,7 @@ public final class DropHeads extends EvPlugin{
 		if(config.getBoolean("drop-for-ranged-kills", false)){
 			getServer().getPluginManager().registerEvents(new ProjectileFireListener(), this);
 		}
-		if(config.getBoolean("drop-for-indirect-kills", false)){
+		if(config.getBoolean("drop-for-indirect-kills", false) && !config.getBoolean("drop-for-nonplayer-kills", false)){
 			getServer().getPluginManager().registerEvents(new EntityDamageListener(), this);
 		}
 		if(config.getBoolean("refresh-textures", false)){

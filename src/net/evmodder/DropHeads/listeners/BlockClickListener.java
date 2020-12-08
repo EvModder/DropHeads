@@ -17,21 +17,21 @@ import net.evmodder.EvLib.extras.HeadUtils;
 import net.evmodder.EvLib.extras.TextUtils;
 
 public class BlockClickListener implements Listener{
-	final DropHeads plugin;
+	final private DropHeads pl;
 	final String HEAD_DISPLAY_PLAYERS, HEAD_DISPLAY_MOBS, HEAD_DISPLAY_HDB, HEAD_DISPLAY_UNKNOWN;
 	final long clickMessageDelayTicks = 10; // So they dont spam themselves
 	final HashSet<UUID> recentClickers;
 
 	public BlockClickListener(){
-		plugin = DropHeads.getPlugin();
+		pl = DropHeads.getPlugin();
 		HEAD_DISPLAY_PLAYERS = TextUtils.translateAlternateColorCodes('&',
-				plugin.getConfig().getString("head-click-format-players", "&7[&6DropHeads&7]&f That's ${NAME}'s Head"));
+				pl.getConfig().getString("head-click-format-players", "&7[&6DropHeads&7]&f That's ${NAME}'s Head"));
 		HEAD_DISPLAY_MOBS = TextUtils.translateAlternateColorCodes('&',
-				plugin.getConfig().getString("head-click-format-mobs", "&7[&6DropHeads&7]&f That's ${A} ${MOB_TYPE} ${HEAD_TYPE}"));
+				pl.getConfig().getString("head-click-format-mobs", "&7[&6DropHeads&7]&f That's ${A} ${MOB_TYPE} ${HEAD_TYPE}"));
 		HEAD_DISPLAY_HDB = TextUtils.translateAlternateColorCodes('&',
-				plugin.getConfig().getString("head-click-format-hdb", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"));
+				pl.getConfig().getString("head-click-format-hdb", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"));
 		HEAD_DISPLAY_UNKNOWN = TextUtils.translateAlternateColorCodes('&',
-				plugin.getConfig().getString("head-click-format-unknown", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"));
+				pl.getConfig().getString("head-click-format-unknown", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"));
 		// That's a <Swamp Amorsmith Zombie Villager> <Head>
 		// That's <EvDoc>'s Head
 		recentClickers = new HashSet<>();
@@ -45,17 +45,17 @@ public class BlockClickListener implements Listener{
 
 		if(!recentClickers.add(evt.getPlayer().getUniqueId())) return;
 		final UUID uuid = evt.getPlayer().getUniqueId();
-		new BukkitRunnable(){@Override public void run(){recentClickers.remove(uuid);}}.runTaskLater(plugin, clickMessageDelayTicks);
+		new BukkitRunnable(){@Override public void run(){recentClickers.remove(uuid);}}.runTaskLater(pl, clickMessageDelayTicks);
 
 		final HeadNameData data;
 		if(HeadUtils.isPlayerHead(evt.getClickedBlock().getType())){
 			Skull skull = (Skull) evt.getClickedBlock().getState();
 			GameProfile profile = HeadUtils.getGameProfile(skull);
-			data = plugin.getAPI().getHeadNameData(profile);
+			data = pl.getAPI().getHeadNameData(profile);
 		}
 		else{
 			EntityType entityType = HeadUtils.getEntityFromHead(evt.getClickedBlock().getType());
-			data = plugin.getAPI().getHeadNameData(null);
+			data = pl.getAPI().getHeadNameData(null);
 			data.textureKey = entityType.name();
 			data.headTypeName = HeadUtils.getDroppedHeadTypeName(entityType);
 			data.entityName = data.headName = TextUtils.getNormalizedEntityName(entityType.name());
