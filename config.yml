@@ -112,8 +112,11 @@ must-use-axe: false
 # EVENT - add the head to normally dropped loot,
 # SPAWN - spawn the head separately from the event,
 # PLACE - place the head on the ground if spot is available (within 3 blocks)
-# GIVE_NEVER_DROP - try to put the head directly into the killer's inventory
-# GIVE - same as above, but drops the head on the ground if it fails
+# PLACE_BY_KILLER - same as PLACE but checks if killer has build permissions
+# PLACE_BY_VICTIM - same as PLACE but checks if victim has build permissions
+# GIVE - try to put the head directly into the killer's inventory
+# You can do multiple of these in a list; i.e., ['GIVE', 'SPAWN'] will try to
+# give a head to the killer, but will drop the item if their inventory is full
 head-item-drop-mode: 'EVENT'
 
 head-place-overwrite-blocks: ['AIR', 'WATER', 'GRASS']

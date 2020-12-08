@@ -1,6 +1,7 @@
 package net.evmodder.DropHeads.listeners;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -11,6 +12,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.Skull;
 import org.bukkit.block.data.Rotatable;
 import org.bukkit.configuration.ConfigurationSection;
@@ -23,14 +25,18 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Vehicle;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.EntityBlockFormEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.EventExecutor;
@@ -57,8 +63,10 @@ public class EntityDeathListener implements Listener{
 	public enum AnnounceMode {GLOBAL, LOCAL, DIRECT, OFF};
 	final AnnounceMode DEFAULT_ANNOUNCE;
 	final EventPriority PRIORITY;
-	public enum DropMode {EVENT, SPAWN, PLACE, GIVE, GIVE_NEVER_DROP};
-	final DropMode DROP_MODE;//TODO: final HashMap<EntityType, DropMode> mobDropModes
+	public enum DropMode {EVENT, SPAWN,
+		PLACE, PLACE_IF_PERM/*DEPRECATED*/, PLACE_BY_KILLER, PLACE_BY_VICTIM,
+		GIVE, GIVE_NEVER_DROP/*DEPRECATED*/};
+	final ArrayList<DropMode> DROP_MODES;//TODO: final HashMap<EntityType, DropMode> mobDropModes
 
 	final boolean ALLOW_NON_PLAYER_KILLS, ALLOW_INDIRECT_KILLS, ALLOW_PROJECTILE_KILLS;
 	final boolean PLAYER_HEADS_ONLY, CHARGED_CREEPER_DROPS, REPLACE_DEATH_MESSAGE, VANILLA_WSKELE_LOOTING;
@@ -128,9 +136,17 @@ public class EntityDeathListener implements Listener{
 		ITEM_DISPLAY_FORMAT = TextUtils.translateAlternateColorCodes('&', itemDisplayFormat);
 //		USE_PLAYER_DISPLAYNAMES = pl.getConfig().getBoolean("message-beheaded-use-player-displaynames", false);
 
-		DROP_MODE = JunkUtils.parseEnumOrDefault(pl.getConfig().getString("head-item-drop-mode", "EVENT"), DropMode.EVENT);
+		DROP_MODES = new ArrayList<>();
+		if(pl.getConfig().contains("head-item-drop-mode"))
+		for(String dropModeName : pl.getConfig().getStringList("head-item-drop-mode")){
+			try{DROP_MODES.add(DropMode.valueOf(dropModeName.toUpperCase()));}
+			catch(IllegalArgumentException ex){pl.getLogger().severe("Unknown head DropMode: "+dropModeName);}
+		}
+		if(DROP_MODES.isEmpty()) DROP_MODES.add(DropMode.EVENT);
+
 		headOverwriteBlocks = new HashSet<>();
-		if(pl.getConfig().contains("")) for(String matName : pl.getConfig().getStringList("head-place-overwrite-blocks")){
+		if(pl.getConfig().contains("head-place-overwrite-blocks"))
+		for(String matName : pl.getConfig().getStringList("head-place-overwrite-blocks")){
 			try{headOverwriteBlocks.add(Material.valueOf(matName.toUpperCase()));}
 			catch(IllegalArgumentException ex){pl.getLogger().severe("Unknown material in 'head-place-overwrite-blocks': "+matName);}
 		}
@@ -303,32 +319,58 @@ public class EntityDeathListener implements Listener{
 	}
 	void dropHead(Entity entity, Event evt, Entity killer, ItemStack weapon){
 		ItemStack headItem = pl.getAPI().getHead(entity);
-		switch(DROP_MODE){
-			case EVENT:
-				if(evt instanceof EntityDeathEvent) ((EntityDeathEvent)evt).getDrops().add(headItem);
-				else entity.getWorld().dropItemNaturally(entity.getLocation(), headItem);
-				break;
-			case PLACE:
-				Block headBlock = EvUtils.getClosestBlock(entity.getLocation(), 5, b -> headOverwriteBlocks.contains(b.getType())).getBlock();
-				headBlock.setType(headItem.getType());
-				Vector facingVector = entity.getLocation().getDirection(); facingVector.setY(0);  // loc.setPitch(0F)
-				Rotatable data = (Rotatable)headBlock.getBlockData();
-				data.setRotation(JunkUtils.getClosestBlockFace(facingVector, possibleHeadRotations).getOppositeFace());
-				headBlock.setBlockData(data);
-				if(headItem.getType() == Material.PLAYER_HEAD){
-					Skull skull = (Skull)headBlock.getState();
-					HeadUtils.setGameProfile(skull, HeadUtils.getGameProfile((SkullMeta)headItem.getItemMeta()));
-					skull.update(true);
-				}
-				break;
-			case GIVE_NEVER_DROP:
-				JunkUtils.giveItemToEntity(entity, headItem);
-				break;
-			case GIVE:
-				headItem = JunkUtils.giveItemToEntity(entity, headItem);
-			case SPAWN:
-				entity.getWorld().dropItemNaturally(entity.getLocation(), headItem);
-				break;
+		for(DropMode mode : DROP_MODES){
+			switch(mode){
+				case EVENT:
+					if(evt instanceof EntityDeathEvent) ((EntityDeathEvent)evt).getDrops().add(headItem);
+					else entity.getWorld().dropItemNaturally(entity.getLocation(), headItem);
+					headItem = null;
+					break;
+				case PLACE_IF_PERM:
+				case PLACE_BY_KILLER:
+				case PLACE_BY_VICTIM:
+				case PLACE:
+					Block headBlock = EvUtils.getClosestBlock(entity.getLocation(), 5, b -> headOverwriteBlocks.contains(b.getType())).getBlock();
+					BlockState state = headBlock.getState();
+					state.setType(headItem.getType());
+					Vector facingVector = entity.getLocation().getDirection(); facingVector.setY(0);  // loc.setPitch(0F)
+					Rotatable data = (Rotatable)headBlock.getBlockData();
+					data.setRotation(JunkUtils.getClosestBlockFace(facingVector, possibleHeadRotations).getOppositeFace());
+					state.setBlockData(data);
+					if(headItem.getType() == Material.PLAYER_HEAD){
+						HeadUtils.setGameProfile((Skull)state, HeadUtils.getGameProfile((SkullMeta)headItem.getItemMeta()));
+					}
+					if(mode != DropMode.PLACE){
+						Entity entityToCheck = (killer == null ||
+								(mode == DropMode.PLACE_BY_VICTIM && (entity instanceof Player || killer instanceof Player == false)))
+								? entity : killer;
+						Event testPermsEvent;
+						if(entityToCheck instanceof Player){
+							testPermsEvent = new BlockPlaceEvent(headBlock, state,
+								headBlock.getRelative(BlockFace.DOWN), headItem, (Player)entityToCheck, /*canBuild=*/true, EquipmentSlot.HAND);
+						}
+						else{
+							testPermsEvent = new EntityBlockFormEvent(entityToCheck, headBlock, state);
+						}
+						pl.getServer().getPluginManager().callEvent(testPermsEvent);
+						if(((Cancellable)testPermsEvent).isCancelled()){
+							pl.getLogger().info("Head placement failed, permission-lacking player: "+entityToCheck.getName());
+							break;
+						}
+					}
+					state.update(/*force=*/true);
+					headItem = null;
+					break;
+				case GIVE_NEVER_DROP:  // Deprecated
+				case GIVE:
+					headItem = JunkUtils.giveItemToEntity(entity, headItem);
+					break;
+				case SPAWN:
+					entity.getWorld().dropItemNaturally(entity.getLocation(), headItem);
+					headItem = null;
+					break;
+			}
+			if(headItem == null) break;
 		}
 		recentlyBeheadedEntities.add(entity.getUniqueId());
 
