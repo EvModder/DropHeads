@@ -95,6 +95,7 @@ public class CommandSpawnHead extends EvCommand{
 	}
 
 	private OfflinePlayer searchForPlayer(String target){
+		if(!target.matches("[a-zA-Z0-9_]+")) return null;
 		@SuppressWarnings("deprecation")
 		OfflinePlayer p = pl.getServer().getOfflinePlayer(target);
 		if(p.hasPlayedBefore() || WebUtils.checkExists(p.getName())) return p;
