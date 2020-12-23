@@ -69,7 +69,7 @@ public class EntityDeathListener implements Listener{
 	final ArrayList<DropMode> DROP_MODES;//TODO: final HashMap<EntityType, DropMode> mobDropModes
 
 	final boolean ALLOW_NON_PLAYER_KILLS, ALLOW_INDIRECT_KILLS, ALLOW_PROJECTILE_KILLS;
-	final boolean PLAYER_HEADS_ONLY, CHARGED_CREEPER_DROPS, REPLACE_DEATH_MESSAGE, VANILLA_WSKELE_LOOTING;
+	final boolean PLAYER_HEADS_ONLY, CHARGED_CREEPER_DROPS, REPLACE_DEATH_MESSAGE, VANILLA_WSKELE_HANDLING, VANILLA_WSKELE_LOOTING;
 	final double DEFAULT_CHANCE, LOOTING_ADD, LOOTING_MULT;
 	final boolean DEBUG_MODE, LOG_PLAYER_BEHEAD, LOG_MOB_BEHEAD;
 	final String LOG_MOB_FORMAT, LOG_PLAYER_FORMAT;
@@ -107,7 +107,8 @@ public class EntityDeathListener implements Listener{
 		ALLOW_PROJECTILE_KILLS = pl.getConfig().getBoolean("drop-for-ranged-kills", false);
 		PLAYER_HEADS_ONLY = pl.getConfig().getBoolean("player-heads-only", false);
 		CHARGED_CREEPER_DROPS = pl.getConfig().getBoolean("charged-creeper-drops", true);
-		VANILLA_WSKELE_LOOTING = pl.getConfig().getBoolean("vanilla-wither-skeleton-looting-behavior", true);
+		VANILLA_WSKELE_HANDLING = pl.getConfig().getBoolean("vanilla-wither-skeleton-skulls", false);
+		VANILLA_WSKELE_LOOTING = pl.getConfig().getBoolean("vanilla-wither-skeleton-looting-behavior", false);
 		LOOTING_ADD = pl.getConfig().getDouble("looting-addition", 0.01D);
 		LOOTING_MULT = pl.getConfig().getDouble("looting-mutliplier", 1D);
 		if(LOOTING_ADD >= 1) pl.getLogger().warning("looting-addition is set to 1.0 or greater. This means heads will always drop when looting is used!");
@@ -248,6 +249,10 @@ public class EntityDeathListener implements Listener{
 					if(!defaultConfigMobs.contains(eName)) pl.getLogger().severe("Unknown entity type: "+eName);
 				}
 			}
+			if(VANILLA_WSKELE_HANDLING && mobChances.get(EntityType.WITHER_SKELETON) != 0.025D){
+				pl.getLogger().warning("Wither Skeleton Skull drop chance has been modified in 'head-drop-rates.txt', "
+						+ "but this value will be ignored because 'vanilla-wither-skeleton-skulls' is set to true.");
+			}
 			// No need storing 0-chance mobs if the default drop chance is 0
 			DEFAULT_CHANCE = mobChances.getOrDefault(EntityType.UNKNOWN, 0D);
 			if(DEFAULT_CHANCE == 0D) mobChances.entrySet().removeIf(entry -> entry.getValue() == 0D);
@@ -304,6 +309,13 @@ public class EntityDeathListener implements Listener{
 	public double getTimeAliveBonus(Entity e){
 		long millisecondsLived = e.getTicksLived()*50L;
 		return timeAliveBonuses.floorEntry(millisecondsLived).getValue();
+	}
+	ItemStack getWeaponFromKiller(Entity killer){
+		return killer != null ?
+					killer instanceof LivingEntity ? ((LivingEntity)killer).getEquipment().getItemInMainHand() :
+					killer instanceof Projectile && killer.hasMetadata("ShotUsing") ? (ItemStack)killer.getMetadata("ShotUsing").get(0).value() :
+					null
+				: null;
 	}
 	String getItemDisplay(ItemStack item){
 		String itemName = item.hasItemMeta() && item.getItemMeta().hasDisplayName()
@@ -475,7 +487,7 @@ public class EntityDeathListener implements Listener{
 			}
 		}
 		// Check if killer qualifies to trigger a behead.
-		if((!VANILLA_WSKELE_LOOTING || victim.getType() != EntityType.WITHER_SKELETON) &&
+		if(/*(!VANILLA_WSKELE_LOOTING || victim.getType() != EntityType.WITHER_SKELETON) &&*/
 			(!ALLOW_INDIRECT_KILLS && killer == null
 				// Note: Won't use timeSinceLastEntityDamage()... it would be expensive to keep track of
 				&& JunkUtils.timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS) ||
@@ -491,12 +503,7 @@ public class EntityDeathListener implements Listener{
 			) : JunkUtils.timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS)
 		) return;
 
-		final ItemStack murderWeapon = 
-			killer != null ?
-				killer instanceof LivingEntity ? ((LivingEntity)killer).getEquipment().getItemInMainHand() :
-				killer instanceof Projectile && killer.hasMetadata("ShotUsing") ? (ItemStack)killer.getMetadata("ShotUsing").get(0).value() :
-				null
-			: null;
+		final ItemStack murderWeapon = getWeaponFromKiller(killer);
 
 		if(!mustUseTools.isEmpty() && (murderWeapon == null || !mustUseTools.contains(murderWeapon.getType()))) return;
 
@@ -554,12 +561,16 @@ public class EntityDeathListener implements Listener{
 
 				// Remove vanilla-dropped wither skeleton skulls so they aren't dropped twice.
 				if(victim.getType() == EntityType.WITHER_SKELETON){
+					int wSkullsDropped = 0;
 					Iterator<ItemStack> it = evt.getDrops().iterator();
-					while(it.hasNext()) if(it.next().getType() == Material.WITHER_SKELETON_SKULL) it.remove();
-					// However, if it is wearing a head in its helmet slot, don't remove the drop.
-					// Note-to-self: Be careful with entity_equipment, heads on armor stands, etc.
+					while(it.hasNext()) if(it.next().getType() == Material.WITHER_SKELETON_SKULL){it.remove(); ++wSkullsDropped;}
+					// However, if it is wearing a head in an armor slot, don't remove the drop.
 					for(ItemStack i : EvUtils.getEquipmentGuaranteedToDrop(evt.getEntity())){
-						if(i != null && i.getType() == Material.WITHER_SKELETON_SKULL) evt.getDrops().add(i);
+						if(i != null && i.getType() == Material.WITHER_SKELETON_SKULL){evt.getDrops().add(i); --wSkullsDropped;}
+					}
+					if(wSkullsDropped == 1 && VANILLA_WSKELE_HANDLING){  // Will always be 0 or 1 by this point
+						dropHead(victim, evt, killer, getWeaponFromKiller(killer));
+						return;
 					}
 				}
 				onEntityDeath(victim, killer, evt);

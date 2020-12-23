@@ -330,7 +330,8 @@ public class HeadAPI {
 				keyDataTagIdx=textureKey.lastIndexOf('|');
 			}
 			// If this is a custom data head (still contains a '|') or eType is null AND the key exists, use it
-			if((keyDataTagIdx != -1 || eType == null || eType == EntityType.UNKNOWN || !PREFER_VANILLA_HEADS) && textures.containsKey(textureKey)){
+			boolean hasCustomData = textureKey.replace("|HOLLOW", "").indexOf('|') != -1;
+			if((hasCustomData || eType == null || eType == EntityType.UNKNOWN || !PREFER_VANILLA_HEADS) && textures.containsKey(textureKey)){
 				return makeTextureSkull(textureKey/*, saveTypeInLore*/);
 			}
 		}
