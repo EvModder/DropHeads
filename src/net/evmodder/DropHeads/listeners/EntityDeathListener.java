@@ -561,15 +561,26 @@ public class EntityDeathListener implements Listener{
 
 				// Remove vanilla-dropped wither skeleton skulls so they aren't dropped twice.
 				if(victim.getType() == EntityType.WITHER_SKELETON){
-					int wSkullsDropped = 0;
+					int newSkullsDropped = 0;
 					Iterator<ItemStack> it = evt.getDrops().iterator();
-					while(it.hasNext()) if(it.next().getType() == Material.WITHER_SKELETON_SKULL){it.remove(); ++wSkullsDropped;}
+					while(it.hasNext()) if(it.next().getType() == Material.WITHER_SKELETON_SKULL){it.remove(); ++newSkullsDropped;}
 					// However, if it is wearing a head in an armor slot, don't remove the drop.
 					for(ItemStack i : EvUtils.getEquipmentGuaranteedToDrop(evt.getEntity())){
-						if(i != null && i.getType() == Material.WITHER_SKELETON_SKULL){evt.getDrops().add(i); --wSkullsDropped;}
+						if(i != null && i.getType() == Material.WITHER_SKELETON_SKULL){evt.getDrops().add(i); --newSkullsDropped;}
 					}
-					if(wSkullsDropped == 1 && VANILLA_WSKELE_HANDLING){  // Will always be 0 or 1 by this point
-						dropHead(victim, evt, killer, getWeaponFromKiller(killer));
+					if(newSkullsDropped > 1 && DEBUG_MODE) pl.getLogger().warning("Multiple non-DropHeads wither skull drops detected!");
+					if(VANILLA_WSKELE_HANDLING){
+						// newSkullsDropped should always be 0 or 1 by this point
+						if((newSkullsDropped == 1 || killer.hasPermission("dropheads.alwaysbehead"))
+								&& victim.hasPermission("dropheads.canlosehead") && killer.hasPermission("dropheads.canbehead")){
+							// Don't drop the skull if another skull has already been dropped for the same charged creeper.
+							if(killer instanceof Creeper && ((Creeper)killer).isPowered() && CHARGED_CREEPER_DROPS){
+								if(explodingChargedCreepers.add(killer.getUniqueId())/* && !HeadUtils.dropsHeadFromChargedCreeper(victim.getType())*/){
+									return;
+								}
+							}
+							dropHead(victim, evt, killer, getWeaponFromKiller(killer));
+						}
 						return;
 					}
 				}

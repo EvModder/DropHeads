@@ -5,7 +5,7 @@ description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite,
 #5=prevent-head-placement, drop-mode, drop rate for mob subtypes, hollow-skeletal-skulls, sub-perms for /spawnhead
-#2=defer wither skeleton skull drop roll to vanilla with 'vanilla-wither-skeleton-skulls', fix hollow skulls for wither skeletons?
+#3=avoid double-dropping wither skulls when vanilla setting is true, multiple <100% chance wither skull drops warning message
 version: 3.5.2
 api-version: 1.13
 softdepend: [HeadDatabase]

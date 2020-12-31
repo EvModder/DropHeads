@@ -137,6 +137,7 @@ looting-addition: 0.0
 # Defer wither skeleton skull handling to vanilla Minecraft
 # This bypasses 'head-drop-rates.txt', custom looting multiplier/addition,
 # 'must-use-axe', 'drop-for-nonplayer-kills', and other DropHeads settings
+# However, it does not bypass permissions such as 'dropheads.alwaysbehead'
 vanilla-wither-skeleton-skulls: true
 
 # Replace Zombie_Pigman heads with Zombified_Piglin heads in 1.16+

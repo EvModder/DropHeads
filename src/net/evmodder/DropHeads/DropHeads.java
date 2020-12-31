@@ -33,6 +33,8 @@ import net.evmodder.EvLib.Updater;
 // * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
 // * stray & wskele skull texture needs to match mob more accurately
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
+// * Known bugs: Charged creeper can cause 2 heads to drop (1 vanilla and 1 non-vanilla head), and the vanilla charged creeper behead bypasses logs
+// * to fix above bug, cancel vanilla charge creeper head drops
 //TEST:
 // * place-head-block, overwrite-blocks, facing-direction, place-as: KILLER/VICTIM/SERVER
 // * middle-click copy with correct item name
