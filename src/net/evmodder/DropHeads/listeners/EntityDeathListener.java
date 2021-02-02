@@ -39,6 +39,8 @@ import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.permissions.Permission;
+import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.EventExecutor;
 import org.bukkit.projectiles.BlockProjectileSource;
 import org.bukkit.projectiles.ProjectileSource;
@@ -291,6 +293,16 @@ public class EntityDeathListener implements Listener{
 				}
 			}, pl);
 		}
+		// Dynamically add all the children perms of "dropheads.alywaysbehead.<entity>"
+		Permission alwaysBeheadPerm = pl.getServer().getPluginManager().getPermission("dropheads.alwaysbehead");
+		for(EntityType entity : EntityType.values()){
+			Permission alwaysBeheadPermForEntity = new Permission(
+					alwaysBeheadPerm.getName()+"."+entity.name().toLowerCase(),
+					"This entity will get a head 100% of the time when killing a "+entity.name().toLowerCase(),
+					PermissionDefault.FALSE);
+			alwaysBeheadPermForEntity.addParent(alwaysBeheadPerm, true);
+		}
+		alwaysBeheadPerm.recalculatePermissibles();
 	}
 
 	public double getRawDropChance(Entity e){
@@ -455,14 +467,14 @@ public class EntityDeathListener implements Listener{
 		if(PLAYER_HEADS_ONLY && victim instanceof Player == false) return;
 		if(killer != null){
 			if(!killer.hasPermission("dropheads.canbehead")){
-				if(DEBUG_MODE) pl.getLogger().info("dropheads.canbehead=false: "+killer.getCustomName());
+				if(DEBUG_MODE) pl.getLogger().info("dropheads.canbehead=false: "+killer.getName());
 				return;
 			}
 			if(!killer.hasPermission("dropheads.canbehead")) return;
 			if(killer instanceof Creeper && ((Creeper)killer).isPowered()){
 				if(CHARGED_CREEPER_DROPS){
 					if(!victim.hasPermission("dropheads.canlosehead")){
-						if(DEBUG_MODE) pl.getLogger().info("dropheads.canlosehead=false: "+victim.getCustomName());
+						if(DEBUG_MODE) pl.getLogger().info("dropheads.canlosehead=false: "+victim.getName());
 						return;
 					}
 					// Limit to 1 head per charged creeper explosion (mimics vanilla)
@@ -476,10 +488,11 @@ public class EntityDeathListener implements Listener{
 					}
 				}
 			}
-			if(killer.hasPermission("dropheads.alwaysbehead")){
-				if(DEBUG_MODE) pl.getLogger().info("dropheads.alwaysbehead=true: "+killer.getCustomName());
+			if(killer.hasPermission("dropheads.alwaysbehead")
+					&& killer.hasPermission("dropheads.alwaysbehead."+victim.getType().name().toLowerCase())){
+				if(DEBUG_MODE) pl.getLogger().info("dropheads.alwaysbehead=true: "+killer.getName());
 				if(!victim.hasPermission("dropheads.canlosehead")){
-					if(DEBUG_MODE) pl.getLogger().info("dropheads.canlosehead=false: "+victim.getCustomName());
+					if(DEBUG_MODE) pl.getLogger().info("dropheads.canlosehead=false: "+victim.getName());
 					return;
 				}
 				dropHead(victim, evt, killer, killer instanceof LivingEntity ? ((LivingEntity)killer).getEquipment().getItemInMainHand() : null);
@@ -520,7 +533,7 @@ public class EntityDeathListener implements Listener{
 
 		if(rand.nextDouble() < dropChance){
 			if(!victim.hasPermission("dropheads.canlosehead")){
-				if(DEBUG_MODE) pl.getLogger().info("dropheads.canlosehead=false: "+victim.getCustomName());
+				if(DEBUG_MODE) pl.getLogger().info("dropheads.canlosehead=false: "+victim.getName());
 				return;
 			}
 			if(!recentlyBeheadedEntities.add(victim.getUniqueId())){
@@ -571,7 +584,8 @@ public class EntityDeathListener implements Listener{
 					if(newSkullsDropped > 1 && DEBUG_MODE) pl.getLogger().warning("Multiple non-DropHeads wither skull drops detected!");
 					if(VANILLA_WSKELE_HANDLING){
 						// newSkullsDropped should always be 0 or 1 by this point
-						if((newSkullsDropped == 1 || killer.hasPermission("dropheads.alwaysbehead"))
+						if((newSkullsDropped == 1 || (killer.hasPermission("dropheads.alwaysbehead")
+								&& killer.hasPermission("dropheads.alwaysbehead.wither_skeleton")))
 								&& victim.hasPermission("dropheads.canlosehead") && killer.hasPermission("dropheads.canbehead")){
 							// Don't drop the skull if another skull has already been dropped for the same charged creeper.
 							if(killer instanceof Creeper && ((Creeper)killer).isPowered() && CHARGED_CREEPER_DROPS){

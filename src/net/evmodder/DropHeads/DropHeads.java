@@ -35,15 +35,15 @@ import net.evmodder.EvLib.Updater;
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
 // * Known bugs: Charged creeper can cause 2 heads to drop (1 vanilla and 1 non-vanilla head), and the vanilla charged creeper behead bypasses logs
 // * to fix above bug, cancel vanilla charge creeper head drops
+// * Work with Trophies/Luck attribute
 //TEST:
+// * yellow head name color
 // * place-head-block, overwrite-blocks, facing-direction, place-as: KILLER/VICTIM/SERVER
 // * middle-click copy with correct item name
 // * head-item-drop-mode
 // * hollow skeletal skulls
 // * /droprate - check (TODO: or edit) per mob (& cmd for spawn modifiers)
-// * /gethead mob:PLAYER|ALEX
 // * prevent placing heads
-// * custom drop rate for sub-types
 // * update-textures=true (head-textures.txt file overwritten when plugin is updated)
 // * new permissions for head click-info
 /*

@@ -5,15 +5,15 @@ description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite,
 #5=prevent-head-placement, drop-mode, drop rate for mob subtypes, hollow-skeletal-skulls, sub-perms for /spawnhead
-#3=avoid double-dropping wither skulls when vanilla setting is true, multiple <100% chance wither skull drops warning message
-version: 3.5.2
+#4=
+version: 3.5.3.1
 api-version: 1.13
 softdepend: [HeadDatabase]
 
 commands:
   spawnhead:
     description: Get a player or mob head
-    usage: /gethead [name]
+    usage: /gethead [name] [amount]
     aliases: [gethead,getskull,dhspawn,spawn-head,head,phspawn,skull]
     permission: dropheads.spawn
     permission-message: You do not have permission to do this.
@@ -39,12 +39,6 @@ permissions:
   dropheads.canbehead:
     description: This entity will be able to get heads
     default: true
-
-  dropheads.alwaysbehead:
-    description: This entity will get heads 100% of the time, unless canlosehead is false
-    default: false
-    children:
-      dropheads.canbehead: true
 
   dropheads.canplacehead:
     description: Permission to place down a head block, if disabled by default in the config
@@ -111,4 +105,8 @@ permissions:
 
   dropheads.debug:
     description: Permission to spawn all the heads in a big cube
+    default: false
+
+  dropheads.alwaysbehead:
+    description: This entity will get heads 100% of the time, unless canlosehead is false
     default: false

@@ -114,6 +114,12 @@ public class CommandSpawnHead extends EvCommand{
 			return true;
 		}
 
+		int amount = 1;
+		if(args.length > 0 && args[args.length-1].matches("[0-9]+")){
+			amount = Integer.parseInt(args[args.length-1]);
+			args = Arrays.copyOfRange(args, 0, args.length-1);
+		}
+
 		String fullTarget = args.length == 0 ? "player:"+sender.getName() : String.join("_", args);
 		int prefixEnd = fullTarget.indexOf(':');
 		String prefix = prefixEnd == -1 ? "" : fullTarget.substring(0, prefixEnd + 1).toLowerCase();
@@ -200,10 +206,10 @@ public class CommandSpawnHead extends EvCommand{
 		else{
 			String headName = head.hasItemMeta() && head.getItemMeta().hasDisplayName()
 					? head.getItemMeta().getDisplayName() : TextUtils.getNormalizedName(head.getType());
+			head.setAmount(amount);
 			((Player)sender).getInventory().addItem(head);
 			sender.sendMessage(ChatColor.GREEN+"Spawned Head: " + ChatColor.YELLOW + headName);
 			if(ENABLE_LOG){
-				
 				String logEntry = LOG_FORMAT
 						.replaceAll("(?i)\\$\\{HEAD\\}", target)
 						.replaceAll("(?i)\\$\\{SENDER\\}", sender.getName())

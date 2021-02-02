@@ -95,7 +95,7 @@ head-click-format-unknown: "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"
 # Saves lore of heads in GameProfile when placed (used by some other plugins)
 # Only works for player-type heads, eg: won't work for minecraft:creeper_head
 # WARNING: This feature is in BETA and is relatively untested
-# NOTE: Lore currently is lost when the head is broken by a non-player
+# WARNING: Lore will still get lost if the head is broken by a non-player
 save-custom-lore: false
 
 # Corrects custom lore and name when CTRL-copying a placed head in creative

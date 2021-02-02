@@ -32,8 +32,10 @@ public class CommandDropRate extends EvCommand{
 		this.deathListener = deathListener;
 		USING_SPAWN_MODIFIERS = pl.getConfig().getBoolean("track-mob-spawns", true);
 		USING_LOOTING_MODIFIERS = pl.getConfig().getDouble("looting-mutliplier") != 1.0 || pl.getConfig().getDouble("looting-addition") != 0;
-		USING_TIME_ALIVE_MODIFIERS = !pl.getConfig().getConfigurationSection("time-alive-modifiers").getKeys(false).isEmpty();
-		USING_TOOL_MODIFIERS = !pl.getConfig().getConfigurationSection("specific-tool-modifiers").getKeys(false).isEmpty();
+		USING_TIME_ALIVE_MODIFIERS = pl.getConfig().isConfigurationSection("time-alive-modifiers")
+				&& !pl.getConfig().getConfigurationSection("time-alive-modifiers").getKeys(false).isEmpty();
+		USING_TOOL_MODIFIERS = pl.getConfig().isConfigurationSection("specific-tool-modifiers")
+				&& !pl.getConfig().getConfigurationSection("specific-tool-modifiers").getKeys(false).isEmpty();
 		USING_REQUIRED_TOOLS = !pl.getConfig().getStringList("must-use").isEmpty();
 		VANILLA_WITHER_SKELETON_LOOTING = pl.getConfig().getBoolean("vanilla-wither-skeleton-looting-behavior", true);
 

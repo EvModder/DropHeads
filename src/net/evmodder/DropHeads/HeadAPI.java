@@ -165,7 +165,7 @@ public class HeadAPI {
 		// Call the actual getNameFromKey()
 		String entityName = TextureKeyLookup.getNameFromKey(/*eType, */textureKey);
 		String headTypeName = eType == null ? "Head" : HeadUtils.getDroppedHeadTypeName(eType);
-		return ChatColor.YELLOW + entityName + " " + headTypeName;
+		return ChatColor.RESET + entityName + " " + headTypeName;
 	}
 
 	// TODO: Redo this part of the API (head naming)!
@@ -199,7 +199,7 @@ public class HeadAPI {
 			data.entityName = TextureKeyLookup.getNameFromKey(EntityType.PLAYER.name());  // "Player"
 			data.headName = UPDATE_PLAYER_HEADS || profile.getName() == null ? data.player.getName() : profile.getName();
 		}
-		else if(textures.containsKey(profile.getName())){
+		else if(profile.getName() != null && textures.containsKey(profile.getName())){
 			data.textureKey = profile.getName();
 			int idx = data.textureKey.indexOf('|');
 			String eTypeName = (idx == -1 ? data.textureKey : data.textureKey.substring(0, idx)).toUpperCase();

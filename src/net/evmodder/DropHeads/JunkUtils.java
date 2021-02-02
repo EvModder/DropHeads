@@ -44,7 +44,7 @@ public class JunkUtils{
 			case "GOLDEN_APPLE":
 			case "MUSIC_DISC_11": case "MUSIC_DISC_13": case "MUSIC_DISC_BLOCKS": case "MUSIC_DISC_CAT":
 			case "MUSIC_DISC_CHIRP": case "MUSIC_DISC_FAR": case "MUSIC_DISC_MALL": case "MUSIC_DISC_MELLOHI":
-			case "MUSIC_DISC_STAL": case "MUSIC_DISC_WAIT": case "MUSIC_DISC_WARD":
+			case "MUSIC_DISC_STAL": case "MUSIC_DISC_WAIT": case "MUSIC_DISC_WARD": case "MUSIC_DISC_PIGSTEP":
 				return ChatColor.AQUA;
 			// UNCOMMON:
 			case "CREEPER_BANNER_PATTERN":
