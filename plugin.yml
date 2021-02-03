@@ -6,7 +6,7 @@ website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite,
 #5=prevent-head-placement, drop-mode, drop rate for mob subtypes, hollow-skeletal-skulls, sub-perms for /spawnhead
 #4=
-version: 3.5.3.1
+version: 3.5.3.2
 api-version: 1.13
 softdepend: [HeadDatabase]
 
@@ -110,3 +110,5 @@ permissions:
   dropheads.alwaysbehead:
     description: This entity will get heads 100% of the time, unless canlosehead is false
     default: false
+    children:
+      dropheads.canbehead: true

@@ -500,20 +500,18 @@ public class EntityDeathListener implements Listener{
 			}
 		}
 		// Check if killer qualifies to trigger a behead.
-		if(/*(!VANILLA_WSKELE_LOOTING || victim.getType() != EntityType.WITHER_SKELETON) &&*/
-			(!ALLOW_INDIRECT_KILLS && killer == null
+		if((!ALLOW_INDIRECT_KILLS && killer == null
 				// Note: Won't use timeSinceLastEntityDamage()... it would be expensive to keep track of
 				&& JunkUtils.timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS) ||
 			(!ALLOW_PROJECTILE_KILLS && killer != null && killer instanceof Projectile) ||
-			(!ALLOW_NON_PLAYER_KILLS && killer != null ? (
+			(!ALLOW_NON_PLAYER_KILLS && (killer != null ? (
 				killer instanceof Player == false &&
 				(
 					!ALLOW_PROJECTILE_KILLS ||
 					killer instanceof Projectile == false ||
 					((Projectile)killer).getShooter() instanceof Player == false
 				)
-				
-			) : JunkUtils.timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS)
+			) : JunkUtils.timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS))
 		) return;
 
 		final ItemStack murderWeapon = getWeaponFromKiller(killer);
