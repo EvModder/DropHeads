@@ -251,7 +251,7 @@ public class EntityDeathListener implements Listener{
 					if(!defaultConfigMobs.contains(eName)) pl.getLogger().severe("Unknown entity type: "+eName);
 				}
 			}
-			if(VANILLA_WSKELE_HANDLING && mobChances.get(EntityType.WITHER_SKELETON) != 0.025D){
+			if(VANILLA_WSKELE_HANDLING && mobChances.getOrDefault(EntityType.WITHER_SKELETON, 0.025D) != 0.025D){
 				pl.getLogger().warning("Wither Skeleton Skull drop chance has been modified in 'head-drop-rates.txt', "
 						+ "but this value will be ignored because 'vanilla-wither-skeleton-skulls' is set to true.");
 			}
