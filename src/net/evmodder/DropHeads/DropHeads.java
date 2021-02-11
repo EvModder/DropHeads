@@ -37,6 +37,7 @@ import net.evmodder.EvLib.Updater;
 // * to fix above bug, cancel vanilla charge creeper head drops
 // * Work with Trophies/Luck attribute
 // * FIX DROPHEADS.ALWAYSBEHEAD PERM
+// * ability to TRANSLATE all msgs in plugin by putting in config
 //TEST:
 // * yellow head name color
 // * place-head-block, overwrite-blocks, facing-direction, place-as: KILLER/VICTIM/SERVER

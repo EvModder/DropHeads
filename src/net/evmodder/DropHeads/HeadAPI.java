@@ -165,7 +165,7 @@ public class HeadAPI {
 		// Call the actual getNameFromKey()
 		String entityName = TextureKeyLookup.getNameFromKey(/*eType, */textureKey);
 		String headTypeName = eType == null ? "Head" : HeadUtils.getDroppedHeadTypeName(eType);
-		return ChatColor.RESET + entityName + " " + headTypeName;
+		return ChatColor.YELLOW + entityName + " " + headTypeName;
 	}
 
 	// TODO: Redo this part of the API (head naming)!
