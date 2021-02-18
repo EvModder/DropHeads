@@ -36,8 +36,8 @@ import net.evmodder.EvLib.Updater;
 // * Known bugs: Charged creeper can cause 2 heads to drop (1 vanilla and 1 non-vanilla head), and the vanilla charged creeper behead bypasses logs
 // * to fix above bug, cancel vanilla charge creeper head drops
 // * Work with Trophies/Luck attribute
-// * FIX DROPHEADS.ALWAYSBEHEAD PERM
 // * ability to TRANSLATE all msgs in plugin by putting in config
+// * un-dye heads with cauldron
 //TEST:
 // * yellow head name color
 // * place-head-block, overwrite-blocks, facing-direction, place-as: KILLER/VICTIM/SERVER

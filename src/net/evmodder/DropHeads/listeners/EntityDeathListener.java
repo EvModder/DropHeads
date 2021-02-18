@@ -301,6 +301,7 @@ public class EntityDeathListener implements Listener{
 					"This entity will get a head 100% of the time when killing a "+entity.name().toLowerCase(),
 					PermissionDefault.FALSE);
 			alwaysBeheadPermForEntity.addParent(alwaysBeheadPerm, true);
+			pl.getServer().getPluginManager().addPermission(alwaysBeheadPermForEntity);
 		}
 		alwaysBeheadPerm.recalculatePermissibles();
 	}
@@ -488,8 +489,7 @@ public class EntityDeathListener implements Listener{
 					}
 				}
 			}
-			if(killer.hasPermission("dropheads.alwaysbehead")
-					&& killer.hasPermission("dropheads.alwaysbehead."+victim.getType().name().toLowerCase())){
+			if(killer.hasPermission("dropheads.alwaysbehead."+victim.getType().name().toLowerCase())){
 				if(DEBUG_MODE) pl.getLogger().info("dropheads.alwaysbehead=true: "+killer.getName());
 				if(!victim.hasPermission("dropheads.canlosehead")){
 					if(DEBUG_MODE) pl.getLogger().info("dropheads.canlosehead=false: "+victim.getName());
@@ -582,8 +582,7 @@ public class EntityDeathListener implements Listener{
 					if(newSkullsDropped > 1 && DEBUG_MODE) pl.getLogger().warning("Multiple non-DropHeads wither skull drops detected!");
 					if(VANILLA_WSKELE_HANDLING){
 						// newSkullsDropped should always be 0 or 1 by this point
-						if((newSkullsDropped == 1 || (killer.hasPermission("dropheads.alwaysbehead")
-								&& killer.hasPermission("dropheads.alwaysbehead.wither_skeleton")))
+						if((newSkullsDropped == 1 || killer.hasPermission("dropheads.alwaysbehead.wither_skeleton"))
 								&& victim.hasPermission("dropheads.canlosehead") && killer.hasPermission("dropheads.canbehead")){
 							// Don't drop the skull if another skull has already been dropped for the same charged creeper.
 							if(killer instanceof Creeper && ((Creeper)killer).isPowered() && CHARGED_CREEPER_DROPS){
