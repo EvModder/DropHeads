@@ -3,15 +3,17 @@ main: net.evmodder.DropHeads.DropHeads
 author: EvModder/EvDoc
 description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
-#3=major rewrite, 3=VehicleDestroy+Broadcast, 9=added grumms, collared dogs, listener priority, vehicle-head-dedupe, persistent spawn reason modifier, indirect kill threshold 0 instead of Long.MAX_VALUE bug
-version: 3.3.9
+#3=major rewrite,
+#5=prevent-head-placement, drop-mode, drop rate for mob subtypes, hollow-skeletal-skulls, sub-perms for /spawnhead
+#4=
+version: 3.5.3.2
 api-version: 1.13
 softdepend: [HeadDatabase]
 
 commands:
   spawnhead:
     description: Get a player or mob head
-    usage: /gethead [name]
+    usage: /gethead [name] [amount]
     aliases: [gethead,getskull,dhspawn,spawn-head,head,phspawn,skull]
     permission: dropheads.spawn
     permission-message: You do not have permission to do this.
@@ -38,19 +40,64 @@ permissions:
     description: This entity will be able to get heads
     default: true
 
-  dropheads.alwaysbehead:
-    description: This entity will get heads 100% of the time, unless canlosehead is false
-    default: false
-    children:
-      dropheads.canbehead: true
+  dropheads.canplacehead:
+    description: Permission to place down a head block, if disabled by default in the config
+    default: op
 
   dropheads.clickinfo:
     description: Permission to see info about a head by clicking it
     default: true
+    children:
+      dropheads.clickinfo.mobs: true
+      dropheads.clickinfo.players: true
+      dropheads.clickinfo.hdb: true
+#     dropheads.clickinfo.unknown: true
+
+  dropheads.clickinfo.mobs:
+    description: Permission to see info about a mob head by clicking it
+    default: false
+
+  dropheads.clickinfo.players:
+    description: Permission to see info about a player head by clicking it
+    default: false
+
+  dropheads.clickinfo.hdb:
+    description: Permission to see info about a HeadDatabase head by clicking it
+    default: false
+
+  dropheads.clickinfo.unknown:
+    description: Permission to see info about an unknown type head by clicking it
+    default: false
 
   dropheads.spawn:
-    description: Permission to spawn heads with a command
+    description: Permission to use /spawnhead
     default: op
+    children:
+      dropheads.spawn.mobs: true
+      dropheads.spawn.players: true
+      dropheads.spawn.self: true
+      dropheads.spawn.code: true
+      dropheads.spawn.hdb: true
+
+  dropheads.spawn.mobs:
+    description: Permission to spawn in mob heads
+    default: false
+
+  dropheads.spawn.players:
+    description: Permission to spawn in other players' heads
+    default: false
+
+  dropheads.spawn.self:
+    description: Permission to spawn in your own head
+    default: false
+
+  dropheads.spawn.code:
+    description: Permission to spawn in heads with custom texture codes
+    default: false
+
+  dropheads.spawn.hdb:
+    description: Permission to spawn in HeadDatabase heads
+    default: false
 
   dropheads.droprate:
     description: Permission to check head drop rates with a command
@@ -59,3 +106,9 @@ permissions:
   dropheads.debug:
     description: Permission to spawn all the heads in a big cube
     default: false
+
+  dropheads.alwaysbehead:
+    description: This entity will get heads 100% of the time, unless canlosehead is false
+    default: false
+    children:
+      dropheads.canbehead: true

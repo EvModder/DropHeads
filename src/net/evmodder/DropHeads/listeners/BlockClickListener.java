@@ -2,7 +2,6 @@ package net.evmodder.DropHeads.listeners;
 
 import java.util.HashSet;
 import java.util.UUID;
-import org.bukkit.ChatColor;
 import org.bukkit.block.Skull;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
@@ -13,71 +12,68 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
+import net.evmodder.DropHeads.HeadAPI.HeadNameData;
 import net.evmodder.EvLib.extras.HeadUtils;
 import net.evmodder.EvLib.extras.TextUtils;
 
 public class BlockClickListener implements Listener{
-	final DropHeads plugin;
-	final String headDisplayStrMob, headDisplayStrPlayer;
+	final private DropHeads pl;
+	final String HEAD_DISPLAY_PLAYERS, HEAD_DISPLAY_MOBS, HEAD_DISPLAY_HDB, HEAD_DISPLAY_UNKNOWN;
 	final long clickMessageDelayTicks = 10; // So they dont spam themselves
 	final HashSet<UUID> recentClickers;
 
 	public BlockClickListener(){
-		plugin = DropHeads.getPlugin();
-		headDisplayStrMob = TextUtils.translateAlternateColorCodes('&',
-				plugin.getConfig().getString("head-click-format-mobs", "&7[&6DropHeads&7]&f That's ${A} ${NAME} ${TYPE}"));
-		headDisplayStrPlayer = TextUtils.translateAlternateColorCodes('&',
-				plugin.getConfig().getString("head-click-format-players", "&7[&6DropHeads&7]&f That's ${NAME}'s Head"));
+		pl = DropHeads.getPlugin();
+		HEAD_DISPLAY_PLAYERS = TextUtils.translateAlternateColorCodes('&',
+				pl.getConfig().getString("head-click-format-players", "&7[&6DropHeads&7]&f That's ${NAME}'s Head"));
+		HEAD_DISPLAY_MOBS = TextUtils.translateAlternateColorCodes('&',
+				pl.getConfig().getString("head-click-format-mobs", "&7[&6DropHeads&7]&f That's ${A} ${MOB_TYPE} ${HEAD_TYPE}"));
+		HEAD_DISPLAY_HDB = TextUtils.translateAlternateColorCodes('&',
+				pl.getConfig().getString("head-click-format-hdb", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"));
+		HEAD_DISPLAY_UNKNOWN = TextUtils.translateAlternateColorCodes('&',
+				pl.getConfig().getString("head-click-format-unknown", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"));
 		// That's a <Swamp Amorsmith Zombie Villager> <Head>
 		// That's <EvDoc>'s Head
 		recentClickers = new HashSet<>();
 	}
 
-	@EventHandler
+	@EventHandler(ignoreCancelled = true)
 	public void onBlockClickEvent(PlayerInteractEvent evt){
-		if(evt.isCancelled() || evt.useInteractedBlock() == Result.DENY || evt.getAction() != Action.RIGHT_CLICK_BLOCK
+		if(evt.useInteractedBlock() == Result.DENY || evt.getAction() != Action.RIGHT_CLICK_BLOCK
 			|| evt.getPlayer().isSneaking() || !HeadUtils.isHead(evt.getClickedBlock().getType())
 			|| !evt.getPlayer().hasPermission("dropheads.clickinfo")) return;
-		evt.setCancelled(true);
 
 		if(!recentClickers.add(evt.getPlayer().getUniqueId())) return;
 		final UUID uuid = evt.getPlayer().getUniqueId();
-		new BukkitRunnable(){@Override public void run(){recentClickers.remove(uuid);}}.runTaskLater(plugin, clickMessageDelayTicks);
+		new BukkitRunnable(){@Override public void run(){recentClickers.remove(uuid);}}.runTaskLater(pl, clickMessageDelayTicks);
 
-		boolean isMobHead = false;
-		final String headName;
-
+		final HeadNameData data;
 		if(HeadUtils.isPlayerHead(evt.getClickedBlock().getType())){
 			Skull skull = (Skull) evt.getClickedBlock().getState();
 			GameProfile profile = HeadUtils.getGameProfile(skull);
-			if(profile == null){
-				isMobHead = true;
-				headName = plugin.getAPI().getHeadNameFromKey(EntityType.PLAYER.name());
-			}
-			else{
-				if(profile.getName() == null) isMobHead = true;
-				else{
-					String profileName = profile.getName();
-					int savedLoreStart = profileName.indexOf('>');
-					if(savedLoreStart != -1) profileName = profileName.substring(0, savedLoreStart);
-					isMobHead = plugin.getAPI().textureExists(profileName);
-				}
-				headName = plugin.getAPI().getHeadName(profile);
-			}
+			data = pl.getAPI().getHeadNameData(profile);
 		}
 		else{
-			isMobHead = true;
-			EntityType entity = HeadUtils.getEntityFromHead(evt.getClickedBlock().getType());
-			headName = plugin.getAPI().getHeadNameFromKey(entity.name());
+			EntityType entityType = HeadUtils.getEntityFromHead(evt.getClickedBlock().getType());
+			data = pl.getAPI().getHeadNameData(null);
+			data.textureKey = entityType.name();
+			data.headTypeName = HeadUtils.getDroppedHeadTypeName(entityType);
+			data.entityName = data.headName = TextUtils.getNormalizedEntityName(entityType.name());
 		}
-		DropHeads.getPlugin().getLogger().info("head name: "+headName);
-		int idx = headName.lastIndexOf(' ');
-		final String entityName = idx == -1 ? headName : ChatColor.stripColor(headName.substring(0, idx));
-		final String headTypeName = idx == -1 ? "Head" : ChatColor.stripColor(headName.substring(idx+1));
-		final String aOrAn = entityName.matches("[aeiouAEIOU].*") ? "an" : "a"; // Yes, an imperfect solution, I know. :l
+		final String aOrAn = data.headName.matches("[aeiouAEIOU].*") ? "an" : "a"; // Yes, an imperfect solution, I know. :/
 
-		final String displayStr = (isMobHead ? headDisplayStrMob : headDisplayStrPlayer)
-								.replace("${NAME}", entityName).replace("${TYPE}", headTypeName).replace("${A}", aOrAn);
-		evt.getPlayer().sendMessage(displayStr);
+		final String HEAD_DISPLAY;
+		if(data.player != null){if(!evt.getPlayer().hasPermission("dropheads.clickinfo.players")) return; HEAD_DISPLAY = HEAD_DISPLAY_PLAYERS;}
+		else if(data.textureKey != null){if(!evt.getPlayer().hasPermission("dropheads.clickinfo.mobs")) return; HEAD_DISPLAY = HEAD_DISPLAY_MOBS;}
+		else if(data.hdbId != null){if(!evt.getPlayer().hasPermission("dropheads.clickinfo.hdb")) return; HEAD_DISPLAY = HEAD_DISPLAY_HDB;}
+		else{if(!evt.getPlayer().hasPermission("dropheads.clickinfo.unknown")) return; HEAD_DISPLAY = HEAD_DISPLAY_UNKNOWN;}
+
+		evt.setCancelled(true);
+		evt.getPlayer().sendMessage(
+				HEAD_DISPLAY
+				.replace("${NAME}", data.headName)
+				.replace("${MOB_TYPE}", data.entityName)
+				.replace("${TYPE}", data.headTypeName).replace("${HEAD_TYPE}", data.headTypeName).replace("${SKULL_TYPE}", data.headTypeName)
+				.replace("${A}", aOrAn));
 	}
 }

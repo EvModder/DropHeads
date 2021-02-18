@@ -1,12 +1,17 @@
 package net.evmodder.DropHeads;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.stream.Collectors;
 import org.bukkit.ChatColor;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
-import org.bukkit.event.EventPriority;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.inventory.EntityEquipment;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.Vector;
 import com.sun.istack.internal.NotNull;
 import net.evmodder.DropHeads.listeners.EntityDeathListener.AnnounceMode;
 import net.evmodder.EvLib.extras.HeadUtils;
@@ -39,7 +44,7 @@ public class JunkUtils{
 			case "GOLDEN_APPLE":
 			case "MUSIC_DISC_11": case "MUSIC_DISC_13": case "MUSIC_DISC_BLOCKS": case "MUSIC_DISC_CAT":
 			case "MUSIC_DISC_CHIRP": case "MUSIC_DISC_FAR": case "MUSIC_DISC_MALL": case "MUSIC_DISC_MELLOHI":
-			case "MUSIC_DISC_STAL": case "MUSIC_DISC_WAIT": case "MUSIC_DISC_WARD":
+			case "MUSIC_DISC_STAL": case "MUSIC_DISC_WAIT": case "MUSIC_DISC_WARD": case "MUSIC_DISC_PIGSTEP":
 				return ChatColor.AQUA;
 			// UNCOMMON:
 			case "CREEPER_BANNER_PATTERN":
@@ -71,19 +76,19 @@ public class JunkUtils{
 			return defaultMode;
 		}
 	}
-	public final static EventPriority parseEventPriority(@NotNull String value, EventPriority defaultPriority){
-		value = value.toUpperCase();
-		try{return EventPriority.valueOf(value);}
+	public final static <E extends Enum<E>> E parseEnumOrDefault(@NotNull String stringValue, E defaultValue){
+		Class<E> enumClass = defaultValue.getDeclaringClass();
+		stringValue = stringValue.toUpperCase();
+		try{return Enum.valueOf(enumClass, stringValue);}
 		catch(IllegalArgumentException ex){
-			DropHeads.getPlugin().getLogger().severe("Unknown EventPriority: '"+value+"'");
+			DropHeads.getPlugin().getLogger().severe("Unknown "+enumClass.getSimpleName()+": '"+stringValue+"'");
 			DropHeads.getPlugin().getLogger().warning("Please use one of: "+String.join(", ",
-					Arrays.asList(EventPriority.values()).stream().map(p -> p.name()).collect(Collectors.toList())));
-			return defaultPriority;
+					Arrays.asList(enumClass.getEnumConstants()).stream().map(v -> v.name()).collect(Collectors.toList())));
+			return defaultValue;
 		}
 	}
-
 	public final static long timeSinceLastPlayerDamage(Entity entity){
-		long lastDamage = entity.hasMetadata("PlayerDamage") ? entity.getMetadata("PlayerDamage").get(0).asLong() : Long.MAX_VALUE;
+		long lastDamage = entity.hasMetadata("PlayerDamage") ? entity.getMetadata("PlayerDamage").get(0).asLong() : 0;
 		return System.currentTimeMillis() - lastDamage;
 	}
 	public final static double getSpawnCauseModifier(Entity e){
@@ -138,6 +143,32 @@ public class JunkUtils{
 		return entityAsJsonObject.toString();
 	}
 
+	public static ItemStack giveItemToEntity(Entity entity, ItemStack item){
+		if(entity instanceof InventoryHolder){
+			Collection<ItemStack> leftovers = ((InventoryHolder)entity).getInventory().addItem(item).values();
+			return leftovers.isEmpty() ? null : leftovers.iterator().next();
+		}
+		if(entity instanceof LivingEntity){
+			EntityEquipment equipment = ((LivingEntity)entity).getEquipment();
+			if(equipment.getItemInMainHandDropChance() == 0F) equipment.setItemInMainHand(item);
+			else if(equipment.getItemInOffHandDropChance() == 0F) equipment.setItemInOffHand(item);
+			else return item;
+			return null;
+		}
+		return item;
+	}
+
+	public static BlockFace getClosestBlockFace(Vector vec, BlockFace... blockFaces){
+		if(!vec.isNormalized()) vec = vec.normalize();
+		BlockFace nearestFace = blockFaces[0];
+		double minAngle = Double.MAX_VALUE;
+		for(BlockFace face : blockFaces){
+			double angle = Math.acos(face.getDirection().dot(vec));
+			if(angle < minAngle){minAngle = angle; nearestFace = face;}
+		}
+		return nearestFace;
+	}
+
 	//TODO: move to EntityUtils?
 	public final static EntityType getEntityByName(String name){
 		//TODO: improve this function / test for errors
@@ -151,6 +182,17 @@ public class JunkUtils{
 		catch(IllegalArgumentException ex){}
 		for(EntityType t : EntityType.values()) if(t.name().replace("_", "").equals(noUnderscoresName)) return t;
 		return EntityType.UNKNOWN;
+	}
+	static boolean isSkeletal(EntityType eType){
+		switch(eType){
+			case SKELETON:
+			case SKELETON_HORSE:
+			case WITHER_SKELETON:
+			case STRAY:
+				return true;
+			default:
+				return false;
+		}
 	}
 
 	public interface TestFunc{boolean test(int num);}

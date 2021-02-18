@@ -25,27 +25,29 @@ import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.Updater;
 
 //TODO:
-// * DeathChest bypass (perhaps as addon?)
-// * attempt-place-head-block, attempt-place-overwrite-liquids, facing-direction, place-as: KILLER/VICTIM/SERVER, what to do if blockplaceevent fails
-// * overwrite blocks: ['AIR', 'WATER, 'GRASS']
-// * middle-click copy with correct item name
-// * /droprate - check or edit per mob (& cmd for spawn modifiers)
+// * /dropheads reload
+// * Cracked iron golem head (repair with ingot?)
 // * jeb_ sheep head animated phasing through colors (like the jeb_ sheep)
 // * if mob has custom name, use it in head name (configurable)
 // * move textures from head-textures.txt to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
-// * using above, inside /textures/MOB_NAME.txt, set 'drop-rate: x' to modify chance for that sub-type only
 // * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
-// * send behead message broadcast if modified death message gets changed by another plugin (check in playerdeathevent with priority monitor?)
-// * stray texture skull match mob colors
-// * hollow stray skull using Ev resource pack? (custom model data or head tag)
+// * stray & wskele skull texture needs to match mob more accurately
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
+// * Known bugs: Charged creeper can cause 2 heads to drop (1 vanilla and 1 non-vanilla head), and the vanilla charged creeper behead bypasses logs
+// * to fix above bug, cancel vanilla charge creeper head drops
+// * Work with Trophies/Luck attribute
+// * FIX DROPHEADS.ALWAYSBEHEAD PERM
+// * ability to TRANSLATE all msgs in plugin by putting in config
 //TEST:
-// * Fix HDB crash
-// * unstackable heads
-// * mob type in item lore
-// * /gethead player:ShEeP, /gethead mob:SHEEP, /gethead hdb:334
-// * persistent spawn cause modifiers
-// * /gethead mob:PLAYER|ALEX
+// * yellow head name color
+// * place-head-block, overwrite-blocks, facing-direction, place-as: KILLER/VICTIM/SERVER
+// * middle-click copy with correct item name
+// * head-item-drop-mode
+// * hollow skeletal skulls
+// * /droprate - check (TODO: or edit) per mob (& cmd for spawn modifiers)
+// * prevent placing heads
+// * update-textures=true (head-textures.txt file overwritten when plugin is updated)
+// * new permissions for head click-info
 /*
  * log:
  *   enable: true
@@ -60,8 +62,7 @@ import net.evmodder.EvLib.Updater;
 
 public final class DropHeads extends EvPlugin{
 	private static DropHeads instance; public static DropHeads getPlugin(){return instance;}
-	private HeadAPI api;
-	public HeadAPI getAPI(){return api;}
+	private HeadAPI api; public HeadAPI getAPI(){return api;}
 	private boolean LOGFILE_ENABLED;
 	private String LOGFILE_NAME;
 
@@ -79,7 +80,7 @@ public final class DropHeads extends EvPlugin{
 		if(config.getBoolean("drop-for-ranged-kills", false)){
 			getServer().getPluginManager().registerEvents(new ProjectileFireListener(), this);
 		}
-		if(config.getBoolean("drop-for-indirect-kills", false)){
+		if(config.getBoolean("drop-for-indirect-kills", false) && !config.getBoolean("drop-for-nonplayer-kills", false)){
 			getServer().getPluginManager().registerEvents(new EntityDamageListener(), this);
 		}
 		if(config.getBoolean("refresh-textures", false)){
@@ -89,8 +90,14 @@ public final class DropHeads extends EvPlugin{
 			getServer().getPluginManager().registerEvents(new BlockClickListener(), this);
 		}
 		if(config.getBoolean("save-custom-lore", true)){
-			getServer().getPluginManager().registerEvents(new BlockPlaceListener(), this);
-			getServer().getPluginManager().registerEvents(new BlockBreakListener(), this);
+			getServer().getPluginManager().registerEvents(new LoreStoreBlockPlaceListener(), this);
+			getServer().getPluginManager().registerEvents(new LoreStoreBlockBreakListener(), this);
+		}
+		if(config.getBoolean("fix-creative-nbt-copy", true)){
+			getServer().getPluginManager().registerEvents(new CreativeMiddleClickListener(), this);
+		}
+		if(config.getBoolean("prevent-head-placement", false)){
+			getServer().getPluginManager().registerEvents(new PreventBlockPlaceListener(), this);
 		}
 
 		new CommandSpawnHead(this);

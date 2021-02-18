@@ -16,23 +16,22 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.DropHeads.HeadAPI;
 import net.evmodder.EvLib.EvCommand;
 import net.evmodder.EvLib.extras.HeadUtils;
 
 public class Commanddebug_all_heads extends EvCommand{
-	final HeadAPI api;
+	final private DropHeads pl;
 	final boolean DISPLAY_3D = false;
 	final boolean SHOW_PLAIN_IF_HAS_DATA_TAG = false;
 
 	public Commanddebug_all_heads(DropHeads plugin){
 		super(plugin);
-		api = plugin.getAPI();
+		pl = plugin;
 	}
 
 	@SuppressWarnings("deprecation")
 	private void setHead(Location loc, String textureKey, BlockFace facing){
-		ItemStack skullItem = api.getHead(/*eType=*/null, textureKey);
+		ItemStack skullItem = pl.getAPI().getHead(/*eType=*/null, textureKey);
 		loc.getBlock().setType(facing == null ? Material.PLAYER_HEAD : Material.PLAYER_WALL_HEAD);
 		Skull blockState = (Skull) loc.getBlock().getState();
 		blockState.setType(facing == null ? Material.PLAYER_HEAD : Material.PLAYER_WALL_HEAD);
@@ -55,7 +54,7 @@ public class Commanddebug_all_heads extends EvCommand{
 		sender.sendMessage("Skipping Grumm heads: "+noGrumm);
 
 		Set<String> textureKeys = new TreeSet<>();
-		textureKeys.addAll(api.getTextures().keySet());
+		textureKeys.addAll(pl.getAPI().getTextures().keySet());
 		sender.sendMessage("Total # texture keys: "+textureKeys.size());
 		if(noGrumm) textureKeys.removeIf(key -> key.endsWith("|GRUMM"));
 		if(!SHOW_PLAIN_IF_HAS_DATA_TAG){

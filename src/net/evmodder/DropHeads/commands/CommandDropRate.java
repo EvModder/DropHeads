@@ -17,7 +17,7 @@ import net.evmodder.EvLib.EvCommand;
 import net.evmodder.EvLib.FileIO;
 
 public class CommandDropRate extends EvCommand{
-	final DropHeads pl;
+	final private DropHeads pl;
 	EntityDeathListener deathListener;
 	final DecimalFormat df;
 	final boolean ONLY_SHOW_VALID_ENTITIES = true;
@@ -32,8 +32,10 @@ public class CommandDropRate extends EvCommand{
 		this.deathListener = deathListener;
 		USING_SPAWN_MODIFIERS = pl.getConfig().getBoolean("track-mob-spawns", true);
 		USING_LOOTING_MODIFIERS = pl.getConfig().getDouble("looting-mutliplier") != 1.0 || pl.getConfig().getDouble("looting-addition") != 0;
-		USING_TIME_ALIVE_MODIFIERS = !pl.getConfig().getConfigurationSection("time-alive-modifiers").getKeys(false).isEmpty();
-		USING_TOOL_MODIFIERS = !pl.getConfig().getConfigurationSection("specific-tool-modifiers").getKeys(false).isEmpty();
+		USING_TIME_ALIVE_MODIFIERS = pl.getConfig().isConfigurationSection("time-alive-modifiers")
+				&& !pl.getConfig().getConfigurationSection("time-alive-modifiers").getKeys(false).isEmpty();
+		USING_TOOL_MODIFIERS = pl.getConfig().isConfigurationSection("specific-tool-modifiers")
+				&& !pl.getConfig().getConfigurationSection("specific-tool-modifiers").getKeys(false).isEmpty();
 		USING_REQUIRED_TOOLS = !pl.getConfig().getStringList("must-use").isEmpty();
 		VANILLA_WITHER_SKELETON_LOOTING = pl.getConfig().getBoolean("vanilla-wither-skeleton-looting-behavior", true);
 
@@ -44,11 +46,16 @@ public class CommandDropRate extends EvCommand{
 		for(String line : chances.split("\n")){
 			String[] parts = line.replace(" ", "").replace("\t", "").toUpperCase().split(":");
 			if(parts.length < 2) continue;
+			parts[0] = parts[0].replace("DEFAULT", "UNKNOWN");
 			try{
 				double dropChance = Double.parseDouble(parts[1]);
 				if(parts[0].equals("UNKNOWN")) chanceForUnknown = dropChance;
-				if(ONLY_SHOW_VALID_ENTITIES) EntityType.valueOf(parts[0]); // If entity does not exist, this drops to the catch below
-				dropChances.put(parts[0].toLowerCase(), dropChance);
+				if(ONLY_SHOW_VALID_ENTITIES){
+					int dataTagSep = parts[0].indexOf('|');
+					String eName = dataTagSep == -1 ? parts[0] : parts[0].substring(0, dataTagSep);
+					EntityType.valueOf(eName); // If entity does not exist, this drops to the catch below
+				}
+				dropChances.put(parts[0], dropChance);
 			}
 			catch(NumberFormatException ex){}
 			catch(IllegalArgumentException ex){}
@@ -59,7 +66,7 @@ public class CommandDropRate extends EvCommand{
 
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
 		if(args.length == 1){
-			args[0] = args[0].toLowerCase();
+			args[0] = args[0].toUpperCase();
 			return dropChances.keySet().stream().filter(name -> name.startsWith(args[0])).collect(Collectors.toList());
 		}
 		return null;
@@ -90,7 +97,7 @@ public class CommandDropRate extends EvCommand{
 			if(sender instanceof Player) entity = getTargetEntity((Player)sender, /*range=*/10);
 			if(entity == null) return false;
 		}
-		final String target = entity == null ? args[0].toLowerCase() : entity.getType().name().toLowerCase();
+		final String target = entity == null ? args[0].toUpperCase() : entity.getType().name().toUpperCase();
 
 		if(entity == null) entity = pl.getServer().getPlayer(target);
 		if(entity != null){
@@ -100,7 +107,7 @@ public class CommandDropRate extends EvCommand{
 						+": §b0% §7(dropheads.canlosehead=§cfalse§7)");
 			}
 			else{
-				double dropChance = dropChances.getOrDefault(target, DEFAULT_DROP_CHANCE);
+				double dropChance = deathListener.getRawDropChance(entity);
 				if(USING_SPAWN_MODIFIERS) dropChance *= JunkUtils.getSpawnCauseModifier(entity);
 				if(USING_TIME_ALIVE_MODIFIERS) dropChance *= (1D + deathListener.getTimeAliveBonus(entity));
 				sender.sendMessage("§6Drop chance for "

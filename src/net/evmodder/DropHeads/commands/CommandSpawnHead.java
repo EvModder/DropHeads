@@ -36,57 +36,66 @@ public class CommandSpawnHead extends EvCommand{
 	}
 
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
-		if(args.length == 1 && sender instanceof Player){
-			final List<String> tabCompletes = new ArrayList<String>();
-			for(String prefix : Arrays.asList("player:", "mob:", "hdb:")){
-				if(prefix.startsWith(args[0])) tabCompletes.add(prefix);
-			}
-			int prefixEnd = args[0].indexOf(':');
-			if(prefixEnd == -1 && !tabCompletes.isEmpty()){
-				if(tabCompletes.size() == 1){
-					args[0] = tabCompletes.get(0);
-					prefixEnd = args[0].length() - 1;
-				}
-				else return tabCompletes;
-			}
-			tabCompletes.clear();
+		if(args.length != 1 || sender instanceof Player == false) return null;
 
-			String prefix = prefixEnd == -1 ? "mob:" : args[0].substring(0, prefixEnd + 1).toLowerCase();
-			String target = args[0].substring(prefixEnd + 1).toUpperCase();
+		// Check what types of heads they have permission to spawn
+		final List<String> availablePrefixes = new ArrayList<String>();
+		if(sender.hasPermission("dropheads.spawn.mobs")) availablePrefixes.add("mob:");
+		if(sender.hasPermission("dropheads.spawn.players")) availablePrefixes.add("player:");
+		if(sender.hasPermission("dropheads.spawn.hdb")) availablePrefixes.add("hdb:");
+		if(availablePrefixes.isEmpty()) return sender.hasPermission("dropheads.spawn.self") ? Arrays.asList(sender.getName()) : null;
 
-			if(prefix.equals("mob:")){
-				for(String key : pl.getAPI().getTextures().keySet()){
-					if(key.startsWith(target) &&
-							(SHOW_GRUMM_IN_TAB_COMPLETE || !key.endsWith("|GRUMM") ||
-									(SHOW_GRUMM_IN_TAB_COMPLETE_FOR_BAR && target.contains(key.substring(0, key.length()-5))))
-					) tabCompletes.add(prefix+key);
-				}
+		// Tab completions of prefixes
+		final List<String> tabCompletes = availablePrefixes.stream().filter(prefix -> prefix.startsWith(args[0]))
+				.collect(Collectors.toList());
+
+		int prefixEnd = args[0].indexOf(':');
+		if(prefixEnd == -1 && !tabCompletes.isEmpty()){
+			if(tabCompletes.size() == 1){
+				// If there is only 1 matching prefix, show suggestions given that prefix
+				args[0] = tabCompletes.get(0);
+				prefixEnd = args[0].length() - 1;
 			}
-			else if(prefix.equals("player:")){
-				return pl.getServer().getOnlinePlayers().stream()
-						.filter(p -> p.getName().toUpperCase().startsWith(target))
-						.map(p -> prefix+p.getName())
-						.collect(Collectors.toList());
-			}
-			else if(prefix.equals("hdb:")){
-				if(pl.getAPI().getHeadDatabaseAPI() == null/*MAX_HDB_ID == -1*/) return null;
-				//try{if(Integer.parseInt(target) > MAX_HDB_ID) return null;}
-				//catch(NumberFormatException ex){return null;}
-				return Arrays.asList(prefix+target);
-//				if(MAX_HDB_ID != -1){
-//					int numResults = ((""+MAX_HDB_ID).length() - target.length())*11;
-//					tabCompletes.addAll(
-//						generateNumericCompletions(/*id_prefix=*/target, /*highest_id=*/MAX_HDB_ID,
-//								/*max_ids_shown=*/MAX_IDS_SHOWN).stream().map(id -> prefix+id).collect(Collectors.toList())
-//					);
-//				}
-			}
-			return tabCompletes;
+			else return tabCompletes;  // Otherwise, return the matching prefixes
 		}
-		return null;
+		tabCompletes.clear();
+
+		String prefix = prefixEnd == -1 ? availablePrefixes.get(0) : args[0].substring(0, prefixEnd + 1).toLowerCase();
+		String target = args[0].substring(prefixEnd + 1).toUpperCase();
+
+		if(prefix.equals("mob:")){
+			for(String key : pl.getAPI().getTextures().keySet()){
+				if(key.startsWith(target) &&
+						(SHOW_GRUMM_IN_TAB_COMPLETE || !key.endsWith("|GRUMM") ||
+								(SHOW_GRUMM_IN_TAB_COMPLETE_FOR_BAR && target.contains(key.substring(0, key.length()-5))))
+				) tabCompletes.add(prefix+key);
+			}
+		}
+		else if(prefix.equals("player:")){
+			return pl.getServer().getOnlinePlayers().stream()
+					.filter(p -> p.getName().toUpperCase().startsWith(target))
+					.map(p -> prefix+p.getName())
+					.collect(Collectors.toList());
+		}
+		else if(prefix.equals("hdb:")){
+			if(pl.getAPI().getHeadDatabaseAPI() == null/*MAX_HDB_ID == -1*/) return null;
+			//try{if(Integer.parseInt(target) > MAX_HDB_ID) return null;}
+			//catch(NumberFormatException ex){return null;}
+			return Arrays.asList(prefix+target);
+//			if(MAX_HDB_ID != -1){
+//				int numResults = ((""+MAX_HDB_ID).length() - target.length())*11;
+//				tabCompletes.addAll(
+//					generateNumericCompletions(/*id_prefix=*/target, /*highest_id=*/MAX_HDB_ID,
+//							/*max_ids_shown=*/MAX_IDS_SHOWN).stream().map(id -> prefix+id).collect(Collectors.toList())
+//				);
+//			}
+		}
+		else if(prefix.equals("self:")) tabCompletes.add(sender.getName());
+		return tabCompletes;
 	}
 
 	private OfflinePlayer searchForPlayer(String target){
+		if(!target.matches("[a-zA-Z0-9_]+")) return null;
 		@SuppressWarnings("deprecation")
 		OfflinePlayer p = pl.getServer().getOfflinePlayer(target);
 		if(p.hasPlayedBefore() || WebUtils.checkExists(p.getName())) return p;
@@ -103,6 +112,12 @@ public class CommandSpawnHead extends EvCommand{
 		if(sender instanceof Player == false){
 			sender.sendMessage(ChatColor.RED+"This command can only be run by in-game players!");
 			return true;
+		}
+
+		int amount = 1;
+		if(args.length > 0 && args[args.length-1].matches("[0-9]+")){
+			amount = Integer.parseInt(args[args.length-1]);
+			args = Arrays.copyOfRange(args, 0, args.length-1);
 		}
 
 		String fullTarget = args.length == 0 ? "player:"+sender.getName() : String.join("_", args);
@@ -124,6 +139,10 @@ public class CommandSpawnHead extends EvCommand{
 
 		if(prefix.equals("mob:") || prefix.equals("key:") || (prefix.isEmpty() && pl.getAPI().textureExists(target.toUpperCase()))){
 			target = target.toUpperCase();
+			if(!sender.hasPermission("dropheads.spawn.mobs")){
+				sender.sendMessage(ChatColor.RED+"You do not have permission to spawn mob heads");
+				return true;
+			}
 			if(!pl.getAPI().textureExists(target)){
 				sender.sendMessage(ChatColor.RED+"Unable to find head texture for mob: "+target);
 				return false;
@@ -141,6 +160,10 @@ public class CommandSpawnHead extends EvCommand{
 			head = pl.getAPI().getHead(eType, textureKey);
 		}
 		else if(prefix.equals("hdb:")){
+			if(!sender.hasPermission("dropheads.spawn.hdb")){
+				sender.sendMessage(ChatColor.RED+"You do not have permission to spawn HeadDatabase heads");
+				return true;
+			}
 			if(pl.getAPI().getHeadDatabaseAPI() == null){
 				sender.sendMessage(ChatColor.RED+"HeadDatabase plugin needs to be installed to enable ID lookup");
 				return true;
@@ -152,6 +175,10 @@ public class CommandSpawnHead extends EvCommand{
 			head = pl.getAPI().getItemHead_wrapper(target);
 		}
 		else if(prefix.equals("code:") || (prefix.isEmpty() && target.length() > TextUtils.MAX_PLAYERNAME_MONO_WIDTH && searchForPlayer(target) == null)){
+			if(!sender.hasPermission("dropheads.spawn.code")){
+				sender.sendMessage(ChatColor.RED+"You do not have permission to spawn heads with custom texture codes");
+				return true;
+			}
 			for(Entry<String, String> entry : pl.getAPI().getTextures().entrySet()){
 				if(entry.getValue().equals(target)){
 					head = pl.getAPI().getHead(null, textureKey);
@@ -164,6 +191,11 @@ public class CommandSpawnHead extends EvCommand{
 		else if(prefix.equals("player:") || (prefix.isEmpty()/* && ...*/)){
 			OfflinePlayer p = searchForPlayer(target);
 			if(p != null){
+				if(!sender.hasPermission("dropheads.spawn.players") &&
+						(!p.getName().equals(sender.getName()) || !sender.hasPermission("dropheads.spawn.self"))){
+					sender.sendMessage(ChatColor.RED+"You do not have permission to spawn player heads");
+					return true;
+				}
 				target = p.getName();
 				head = pl.getAPI().getPlayerHead_wrapper(p);
 			}
@@ -174,10 +206,10 @@ public class CommandSpawnHead extends EvCommand{
 		else{
 			String headName = head.hasItemMeta() && head.getItemMeta().hasDisplayName()
 					? head.getItemMeta().getDisplayName() : TextUtils.getNormalizedName(head.getType());
+			head.setAmount(amount);
 			((Player)sender).getInventory().addItem(head);
 			sender.sendMessage(ChatColor.GREEN+"Spawned Head: " + ChatColor.YELLOW + headName);
 			if(ENABLE_LOG){
-				
 				String logEntry = LOG_FORMAT
 						.replaceAll("(?i)\\$\\{HEAD\\}", target)
 						.replaceAll("(?i)\\$\\{SENDER\\}", sender.getName())

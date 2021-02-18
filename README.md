@@ -1,16 +1,18 @@
 # DropHeads
 A light-weight, highly configurable head collecting plugin for Minecraft
-
 <br>
-
-**Main config file:**<br>
-[plugins/Dropheads/config.yml](./config.yml)
-
+<br>
+**Main config:**<br>
+[config.yml](./config.yml)
+<br>
+<br>
 **Default head drop chance per mob:**<br>
-[plugins/Dropheads/head-drop-rates.txt](./head-drop-rates.txt)
-
-**Drop rate adjustment based on spawn conditions (Breeding vs Spawner vs /summon...):**<br>
-[plugins/Dropheads/spawn-cause-modifiers.txt](./spawn-cause-modifiers.txt)
-
-**Encoded textures (from [minecraft-heads](https://minecraft-heads.com/)) for each custom head:**<br>
-[plugins/Dropheads/head-textures.txt](./head-textures.txt)
+[head-drop-rates.txt](./head-drop-rates.txt)
+<br>
+<br>
+**Drop rate adjustment based on SpawnReason** (e.g., breeding, spawn_egg, natural, /summon, ...)**:**<br>
+[spawn-cause-modifiers.txt](./spawn-cause-modifiers.txt)
+<br>
+<br>
+**Texture codes for each head** (from [minecraft-heads](https://minecraft-heads.com/))**:**<br>
+[head-textures.txt](./head-textures.txt)

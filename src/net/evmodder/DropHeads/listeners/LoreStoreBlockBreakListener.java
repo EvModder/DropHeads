@@ -16,11 +16,11 @@ import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.EvLib.extras.HeadUtils;
 
-public class BlockBreakListener implements Listener{
+public class LoreStoreBlockBreakListener implements Listener{
 	// This listener is only registered when 'save-custom-lore' = true
 
 	// Returns null unless the block is a skull that contains encodes lore text
-	private ItemStack getItemWithLore(Block block){
+	static ItemStack getItemWithLore(Block block){
 		if(!HeadUtils.isPlayerHead(block.getType())) return null;
 
 		Skull skull = (Skull) block.getState();
@@ -45,9 +45,9 @@ public class BlockBreakListener implements Listener{
 	}
 	// Monitor priority since there is no way for us to replace the dropped item without cancelling and dropping manually
 	// TODO: Switch to BlockDropItemEvent once it is fully supported.
-	@EventHandler(priority = EventPriority.MONITOR)
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onBlockBreakByPlayerEvent(BlockBreakEvent evt){
-		if(evt.isCancelled() || evt.getPlayer().getGameMode() == GameMode.CREATIVE) return;
+		if(evt.getPlayer().getGameMode() == GameMode.CREATIVE) return;
 		ItemStack itemWithAddedLore = getItemWithLore(evt.getBlock());
 		if(itemWithAddedLore != null){
 			evt.setCancelled(true);

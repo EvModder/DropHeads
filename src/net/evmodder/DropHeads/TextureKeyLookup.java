@@ -21,6 +21,7 @@ import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
 import net.evmodder.EvLib.extras.TextUtils;
 import org.bukkit.entity.Villager;
 import org.bukkit.entity.Wolf;
+import org.bukkit.entity.Zombie;
 import org.bukkit.entity.ZombieVillager;
 
 public class TextureKeyLookup{
@@ -152,6 +153,12 @@ public class TextureKeyLookup{
 					dataFlags = textureKey.split("\\|");
 				}
 				break;
+			case "SHEEP":
+				if(textureKey.contains("|WHITE")){
+					textureKey = textureKey.replace("|WHITE", "");
+					dataFlags = textureKey.split("\\|");
+				}
+				break;
 			case "OCELOT":
 				// "Red Cat Ocelot Head" -> "Red Cat Head"
 				if(dataFlags.length > 1) dataFlags = Arrays.copyOfRange(dataFlags, 1, dataFlags.length);
@@ -161,6 +168,12 @@ public class TextureKeyLookup{
 			case "PANDA":
 				if(textureKey.contains("|NORMAL")){
 					textureKey = textureKey.replace("|NORMAL", "");
+					dataFlags = textureKey.split("\\|");
+				}
+				break;
+			case "SKELETON": case "WITHER_SKELETON": case "SKELETON_HORSE": case "STRAY":
+				if(textureKey.contains("|HOLLOW")){
+					textureKey = textureKey.replace("|HOLLOW", "");
 					dataFlags = textureKey.split("\\|");
 				}
 				break;
@@ -182,6 +195,7 @@ public class TextureKeyLookup{
 	static RefMethod mPandaGetMainGene, mPandaGetHiddenGene;
 	static RefMethod mTraderLlamaGetColor;
 	static RefMethod mVexIsCharging;
+	static RefMethod mStriderIsShivering, mStriderHasSaddle;
 	static RefMethod mGetHandle, mGetDataWatcher, mGet_FromDataWatcher;
 	static java.lang.reflect.Field ghastIsAttackingField;
 
@@ -196,8 +210,13 @@ public class TextureKeyLookup{
 				if(((Wolf)entity).isAngry()) return "WOLF|ANGRY";
 				return "WOLF";
 			case "HORSE":
+				//TODO: isSaddled
 				return "HORSE|"+((Horse)entity).getColor().name();
+			case "DONKEY": case "MULE": case "PIG":
+				//TODO: isSaddled
+				return entity.getType().name();
 			case "LLAMA":
+				//TODO: getCarpetColor
 				return "LLAMA|"+((Llama)entity).getColor().name();
 			case "PARROT":
 				return "PARROT|"+((Parrot)entity).getVariant().name();
@@ -236,10 +255,11 @@ public class TextureKeyLookup{
 				}
 				return "ZOMBIE_VILLAGER|"+zombieVillagerProfession+"|"+((Enum)mZombieVillagerType.of(entity).call()).name();
 			case "OCELOT":
-				return "OCELOT|"+((Ocelot)entity).getCatType().name();
+				String catType = ((Ocelot)entity).getCatType().name();
+				return catType.equals("WILD_OCELOT") ? "OCELOT" : "OCELOT|"+catType;
 			case "CAT":
 				if(mCatGetType == null) mCatGetType = ReflectionUtils.getRefClass("org.bukkit.entity.Cat").getMethod("getCatType");
-				String catType = ((Enum)mCatGetType.of(entity).call()).name();
+				catType = ((Enum)mCatGetType.of(entity).call()).name();
 				if(catType.equals("RED")) catType = "GINGER";
 				if(catType.equals("BLACK")) catType = "TUXEDO";
 				if(catType.equals("ALL_BLACK")) catType = "BLACK";
@@ -248,6 +268,9 @@ public class TextureKeyLookup{
 					return "CAT|"+catType+"|"+((DyeColor)mCatGetCollarColor.of(entity).call()).name()+"_COLLARED";
 				}
 				return "CAT|"+catType;
+			case "IRON_GOLEM":
+				// TODO: Drop varying-crackiness iron golem heads
+				return "IRON_GOLEM";
 			case "MUSHROOM_COW":
 				if(ReflectionUtils.getServerVersionString().compareTo("v1_14_R0") < 0) return "MUSHROOM_COW";
 				if(mMushroomCowGetVariant == null) mMushroomCowGetVariant =
@@ -300,7 +323,17 @@ public class TextureKeyLookup{
 				if(isScreaming) return "GHAST|SCREAMING";//TODO: Add this to the Bukkit API
 				else return "GHAST";
 			case "STRIDER":
-				//TODO: Cold vs. Hot
+				if(mStriderIsShivering == null){
+					RefClass classStrider = ReflectionUtils.getRefClass("org.bukkit.entity.Strider");
+					mStriderIsShivering = classStrider.getMethod("isShivering");
+					mStriderHasSaddle = classStrider.getMethod("hasSaddle");
+				}
+				boolean isShivering = mStriderIsShivering.of(entity).call().equals(true);
+				boolean hasSaddle = mStriderHasSaddle.of(entity).call().equals(true);
+				return "STRIDER|"+(isShivering ? "COLD" : "WARM")+(hasSaddle ? "|SADDLED" : "");
+			case "PIG_ZOMBIE":
+				if(((Zombie)entity).isBaby()) return "PIG_ZOMBIE|BABY";
+				else return "PIG_ZOMBIE";
 			case "PLAYER":
 				/* hmm */
 			default:

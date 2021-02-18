@@ -1,6 +1,9 @@
 # How to announce beheadings, options are GLOBAL, LOCAL, DIRECT, or OFF
-behead-announcement-mobs: 'LOCAL'
-behead-announcement-players: 'GLOBAL'
+# To specify per entity, use: "entity_name: '<MODE>'"
+behead-announcement:
+  default: 'LOCAL'
+  player: 'GLOBAL'
+#  wither_skeleton: 'OFF'
 
 # Replaces death messages if player behead announcement is GLOBAL
 behead-announcement-replaces-death-message: true
@@ -12,15 +15,13 @@ message-beheaded-by-entity-with-item: '&6${VICTIM}&r was decapitated by &6${KILL
 message-beheaded-by-entity-with-item-named: '&6${KILLER}&r decapitated &6${VICTIM}&r using &7${ITEM}&r'
 message-beheaded-item-display-format: '${RARITY}[${NAME}${RARITY}]'
 
-# Whether to drop heads when not killed by a player
+# Whether to drop heads if not killed by a player
 drop-for-nonplayer-kills: false
 
-# Whether to drop heads if killed by projectile weapon from a player
-# Only checked if 'drop-for-nonplayer-kills' is false
+# Whether to drop heads if killed by a projectile weapon
 drop-for-ranged-kills: false
 
-# Whether to drop heads for any death cause if last-damager is a player
-# Only checked if 'drop-for-nonplayer-kills' is false
+# Whether to drop heads if last-damage-cause is not a valid entity
 drop-for-indirect-kills: false
 
 # Only drop player heads (you can also do this in 'head-drop-rates.txt'
@@ -36,6 +37,9 @@ refresh-textures: true
 
 # Whether to reset the item name for a head when refreshing its texture
 refresh-item-names: false
+
+# Whether to reset the item lore for a head when refreshing its texture
+refresh-item-lores: false
 
 # When a player changes their skin, should old heads be updated to the
 # new texture? Note: to trigger refresh, heads must be mined or dropped
@@ -58,6 +62,13 @@ charged-creeper-drops: true
 drop-grumm-heads: true
 show-grumm-in-tab-complete: false
 
+# Should heads of saddled mobs have altered textures (when applicable)?
+drop-saddled-heads: false
+
+# Should skeletal mob heads use hollow textures on the bottom?
+# Note: This is only possible due to HD textures, which Mojang might patch
+hollow-skeletal-skulls: false
+
 # Enable plugin auto-updates (checks for new versions and head textures)
 # Note: Disable if your console shows DropHeads errors on startup
 update-plugin: true
@@ -67,18 +78,28 @@ update-plugin: true
 update-textures: true
 
 # Run in debug mode (prints extra information to console)
-debug-messages: true
+debug-messages: false
+
+# If this is set to true, players will not be able to place down head blocks
+# unless they are given the 'dropheads.canplacehead' permission
+prevent-head-placement: false
+prevent-head-placement-message: '&7[&6DropHeads&7]&c No permission to place head blocks'
 
 # Shows information about a head when right-clicked by a player
 head-click-listener: true
-head-click-format-mobs: "&7[&6DropHeads&7]&f That's ${A} ${NAME}&f ${TYPE}"
 head-click-format-players: "&7[&6DropHeads&7]&f That's ${NAME}'s Head"
+head-click-format-mobs: "&7[&6DropHeads&7]&f That's ${A} ${MOB_TYPE}&f ${HEAD_TYPE}"
+head-click-format-hdb: "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"
+head-click-format-unknown: "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"
 
 # Saves lore of heads in GameProfile when placed (used by some other plugins)
 # Only works for player-type heads, eg: won't work for minecraft:creeper_head
 # WARNING: This feature is in BETA and is relatively untested
-# NOTE: Lore currently is lost when the head is broken by a non-player
+# WARNING: Lore will still get lost if the head is broken by a non-player
 save-custom-lore: false
+
+# Corrects custom lore and name when CTRL-copying a placed head in creative
+fix-creative-nbt-copy: true
 
 # Displays the type of head (eg: player, mob, HDB) in the head item's lore
 # Note: Applies to custom player/mob heads, but not to WITHER_SKULL etc.
@@ -86,6 +107,19 @@ show-head-type-in-lore: true
 
 # Only drop heads if the killer used an axe; overrides 'must-use'
 must-use-axe: false
+
+# How the head item from a beheading should be handled, options are:
+# EVENT - add the head to normally dropped loot,
+# SPAWN - spawn the head separately from the event,
+# PLACE - place the head on the ground if spot is available (within 3 blocks)
+# PLACE_BY_KILLER - same as PLACE but checks if killer has build permissions
+# PLACE_BY_VICTIM - same as PLACE but checks if victim has build permissions
+# GIVE - try to put the head directly into the killer's inventory
+# You can do multiple of these in a list; i.e., ['GIVE', 'SPAWN'] will try to
+# give a head to the killer, but will drop the item if their inventory is full
+head-item-drop-mode: 'EVENT'
+
+head-place-overwrite-blocks: ['AIR', 'WATER', 'GRASS']
 
 # (Optional) Select weapons required to be used in order to get heads to drop
 # If this list is empty, any weapon can be used to get heads
@@ -100,11 +134,18 @@ looting-mutliplier: 1.01
 # This number is added to the drop chance for each level of looting
 looting-addition: 0.0
 
-# Use vanilla behavior (overrides 'looting-mult/add') for wither skeletons
-vanilla-wither-skeleton-looting-behavior: true
+# Defer wither skeleton skull handling to vanilla Minecraft
+# This bypasses 'head-drop-rates.txt', custom looting multiplier/addition,
+# 'must-use-axe', 'drop-for-nonplayer-kills', and other DropHeads settings
+# However, it does not bypass permissions such as 'dropheads.alwaysbehead'
+vanilla-wither-skeleton-skulls: true
 
 # Replace Zombie_Pigman heads with Zombified_Piglin heads in 1.16+
 update-zombie-pigman-heads: true
+
+# If this is false, all heads will be forced to use the player_head type
+# This changes the material type of zombie, creeper, skeleton & wither skulls
+prefer-vanilla-heads: true
 
 # Changes the death "Event Priority" that DropHeads registers at
 # Low values => DropHeads runs BEFORE other plugins; high values => runs AFTER
@@ -116,9 +157,11 @@ death-listener-priority: LOW
 # Eg: 0.8 = 80% more likely, -0.1 = 10% less likely, 2.0 = +200%, etc.
 specific-tool-modifiers:
   GOLDEN_AXE: 3
-  DIAMOND_AXE: 1
-  IRON_AXE: 0.8
-  STONE_AXE: 0.5
+  NETHERITE_AXE: 1
+  DIAMOND_AXE: 0.8
+  IRON_AXE: 0.6
+  STONE_AXE: 0.4
+  WOODEN_AXE: 0.2
   SHEARS: 2
   DIAMOND_SWORD: 0.2
   IRON_SWORD: 0.1
