@@ -29,7 +29,6 @@ import net.evmodder.EvLib.Updater;
 // * jeb_ sheep head animated phasing through colors (like the jeb_ sheep)
 // * if mob has custom name, use it in head name (configurable)
 // * move textures from head-textures.txt to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
-// * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
 // * stray & wskele skull texture needs to match mob more accurately
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
 // * Known bugs: Charged creeper can cause 2 heads to drop (1 vanilla and 1 non-vanilla head), and the vanilla charged creeper behead bypasses logs
@@ -37,7 +36,9 @@ import net.evmodder.EvLib.Updater;
 // * Work with Trophies/Luck attribute
 // * ability to TRANSLATE all msgs in plugin by putting in config
 // * un-dye heads with cauldron
+// * hide behead msgs for vanished players
 //TEST:
+// * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
 // * Cracked iron golem head / repair with ingot
 // * yellow head name color
 // * place-head-block, overwrite-blocks, facing-direction, place-as: KILLER/VICTIM/SERVER

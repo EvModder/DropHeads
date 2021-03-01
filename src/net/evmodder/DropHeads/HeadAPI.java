@@ -148,7 +148,7 @@ public class HeadAPI {
 
 	public boolean textureExists(String textureKey){return textures.containsKey(textureKey);}
 	public TreeMap<String, String> getTextures(){return textures;}//TODO: remove public (add CommandSpawnHead as friend?)
-	public HeadDatabaseAPI getHeadDatabaseAPI(){return hdbAPI;}//TODO: prefer this not by public
+	public HeadDatabaseAPI getHeadDatabaseAPI(){return hdbAPI;}//TODO: prefer avoiding public
 
 	public String getHeadNameFromKey(String textureKey){
 		// Attempt to parse out an EntityType
@@ -257,7 +257,7 @@ public class HeadAPI {
 		}
 		return head;
 	}
-	public ItemStack makeSkull_wrapper(String textureCode, String headName){
+	public ItemStack makeSkull_wrapper(String textureCode, String headName){//TODO: prefer avoiding public
 		ItemStack head = HeadUtils.makeSkull(textureCode, headName);
 		if(SAVE_TYPE_IN_LORE){
 			ItemMeta meta = head.getItemMeta();
@@ -273,7 +273,7 @@ public class HeadAPI {
 		}
 		return head;
 	}
-	public ItemStack getPlayerHead_wrapper(OfflinePlayer player){
+	public ItemStack getPlayerHead_wrapper(OfflinePlayer player){//TODO: prefer avoiding public
 		ItemStack head = HeadUtils.getPlayerHead(player);
 		if(SAVE_TYPE_IN_LORE){
 			SkullMeta meta = (SkullMeta) head.getItemMeta();
@@ -304,7 +304,7 @@ public class HeadAPI {
 		}
 		return head;
 	}
-	public ItemStack getItemHead_wrapper(String id){
+	public ItemStack getItemHead_wrapper(String id){//TODO: prefer avoiding public
 		ItemStack hdbHead = hdbAPI.getItemHead(id);
 		GameProfile profile = HeadUtils.getGameProfile((SkullMeta)hdbHead.getItemMeta());
 		ItemStack head = HeadUtils.getPlayerHead(profile);
@@ -321,6 +321,12 @@ public class HeadAPI {
 		return head;
 	}
 
+	/**
+	 * Get a custom head from an entity type and texture key (e.g., FOX|SNOW|SLEEPING)
+	 * @param type The entity type for the head
+	 * @param textureKey The texture key for the head
+	 * @return The result head ItemStack
+	 */
 	public ItemStack getHead(EntityType eType, String textureKey/*, boolean saveTypeInLore, boolean unstackable*/){
 		// If there is extra "texture metadata" (aka '|') we should return the custom skull
 		if(textureKey != null){
@@ -358,6 +364,11 @@ public class HeadAPI {
 			}
 	}
 
+	/**
+	 * Get a custom head from an Entity
+	 * @param entity The entity for which to to create a head
+	 * @return The result head ItemStack
+	 */
 	public ItemStack getHead(Entity entity/*, boolean saveTypeInLore, boolean unstackable*/){
 		if(entity.getType() == EntityType.PLAYER){
 			return getPlayerHead_wrapper((OfflinePlayer)entity);
@@ -370,6 +381,11 @@ public class HeadAPI {
 		return getHead(entity.getType(), textureKey);
 	}
 
+	/**
+	 * Get a custom head from a GameProfile
+	 * @param profile The profile information to create a head
+	 * @return The result head ItemStack
+	 */
 	public ItemStack getHead(GameProfile profile/*, boolean saveTypeInLore, boolean unstackable*/){
 		if(profile == null) return null;
 		String profileName = profile.getName();

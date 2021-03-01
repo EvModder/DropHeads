@@ -2,9 +2,11 @@ package net.evmodder.DropHeads;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 import org.bukkit.ChatColor;
 import org.bukkit.block.BlockFace;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -16,6 +18,7 @@ import com.sun.istack.internal.NotNull;
 import net.evmodder.DropHeads.listeners.EntityDeathListener.AnnounceMode;
 import net.evmodder.EvLib.extras.HeadUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils;
+import net.evmodder.EvLib.extras.TextUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
 
@@ -65,6 +68,13 @@ public class JunkUtils{
 		}
 	}
 
+	public final static String[] parseStringOrStringList(FileConfiguration config, String key, String defaultMsg){
+		List<String> strList = null;
+		return config.isList(key) && (strList=config.getStringList(key)) != null && !strList.isEmpty()
+				? strList.stream().map(
+					msg -> TextUtils.translateAlternateColorCodes('&', msg)).toArray(size -> new String[size])
+				: new String[]{TextUtils.translateAlternateColorCodes('&', config.getString(key, defaultMsg))};
+	}
 	public final static AnnounceMode parseAnnounceMode(@NotNull String value, AnnounceMode defaultMode){
 		value = value.toUpperCase();
 		if(value.equals("FALSE")) return AnnounceMode.OFF;
