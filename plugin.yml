@@ -5,8 +5,8 @@ description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite,
 #5=prevent-head-placement, drop-mode, drop rate for mob subtypes, hollow-skeletal-skulls, sub-perms for /spawnhead
-#4=
-version: 3.5.3.2
+#4=silver -> light_gray, dropheads.silentbehead, multi-rdm-behead-msg
+version: 3.5.4
 api-version: 1.13
 softdepend: [HeadDatabase]
 
@@ -112,3 +112,18 @@ permissions:
     default: false
     children:
       dropheads.canbehead: true
+
+  dropheads.silentbehead:
+    description: Permission to hide all behead messages caused by this entity
+    default: false
+    children:
+      dropheads.silentbehead.vanished: true
+      dropheads.silentbehead.invisible: true
+
+  dropheads.silentbehead.vanished: ## NOTE: THIS PERMISSION IS UPCOMING, NOT YET SUPPORTED
+    description: Permission to suppress the behead message while vanished
+    default: true
+
+  dropheads.silentbehead.invisible:
+    description: Permission to suppress the behead message while invisible
+    default: true

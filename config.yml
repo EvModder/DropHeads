@@ -29,7 +29,7 @@ drop-for-indirect-kills: false
 player-heads-only: false
 
 # Only drop "simple" mob heads (one per EntityType), without any unique
-# features based on mob traits or subtype; very boring, not recommended
+# texture features based on mob traits or subtype
 simple-mob-heads-only: false
 
 # Whether to keep entity heads updated with the latest vanilla textures
@@ -146,6 +146,10 @@ update-zombie-pigman-heads: true
 # If this is false, all heads will be forced to use the player_head type
 # This changes the material type of zombie, creeper, skeleton & wither skulls
 prefer-vanilla-heads: true
+
+# If this is true, Iron Golems will drop "cracked" heads which can be repaired
+# to the normal texture by placing them and clicking on them with iron ingots.
+cracked-iron-golem-heads: false
 
 # Changes the death "Event Priority" that DropHeads registers at
 # Low values => DropHeads runs BEFORE other plugins; high values => runs AFTER

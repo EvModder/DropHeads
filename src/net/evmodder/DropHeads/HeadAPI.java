@@ -33,7 +33,7 @@ public class HeadAPI {
 	final private DropHeads pl;
 	private HeadDatabaseAPI hdbAPI = null;
 //	private int MAX_HDB_ID = -1;
-	final boolean GRUM_ENABLED, SADDLES_ENABLED, HOLLOW_SKULLS_ENABLED;
+	final boolean GRUM_ENABLED, SADDLES_ENABLED, HOLLOW_SKULLS_ENABLED, CRACKED_IRON_GOLEMS_ENABLED;
 	final boolean UPDATE_PLAYER_HEADS, UPDATE_ZOMBIE_PIGMEN_HEADS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_VANILLA_HEADS;
 	final TreeMap<String, String> textures; // Key="ENTITY_NAME|DATA", Value="eyJ0ZXh0dXJl..."
 
@@ -43,6 +43,7 @@ public class HeadAPI {
 		GRUM_ENABLED = pl.getConfig().getBoolean("drop-grumm-heads", true);
 		SADDLES_ENABLED = pl.getConfig().getBoolean("drop-saddled-heads", true);
 		HOLLOW_SKULLS_ENABLED = pl.getConfig().getBoolean("hollow-skeletal-skulls", false);
+		CRACKED_IRON_GOLEMS_ENABLED = pl.getConfig().getBoolean("cracked-iron-golem-heads", false);
 		UPDATE_PLAYER_HEADS = pl.getConfig().getBoolean("update-on-skin-change", true);
 		boolean zombifiedPiglensExist = false;
 		try{EntityType.valueOf("ZOMBIFIED_PIGLIN"); zombifiedPiglensExist = true;} catch(IllegalArgumentException ex){}
@@ -147,7 +148,7 @@ public class HeadAPI {
 
 	public boolean textureExists(String textureKey){return textures.containsKey(textureKey);}
 	public TreeMap<String, String> getTextures(){return textures;}//TODO: remove public (add CommandSpawnHead as friend?)
-	public HeadDatabaseAPI getHeadDatabaseAPI(){return hdbAPI;}//TODO: prefer this not by public
+	public HeadDatabaseAPI getHeadDatabaseAPI(){return hdbAPI;}//TODO: prefer avoiding public
 
 	public String getHeadNameFromKey(String textureKey){
 		// Attempt to parse out an EntityType
@@ -256,7 +257,7 @@ public class HeadAPI {
 		}
 		return head;
 	}
-	public ItemStack makeSkull_wrapper(String textureCode, String headName){
+	public ItemStack makeSkull_wrapper(String textureCode, String headName){//TODO: prefer avoiding public
 		ItemStack head = HeadUtils.makeSkull(textureCode, headName);
 		if(SAVE_TYPE_IN_LORE){
 			ItemMeta meta = head.getItemMeta();
@@ -272,7 +273,7 @@ public class HeadAPI {
 		}
 		return head;
 	}
-	public ItemStack getPlayerHead_wrapper(OfflinePlayer player){
+	public ItemStack getPlayerHead_wrapper(OfflinePlayer player){//TODO: prefer avoiding public
 		ItemStack head = HeadUtils.getPlayerHead(player);
 		if(SAVE_TYPE_IN_LORE){
 			SkullMeta meta = (SkullMeta) head.getItemMeta();
@@ -303,7 +304,7 @@ public class HeadAPI {
 		}
 		return head;
 	}
-	public ItemStack getItemHead_wrapper(String id){
+	public ItemStack getItemHead_wrapper(String id){//TODO: prefer avoiding public
 		ItemStack hdbHead = hdbAPI.getItemHead(id);
 		GameProfile profile = HeadUtils.getGameProfile((SkullMeta)hdbHead.getItemMeta());
 		ItemStack head = HeadUtils.getPlayerHead(profile);
@@ -320,6 +321,12 @@ public class HeadAPI {
 		return head;
 	}
 
+	/**
+	 * Get a custom head from an entity type and texture key (e.g., FOX|SNOW|SLEEPING)
+	 * @param type The entity type for the head
+	 * @param textureKey The texture key for the head
+	 * @return The result head ItemStack
+	 */
 	public ItemStack getHead(EntityType eType, String textureKey/*, boolean saveTypeInLore, boolean unstackable*/){
 		// If there is extra "texture metadata" (aka '|') we should return the custom skull
 		if(textureKey != null){
@@ -357,17 +364,28 @@ public class HeadAPI {
 			}
 	}
 
+	/**
+	 * Get a custom head from an Entity
+	 * @param entity The entity for which to to create a head
+	 * @return The result head ItemStack
+	 */
 	public ItemStack getHead(Entity entity/*, boolean saveTypeInLore, boolean unstackable*/){
 		if(entity.getType() == EntityType.PLAYER){
 			return getPlayerHead_wrapper((OfflinePlayer)entity);
 		}
 		String textureKey = TextureKeyLookup.getTextureKey(entity);
 		if(!SADDLES_ENABLED && textureKey.endsWith("|SADDLED")) textureKey = textureKey.substring(0, textureKey.length()-8);
+		if(CRACKED_IRON_GOLEMS_ENABLED && entity.getType() == EntityType.IRON_GOLEM) textureKey += "|HIGH_CRACKINESS";
 		if(HOLLOW_SKULLS_ENABLED && JunkUtils.isSkeletal(entity.getType())) textureKey += "|HOLLOW";
 		if(GRUM_ENABLED && HeadUtils.hasGrummName(entity)) textureKey += "|GRUMM";
 		return getHead(entity.getType(), textureKey);
 	}
 
+	/**
+	 * Get a custom head from a GameProfile
+	 * @param profile The profile information to create a head
+	 * @return The result head ItemStack
+	 */
 	public ItemStack getHead(GameProfile profile/*, boolean saveTypeInLore, boolean unstackable*/){
 		if(profile == null) return null;
 		String profileName = profile.getName();

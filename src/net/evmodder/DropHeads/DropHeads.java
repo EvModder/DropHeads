@@ -26,19 +26,20 @@ import net.evmodder.EvLib.Updater;
 
 //TODO:
 // * /dropheads reload
-// * Cracked iron golem head (repair with ingot?)
 // * jeb_ sheep head animated phasing through colors (like the jeb_ sheep)
 // * if mob has custom name, use it in head name (configurable)
 // * move textures from head-textures.txt to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
-// * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
 // * stray & wskele skull texture needs to match mob more accurately
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
 // * Known bugs: Charged creeper can cause 2 heads to drop (1 vanilla and 1 non-vanilla head), and the vanilla charged creeper behead bypasses logs
 // * to fix above bug, cancel vanilla charge creeper head drops
 // * Work with Trophies/Luck attribute
-// * FIX DROPHEADS.ALWAYSBEHEAD PERM
 // * ability to TRANSLATE all msgs in plugin by putting in config
+// * un-dye heads with cauldron
+// * hide behead msgs for vanished players
 //TEST:
+// * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
+// * Cracked iron golem head / repair with ingot
 // * yellow head name color
 // * place-head-block, overwrite-blocks, facing-direction, place-as: KILLER/VICTIM/SERVER
 // * middle-click copy with correct item name
@@ -86,7 +87,7 @@ public final class DropHeads extends EvPlugin{
 		if(config.getBoolean("refresh-textures", false)){
 			getServer().getPluginManager().registerEvents(new ItemDropListener(), this);
 		}
-		if(config.getBoolean("head-click-listener", true)){
+		if(config.getBoolean("head-click-listener", true) || config.getBoolean("cracked-iron-golem-heads", false)){
 			getServer().getPluginManager().registerEvents(new BlockClickListener(), this);
 		}
 		if(config.getBoolean("save-custom-lore", true)){

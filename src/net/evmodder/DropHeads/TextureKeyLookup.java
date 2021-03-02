@@ -177,6 +177,16 @@ public class TextureKeyLookup{
 					dataFlags = textureKey.split("\\|");
 				}
 				break;
+			case "IRON_GOLEM":
+				if(textureKey.contains("|HOLLOW")){
+					textureKey = textureKey
+							.replace("|FULL_HEALTH", "")
+							.replace("|LOW_CRACKINESS", "|SLIGHTLY_DAMAGED")
+							.replace("|MEDIUM_CRACKINESS", "|DAMAGED")
+							.replace("|HIGH_CRACKINESS", "|VERY_DAMAGED");
+					dataFlags = textureKey.split("\\|");
+				}
+				break;
 		}
 		StringBuilder builder = new StringBuilder("");
 		for(int i=dataFlags.length-1; i>0; --i){
