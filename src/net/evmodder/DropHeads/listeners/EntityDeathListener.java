@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.Random;
 import java.util.TreeMap;
 import java.util.UUID;
+import javax.annotation.Nonnull;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -47,7 +48,6 @@ import org.bukkit.projectiles.BlockProjectileSource;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
-import com.sun.istack.internal.NotNull;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.DropHeads.TextureKeyLookup;
@@ -295,15 +295,18 @@ public class EntityDeathListener implements Listener{
 		}
 		// Dynamically add all the children perms of "dropheads.alywaysbehead.<entity>"
 		Permission alwaysBeheadPerm = pl.getServer().getPluginManager().getPermission("dropheads.alwaysbehead");
-		for(EntityType entity : EntityType.values()){
-			Permission alwaysBeheadPermForEntity = new Permission(
-					alwaysBeheadPerm.getName()+"."+entity.name().toLowerCase(),
-					"This entity will get a head 100% of the time when killing a "+entity.name().toLowerCase(),
-					PermissionDefault.FALSE);
-			alwaysBeheadPermForEntity.addParent(alwaysBeheadPerm, true);
-			pl.getServer().getPluginManager().addPermission(alwaysBeheadPermForEntity);
+		try{
+			for(EntityType entity : EntityType.values()){
+				Permission alwaysBeheadPermForEntity = new Permission(
+						alwaysBeheadPerm.getName()+"."+entity.name().toLowerCase(),
+						"This entity will get a head 100% of the time when killing a "+entity.name().toLowerCase(),
+						PermissionDefault.FALSE);
+				alwaysBeheadPermForEntity.addParent(alwaysBeheadPerm, true);
+				pl.getServer().getPluginManager().addPermission(alwaysBeheadPermForEntity);
+			}
+			alwaysBeheadPerm.recalculatePermissibles();
 		}
-		alwaysBeheadPerm.recalculatePermissibles();
+		catch(IllegalArgumentException ex){/*The permissions are already defined; perhaps this is just a plugin or server reload*/}
 	}
 
 	public double getRawDropChance(Entity e){
@@ -422,15 +425,15 @@ public class EntityDeathListener implements Listener{
 				message.addComponent(hasCustomName
 						? MSH_BEHEAD_BY_WITH_NAMED[rand.nextInt(MSH_BEHEAD_BY_WITH_NAMED.length)]
 						: MSH_BEHEAD_BY_WITH[rand.nextInt(MSH_BEHEAD_BY_WITH.length)]);
-				message.replaceRawTextWithComponent("${ITEM}", itemComp);
+				message.replaceRawDisplayTextWithComponent("${ITEM}", itemComp);
 			}
 			else message.addComponent(MSH_BEHEAD_BY[rand.nextInt(MSH_BEHEAD_BY.length)]);
 			//if(USE_PLAYER_DISPLAYNAMES) message.replaceRawTextWithComponent("${KILLER}", ...);
-			message.replaceRawTextWithComponent("${KILLER}", killerComp);
+			message.replaceRawDisplayTextWithComponent("${KILLER}", killerComp);
 		}
 		else message.addComponent(MSG_BEHEAD[rand.nextInt(MSG_BEHEAD.length)]);
 		Component victimComp = new SelectorComponent(entity.getUniqueId(), USE_PLAYER_DISPLAYNAMES);
-		message.replaceRawTextWithComponent("${VICTIM}", victimComp);
+		message.replaceRawDisplayTextWithComponent("${VICTIM}", victimComp);
 
 		if(!message.toPlainText().replaceAll(" ", "").isEmpty()){
 			if(DEBUG_MODE) pl.getLogger().info(/*"Tellraw message: "+*/message.toPlainText());
@@ -472,7 +475,7 @@ public class EntityDeathListener implements Listener{
 	}
 
 
-	void onEntityDeath(@NotNull final Entity victim, final Entity killer, final Event evt){
+	void onEntityDeath(@Nonnull final Entity victim, final Entity killer, final Event evt){
 		if(PLAYER_HEADS_ONLY && victim instanceof Player == false) return;
 		if(killer != null){
 			if(!killer.hasPermission("dropheads.canbehead")){
