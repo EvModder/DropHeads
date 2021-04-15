@@ -15,6 +15,8 @@ import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.DropHeads.listeners.EntityDeathListener;
 import net.evmodder.EvLib.EvCommand;
 import net.evmodder.EvLib.FileIO;
+import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
+import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
 
 public class CommandDropRate extends EvCommand{
 	final private DropHeads pl;
@@ -22,21 +24,34 @@ public class CommandDropRate extends EvCommand{
 	final DecimalFormat df;
 	final boolean ONLY_SHOW_VALID_ENTITIES = true;
 	final boolean USING_SPAWN_MODIFIERS, USING_LOOTING_MODIFIERS, USING_TIME_ALIVE_MODIFIERS, USING_TOOL_MODIFIERS,
-			USING_REQUIRED_TOOLS, VANILLA_WITHER_SKELETON_LOOTING;
+			VANILLA_WITHER_SKELETON_LOOTING;
+	final ListComponent REQUIRED_TOOLS;
 	final HashMap<String, Double> dropChances;
 	final double DEFAULT_DROP_CHANCE;
+	
+	final String DROP_CHANCE_FOR = "§6Drop chance for §e%s§6: §b%s%";
+	final String DROP_CHANCE_FOR_NOT_FOUND = "§6Drop chance for \"§c%s\"§6 not found! §7(unknown mobs default to §b0%§7)";
+	final String OTHER_THINGS_THAT_AFFECT_DROPRATE = "§7Other things that can affect droprate: ";
+	final String VICTIM_MUST_HAVE_PERM = "Victim must have '§fdropheads.canlosehead§7' perm (default=true)";
+	final String KILLER_MUST_HAVE_PERM = "You must have the '§fdropheads.canbehead§7' perm";
+	final String ALWAYS_BEHEAD_ALERT = "Perm '§fdropheads.alwaysbehead§7' raises rate to 100%";
+	final String SPECIFIC_WEAPONS_ALERT = "Specific murder weapons are required {%s}";
+	final String RATE_MODIFIER_HEADER = "Rate modifiers: ";
+	final String SPAWN_REASON = "§fSpawnReason§7, ", TIME_ALIVE = "§fTimeAlive§7, ", WEAPON_TYPE = "§fWeaponType§7, ", LOOTING = "§fLooting§7";
+	final String VANILLA_WITHER_SKELETON_BEHAVIOR_ALERT = "Vanilla wither_skeleton looting rate is enabled";
 
 	public CommandDropRate(DropHeads plugin, EntityDeathListener deathListener) {
 		super(plugin);
 		pl = plugin;
 		this.deathListener = deathListener;
+		REQUIRED_TOOLS = new ListComponent();
+		deathListener.mustUseTools.stream().forEach(mat -> REQUIRED_TOOLS.addComponent(new TranslationComponent("item.minecraft."+mat.name().toLowerCase())));
 		USING_SPAWN_MODIFIERS = pl.getConfig().getBoolean("track-mob-spawns", true);
 		USING_LOOTING_MODIFIERS = pl.getConfig().getDouble("looting-mutliplier") != 1.0 || pl.getConfig().getDouble("looting-addition") != 0;
 		USING_TIME_ALIVE_MODIFIERS = pl.getConfig().isConfigurationSection("time-alive-modifiers")
 				&& !pl.getConfig().getConfigurationSection("time-alive-modifiers").getKeys(false).isEmpty();
 		USING_TOOL_MODIFIERS = pl.getConfig().isConfigurationSection("specific-tool-modifiers")
 				&& !pl.getConfig().getConfigurationSection("specific-tool-modifiers").getKeys(false).isEmpty();
-		USING_REQUIRED_TOOLS = !pl.getConfig().getStringList("must-use").isEmpty();
 		VANILLA_WITHER_SKELETON_LOOTING = pl.getConfig().getBoolean("vanilla-wither-skeleton-looting-behavior", true);
 
 		//String defaultChances = FileIO.loadResource(pl, "head-drop-rates.txt"); // Already done in EntityDeathListener
@@ -102,42 +117,39 @@ public class CommandDropRate extends EvCommand{
 		if(entity == null) entity = pl.getServer().getPlayer(target);
 		if(entity != null){
 			if(!entity.hasPermission("dropheads.canlosehead")){
-				sender.sendMessage("§6Drop chance for "
-						+(entity instanceof Player ? "\"§e"+entity.getName()+"§6\"" : "§e"+target+"§6")
-						+": §b0% §7(dropheads.canlosehead=§cfalse§7)");
+				sender.sendMessage(String.format(DROP_CHANCE_FOR, entity instanceof Player ? entity.getName() : target, 0)
+						+" §7(dropheads.canlosehead=§cfalse§7)");
 			}
 			else{
 				double dropChance = deathListener.getRawDropChance(entity);
 				if(USING_SPAWN_MODIFIERS) dropChance *= JunkUtils.getSpawnCauseModifier(entity);
 				if(USING_TIME_ALIVE_MODIFIERS) dropChance *= (1D + deathListener.getTimeAliveBonus(entity));
-				sender.sendMessage("§6Drop chance for "
-						+(entity instanceof Player ? "\"§e"+entity.getName()+"§6\"" : "§e"+target+"§6")
-						+": §b"+df.format(dropChance*100D)+"%");
+				sender.sendMessage(String.format(DROP_CHANCE_FOR, entity instanceof Player ? entity.getName() : target, df.format(dropChance*100D)));
 			}
 		}
 		else{
 			Double rawChance = dropChances.get(target);
-			if(rawChance != null) sender.sendMessage("§6Drop chance for §e"+target+"§6: §b"+df.format(rawChance*100D)+"%");
+			if(rawChance != null) sender.sendMessage(String.format(DROP_CHANCE_FOR, target, df.format(rawChance*100D), df.format(rawChance*100D)));
 			else{
-				sender.sendMessage("§6Drop chance for \"§c"+target+"\"§6 not found! §7(unknown mobs default to §b0%§7)");
+				sender.sendMessage(String.format(DROP_CHANCE_FOR_NOT_FOUND, target));
 				return false;
 			}
 		}
 
-		StringBuilder builder = new StringBuilder("§7Other things that can affect droprate: ");
-		if(entity == null && target.equals("player")) builder.append("\nVictim must have '§fdropheads.canlosehead§7' perm (default=true)");
-		if(!sender.hasPermission("dropheads.canbehead")) builder.append("\nYou must have the '§fdropheads.canbehead§7' perm");// (true/fase for you)
-		if(sender.hasPermission("dropheads.alwaysbehead")) builder.append("\nPerm '§fdropheads.alwaysbehead§7' raises rate to 100%");// (true/false for you)
-		if(USING_REQUIRED_TOOLS) builder.append("\nSpecific murder weapons are required"/* {IRON_AXE, ...}*/);
-		builder.append("\nRate modifiers: ");
-		if(USING_SPAWN_MODIFIERS && !target.equals("player") && (entity == null ||
-				Math.abs(1F - JunkUtils.getSpawnCauseModifier(entity)) > 0.001F))
-			builder.append("§fSpawnReason§7, "/* <red>-XX% to <green>+YY% */);
+		StringBuilder builder = new StringBuilder(OTHER_THINGS_THAT_AFFECT_DROPRATE);
+		if(entity == null && target.equals("PLAYER")) builder.append('\n').append(VICTIM_MUST_HAVE_PERM);
+		if(!sender.hasPermission("dropheads.canbehead")) builder.append('\n').append(KILLER_MUST_HAVE_PERM);// (true/false for you)
+		if(sender.hasPermission("dropheads.alwaysbehead")) builder.append('\n').append(ALWAYS_BEHEAD_ALERT);// (true/false for you)
+		if(!REQUIRED_TOOLS.getComponents().isEmpty()) builder.append('\n').append(String.format(SPECIFIC_WEAPONS_ALERT, "${REQUIRED_TOOLS}"));
+		builder.append('\n').append(RATE_MODIFIER_HEADER);
+		if(USING_SPAWN_MODIFIERS && !target.equals("PLAYER") &&
+				(entity == null || Math.abs(1F - JunkUtils.getSpawnCauseModifier(entity)) > 0.001F))
+			builder.append(SPAWN_REASON/* <red>-XX% to <green>+YY% */);
 		if(USING_TIME_ALIVE_MODIFIERS && (entity == null || Math.abs(deathListener.getTimeAliveBonus(entity)) > 0.001))
-			builder.append("§fTimeAlive§7, "/* <red>-XX% to <green>+YY% */);
-		if(USING_TOOL_MODIFIERS) builder.append("§fWeaponType§7, "/* <red>-XX% to <green>+YY% */);
-		if(VANILLA_WITHER_SKELETON_LOOTING && target.equals("wither_skeleton")) builder.append("\nVanilla wither_skeleton looting rate is enabled");
-		else if(USING_LOOTING_MODIFIERS) builder.append("§fLooting§7"/* (level 3: <green>+XX%) */);
+			builder.append(TIME_ALIVE/* <red>-XX% to <green>+YY% */);
+		if(USING_TOOL_MODIFIERS) builder.append(WEAPON_TYPE/* <red>-XX% to <green>+YY% */);
+		if(VANILLA_WITHER_SKELETON_LOOTING && target.equals("WITHER_SKELETON")) builder.append('\n').append(VANILLA_WITHER_SKELETON_BEHAVIOR_ALERT);
+		else if(USING_LOOTING_MODIFIERS) builder.append(LOOTING/* (level 3: <green>+XX%) */);
 		sender.sendMessage(builder.toString());
 		return true;
 	}
