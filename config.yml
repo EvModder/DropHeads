@@ -88,7 +88,7 @@ prevent-head-placement-message: '&7[&6DropHeads&7]&c No permission to place head
 # Shows information about a head when right-clicked by a player
 head-click-listener: true
 head-click-format-players: "&7[&6DropHeads&7]&f That's ${NAME}'s Head"
-head-click-format-mobs: "&7[&6DropHeads&7]&f That's ${A} ${MOB_TYPE}&f ${HEAD_TYPE}"
+head-click-format-mobs: "&7[&6DropHeads&7]&f That's ${A} ${MOB_SUBTYPES_DESC} ${MOB_TYPE}&f ${HEAD_TYPE}"
 head-click-format-hdb: "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"
 head-click-format-unknown: "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"
 
@@ -148,7 +148,7 @@ update-zombie-pigman-heads: true
 prefer-vanilla-heads: true
 
 # If this is true, Iron Golems will drop "cracked" heads which can be repaired
-# to the normal texture by placing them and clicking on them with iron ingots.
+# to the normal texture by placing them and clicking on them with iron ingots
 cracked-iron-golem-heads: false
 
 # Changes the death "Event Priority" that DropHeads registers at
@@ -192,3 +192,11 @@ log:
   log-player-behead-format: '${TIMESTAMP},player decapitated,${VICTIM},${KILLER},${ITEM}'
   log-head-command: true
   log-head-command-format: '${TIMESTAMP},gethead command,${SENDER},${HEAD}'
+
+# Configure this section to translate messages to your preferred language
+local-type-head: "Head"
+local-type-skull: "Skull"
+local-type-toe: "Toe"
+local-item-display-mobs: "${MOB_SUBTYPES_DESC} ${MOB_TYPE} ${HEAD_TYPE}"
+local-item-display-players: "${NAME} Head"
+# More translation settings coming soon...

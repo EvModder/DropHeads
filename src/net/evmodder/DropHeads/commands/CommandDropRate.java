@@ -140,7 +140,7 @@ public class CommandDropRate extends EvCommand{
 		if(entity == null && target.equals("PLAYER")) builder.append('\n').append(VICTIM_MUST_HAVE_PERM);
 		if(!sender.hasPermission("dropheads.canbehead")) builder.append('\n').append(KILLER_MUST_HAVE_PERM);// (true/false for you)
 		if(sender.hasPermission("dropheads.alwaysbehead")) builder.append('\n').append(ALWAYS_BEHEAD_ALERT);// (true/false for you)
-		if(!REQUIRED_TOOLS.getComponents().isEmpty()) builder.append('\n').append(String.format(SPECIFIC_WEAPONS_ALERT, "${REQUIRED_TOOLS}"));
+		if(!REQUIRED_TOOLS.isEmpty()) builder.append('\n').append(String.format(SPECIFIC_WEAPONS_ALERT, "${REQUIRED_TOOLS}"));
 		builder.append('\n').append(RATE_MODIFIER_HEADER);
 		if(USING_SPAWN_MODIFIERS && !target.equals("PLAYER") &&
 				(entity == null || Math.abs(1F - JunkUtils.getSpawnCauseModifier(entity)) > 0.001F))

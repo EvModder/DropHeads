@@ -27,7 +27,7 @@ import net.evmodder.EvLib.Updater;
 //TODO:
 // * /dropheads reload
 // * jeb_ sheep head animated phasing through colors (like the jeb_ sheep)
-// * if mob has custom name, use it in head name (configurable)
+// * if mob has custom name, use it in head name (config option)
 // * move textures from head-textures.txt to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
 // * stray & wskele skull texture needs to match mob more accurately
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
@@ -36,11 +36,10 @@ import net.evmodder.EvLib.Updater;
 // * Work with Trophies/Luck attribute
 // * ability to TRANSLATE all msgs in plugin by putting in config
 // * un-dye heads with cauldron
-// * hide behead msgs for vanished players
 //TEST:
+// * hide behead msgs for vanished players
 // * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
 // * Cracked iron golem head / repair with ingot
-// * yellow head name color
 // * place-head-block, overwrite-blocks, facing-direction, place-as: KILLER/VICTIM/SERVER
 // * middle-click copy with correct item name
 // * head-item-drop-mode
@@ -49,6 +48,7 @@ import net.evmodder.EvLib.Updater;
 // * prevent placing heads
 // * update-textures=true (head-textures.txt file overwritten when plugin is updated)
 // * new permissions for head click-info
+// * translated tropical fish heads
 /*
  * log:
  *   enable: true

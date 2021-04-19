@@ -1,10 +1,10 @@
 package net.evmodder.DropHeads;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import org.bukkit.DyeColor;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.Llama;
 import org.bukkit.entity.Ocelot;
@@ -15,9 +15,15 @@ import org.bukkit.entity.Shulker;
 import org.bukkit.entity.Tameable;
 import org.bukkit.entity.TropicalFish;
 import org.bukkit.entity.TropicalFish.Pattern;
+import net.evmodder.EvLib.extras.EntityUtils;
+import net.evmodder.EvLib.extras.EntityUtils.CCP;
 import net.evmodder.EvLib.extras.ReflectionUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
+import net.evmodder.EvLib.extras.TellrawUtils;
+import net.evmodder.EvLib.extras.TellrawUtils.Component;
+import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
+import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
 import net.evmodder.EvLib.extras.TextUtils;
 import org.bukkit.entity.Villager;
 import org.bukkit.entity.Wolf;
@@ -25,115 +31,18 @@ import org.bukkit.entity.Zombie;
 import org.bukkit.entity.ZombieVillager;
 
 public class TextureKeyLookup{
-	static class CCP{
-		DyeColor bodyColor, patternColor;
-		Pattern pattern;
-		CCP(DyeColor color, DyeColor pColor, Pattern p){bodyColor = color; patternColor = pColor; pattern = p;}
-		@Override public boolean equals(Object o){
-			if(o == this) return true;
-			if(o == null || o.getClass() != getClass()) return false;
-			CCP ccp = (CCP)o;
-			return ccp.bodyColor == bodyColor && ccp.patternColor == patternColor && ccp.pattern == pattern;
+	@SuppressWarnings("deprecation")
+	static String getTropicalFishKey(CCP ccp){
+		if(EntityUtils.getCommonTropicalFishId(ccp) != null){
+			return EntityUtils.getTropicalFishEnglishName(ccp).toUpperCase().replace(' ', '_');
 		}
-		@Override public int hashCode(){
-			return bodyColor.hashCode() + 16*(patternColor.hashCode() + 16*pattern.hashCode());
-		}
-	}
-	static final HashMap<CCP, String> commonTropicalFishNames;//Names for the 22 common tropical fish
-	static final HashMap<CCP, String> cachedTropicalFishNames;//Cached names for the 2700 other varieties (15*15*12)
-	static final HashMap<DyeColor, String> fishColorNames;//Names assigned by color
-	static{
-		commonTropicalFishNames = new HashMap<CCP, String>();
-		commonTropicalFishNames.put(new CCP(DyeColor.ORANGE, DyeColor.GRAY, Pattern.STRIPEY), "Anemone");
-		commonTropicalFishNames.put(new CCP(DyeColor.GRAY, DyeColor.GRAY, Pattern.FLOPPER), "Black Tang");
-		commonTropicalFishNames.put(new CCP(DyeColor.GRAY, DyeColor.BLUE, Pattern.FLOPPER), "Blue Tang");
-		commonTropicalFishNames.put(new CCP(DyeColor.WHITE, DyeColor.GRAY, Pattern.BRINELY), "Butterflyfish");
-		commonTropicalFishNames.put(new CCP(DyeColor.BLUE, DyeColor.GRAY, Pattern.SUNSTREAK), "Cichlid");
-		commonTropicalFishNames.put(new CCP(DyeColor.ORANGE, DyeColor.WHITE, Pattern.KOB), "Clownfish");
-		commonTropicalFishNames.put(new CCP(DyeColor.PINK, DyeColor.LIGHT_BLUE, Pattern.SPOTTY), "Cotton Candy Betta");
-		commonTropicalFishNames.put(new CCP(DyeColor.PURPLE, DyeColor.YELLOW, Pattern.BLOCKFISH), "Dottyback");
-		commonTropicalFishNames.put(new CCP(DyeColor.WHITE, DyeColor.RED, Pattern.CLAYFISH), /*US=*/"Emperor Red Snapper" /*UK="Red Emperor"*/);
-		commonTropicalFishNames.put(new CCP(DyeColor.WHITE, DyeColor.YELLOW, Pattern.SPOTTY), "Goatfish");
-		commonTropicalFishNames.put(new CCP(DyeColor.WHITE, DyeColor.GRAY, Pattern.GLITTER), "Moorish Idol");
-		commonTropicalFishNames.put(new CCP(DyeColor.WHITE, DyeColor.ORANGE, Pattern.CLAYFISH), "Ornate Butterflyfish");
-		commonTropicalFishNames.put(new CCP(DyeColor.CYAN, DyeColor.PINK, Pattern.DASHER), "Parrotfish");
-		commonTropicalFishNames.put(new CCP(DyeColor.LIME, DyeColor.LIGHT_BLUE, Pattern.BRINELY), "Queen Angelfish");
-		commonTropicalFishNames.put(new CCP(DyeColor.RED, DyeColor.WHITE, Pattern.BETTY), "Red Cichlid");
-		commonTropicalFishNames.put(new CCP(DyeColor.GRAY, DyeColor.RED, Pattern.SNOOPER), "Red Lipped Blenny");
-		commonTropicalFishNames.put(new CCP(DyeColor.RED, DyeColor.WHITE, Pattern.BLOCKFISH), "Red Snapper");
-		commonTropicalFishNames.put(new CCP(DyeColor.WHITE, DyeColor.YELLOW, Pattern.FLOPPER), "Threadfin");
-		commonTropicalFishNames.put(new CCP(DyeColor.RED, DyeColor.WHITE, Pattern.KOB), "Tomato Clownfish");
-		commonTropicalFishNames.put(new CCP(DyeColor.GRAY, DyeColor.WHITE, Pattern.SUNSTREAK), "Triggerfish");
-		commonTropicalFishNames.put(new CCP(DyeColor.CYAN, DyeColor.YELLOW, Pattern.DASHER), "Yellowtail Parrotfish");
-		commonTropicalFishNames.put(new CCP(DyeColor.YELLOW, DyeColor.YELLOW, Pattern.FLOPPER), "Yellow Tang");
-		cachedTropicalFishNames = new HashMap<CCP, String>();
-	}
-	static{
-		fishColorNames = new HashMap<DyeColor, String>();//TODO: use Color instead of DyeColor
-		fishColorNames.put(DyeColor.BLACK, "Black");
-		fishColorNames.put(DyeColor.BLUE, "Blue");
-		fishColorNames.put(DyeColor.BROWN, "Brown");
-		fishColorNames.put(DyeColor.CYAN, "Teal");
-		fishColorNames.put(DyeColor.GRAY, "Gray");
-		fishColorNames.put(DyeColor.GREEN, "Green");
-		fishColorNames.put(DyeColor.LIGHT_BLUE, "Sky");
-		fishColorNames.put(DyeColor.LIGHT_GRAY, "Silver");
-		fishColorNames.put(DyeColor.LIME, "Lime");
-		fishColorNames.put(DyeColor.MAGENTA, "Magenta");
-		fishColorNames.put(DyeColor.ORANGE, "Orange");
-		fishColorNames.put(DyeColor.PINK, "Rose");
-		fishColorNames.put(DyeColor.PURPLE, "Plum");
-		fishColorNames.put(DyeColor.RED, "Red");
-		fishColorNames.put(DyeColor.WHITE, "White");
-		fishColorNames.put(DyeColor.YELLOW, "Yellow");
-	}
-
-	//TODO: move to TextUtils or EntityUtils?
-	static String getTropicalFishName(CCP ccp, boolean strictTypeName){
-		String name = commonTropicalFishNames.get(ccp);
-		if(strictTypeName){
-			if(name == null){
-				return new StringBuilder(ccp.bodyColor.name()).append('|').append(ccp.patternColor.name())
-						.append('|').append(ccp.pattern.name()).toString();
-			}
-			else return name.toUpperCase().replace(' ', '_');
-		}
-		if(name == null){
-			StringBuilder builder = new StringBuilder(fishColorNames.get(ccp.bodyColor));
-			if(ccp.bodyColor != ccp.patternColor) builder.append('-').append(fishColorNames.get(ccp.patternColor));
-			builder.append(' ').append(TextUtils.capitalizeAndSpacify(ccp.pattern.name(), '_'));
-			name = builder.toString();
-			cachedTropicalFishNames.put(ccp, name); // Cache result. Size can reach up to 2700 varieties (15*15*12)
-		}
-		return name;
-	}
-	static String getTropicalFishName(TropicalFish fish, boolean strictTypeName){
-		return getTropicalFishName(new CCP(fish.getBodyColor(), fish.getPatternColor(), fish.getPattern()), strictTypeName);
-	}
-
-	//TODO: move to EntityUtils in EvLib
-	/*public static Gene getPandaTrait(Panda panda){
-		if(panda.getMainGene() == panda.getHiddenGene()) return panda.getMainGene();
-		switch(panda.getMainGene()){
-			case BROWN:
-			case WEAK:
-				return Gene.NORMAL;
-			default:
-				return panda.getMainGene();
-		}
-	}*/
-	static String getPandaTrait(String mainGene, String hiddenGene){
-		if(mainGene.equals(hiddenGene)) return mainGene;
-		switch(mainGene){
-			case "BROWN":
-			case "WEAK":
-				return "NORMAL";
-			default:
-				return mainGene;
+		else{
+			return new StringBuilder(ccp.bodyColor.name()).append('|').append(ccp.patternColor.name())
+					.append('|').append(ccp.pattern.name()).toString();
 		}
 	}
 
-	static String getNameFromKey(/*EntityType entity, */String textureKey){
+	@Deprecated static String getEnglishNameFromKey(/*EntityType entity, */String textureKey){
 		if(textureKey.equals("PLAYER|GRUMM")) return "Grumm";
 		String[] dataFlags = textureKey.split("\\|");
 		switch(/*entity != null ? entity.name() : */dataFlags[0]){
@@ -143,7 +52,7 @@ public class TextureKeyLookup{
 					DyeColor bodyColor = DyeColor.valueOf(dataFlags[1]);
 					DyeColor patternColor = dataFlags.length == 3 ? bodyColor : DyeColor.valueOf(dataFlags[2]);
 					Pattern pattern = Pattern.valueOf(dataFlags[dataFlags.length == 3 ? 2 : 3]);
-					return getTropicalFishName(new CCP(bodyColor, patternColor, pattern), /*strictTypeName=*/false);// C-C-P
+					return EntityUtils.getTropicalFishEnglishName(new CCP(bodyColor, patternColor, pattern));
 				}
 				catch(IllegalArgumentException e){}
 				break;
@@ -193,10 +102,84 @@ public class TextureKeyLookup{
 			String dataStr = TextUtils.capitalizeAndSpacify(dataFlags[i], '_');
 			builder.append(dataStr).append(' ');
 		}
-		builder.append(TextUtils.getNormalizedEntityName(dataFlags[0]));
+		builder.append(TextUtils.getNormalizedName(EntityType.valueOf(dataFlags[0])));
 		return builder.toString();
 	}
 
+	static Component[] getTypeAndSubtypeNamesFromKey(/*EntityType entity, */String textureKey){
+		if(textureKey.equals("PLAYER|GRUMM")) return new Component[]{new RawTextComponent("Grumm")};
+		String[] dataFlags = textureKey.split("\\|");
+		switch(/*entity != null ? entity.name() : */dataFlags[0]){
+			case "TROPICAL_FISH":
+				if(dataFlags.length == 2){
+					CCP ccp = EntityUtils.getCCP(dataFlags[1]);
+//					String name = TextUtils.capitalizeAndSpacify(dataFlags[1], '_');
+					return new Component[]{new TranslationComponent(
+							"entity.minecraft.tropical_fish.predefined."+EntityUtils.getCommonTropicalFishId(ccp))};
+				}
+				else if(dataFlags.length > 2) try{
+					DyeColor bodyColor = DyeColor.valueOf(dataFlags[1]);
+					DyeColor patternColor = dataFlags.length == 3 ? bodyColor : DyeColor.valueOf(dataFlags[2]);
+					Pattern pattern = Pattern.valueOf(dataFlags[dataFlags.length == 3 ? 2 : 3]);
+					return new Component[]{TellrawUtils.getLocalizedDisplayName(new CCP(bodyColor, patternColor, pattern))};
+				}
+				catch(IllegalArgumentException e){}
+				break;
+			case "VILLAGER": case "ZOMBIE_VILLAGER":
+				if(textureKey.contains("|NONE")){
+					textureKey = textureKey.replace("|NONE", "");
+					dataFlags = textureKey.split("\\|");
+				}
+				break;
+			case "SHEEP":
+				if(textureKey.contains("|WHITE")){
+					textureKey = textureKey.replace("|WHITE", "");
+					dataFlags = textureKey.split("\\|");
+				}
+				break;
+			case "OCELOT":
+				// "Red Cat Ocelot Head" -> "Red Cat Head"
+				if(dataFlags.length > 1) dataFlags = Arrays.copyOfRange(dataFlags, 1, dataFlags.length);
+				// "Wild Ocelot Head" -> "Ocelot Head"
+				if(dataFlags[0].equals("WILD_OCELOT")) dataFlags[0] = "OCELOT";
+				break;
+			case "PANDA":
+				if(textureKey.contains("|NORMAL")){
+					textureKey = textureKey.replace("|NORMAL", "");
+					dataFlags = textureKey.split("\\|");
+				}
+				break;
+			case "SKELETON": case "WITHER_SKELETON": case "SKELETON_HORSE": case "STRAY":
+				if(textureKey.contains("|HOLLOW")){
+					textureKey = textureKey.replace("|HOLLOW", "");
+					dataFlags = textureKey.split("\\|");
+				}
+				break;
+			case "IRON_GOLEM":
+				if(textureKey.contains("|HOLLOW")){
+					textureKey = textureKey
+							.replace("|FULL_HEALTH", "")
+							.replace("|LOW_CRACKINESS", "|SLIGHTLY_DAMAGED")
+							.replace("|MEDIUM_CRACKINESS", "|DAMAGED")
+							.replace("|HIGH_CRACKINESS", "|VERY_DAMAGED");
+					dataFlags = textureKey.split("\\|");
+				}
+				break;
+		}
+		Component[] components = new Component[dataFlags.length];
+		components[0] = new TranslationComponent("entity.minecraft."+dataFlags[0].toLowerCase());
+		for(int i=1; i<dataFlags.length; ++i){
+			try{
+				DyeColor color = DyeColor.valueOf(dataFlags[i]);
+				components[i] = new TranslationComponent("color.minecraft."+color.name().toLowerCase());
+				continue;
+			}
+			catch(IllegalArgumentException ex){}
+			components[i] = new TranslationComponent(TextUtils.capitalizeAndSpacify(dataFlags[i], '_')
+					/*"dropheads."+dataFlags[i].toLowerCase()*/);
+		}
+		return components;
+	}
 
 	static RefMethod mVillagerType, mZombieVillagerType;
 	static RefMethod mCatGetType, mCatGetCollarColor;
@@ -236,10 +219,11 @@ public class TextureKeyLookup{
 				if(entity.getCustomName() != null && entity.getCustomName().equals("jeb_")) return "SHEEP|JEB";
 				else return "SHEEP|"+((Sheep)entity).getColor().name();
 			case "SHULKER":
+				//TODO: isClosed
 				DyeColor color = ((Shulker)entity).getColor();
 				return color == null ? "SHULKER" : "SHULKER|"+color.name();
 			case "TROPICAL_FISH":
-				return "TROPICAL_FISH|"+getTropicalFishName((TropicalFish)entity, /*strictTypeName=*/true);
+				return "TROPICAL_FISH|"+getTropicalFishKey(EntityUtils.getCCP((TropicalFish)entity));
 				/*CCP fishData = new CCP(f.getBodyColor(), f.getPatternColor(), f.getPattern());
 				String name = HeadUtils.tropicalFishNames.get(fishData);
 				if(name == null) name = EvUtils.getNormalizedName(entity.getType());
@@ -278,9 +262,9 @@ public class TextureKeyLookup{
 					return "CAT|"+catType+"|"+((DyeColor)mCatGetCollarColor.of(entity).call()).name()+"_COLLARED";
 				}
 				return "CAT|"+catType;
-			case "IRON_GOLEM":
-				// TODO: Drop varying-crackiness iron golem heads
-				return "IRON_GOLEM";
+//			case "IRON_GOLEM":
+//				// DONE:TEST (in HeadAPI): Drop varying-crackiness iron golem heads
+//				return "IRON_GOLEM";
 			case "MUSHROOM_COW":
 				if(ReflectionUtils.getServerVersionString().compareTo("v1_14_R0") < 0) return "MUSHROOM_COW";
 				if(mMushroomCowGetVariant == null) mMushroomCowGetVariant =
@@ -303,7 +287,7 @@ public class TextureKeyLookup{
 				}
 				String mainGene = ((Enum)mPandaGetMainGene.of(entity).call()).name();
 				String hiddenGene = ((Enum)mPandaGetHiddenGene.of(entity).call()).name();
-				return "PANDA|"+TextureKeyLookup.getPandaTrait(mainGene, hiddenGene);
+				return "PANDA|"+EntityUtils.getPandaTrait(mainGene, hiddenGene);
 			case "TRADER_LLAMA":
 				if(mTraderLlamaGetColor == null) mTraderLlamaGetColor =
 						ReflectionUtils.getRefClass("org.bukkit.entity.TraderLlama").getMethod("getColor");

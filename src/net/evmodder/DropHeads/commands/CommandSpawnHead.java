@@ -2,6 +2,7 @@ package net.evmodder.DropHeads.commands;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.UUID;
@@ -17,9 +18,11 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.EvLib.EvCommand;
+import net.evmodder.EvLib.extras.EntityUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
+import net.evmodder.EvLib.extras.TellrawUtils;
+import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
 import net.evmodder.EvLib.extras.TextUtils;
 import net.evmodder.EvLib.extras.WebUtils;
 
@@ -45,7 +48,8 @@ public class CommandSpawnHead extends EvCommand{
 	final String ERROR_HDB_NOT_INSTALLED = ChatColor.RED + "HeadDatabase plugin needs to be installed to enable ID lookup";
 	final String ERROR_HDB_HEAD_NOT_FOUND = ChatColor.RED + "Could not find head with HDB id: %s";
 	final String ERROR_HEAD_NOT_FOUND = ChatColor.RED + "Head \"%s%s\" not found";
-	final String SUCCESSFULLY_SPAWNED_HEAD = ChatColor.GREEN + "Spawned Head: " + ChatColor.YELLOW + "%";
+	final String ERROR_NOT_ENOUGH_INV_SPACE = ChatColor.RED + "Not enough inventory space";
+	final String SUCCESSFULLY_SPAWNED_HEAD = ChatColor.GREEN + "Spawned Head: " + ChatColor.YELLOW + "%";//todo: %s => "x64" for amount?
 
 	public CommandSpawnHead(DropHeads plugin){
 		super(plugin);
@@ -164,7 +168,7 @@ public class CommandSpawnHead extends EvCommand{
 				sender.sendMessage(String.format(ERROR_UNKNOWN_MOB_TEXTURE, target));
 				return false;
 			}
-			EntityType eType = JunkUtils.getEntityByName(target);
+			EntityType eType = EntityUtils.getEntityByName(target);
 			if(eType != null && eType != EntityType.UNKNOWN){
 				textureKey = eType.name() + (extraData == null ? "" : "|" + extraData);
 			}
@@ -223,11 +227,16 @@ public class CommandSpawnHead extends EvCommand{
 		// Give head item
 		if(head == null) sender.sendMessage(String.format(ERROR_HEAD_NOT_FOUND, prefix, target));
 		else{
-			String headName = head.hasItemMeta() && head.getItemMeta().hasDisplayName() ? head.getItemMeta().getDisplayName()
-					: TextUtils.getNormalizedName(head.getType());
+			ListComponent successMessage = new ListComponent();
+			successMessage.addComponent(SUCCESSFULLY_SPAWNED_HEAD);
+			successMessage.replaceRawDisplayTextWithComponent("%s", TellrawUtils.getLocalizedDisplayName(head));
 			head.setAmount(amount);
-			((Player)sender).getInventory().addItem(head);
-			sender.sendMessage(String.format(SUCCESSFULLY_SPAWNED_HEAD, headName));
+			HashMap<Integer, ItemStack> leftovers = ((Player)sender).getInventory().addItem(head);
+			if(!leftovers.isEmpty()){
+				sender.sendMessage(ERROR_NOT_ENOUGH_INV_SPACE);
+				if(leftovers.values().iterator().next().getAmount() == amount) return true;
+			}
+			pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+sender.getName()+" "+successMessage.toString());
 			if(ENABLE_LOG){
 				String logEntry = LOG_FORMAT.replaceAll("(?i)\\$\\{HEAD\\}", target).replaceAll("(?i)\\$\\{SENDER\\}", sender.getName())
 						.replaceAll("(?i)\\$\\{TIMESTAMP\\}", "" + System.currentTimeMillis());

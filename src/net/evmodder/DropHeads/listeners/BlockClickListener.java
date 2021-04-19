@@ -19,11 +19,15 @@ import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.HeadAPI.HeadNameData;
 import net.evmodder.EvLib.extras.HeadUtils;
 import net.evmodder.EvLib.extras.TextUtils;
+import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
+import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
+import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
 
 public class BlockClickListener implements Listener{
 	final private DropHeads pl;
 	final boolean SHOW_CLICK_INFO, REPAIR_IRON_GOLEM_HEADS;
 	final String HEAD_DISPLAY_PLAYERS, HEAD_DISPLAY_MOBS, HEAD_DISPLAY_HDB, HEAD_DISPLAY_UNKNOWN;
+	final String LOCAL_HEAD, LOCAL_SKULL, LOCAL_TOE;
 	final long clickMessageDelayTicks = 10; // So they dont spam themselves
 	final HashSet<UUID> recentClickers;
 
@@ -41,10 +45,15 @@ public class BlockClickListener implements Listener{
 					pl.getConfig().getString("head-click-format-hdb", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"));
 			HEAD_DISPLAY_UNKNOWN = TextUtils.translateAlternateColorCodes('&',
 					pl.getConfig().getString("head-click-format-unknown", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"));
+
+			LOCAL_HEAD = pl.getConfig().getString("local-type-head", "Head");
+			LOCAL_SKULL = pl.getConfig().getString("local-type-skull", "Skull");
+			LOCAL_TOE = pl.getConfig().getString("local-type-toe", "Toe");
 			recentClickers = new HashSet<>();
 		}
 		else{
 			HEAD_DISPLAY_PLAYERS = HEAD_DISPLAY_MOBS = HEAD_DISPLAY_HDB = HEAD_DISPLAY_UNKNOWN = null;
+			LOCAL_HEAD = LOCAL_SKULL = LOCAL_TOE = null;
 			recentClickers = null;
 		}
 	}
@@ -81,27 +90,13 @@ public class BlockClickListener implements Listener{
 					return;
 				}
 			}
-		}
+		}//if REPAIR_IRON_GOLEM_HEADS
 
-		if(!SHOW_CLICK_INFO || !evt.getPlayer().hasPermission("dropheads.clickinfo")
-				|| !recentClickers.add(evt.getPlayer().getUniqueId())) return;
+		if(!SHOW_CLICK_INFO || !evt.getPlayer().hasPermission("dropheads.clickinfo") || !recentClickers.add(evt.getPlayer().getUniqueId())) return;
 		final UUID uuid = evt.getPlayer().getUniqueId();
 		new BukkitRunnable(){@Override public void run(){recentClickers.remove(uuid);}}.runTaskLater(pl, clickMessageDelayTicks);
 
-		final HeadNameData data;
-		if(HeadUtils.isPlayerHead(evt.getClickedBlock().getType())){
-			Skull skull = (Skull) evt.getClickedBlock().getState();
-			GameProfile profile = HeadUtils.getGameProfile(skull);
-			data = pl.getAPI().getHeadNameData(profile);
-		}
-		else{
-			EntityType entityType = HeadUtils.getEntityFromHead(evt.getClickedBlock().getType());
-			data = pl.getAPI().getHeadNameData(null);
-			data.textureKey = entityType.name();
-			data.headTypeName = HeadUtils.getDroppedHeadTypeName(entityType);
-			data.entityName = data.headName = TextUtils.getNormalizedEntityName(entityType.name());
-		}
-		final String aOrAn = data.headName.matches("[aeiouAEIOU].*") ? "an" : "a"; // Yes, an imperfect solution, I know. :/
+		final HeadNameData data = pl.getAPI().getHeadNameData(evt.getClickedBlock().getState());
 
 		final String HEAD_DISPLAY;
 		if(data.player != null){if(!evt.getPlayer().hasPermission("dropheads.clickinfo.players")) return; HEAD_DISPLAY = HEAD_DISPLAY_PLAYERS;}
@@ -109,12 +104,40 @@ public class BlockClickListener implements Listener{
 		else if(data.hdbId != null){if(!evt.getPlayer().hasPermission("dropheads.clickinfo.hdb")) return; HEAD_DISPLAY = HEAD_DISPLAY_HDB;}
 		else{if(!evt.getPlayer().hasPermission("dropheads.clickinfo.unknown")) return; HEAD_DISPLAY = HEAD_DISPLAY_UNKNOWN;}
 
+		final TranslationComponent headTypeName = pl.getAPI().getHeadTypeName(data.headType);
+		final String aOrAn =
+				(data.textureKey != null ? pl.getAPI().getHeadNameFromKey(data.textureKey).toPlainText()
+					: data.player != null ? data.player.getName() : data.profileName.toPlainText())
+				.matches("[aeiouAEIOU].*") ? "an" : "a"; // Yes, an imperfect solution, I know. :/
+
 		evt.setCancelled(true);
-		evt.getPlayer().sendMessage(
-				HEAD_DISPLAY
-				.replace("${NAME}", data.headName)
-				.replace("${MOB_TYPE}", data.entityName)
-				.replace("${TYPE}", data.headTypeName).replace("${HEAD_TYPE}", data.headTypeName).replace("${SKULL_TYPE}", data.headTypeName)
-				.replace("${A}", aOrAn));
+		ListComponent blob = new ListComponent();
+		blob.addComponent(HEAD_DISPLAY);
+		blob.replaceRawDisplayTextWithComponent("${TYPE}", headTypeName);//these 3 are aliases of eachother
+		blob.replaceRawDisplayTextWithComponent("${HEAD_TYPE}", headTypeName);
+		blob.replaceRawDisplayTextWithComponent("${SKULL_TYPE}", headTypeName);
+
+		blob.replaceRawDisplayTextWithComponent("${A}", new RawTextComponent(aOrAn));
+		blob.replaceRawDisplayTextWithComponent("${NAME}", data.profileName);
+		blob.replaceRawDisplayTextWithComponent("${MOB_TYPE}", data.entityTypeNames[0]);
+		
+		if(HEAD_DISPLAY.contains("${MOB_SUBTYPES_ASC}")){
+			ListComponent subtypeNamesAsc = new ListComponent();
+			for(int i=1; i<data.entityTypeNames.length; ++i){
+				subtypeNamesAsc.addComponent(data.entityTypeNames[i]);
+				if(i != data.entityTypeNames.length-1) subtypeNamesAsc.addComponent(" ");
+			}
+			blob.replaceRawDisplayTextWithComponent("${MOB_SUBTYPES_ASC}", subtypeNamesAsc);
+		}
+		if(HEAD_DISPLAY.contains("${MOB_SUBTYPES_DESC}")){
+			ListComponent subtypeNamesDesc = new ListComponent();
+			for(int i=data.entityTypeNames.length-1; i>0; --i){
+				subtypeNamesDesc.addComponent(data.entityTypeNames[i]);
+				if(i != 1) subtypeNamesDesc.addComponent(" ");
+			}
+			blob.replaceRawDisplayTextWithComponent("${MOB_SUBTYPES_DESC}", subtypeNamesDesc);
+		}
+		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(),
+				"minecraft:tellraw "+evt.getPlayer().getName()+" "+blob.toString());
 	}
 }

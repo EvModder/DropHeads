@@ -2,12 +2,15 @@ package net.evmodder.DropHeads.listeners;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -55,13 +58,15 @@ import net.evmodder.DropHeads.events.HeadRollEvent;
 import net.evmodder.EvLib.EvUtils;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.extras.TellrawUtils.HoverEvent;
-import net.evmodder.EvLib.extras.TellrawUtils.ActionComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
 import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
+import net.evmodder.EvLib.extras.TellrawUtils.TextHoverAction;
 import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
-import net.evmodder.EvLib.extras.TellrawUtils.TellrawBlob;
+import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
 import net.evmodder.EvLib.extras.HeadUtils;
+import net.evmodder.EvLib.extras.TellrawUtils;
 import net.evmodder.EvLib.extras.TextUtils;
+import net.evmodder.EvLib.extras.TypeUtils;
 
 public class EntityDeathListener implements Listener{
 	public enum AnnounceMode {GLOBAL, LOCAL, DIRECT, OFF};
@@ -94,7 +99,7 @@ public class EntityDeathListener implements Listener{
 	final DropHeads pl;
 	final Random rand;
 	final HashSet<Material> headOverwriteBlocks;
-	final HashSet<Material> mustUseTools;
+	public final Set<Material> mustUseTools; // TODO: remove public
 	final HashSet<EntityType> noLootingEffectMobs;
 	final HashMap<EntityType, Double> mobChances;
 	final HashMap<EntityType, HashMap<String, Double>> subtypeMobChances;
@@ -171,17 +176,16 @@ public class EntityDeathListener implements Listener{
 		}
 		DEFAULT_ANNOUNCE = mobAnnounceModes.get(EntityType.UNKNOWN);
 
-		mustUseTools = new HashSet<Material>();
 		if(pl.getConfig().getBoolean("must-use-axe")){
-			for(Material mat : Material.values()) if(mat.name().endsWith("_AXE")) mustUseTools.add(mat);
-//			mustUseTools.addAll(Arrays.asList(Material.NETHERITE_AXE, Material.DIAMOND_AXE, Material.IRON_AXE,
-//								Material.IRON_AXE, Material.GOLDEN_AXE, Material.STONE_AXE, Material.WOODEN_AXE));
+			mustUseTools = Arrays.stream(Material.values()).filter(mat -> mat.name().endsWith("_AXE")).collect(Collectors.toSet());
 		}
-		else for(String toolName : pl.getConfig().getStringList("must-use")){
-			if(toolName.isEmpty()) continue;
-			Material mat = Material.getMaterial(toolName.toUpperCase());
-			if(mat != null) mustUseTools.add(mat);
-			else pl.getLogger().warning("Unknown Tool \""+toolName+"\"!");
+		else{
+			(mustUseTools = pl.getConfig().getStringList("must-use").stream().map(toolName -> {
+				if(toolName.isEmpty()) return null;
+				Material mat = Material.getMaterial(toolName.toUpperCase());
+				if(mat == null) pl.getLogger().warning("Unknown Tool \""+toolName+"\"!");
+				return mat;
+			}).collect(Collectors.toSet())).remove(null);
 		}
 
 		toolBonuses = new HashMap<Material, Double>();
@@ -333,14 +337,13 @@ public class EntityDeathListener implements Listener{
 					null
 				: null;
 	}
-	String getItemDisplay(ItemStack item){
-		String itemName = item.hasItemMeta() && item.getItemMeta().hasDisplayName()
-				? ChatColor.ITALIC+item.getItemMeta().getDisplayName() : TextUtils.getNormalizedName(item.getType());
-		ChatColor rarityColor = JunkUtils.getRarityColor(item, /*checkCustomName=*/false);
-		return ITEM_DISPLAY_FORMAT
-				.replaceAll("(?i)\\$\\{NAME\\}", itemName)
-				.replaceAll("(?i)\\$\\{RARITY\\}", ""+rarityColor)
-				.replaceAll("(?i)\\$\\{AMOUNT\\}", ""+item.getAmount());
+	Component getItemDisplay(ItemStack item, TextHoverAction hoverText){
+		ChatColor rarityColor = TypeUtils.getRarityColor(item);
+		ListComponent itemDisplay = new ListComponent(new RawTextComponent(ITEM_DISPLAY_FORMAT, hoverText));
+		itemDisplay.replaceRawDisplayTextWithComponent("${NAME}", TellrawUtils.getLocalizedDisplayName(item));
+		itemDisplay.replaceRawDisplayTextWithComponent("${RARITY}", new RawTextComponent(""+rarityColor));
+		itemDisplay.replaceRawDisplayTextWithComponent("${AMOUNT}", new RawTextComponent(""+item.getAmount()));
+		return itemDisplay;
 	}
 	void sendTellraw(String target, String message){
 		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+target+" "+message);
@@ -402,22 +405,20 @@ public class EntityDeathListener implements Listener{
 		}
 		recentlyBeheadedEntities.add(entity.getUniqueId());
 
-		TellrawBlob message = new TellrawBlob();
+		ListComponent message = new ListComponent();
 		Component killerComp = null, itemComp = null;
 		if(killer != null){
 			killerComp = new SelectorComponent(killer.getUniqueId(), USE_PLAYER_DISPLAYNAMES);
 			if(weapon != null && weapon.getType() != Material.AIR){
-				String itemDisplay = getItemDisplay(weapon);
 				String jsonData = JunkUtils.convertItemStackToJson(weapon, JSON_LIMIT);
-				itemComp = new ActionComponent(itemDisplay, HoverEvent.SHOW_ITEM, jsonData);
+				itemComp = getItemDisplay(weapon, new TextHoverAction(HoverEvent.SHOW_ITEM, jsonData));
 			}
 			if(killer instanceof Projectile){
 				if(weapon == null) itemComp = new SelectorComponent(killer.getUniqueId(), USE_PLAYER_DISPLAYNAMES);
 				ProjectileSource shooter = ((Projectile)killer).getShooter();
 				if(shooter instanceof Entity) killerComp = new SelectorComponent(((Entity)shooter).getUniqueId(), USE_PLAYER_DISPLAYNAMES);
 				else if(shooter instanceof BlockProjectileSource){
-					String blockName = TextUtils.getNormalizedName(((BlockProjectileSource)shooter).getBlock().getType());
-					killerComp = new RawTextComponent(blockName);
+					killerComp = TellrawUtils.getLocalizedDisplayName(((BlockProjectileSource)shooter).getBlock().getState());
 				}
 			}
 			if(itemComp != null){
@@ -595,10 +596,10 @@ public class EntityDeathListener implements Listener{
 					if(newSkullsDropped > 1 && DEBUG_MODE) pl.getLogger().warning("Multiple non-DropHeads wither skull drops detected!");
 					if(VANILLA_WSKELE_HANDLING){
 						// newSkullsDropped should always be 0 or 1 by this point
-						if((newSkullsDropped == 1 || killer.hasPermission("dropheads.alwaysbehead.wither_skeleton"))
-								&& victim.hasPermission("dropheads.canlosehead") && killer.hasPermission("dropheads.canbehead")){
+						if((newSkullsDropped == 1 || (killer != null && killer.hasPermission("dropheads.alwaysbehead.wither_skeleton")))
+								&& victim.hasPermission("dropheads.canlosehead") && (killer == null || killer.hasPermission("dropheads.canbehead"))){
 							// Don't drop the skull if another skull drop has already caused by the same charged creeper.
-							if(killer instanceof Creeper && ((Creeper)killer).isPowered() && CHARGED_CREEPER_DROPS){
+							if(killer != null && killer instanceof Creeper && ((Creeper)killer).isPowered() && CHARGED_CREEPER_DROPS){
 								if(explodingChargedCreepers.add(killer.getUniqueId())/* && !HeadUtils.dropsHeadFromChargedCreeper(victim.getType())*/){
 									return;
 								}

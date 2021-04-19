@@ -12,6 +12,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.Skull;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -31,7 +32,7 @@ public class Commanddebug_all_heads extends EvCommand{
 
 	@SuppressWarnings("deprecation")
 	private void setHead(Location loc, String textureKey, BlockFace facing){
-		ItemStack skullItem = pl.getAPI().getHead(/*eType=*/null, textureKey);
+		ItemStack skullItem = pl.getAPI().getHead((EntityType)null, textureKey);
 		loc.getBlock().setType(facing == null ? Material.PLAYER_HEAD : Material.PLAYER_WALL_HEAD);
 		Skull blockState = (Skull) loc.getBlock().getState();
 		blockState.setType(facing == null ? Material.PLAYER_HEAD : Material.PLAYER_WALL_HEAD);
