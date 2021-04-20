@@ -125,7 +125,7 @@ public class BlockClickListener implements Listener{
 			ListComponent subtypeNamesAsc = new ListComponent();
 			for(int i=1; i<data.entityTypeNames.length; ++i){
 				subtypeNamesAsc.addComponent(data.entityTypeNames[i]);
-				if(i != data.entityTypeNames.length-1) subtypeNamesAsc.addComponent(" ");
+				/*if(i != data.entityTypeNames.length-1) */subtypeNamesAsc.addComponent(" ");
 			}
 			blob.replaceRawDisplayTextWithComponent("${MOB_SUBTYPES_ASC}", subtypeNamesAsc);
 		}
@@ -133,7 +133,7 @@ public class BlockClickListener implements Listener{
 			ListComponent subtypeNamesDesc = new ListComponent();
 			for(int i=data.entityTypeNames.length-1; i>0; --i){
 				subtypeNamesDesc.addComponent(data.entityTypeNames[i]);
-				if(i != 1) subtypeNamesDesc.addComponent(" ");
+				/*if(i != 1) */subtypeNamesDesc.addComponent(" ");
 			}
 			blob.replaceRawDisplayTextWithComponent("${MOB_SUBTYPES_DESC}", subtypeNamesDesc);
 		}
