@@ -80,6 +80,12 @@ public class JunkUtils{
 		return NBTTagUtils.setTag(item, tag);
 	}
 
+	public final static String getDisplayName(ItemStack item){
+		RefNBTTag tag = NBTTagUtils.getTag(item);
+		RefNBTTag display = tag.hasKey("display") ? (RefNBTTag)tag.get("display") : new RefNBTTag();
+		return display.hasKey("Name") ? display.getString("Name") : null;
+	}
+
 	// ItemStack methods to get a net.minecraft.server.ItemStack object for serialization
 	final static RefClass craftItemStackClazz = ReflectionUtils.getRefClass("{cb}.inventory.CraftItemStack");
 	final static RefMethod asNMSCopyMethod = craftItemStackClazz.getMethod("asNMSCopy", ItemStack.class);

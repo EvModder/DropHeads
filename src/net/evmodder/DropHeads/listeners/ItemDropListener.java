@@ -7,7 +7,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
+import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
+import net.evmodder.EvLib.extras.TellrawUtils;
 
 public class ItemDropListener implements Listener{
 	final private DropHeads pl;
@@ -32,10 +34,13 @@ public class ItemDropListener implements Listener{
 		GameProfile refreshedProfile = HeadUtils.getGameProfile((SkullMeta)refreshedItem.getItemMeta());
 		HeadUtils.setGameProfile(originalMeta, refreshedProfile); // This is what actually refreshes the texture
 
-		if(!originalMeta.hasDisplayName() || FORCE_NAME_UPDATE) originalMeta.setDisplayName(refreshedItem.getItemMeta().getDisplayName());
+//		if(!originalMeta.hasDisplayName() || FORCE_NAME_UPDATE) originalMeta.setDisplayName(refreshedItem.getItemMeta().getDisplayName());
 		if(!originalMeta.hasLore() || FORCE_LORE_UPDATE) originalMeta.setLore(refreshedItem.getItemMeta().getLore());
-
 		originalItem.setItemMeta(originalMeta);
+
+		if(!originalMeta.hasDisplayName() || FORCE_NAME_UPDATE) originalItem = JunkUtils.setDisplayName(originalItem,
+				TellrawUtils.parseComponentFromString(JunkUtils.getDisplayName(refreshedItem)));
+
 		evt.getEntity().setItemStack(originalItem); // TODO: not sure if this is necessary
 	}
 }
