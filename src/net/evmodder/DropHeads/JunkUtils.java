@@ -17,10 +17,18 @@ import net.evmodder.DropHeads.listeners.EntityDeathListener.AnnounceMode;
 import net.evmodder.EvLib.extras.NBTTagUtils;
 import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTTag;
 import net.evmodder.EvLib.extras.ReflectionUtils;
+import net.evmodder.EvLib.extras.TellrawUtils;
 import net.evmodder.EvLib.extras.TextUtils;
+import net.evmodder.EvLib.extras.TypeUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
+import net.evmodder.EvLib.extras.TellrawUtils.Format;
+import net.evmodder.EvLib.extras.TellrawUtils.FormatFlag;
+import net.evmodder.EvLib.extras.TellrawUtils.HoverEvent;
+import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
+import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
+import net.evmodder.EvLib.extras.TellrawUtils.TextHoverAction;
 
 // A trashy place to dump stuff that I should probably move to EvLib after ensure cross-version safety
 public class JunkUtils{
@@ -105,17 +113,65 @@ public class JunkUtils{
 		return itemAsJsonObject.toString();
 	}
 
+	public final static Component getMurderItemComponent(ItemStack item, int JSON_LIMIT){
+		TextHoverAction hoverAction = new TextHoverAction(HoverEvent.SHOW_ITEM, JunkUtils.convertItemStackToJson(item, JSON_LIMIT));
+		String rarityColor = TypeUtils.getRarityColor(item).name().toLowerCase();
+		if(item.hasItemMeta() && item.getItemMeta().hasDisplayName()){
+			String rawDisplayName = ((RefNBTTag)NBTTagUtils.getTag(item).get("display")).getString("Name");
+			FormatFlag[] formats = new FormatFlag[]{new FormatFlag(Format.ITALIC, true)};
+			return new ListComponent(
+					new RawTextComponent(/*text=*/"[", /*insert=*/null, /*click=*/null, hoverAction, /*color=*/rarityColor, /*formats=*/null),
+					new ListComponent(
+							new RawTextComponent(/*text=*/"", /*insert=*/null, /*click=*/null, null, /*color=*/null, /*formats=*/formats),
+							TellrawUtils.parseComponentFromString(rawDisplayName)
+					),
+					new RawTextComponent(/*text=*/"]"));
+		}
+		else{
+			return new ListComponent(
+					new RawTextComponent(/*text=*/"[", /*insert=*/null, /*click=*/null, hoverAction, /*color=*/rarityColor, /*formats=*/null),
+					TellrawUtils.getLocalizedDisplayName(item),
+					new RawTextComponent(/*text=*/"]"));
+		}
+	}
+
 	// Similar as above, but for Entity instead of ItemStack
 	final static RefClass craftEntityClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftEntity");
-	final static RefMethod getHandleMethod = craftEntityClazz.getMethod("getHandle");
+	final static RefMethod entityGetHandleMethod = craftEntityClazz.getMethod("getHandle");
 	final static RefClass nmsEntityClazz = ReflectionUtils.getRefClass("{nms}.Entity");
 	final static RefMethod saveNmsEntityMethod = nmsEntityClazz.getMethod("save", nbtTagCompoundClazz);
 	public final static String convertEntityToJson(Entity entity){//TODO: not currently used
 		Object nmsNbtTagCompoundObj = nbtTagCompoundClazz.getConstructor().create();
-		Object nmsEntityObj = getHandleMethod.of(entity).call();
+		Object nmsEntityObj = entityGetHandleMethod.of(entity).call();
 		Object entityAsJsonObject = saveNmsEntityMethod.of(nmsEntityObj).call(nmsNbtTagCompoundObj);
 		return entityAsJsonObject.toString();
 	}
+
+//	final static RefClass craftLivingEntityClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftLivingEntity");
+//	final static RefMethod livingEntityGetHandleMethod = craftLivingEntityClazz.getMethod("getHandle");
+//	final static RefClass nmsEntityLivingClazz = ReflectionUtils.getRefClass("{nms}.EntityLiving");
+//	final static RefClass nmsEnumItemSlotClazz = ReflectionUtils.getRefClass("{nms}.EnumItemSlot");
+//	final static Object nmsEnumItemSlotHead = nmsEnumItemSlotClazz.getMethod("valueOf", String.class).call("HEAD");
+//	final static RefMethod entityLivingGetEquipmentMethod = nmsEntityLivingClazz.getMethod("getEquipment", nmsEnumItemSlotClazz);
+//	final static RefConstructor craftItemStackCnstr = craftItemStackClazz.getConstructor(nmsItemStackClazz);
+//	public static Collection<ItemStack> getEquipmentGuaranteedToDrop(LivingEntity entity){//TODO: move to EntityUtils
+//		ArrayList<ItemStack> itemsThatWillDrop = new ArrayList<>();
+//		EntityEquipment equipment = entity.getEquipment();
+//		if(equipment.getItemInMainHandDropChance() >= 1f) itemsThatWillDrop.add(equipment.getItemInMainHand());
+//		if(equipment.getItemInOffHandDropChance() >= 1f) itemsThatWillDrop.add(equipment.getItemInOffHand());
+//		if(equipment.getChestplateDropChance() >= 1f) itemsThatWillDrop.add(equipment.getChestplate());
+//		if(equipment.getLeggingsDropChance() >= 1f) itemsThatWillDrop.add(equipment.getLeggings());
+//		Bukkit.getLogger().info("helmet drop chance: "+equipment.getHelmetDropChance());
+//		if(equipment.getHelmetDropChance() >= 1f) itemsThatWillDrop.add(
+//				(ItemStack)craftItemStackCnstr
+//				.create(entityLivingGetEquipmentMethod.of(
+//						livingEntityGetHandleMethod
+//						.of(entity).call())
+//						.call(nmsEnumItemSlotHead))
+//		);
+//		if(equipment.getBootsDropChance() >= 1f) itemsThatWillDrop.add(equipment.getBoots());
+//		return itemsThatWillDrop;
+//	}
 
 	public final static ItemStack giveItemToEntity(Entity entity, ItemStack item){
 		if(entity instanceof InventoryHolder){

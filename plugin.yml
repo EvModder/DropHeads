@@ -5,7 +5,7 @@ description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite,
 #5=prevent-head-placement, drop-mode, drop rate for mob subtypes, hollow-skeletal-skulls, sub-perms for /spawnhead
-#5=fix killer NullPointerException for wither skeletons, translations, evlib rewrite
+#5=fix killer NullPointerException for wither skeletons, fix wither skeletons wearing skulls, translations, evlib rewrite
 version: 3.5.5
 api-version: 1.13
 softdepend: [HeadDatabase]

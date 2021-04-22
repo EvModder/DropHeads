@@ -12,7 +12,6 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -57,16 +56,12 @@ import net.evmodder.DropHeads.TextureKeyLookup;
 import net.evmodder.DropHeads.events.HeadRollEvent;
 import net.evmodder.EvLib.EvUtils;
 import net.evmodder.EvLib.FileIO;
-import net.evmodder.EvLib.extras.TellrawUtils.HoverEvent;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
 import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
-import net.evmodder.EvLib.extras.TellrawUtils.TextHoverAction;
-import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
 import net.evmodder.EvLib.extras.HeadUtils;
 import net.evmodder.EvLib.extras.TellrawUtils;
 import net.evmodder.EvLib.extras.TextUtils;
-import net.evmodder.EvLib.extras.TypeUtils;
 
 public class EntityDeathListener implements Listener{
 	public enum AnnounceMode {GLOBAL, LOCAL, DIRECT, OFF};
@@ -83,7 +78,6 @@ public class EntityDeathListener implements Listener{
 	final boolean DEBUG_MODE, LOG_PLAYER_BEHEAD, LOG_MOB_BEHEAD;
 	final String LOG_MOB_FORMAT, LOG_PLAYER_FORMAT;
 	final String[] MSG_BEHEAD, MSH_BEHEAD_BY, MSH_BEHEAD_BY_WITH, MSH_BEHEAD_BY_WITH_NAMED;
-	final String ITEM_DISPLAY_FORMAT;
 	final long INDIRECT_KILL_THRESHOLD_MILLIS = 30*1000;//TODO: move to config
 	final boolean USE_PLAYER_DISPLAYNAMES = false;//TODO: move to config, when possible
 	final boolean CROSS_DIMENSIONAL_BROADCAST = true;//TODO: move to config
@@ -140,9 +134,7 @@ public class EntityDeathListener implements Listener{
 		MSH_BEHEAD_BY_WITH_NAMED = JunkUtils.parseStringOrStringList(pl.getConfig(), "message-beheaded-by-entity-with-item-named",
 				"${VICTIM}&r was beheaded by ${KILLER}&r using ${ITEM}&r");
 
-		String itemDisplayFormat = pl.getConfig().getString("message-beheaded-item-display-format", "${RARITY}[${NAME}${RARITY}]&r");
-		ITEM_DISPLAY_FORMAT = TextUtils.translateAlternateColorCodes('&', itemDisplayFormat);
-//		USE_PLAYER_DISPLAYNAMES = pl.getConfig().getBoolean("message-beheaded-use-player-displaynames", false);
+//		USE_PLAYER_DISPLAYNAMES = pl.getConfig().getBoolean("message-beheaded-use-player-displaynames", true);//TODO
 
 		DROP_MODES = new ArrayList<>();
 		if(pl.getConfig().contains("head-item-drop-mode"))
@@ -337,14 +329,6 @@ public class EntityDeathListener implements Listener{
 					null
 				: null;
 	}
-	Component getItemDisplay(ItemStack item, TextHoverAction hoverText){
-		ChatColor rarityColor = TypeUtils.getRarityColor(item);
-		ListComponent itemDisplay = new ListComponent(new RawTextComponent(ITEM_DISPLAY_FORMAT, hoverText));
-		itemDisplay.replaceRawDisplayTextWithComponent("${NAME}", TellrawUtils.getLocalizedDisplayName(item));
-		itemDisplay.replaceRawDisplayTextWithComponent("${RARITY}", new RawTextComponent(""+rarityColor));
-		itemDisplay.replaceRawDisplayTextWithComponent("${AMOUNT}", new RawTextComponent(""+item.getAmount()));
-		return itemDisplay;
-	}
 	void sendTellraw(String target, String message){
 		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+target+" "+message);
 	}
@@ -410,8 +394,7 @@ public class EntityDeathListener implements Listener{
 		if(killer != null){
 			killerComp = new SelectorComponent(killer.getUniqueId(), USE_PLAYER_DISPLAYNAMES);
 			if(weapon != null && weapon.getType() != Material.AIR){
-				String jsonData = JunkUtils.convertItemStackToJson(weapon, JSON_LIMIT);
-				itemComp = getItemDisplay(weapon, new TextHoverAction(HoverEvent.SHOW_ITEM, jsonData));
+				itemComp = JunkUtils.getMurderItemComponent(weapon, JSON_LIMIT);
 			}
 			if(killer instanceof Projectile){
 				if(weapon == null) itemComp = new SelectorComponent(killer.getUniqueId(), USE_PLAYER_DISPLAYNAMES);
@@ -588,19 +571,35 @@ public class EntityDeathListener implements Listener{
 				if(victim.getType() == EntityType.WITHER_SKELETON){
 					int newSkullsDropped = 0;
 					Iterator<ItemStack> it = evt.getDrops().iterator();
-					while(it.hasNext()) if(it.next().getType() == Material.WITHER_SKELETON_SKULL){it.remove(); ++newSkullsDropped;}
+					ArrayList<ItemStack> removedSkulls = new ArrayList<>();//TODO: remove this hacky fix once Bukkit/Spigot gets their shit sorted
+					while(it.hasNext()){
+						ItemStack next = it.next();
+						if(next.getType() == Material.WITHER_SKELETON_SKULL){
+							it.remove();
+							++newSkullsDropped;
+							//TODO: remove this hacky fix once Bukkit/Spigot gets their shit sorted
+							if(!next.equals(new ItemStack(Material.WITHER_SKELETON_SKULL))) removedSkulls.add(next);
+						}
+					}
 					// However, if it is wearing a head in an armor slot, don't remove the drop.
 					for(ItemStack i : EvUtils.getEquipmentGuaranteedToDrop(evt.getEntity())){
 						if(i != null && i.getType() == Material.WITHER_SKELETON_SKULL){evt.getDrops().add(i); --newSkullsDropped;}
+						//TODO: remove this hacky fix below once Bukkit/Spigot gets their shit sorted
+						if(i != null && i.getType() == Material.AIR && newSkullsDropped > 1){
+							evt.getDrops().add(removedSkulls.isEmpty()
+									? new ItemStack(Material.WITHER_SKELETON_SKULL)
+									: removedSkulls.remove(removedSkulls.size()-1));
+							--newSkullsDropped;
+						}
 					}
 					if(newSkullsDropped > 1 && DEBUG_MODE) pl.getLogger().warning("Multiple non-DropHeads wither skull drops detected!");
-					if(VANILLA_WSKELE_HANDLING){
+					if(VANILLA_WSKELE_HANDLING || mobChances.getOrDefault(EntityType.WITHER_SKELETON, 0.025D) == 0.025D){
 						// newSkullsDropped should always be 0 or 1 by this point
 						if((newSkullsDropped == 1 || (killer != null && killer.hasPermission("dropheads.alwaysbehead.wither_skeleton")))
 								&& victim.hasPermission("dropheads.canlosehead") && (killer == null || killer.hasPermission("dropheads.canbehead"))){
 							// Don't drop the skull if another skull drop has already caused by the same charged creeper.
 							if(killer != null && killer instanceof Creeper && ((Creeper)killer).isPowered() && CHARGED_CREEPER_DROPS){
-								if(explodingChargedCreepers.add(killer.getUniqueId())/* && !HeadUtils.dropsHeadFromChargedCreeper(victim.getType())*/){
+								if(!explodingChargedCreepers.add(killer.getUniqueId())/* && !HeadUtils.dropsHeadFromChargedCreeper(victim.getType())*/){
 									return;
 								}
 							}

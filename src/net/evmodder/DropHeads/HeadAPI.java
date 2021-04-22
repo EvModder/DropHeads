@@ -214,7 +214,7 @@ public class HeadAPI {
 					ListComponent subtypeNamesAsc = new ListComponent();
 					for(int j=1; j<entityTypeNames.length; ++j){
 						subtypeNamesAsc.addComponent(entityTypeNames[j]);
-						if(j != entityTypeNames.length-1) subtypeNamesAsc.addComponent(" ");
+						/*if(j != entityTypeNames.length-1) */subtypeNamesAsc.addComponent(" ");
 					}
 					withComps.add(subtypeNamesAsc);
 					break;
@@ -223,7 +223,7 @@ public class HeadAPI {
 					ListComponent subtypeNamesDesc = new ListComponent();
 					for(int j=entityTypeNames.length-1; j>0; --j){
 						subtypeNamesDesc.addComponent(entityTypeNames[j]);
-						if(j != 1) subtypeNamesDesc.addComponent(" ");
+						/*if(j != 1) */subtypeNamesDesc.addComponent(" ");
 					}
 					withComps.add(subtypeNamesDesc);
 					break;
