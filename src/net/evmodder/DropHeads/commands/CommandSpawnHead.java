@@ -18,10 +18,10 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
+import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.EvLib.EvCommand;
 import net.evmodder.EvLib.extras.EntityUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
-import net.evmodder.EvLib.extras.TellrawUtils;
 import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
 import net.evmodder.EvLib.extras.TextUtils;
 import net.evmodder.EvLib.extras.WebUtils;
@@ -33,6 +33,7 @@ public class CommandSpawnHead extends EvCommand{
 	final boolean ENABLE_LOG;
 	final String LOG_FORMAT;
 	final int MAX_IDS_SHOWN = 200;
+	final int JSON_LIMIT = 15000;
 
 	// TODO: Move this to a localization file
 	final String MOB_PREFIX = "mob:", PLAYER_PREFIX = "player:", HDB_PREFIX = "hdb:", SELF_PREFIX = "self:", CODE_PREFIX = "code:";
@@ -49,7 +50,7 @@ public class CommandSpawnHead extends EvCommand{
 	final String ERROR_HDB_HEAD_NOT_FOUND = ChatColor.RED + "Could not find head with HDB id: %s";
 	final String ERROR_HEAD_NOT_FOUND = ChatColor.RED + "Head \"%s%s\" not found";
 	final String ERROR_NOT_ENOUGH_INV_SPACE = ChatColor.RED + "Not enough inventory space";
-	final String SUCCESSFULLY_SPAWNED_HEAD = ChatColor.GREEN + "Spawned Head: " + ChatColor.YELLOW + "%";//todo: %s => "x64" for amount?
+	final String SUCCESSFULLY_SPAWNED_HEAD = ChatColor.GREEN + "Spawned Head: " + ChatColor.YELLOW + "%s";//todo: %s => "x64" for amount?
 
 	public CommandSpawnHead(DropHeads plugin){
 		super(plugin);
@@ -229,7 +230,7 @@ public class CommandSpawnHead extends EvCommand{
 		else{
 			ListComponent successMessage = new ListComponent();
 			successMessage.addComponent(SUCCESSFULLY_SPAWNED_HEAD);
-			successMessage.replaceRawDisplayTextWithComponent("%s", TellrawUtils.getLocalizedDisplayName(head));
+			successMessage.replaceRawDisplayTextWithComponent("%s", JunkUtils.getItemDisplayNameComponent(head, JSON_LIMIT));
 			head.setAmount(amount);
 			HashMap<Integer, ItemStack> leftovers = ((Player)sender).getInventory().addItem(head);
 			if(!leftovers.isEmpty()){

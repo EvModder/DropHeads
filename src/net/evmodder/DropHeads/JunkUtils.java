@@ -119,6 +119,22 @@ public class JunkUtils{
 		return itemAsJsonObject.toString();
 	}
 
+	public final static Component getItemDisplayNameComponent(ItemStack item, int JSON_LIMIT){
+		String rarityColor = TypeUtils.getRarityColor(item).name().toLowerCase();
+		if(item.hasItemMeta() && item.getItemMeta().hasDisplayName()){
+			String rawDisplayName = ((RefNBTTag)NBTTagUtils.getTag(item).get("display")).getString("Name");
+			FormatFlag[] formats = new FormatFlag[]{new FormatFlag(Format.ITALIC, true)};
+			return new ListComponent(
+					new RawTextComponent(/*text=*/"", /*insert=*/null, /*click=*/null, /*hover=*/null, /*color=*/rarityColor, /*formats=*/formats),
+					TellrawUtils.parseComponentFromString(rawDisplayName)
+			);
+		}
+		else{
+			return new ListComponent(
+					new RawTextComponent(/*text=*/"", /*insert=*/null, /*click=*/null, /*hover=*/null, /*color=*/rarityColor, /*formats=*/null),
+					TellrawUtils.getLocalizedDisplayName(item));
+		}
+	}
 	public final static Component getMurderItemComponent(ItemStack item, int JSON_LIMIT){
 		TextHoverAction hoverAction = new TextHoverAction(HoverEvent.SHOW_ITEM, JunkUtils.convertItemStackToJson(item, JSON_LIMIT));
 		String rarityColor = TypeUtils.getRarityColor(item).name().toLowerCase();
