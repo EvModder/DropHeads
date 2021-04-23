@@ -4,9 +4,9 @@ author: EvModder/EvDoc
 description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite,
-#5=prevent-head-placement, drop-mode, drop rate for mob subtypes, hollow-skeletal-skulls, sub-perms for /spawnhead
-#5=fix killer NullPointerException for wither skeletons, fix wither skeletons wearing skulls, translations, evlib rewrite
-version: 3.5.5
+#6=translations, hex colors, fixed wskele helmet not dropping, correct item display, head display name overhaul, 1.17 mobs, fixed NullPointerException when wskele beheaded by a non-player,
+#0=
+version: 3.6.0
 api-version: 1.13
 softdepend: [HeadDatabase]
 

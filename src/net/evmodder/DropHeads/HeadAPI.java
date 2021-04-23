@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -14,11 +15,15 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 import org.bukkit.ChatColor;
+import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Skull;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
@@ -35,6 +40,7 @@ import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.extras.EntityUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
+import net.evmodder.EvLib.extras.TellrawUtils;
 import net.evmodder.EvLib.extras.HeadUtils.HeadType;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
 import net.evmodder.EvLib.extras.TellrawUtils.Format;
@@ -43,6 +49,7 @@ import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
 import net.evmodder.EvLib.extras.TextUtils;
+import net.evmodder.EvLib.extras.EntityUtils.CCP;
 
 public class HeadAPI {
 	final private DropHeads pl;
@@ -51,8 +58,10 @@ public class HeadAPI {
 	final boolean GRUM_ENABLED, SADDLES_ENABLED, HOLLOW_SKULLS_ENABLED, CRACKED_IRON_GOLEMS_ENABLED;
 	final boolean UPDATE_PLAYER_HEADS, UPDATE_ZOMBIE_PIGMEN_HEADS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_VANILLA_HEADS;
 	final TranslationComponent LOCAL_HEAD, LOCAL_SKULL, LOCAL_TOE;
-	final String LOCAL_DISPLAY_NAME_MOBS, LOCAL_DISPLAY_NAME_PLAYERS;
+	final HashMap<EntityType, String> headNameFormats;
+	final String DEFAULT_HEAD_NAME_FORMAT;
 	final TreeMap<String, String> textures; // Key="ENTITY_NAME|DATA", Value="eyJ0ZXh0dXJl..."
+	final HashMap<String, TranslationComponent> entitySubtypeNames;
 
 	// TODO: Move these to a localization file
 	final String MOB_PREFIX = "mob:", PLAYER_PREFIX = "player:", MHF_PREFIX = "player:", HDB_PREFIX = "hdb:", CODE_PREFIX = "code:";
@@ -75,18 +84,47 @@ public class HeadAPI {
 		MAKE_UNSTACKABLE = pl.getConfig().getBoolean("make-heads-unstackable", false);
 		PREFER_VANILLA_HEADS = pl.getConfig().getBoolean("prefer-vanilla-heads", true);
 
-		LOCAL_HEAD = new TranslationComponent(pl.getConfig().getString("local-type-head", "Head"));
-		LOCAL_SKULL = new TranslationComponent(pl.getConfig().getString("local-type-skull", "Skull"));
-		LOCAL_TOE = new TranslationComponent(pl.getConfig().getString("local-type-toe", "Toe"));
-		LOCAL_DISPLAY_NAME_MOBS = TextUtils.translateAlternateColorCodes('&',
-				pl.getConfig().getString("local-item-display-mobs", "&e${MOB_SUBTYPES_DESC} ${MOB_TYPE} ${HEAD_TYPE}"));
-		LOCAL_DISPLAY_NAME_PLAYERS = TextUtils.translateAlternateColorCodes('&',
-				pl.getConfig().getString("local-item-display-players", "&e${NAME} Head"));
+		//---------- <Load translations> ----------------------------------------------------------------------
+		YamlConfiguration translationsFile = FileIO.loadConfig(pl, "translations.yml", pl.getResource("/translations.yml"), /*notifyIfNew=*/false);
+		YamlConfiguration embeddedTranslationsFile = FileIO.loadConfig(pl, "translations-temp-DELETE.yml", pl.getResource("/translations.yml"), false);
+		translationsFile.setDefaults(embeddedTranslationsFile);
+		FileIO.deleteFile("translations-temp-DELETE.yml");
+		LOCAL_HEAD = new TranslationComponent(translationsFile.getString("head-type-names.head", "Head"));
+		LOCAL_SKULL = new TranslationComponent(translationsFile.getString("head-type-names.skull", "Skull"));
+		LOCAL_TOE = new TranslationComponent(translationsFile.getString("head-type-names.toe", "Toe"));
+
+		headNameFormats = new HashMap<EntityType, String>();
+		headNameFormats.put(EntityType.UNKNOWN, "${MOB_SUBTYPES_DESC}${MOB_TYPE} ${HEAD_TYPE}"); // Default for mobs
+		headNameFormats.put(EntityType.PLAYER, "${NAME} Head"); // Default for players
+		ConfigurationSection entityHeadFormatsConfig = pl.getConfig().getConfigurationSection("head-name-format");
+		if(entityHeadFormatsConfig != null) entityHeadFormatsConfig.getValues(/*deep=*/false)
+			.forEach((entityName, entityHeadNameFormat) -> {
+				if(entityHeadNameFormat instanceof String == false){
+					pl.getLogger().severe("Invalid (non-enclosed-String) value for "+entityName+" in translations.yml: "+entityHeadNameFormat);
+				}
+				try{
+					EntityType eType = EntityType.valueOf(entityName.toUpperCase().replace("DEFAULT", "UNKNOWN"));
+					headNameFormats.put(eType, (String)entityHeadNameFormat);
+				}
+				catch(IllegalArgumentException ex){pl.getLogger().severe("Unknown entity type in 'head-name-format': "+entityName);}
+			});
+		DEFAULT_HEAD_NAME_FORMAT = headNameFormats.get(EntityType.UNKNOWN);
+
+		entitySubtypeNames = new HashMap<String, TranslationComponent>();
+		ConfigurationSection entitySubtypeNamesConfig = pl.getConfig().getConfigurationSection("entity-subtype-names");
+		if(entitySubtypeNamesConfig != null) entitySubtypeNamesConfig.getValues(/*deep=*/false)
+			.forEach((subtypeName, localSubtypeName) -> {
+			if(localSubtypeName instanceof String == false){
+				pl.getLogger().severe("Invalid (non-enclosed-String) value for "+subtypeName+" in translations.yml: "+localSubtypeName);
+			}
+			entitySubtypeNames.put(subtypeName.toUpperCase(), new TranslationComponent((String)localSubtypeName));
+		});
+		//---------- </Load translations> ---------------------------------------------------------------------
 
 		String hardcodedList = FileIO.loadResource(pl, "head-textures.txt");
 		loadTextures(hardcodedList, /*logMissingEntities=*/true, /*logUnknownEntities=*/false);
 //		String localList = FileIO.loadFile("head-textures.txt", hardcodedList);  // This version does not preserve comments
-		String localList = FileIO.loadFile("head-textures.txt", getClass().getResourceAsStream("/head-textures.txt"));
+		String localList = FileIO.loadFile("head-textures.txt", pl.getResource("/head-textures.txt"));
 		loadTextures(localList, /*logMissingEntities=*/false, /*logUnknownEntities=*/true);
 
 		//TODO: decide whether this feature is worth keeping
@@ -178,14 +216,94 @@ public class HeadAPI {
 	public Map<String, String> getTextures(){return Collections.unmodifiableMap(textures);}
 	public HeadDatabaseAPI getHeadDatabaseAPI(){return hdbAPI;}//TODO: prefer avoiding public
 
+	Component[] getTypeAndSubtypeNamesFromKey(/*EntityType entity, */String textureKey){
+		if(textureKey.equals("PLAYER|GRUMM")) return new Component[]{new RawTextComponent("Grumm")};
+		String[] dataFlags = textureKey.split("\\|");
+		switch(/*entity != null ? entity.name() : */dataFlags[0]){
+			case "TROPICAL_FISH":
+				if(dataFlags.length == 2){
+					CCP ccp = EntityUtils.getCCP(dataFlags[1]);
+//					String name = TextUtils.capitalizeAndSpacify(dataFlags[1], '_');
+					return new Component[]{new TranslationComponent(
+							"entity.minecraft.tropical_fish.predefined."+EntityUtils.getCommonTropicalFishId(ccp))};
+				}
+				else if(dataFlags.length > 2) try{
+					DyeColor bodyColor = DyeColor.valueOf(dataFlags[1]);
+					DyeColor patternColor = dataFlags.length == 3 ? bodyColor : DyeColor.valueOf(dataFlags[2]);
+					org.bukkit.entity.TropicalFish.Pattern pattern = org.bukkit.entity.TropicalFish.Pattern
+							.valueOf(dataFlags[dataFlags.length == 3 ? 2 : 3]);
+					return new Component[]{TellrawUtils.getLocalizedDisplayName(new CCP(bodyColor, patternColor, pattern))};
+				}
+				catch(IllegalArgumentException e){}
+				break;
+			case "VILLAGER": case "ZOMBIE_VILLAGER":
+				if(textureKey.contains("|NONE")){
+					textureKey = textureKey.replace("|NONE", "");
+					dataFlags = textureKey.split("\\|");
+				}
+				break;
+			case "SHEEP":
+				if(textureKey.contains("|WHITE")){
+					textureKey = textureKey.replace("|WHITE", "");
+					dataFlags = textureKey.split("\\|");
+				}
+				break;
+			case "OCELOT":
+				if(dataFlags.length == 2){
+					switch(dataFlags[1]){
+						case "WILD_OCELOT": textureKey = "OCELOT"; break;
+						case "BLACK_CAT":textureKey = "CAT|BLACK"; break;
+						case "RED_CAT": textureKey = "CAT|RED"; break;
+						case "SIAMESE_CAT": textureKey = "CAT|SIAMESE"; break;
+					}
+					dataFlags = textureKey.split("\\|");
+				}
+				break;
+			case "PANDA":
+				if(textureKey.contains("|NORMAL")){
+					textureKey = textureKey.replace("|NORMAL", "");
+					dataFlags = textureKey.split("\\|");
+				}
+				break;
+			case "SKELETON": case "WITHER_SKELETON": case "SKELETON_HORSE": case "STRAY":
+				if(textureKey.contains("|HOLLOW")){
+					textureKey = textureKey.replace("|HOLLOW", "");
+					dataFlags = textureKey.split("\\|");
+				}
+				break;
+			case "IRON_GOLEM":
+				if(dataFlags.length == 2){
+					textureKey = textureKey
+							.replace("|FULL_HEALTH", "")
+							.replace("|LOW_CRACKINESS", "|SLIGHTLY_DAMAGED")
+							.replace("|MEDIUM_CRACKINESS", "|DAMAGED")
+							.replace("|HIGH_CRACKINESS", "|VERY_DAMAGED");
+					dataFlags = textureKey.split("\\|");
+				}
+				break;
+			case "RABBIT":
+				if(textureKey.equals("RABBIT|THE_KILLER_BUNNY")) textureKey = "THE_KILLER_BUNNY";
+				dataFlags = textureKey.split("\\|");
+				break;
+		}
+		Component[] components = new Component[dataFlags.length];
+		components[0] = new TranslationComponent("entity.minecraft."+dataFlags[0].toLowerCase());
+		for(int i=1; i<dataFlags.length; ++i){
+			TranslationComponent subtypeName = entitySubtypeNames.get(dataFlags[i]);
+			components[i] = subtypeName != null ? subtypeName : new RawTextComponent(TextUtils.capitalizeAndSpacify(dataFlags[i], /*toSpace=*/'_'));
+		}
+		return components;
+	}
+
 	public TranslationComponent getHeadTypeName(HeadType headType){
+		if(headType == null) return LOCAL_HEAD;
 		switch(headType){
 			case SKULL: return LOCAL_SKULL;
 			case TOE: return LOCAL_TOE;
 			case HEAD: default: return LOCAL_HEAD;
 		}
 	}
-	public TranslationComponent getHeadNameFromKey(String textureKey){
+	public Component getHeadNameFromKey(@Nonnull String textureKey, @Nonnull String customName){
 		// Attempt to parse out an EntityType
 		EntityType eType;
 		int i = textureKey.indexOf('|');
@@ -199,38 +317,52 @@ public class HeadAPI {
 		}
 
 		// Call the actual getNameFromKey()
-		Component[] entityTypeNames = TextureKeyLookup.getTypeAndSubtypeNamesFromKey(/*eType, */textureKey);
+		Component[] entityTypeNames = getTypeAndSubtypeNamesFromKey(/*eType, */textureKey);
 
-		Pattern pattern = Pattern.compile("\\$\\{(HEAD_TYPE|MOB_TYPE|MOB_SUBTYPES_ASC|MOB_SUBTYPES_DESC)\\}");
-		Matcher matcher = pattern.matcher(LOCAL_DISPLAY_NAME_MOBS);
+		String headNameFormat = headNameFormats.getOrDefault(eType, DEFAULT_HEAD_NAME_FORMAT);
+		Pattern pattern = Pattern.compile("\\$\\{(NAME|HEAD_TYPE|MOB_TYPE|MOB_SUBTYPES_ASC|MOB_SUBTYPES_DESC)\\}");
+		Matcher matcher = pattern.matcher(headNameFormat);
 		ArrayList<Component> withComps = new ArrayList<>();
+		boolean containsTranslation = false;
 		while(matcher.find()){
-			switch(matcher.group(1)){
-				case "HEAD_TYPE": withComps.add(eType == null ? LOCAL_HEAD : getHeadTypeName(HeadUtils.getDroppedHeadType(eType)));
-					break;
-				case "MOB_TYPE": withComps.add(entityTypeNames[0]);
-					break;
-				case "MOB_SUBTYPES_ASC": {
-					ListComponent subtypeNamesAsc = new ListComponent();
-					for(int j=1; j<entityTypeNames.length; ++j){
-						subtypeNamesAsc.addComponent(entityTypeNames[j]);
-						/*if(j != entityTypeNames.length-1) */subtypeNamesAsc.addComponent(" ");
-					}
-					withComps.add(subtypeNamesAsc);
-					break;
-				}
-				case "MOB_SUBTYPES_DESC": {
-					ListComponent subtypeNamesDesc = new ListComponent();
-					for(int j=entityTypeNames.length-1; j>0; --j){
-						subtypeNamesDesc.addComponent(entityTypeNames[j]);
-						/*if(j != 1) */subtypeNamesDesc.addComponent(" ");
-					}
-					withComps.add(subtypeNamesDesc);
-					break;
-				}
+			if(matcher.group(1).equals("NAME")){
+				withComps.add(new RawTextComponent(customName));
+				break;
 			}
-		}
-		return new TranslationComponent(matcher.replaceAll("%s"), withComps.toArray(new Component[0]),
+			else{
+				containsTranslation = true;
+				switch(matcher.group(1)){
+					case "HEAD_TYPE":
+						withComps.add(getHeadTypeName(HeadUtils.getDroppedHeadType(eType)));
+						break;
+					case "MOB_TYPE":
+						withComps.add(entityTypeNames[0]);
+						break;
+					case "MOB_SUBTYPES_ASC": {
+						ListComponent subtypeNamesAsc = new ListComponent();
+						for(int j=1; j<entityTypeNames.length; ++j){
+							subtypeNamesAsc.addComponent(entityTypeNames[j]);
+							/*if(j != entityTypeNames.length-1) */subtypeNamesAsc.addComponent(" ");
+						}
+						withComps.add(subtypeNamesAsc);
+						break;
+					}
+					case "MOB_SUBTYPES_DESC": {
+						ListComponent subtypeNamesDesc = new ListComponent();
+						for(int j=entityTypeNames.length-1; j>0; --j){
+							subtypeNamesDesc.addComponent(entityTypeNames[j]);
+							/*if(j != 1) */subtypeNamesDesc.addComponent(" ");
+						}
+						withComps.add(subtypeNamesDesc);
+						break;
+					}
+				}//switch (matcher.group)
+			}//else (!="NAME")
+		}//while (matcher.find)
+		return containsTranslation
+			? new TranslationComponent(matcher.replaceAll("%s"), withComps.toArray(new Component[0]),
+				/*insert=*/null, /*click=*/null, /*hover=*/null, /*color=*/null, /*formats=*/new FormatFlag(Format.ITALIC, false))
+			: new RawTextComponent(headNameFormat.replace("${NAME}", customName),
 				/*insert=*/null, /*click=*/null, /*hover=*/null, /*color=*/null, /*formats=*/new FormatFlag(Format.ITALIC, false));
 	}
 
@@ -249,7 +381,7 @@ public class HeadAPI {
 		if(profile == null){
 			data.textureKey = EntityType.PLAYER.name();  // This is considered a mob head
 			data.headType = HeadUtils.getDroppedHeadType(EntityType.PLAYER);  // "Head"
-			data.entityTypeNames = TextureKeyLookup.getTypeAndSubtypeNamesFromKey(EntityType.PLAYER.name());  // "Player"
+			data.entityTypeNames = getTypeAndSubtypeNamesFromKey(EntityType.PLAYER.name());  // "Player"
 			data.profileName = data.entityTypeNames[0];
 			return data;
 		}
@@ -261,7 +393,7 @@ public class HeadAPI {
 		//hdb
 		if(hdbAPI != null && (data.hdbId = hdbAPI.getItemID(HeadUtils.getPlayerHead(profile))) != null && hdbAPI.isHead(data.hdbId)){
 			data.headType = HeadUtils.getDroppedHeadType(EntityType.UNKNOWN);  // "Head"
-			data.entityTypeNames = TextureKeyLookup.getTypeAndSubtypeNamesFromKey(EntityType.UNKNOWN.name());  // "Unknown"
+			data.entityTypeNames = getTypeAndSubtypeNamesFromKey(EntityType.UNKNOWN.name());  // "Unknown"
 			String hdbHeadName = hdbAPI.getItemHead(data.hdbId).getItemMeta().getDisplayName();
 			int idx = hdbHeadName.lastIndexOf(' ');
 			data.profileName = new RawTextComponent(idx == -1 ? hdbHeadName : hdbHeadName.substring(0, idx));
@@ -269,7 +401,7 @@ public class HeadAPI {
 		//player
 		else if(profile.getId() != null && (data.player = pl.getServer().getOfflinePlayer(profile.getId())) != null && data.player.getName() != null){
 			data.headType = HeadUtils.getDroppedHeadType(EntityType.PLAYER);  // "Head"
-			data.entityTypeNames = TextureKeyLookup.getTypeAndSubtypeNamesFromKey(EntityType.PLAYER.name());  // "Player"
+			data.entityTypeNames = getTypeAndSubtypeNamesFromKey(EntityType.PLAYER.name());  // "Player"
 			data.profileName = new RawTextComponent(UPDATE_PLAYER_HEADS || profile.getName() == null ? data.player.getName() : profile.getName());
 		}
 		//mob
@@ -279,13 +411,13 @@ public class HeadAPI {
 			String eTypeName = (idx == -1 ? data.textureKey : data.textureKey.substring(0, idx)).toUpperCase();
 			try{data.headType = HeadUtils.getDroppedHeadType(EntityType.valueOf(eTypeName));}
 			catch(IllegalArgumentException ex){data.headType = HeadUtils.getDroppedHeadType(EntityType.UNKNOWN);}  // "Head"
-			data.entityTypeNames = TextureKeyLookup.getTypeAndSubtypeNamesFromKey(data.textureKey);
+			data.entityTypeNames = getTypeAndSubtypeNamesFromKey(data.textureKey);
 			data.profileName = new RawTextComponent(profile.getName());
 		}
 		//unknown
 		else{
 			data.headType = HeadUtils.getDroppedHeadType(EntityType.UNKNOWN);  // "Head"
-			data.entityTypeNames = TextureKeyLookup.getTypeAndSubtypeNamesFromKey(EntityType.UNKNOWN.name());  // "Unknown"
+			data.entityTypeNames = getTypeAndSubtypeNamesFromKey(EntityType.UNKNOWN.name());  // "Unknown"
 			data.profileName = profile.getName() != null ? new RawTextComponent(profile.getName()) : data.entityTypeNames[0];
 		}
 		if(data.hdbId != null && !hdbAPI.isHead(data.hdbId)) data.hdbId = null;
@@ -301,14 +433,14 @@ public class HeadAPI {
 		HeadNameData data = new HeadNameData();
 		data.textureKey = entityType.name();
 		data.headType = HeadUtils.getDroppedHeadType(entityType);
-		data.entityTypeNames = TextureKeyLookup.getTypeAndSubtypeNamesFromKey(entityType.name());
+		data.entityTypeNames = getTypeAndSubtypeNamesFromKey(entityType.name());
 		data.profileName = data.entityTypeNames[0];
 		return data;
 	}
 
 	ItemStack makeTextureSkull(String textureKey/*, boolean saveTypeInLore, boolean unstackable*/){
 		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
-		item = JunkUtils.setDisplayName(item, getHeadNameFromKey(textureKey));
+		item = JunkUtils.setDisplayName(item, getHeadNameFromKey(textureKey, /*customName=*/""));
 		SkullMeta meta = (SkullMeta) item.getItemMeta();
 
 		UUID uuid = UUID.nameUUIDFromBytes(textureKey.getBytes());// Stable UUID for this textureKey
@@ -331,7 +463,7 @@ public class HeadAPI {
 	@SuppressWarnings("deprecation")
 	ItemStack makeSkull_wrapper(EntityType eType){
 		ItemStack head = HeadUtils.makeSkull(eType);
-		JunkUtils.setDisplayName(head, getHeadNameFromKey(eType.name()));
+		JunkUtils.setDisplayName(head, getHeadNameFromKey(eType.name(), /*customName=*/""));
 		if(SAVE_TYPE_IN_LORE){
 			SkullMeta meta = (SkullMeta) head.getItemMeta();
 			meta.setLore(Arrays.asList(ChatColor.DARK_GRAY + MOB_PREFIX + eType.name().toLowerCase()));
@@ -456,10 +588,13 @@ public class HeadAPI {
 			String id = hdbAPI.getItemID(head);
 			if(id != null && hdbAPI.isHead(id)) return getItemHead_wrapper(id);
 		}
-		SkullMeta meta = (SkullMeta) head.getItemMeta();
+		SkullMeta meta = (SkullMeta)head.getItemMeta();
 		if(profileName != null){
 			if(profileName.startsWith("MHF_")) meta.setDisplayName(ChatColor.YELLOW+profileName);
-			else meta.setDisplayName(LOCAL_DISPLAY_NAME_PLAYERS.replace("${NAME}", profileName));
+			else{
+				head = JunkUtils.setDisplayName(head, getHeadNameFromKey("PLAYER", /*customName=*/profileName));
+				meta = (SkullMeta)head.getItemMeta();
+			}
 			if(SAVE_TYPE_IN_LORE) meta.setLore(Arrays.asList(
 					ChatColor.DARK_GRAY + (profileName.startsWith("MHF_") ? MHF_PREFIX : PLAYER_PREFIX) + profileName));
 			head.setItemMeta(meta);

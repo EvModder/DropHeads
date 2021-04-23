@@ -1,10 +1,8 @@
 package net.evmodder.DropHeads;
 
-import java.util.Arrays;
 import org.bukkit.DyeColor;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.Llama;
 import org.bukkit.entity.Ocelot;
@@ -14,17 +12,11 @@ import org.bukkit.entity.Sheep;
 import org.bukkit.entity.Shulker;
 import org.bukkit.entity.Tameable;
 import org.bukkit.entity.TropicalFish;
-import org.bukkit.entity.TropicalFish.Pattern;
 import net.evmodder.EvLib.extras.EntityUtils;
 import net.evmodder.EvLib.extras.EntityUtils.CCP;
 import net.evmodder.EvLib.extras.ReflectionUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
-import net.evmodder.EvLib.extras.TellrawUtils;
-import net.evmodder.EvLib.extras.TellrawUtils.Component;
-import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
-import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
-import net.evmodder.EvLib.extras.TextUtils;
 import org.bukkit.entity.Villager;
 import org.bukkit.entity.Wolf;
 import org.bukkit.entity.Zombie;
@@ -40,145 +32,6 @@ public class TextureKeyLookup{
 			return new StringBuilder(ccp.bodyColor.name()).append('|').append(ccp.patternColor.name())
 					.append('|').append(ccp.pattern.name()).toString();
 		}
-	}
-
-	@Deprecated static String getEnglishNameFromKey(/*EntityType entity, */String textureKey){
-		if(textureKey.equals("PLAYER|GRUMM")) return "Grumm";
-		String[] dataFlags = textureKey.split("\\|");
-		switch(/*entity != null ? entity.name() : */dataFlags[0]){
-			case "TROPICAL_FISH":
-				if(dataFlags.length == 2) return TextUtils.capitalizeAndSpacify(dataFlags[1], '_');// 22 common
-				else if(dataFlags.length > 2) try{
-					DyeColor bodyColor = DyeColor.valueOf(dataFlags[1]);
-					DyeColor patternColor = dataFlags.length == 3 ? bodyColor : DyeColor.valueOf(dataFlags[2]);
-					Pattern pattern = Pattern.valueOf(dataFlags[dataFlags.length == 3 ? 2 : 3]);
-					return EntityUtils.getTropicalFishEnglishName(new CCP(bodyColor, patternColor, pattern));
-				}
-				catch(IllegalArgumentException e){}
-				break;
-			case "VILLAGER": case "ZOMBIE_VILLAGER":
-				if(textureKey.contains("|NONE")){
-					textureKey = textureKey.replace("|NONE", "");
-					dataFlags = textureKey.split("\\|");
-				}
-				break;
-			case "SHEEP":
-				if(textureKey.contains("|WHITE")){
-					textureKey = textureKey.replace("|WHITE", "");
-					dataFlags = textureKey.split("\\|");
-				}
-				break;
-			case "OCELOT":
-				// "Red Cat Ocelot Head" -> "Red Cat Head"
-				if(dataFlags.length > 1) dataFlags = Arrays.copyOfRange(dataFlags, 1, dataFlags.length);
-				// "Wild Ocelot Head" -> "Ocelot Head"
-				if(dataFlags[0].equals("WILD_OCELOT")) dataFlags[0] = "OCELOT";
-				break;
-			case "PANDA":
-				if(textureKey.contains("|NORMAL")){
-					textureKey = textureKey.replace("|NORMAL", "");
-					dataFlags = textureKey.split("\\|");
-				}
-				break;
-			case "SKELETON": case "WITHER_SKELETON": case "SKELETON_HORSE": case "STRAY":
-				if(textureKey.contains("|HOLLOW")){
-					textureKey = textureKey.replace("|HOLLOW", "");
-					dataFlags = textureKey.split("\\|");
-				}
-				break;
-			case "IRON_GOLEM":
-				if(textureKey.contains("|HOLLOW")){
-					textureKey = textureKey
-							.replace("|FULL_HEALTH", "")
-							.replace("|LOW_CRACKINESS", "|SLIGHTLY_DAMAGED")
-							.replace("|MEDIUM_CRACKINESS", "|DAMAGED")
-							.replace("|HIGH_CRACKINESS", "|VERY_DAMAGED");
-					dataFlags = textureKey.split("\\|");
-				}
-				break;
-		}
-		StringBuilder builder = new StringBuilder("");
-		for(int i=dataFlags.length-1; i>0; --i){
-			String dataStr = TextUtils.capitalizeAndSpacify(dataFlags[i], '_');
-			builder.append(dataStr).append(' ');
-		}
-		builder.append(TextUtils.getNormalizedName(EntityType.valueOf(dataFlags[0])));
-		return builder.toString();
-	}
-
-	static Component[] getTypeAndSubtypeNamesFromKey(/*EntityType entity, */String textureKey){
-		if(textureKey.equals("PLAYER|GRUMM")) return new Component[]{new RawTextComponent("Grumm")};
-		String[] dataFlags = textureKey.split("\\|");
-		switch(/*entity != null ? entity.name() : */dataFlags[0]){
-			case "TROPICAL_FISH":
-				if(dataFlags.length == 2){
-					CCP ccp = EntityUtils.getCCP(dataFlags[1]);
-//					String name = TextUtils.capitalizeAndSpacify(dataFlags[1], '_');
-					return new Component[]{new TranslationComponent(
-							"entity.minecraft.tropical_fish.predefined."+EntityUtils.getCommonTropicalFishId(ccp))};
-				}
-				else if(dataFlags.length > 2) try{
-					DyeColor bodyColor = DyeColor.valueOf(dataFlags[1]);
-					DyeColor patternColor = dataFlags.length == 3 ? bodyColor : DyeColor.valueOf(dataFlags[2]);
-					Pattern pattern = Pattern.valueOf(dataFlags[dataFlags.length == 3 ? 2 : 3]);
-					return new Component[]{TellrawUtils.getLocalizedDisplayName(new CCP(bodyColor, patternColor, pattern))};
-				}
-				catch(IllegalArgumentException e){}
-				break;
-			case "VILLAGER": case "ZOMBIE_VILLAGER":
-				if(textureKey.contains("|NONE")){
-					textureKey = textureKey.replace("|NONE", "");
-					dataFlags = textureKey.split("\\|");
-				}
-				break;
-			case "SHEEP":
-				if(textureKey.contains("|WHITE")){
-					textureKey = textureKey.replace("|WHITE", "");
-					dataFlags = textureKey.split("\\|");
-				}
-				break;
-			case "OCELOT":
-				// "Red Cat Ocelot Head" -> "Red Cat Head"
-				if(dataFlags.length > 1) dataFlags = Arrays.copyOfRange(dataFlags, 1, dataFlags.length);
-				// "Wild Ocelot Head" -> "Ocelot Head"
-				if(dataFlags[0].equals("WILD_OCELOT")) dataFlags[0] = "OCELOT";
-				break;
-			case "PANDA":
-				if(textureKey.contains("|NORMAL")){
-					textureKey = textureKey.replace("|NORMAL", "");
-					dataFlags = textureKey.split("\\|");
-				}
-				break;
-			case "SKELETON": case "WITHER_SKELETON": case "SKELETON_HORSE": case "STRAY":
-				if(textureKey.contains("|HOLLOW")){
-					textureKey = textureKey.replace("|HOLLOW", "");
-					dataFlags = textureKey.split("\\|");
-				}
-				break;
-			case "IRON_GOLEM":
-				if(textureKey.contains("|HOLLOW")){
-					textureKey = textureKey
-							.replace("|FULL_HEALTH", "")
-							.replace("|LOW_CRACKINESS", "|SLIGHTLY_DAMAGED")
-							.replace("|MEDIUM_CRACKINESS", "|DAMAGED")
-							.replace("|HIGH_CRACKINESS", "|VERY_DAMAGED");
-					dataFlags = textureKey.split("\\|");
-				}
-				break;
-		}
-		Component[] components = new Component[dataFlags.length];
-		components[0] = new TranslationComponent("entity.minecraft."+dataFlags[0].toLowerCase());
-		for(int i=1; i<dataFlags.length; ++i){
-			try{
-				DyeColor color = DyeColor.valueOf(dataFlags[i]);
-				components[i] = new TranslationComponent("color.minecraft."+color.name().toLowerCase());
-				continue;
-			}
-			catch(IllegalArgumentException ex){}
-			components[i] = new TranslationComponent(TextUtils.capitalizeAndSpacify(dataFlags[i], '_')
-					/*"dropheads."+dataFlags[i].toLowerCase()*/);
-		}
-		return components;
 	}
 
 	static RefMethod mVillagerType, mZombieVillagerType;

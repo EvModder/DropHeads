@@ -18,6 +18,7 @@ import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.HeadAPI.HeadNameData;
 import net.evmodder.EvLib.extras.HeadUtils;
+import net.evmodder.EvLib.extras.TellrawUtils;
 import net.evmodder.EvLib.extras.TextUtils;
 import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
@@ -27,8 +28,7 @@ public class BlockClickListener implements Listener{
 	final private DropHeads pl;
 	final boolean SHOW_CLICK_INFO, REPAIR_IRON_GOLEM_HEADS;
 	final String HEAD_DISPLAY_PLAYERS, HEAD_DISPLAY_MOBS, HEAD_DISPLAY_HDB, HEAD_DISPLAY_UNKNOWN;
-	final String LOCAL_HEAD, LOCAL_SKULL, LOCAL_TOE;
-	final long clickMessageDelayTicks = 10; // So they dont spam themselves
+	final long clickMessageDelayTicks = 10; // So they dont spam themselves TODO: move to config
 	final HashSet<UUID> recentClickers;
 
 	public BlockClickListener(){
@@ -45,15 +45,10 @@ public class BlockClickListener implements Listener{
 					pl.getConfig().getString("head-click-format-hdb", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"));
 			HEAD_DISPLAY_UNKNOWN = TextUtils.translateAlternateColorCodes('&',
 					pl.getConfig().getString("head-click-format-unknown", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"));
-
-			LOCAL_HEAD = pl.getConfig().getString("local-type-head", "Head");
-			LOCAL_SKULL = pl.getConfig().getString("local-type-skull", "Skull");
-			LOCAL_TOE = pl.getConfig().getString("local-type-toe", "Toe");
-			recentClickers = new HashSet<>();
+			recentClickers = new HashSet<UUID>();
 		}
 		else{
 			HEAD_DISPLAY_PLAYERS = HEAD_DISPLAY_MOBS = HEAD_DISPLAY_HDB = HEAD_DISPLAY_UNKNOWN = null;
-			LOCAL_HEAD = LOCAL_SKULL = LOCAL_TOE = null;
 			recentClickers = null;
 		}
 	}
@@ -106,13 +101,12 @@ public class BlockClickListener implements Listener{
 
 		final TranslationComponent headTypeName = pl.getAPI().getHeadTypeName(data.headType);
 		final String aOrAn =
-				(data.textureKey != null ? pl.getAPI().getHeadNameFromKey(data.textureKey).toPlainText()
+				(data.textureKey != null ? pl.getAPI().getHeadNameFromKey(data.textureKey, /*customName=*/"").toPlainText()
 					: data.player != null ? data.player.getName() : data.profileName.toPlainText())
 				.matches("[aeiouAEIOU].*") ? "an" : "a"; // Yes, an imperfect solution, I know. :/
 
 		evt.setCancelled(true);
-		ListComponent blob = new ListComponent();
-		blob.addComponent(HEAD_DISPLAY);
+		ListComponent blob = TellrawUtils.convertHexColorsToComponents(HEAD_DISPLAY);
 		blob.replaceRawDisplayTextWithComponent("${TYPE}", headTypeName);//these 3 are aliases of eachother
 		blob.replaceRawDisplayTextWithComponent("${HEAD_TYPE}", headTypeName);
 		blob.replaceRawDisplayTextWithComponent("${SKULL_TYPE}", headTypeName);
@@ -120,7 +114,7 @@ public class BlockClickListener implements Listener{
 		blob.replaceRawDisplayTextWithComponent("${A}", new RawTextComponent(aOrAn));
 		blob.replaceRawDisplayTextWithComponent("${NAME}", data.profileName);
 		blob.replaceRawDisplayTextWithComponent("${MOB_TYPE}", data.entityTypeNames[0]);
-		
+
 		if(HEAD_DISPLAY.contains("${MOB_SUBTYPES_ASC}")){
 			ListComponent subtypeNamesAsc = new ListComponent();
 			for(int i=1; i<data.entityTypeNames.length; ++i){
@@ -137,7 +131,6 @@ public class BlockClickListener implements Listener{
 			}
 			blob.replaceRawDisplayTextWithComponent("${MOB_SUBTYPES_DESC}", subtypeNamesDesc);
 		}
-		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(),
-				"minecraft:tellraw "+evt.getPlayer().getName()+" "+blob.toString());
+		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+evt.getPlayer().getName()+" "+blob.toString());
 	}
 }

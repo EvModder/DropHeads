@@ -191,11 +191,3 @@ log:
   log-player-behead-format: '${TIMESTAMP},player decapitated,${VICTIM},${KILLER},${ITEM}'
   log-head-command: true
   log-head-command-format: '${TIMESTAMP},gethead command,${SENDER},${HEAD}'
-
-# Configure this section to translate messages to your preferred language
-local-type-head: "Head"
-local-type-skull: "Skull"
-local-type-toe: "Toe"
-local-item-display-mobs: "${MOB_SUBTYPES_DESC}${MOB_TYPE} ${HEAD_TYPE}"
-local-item-display-players: "${NAME} Head"
-# More translation settings coming soon...

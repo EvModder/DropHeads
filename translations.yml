@@ -1,0 +1,101 @@
+# Use this file to translate heads and messages to your preferred language
+# Values can be either Minecraft translation keys or plain text
+
+head-type-names:
+  head: "Head"
+  skull: "Skull"
+  toe: "Toe"
+
+# The display name format used when creating head items
+head-name-format:
+  default: "${MOB_SUBTYPES_DESC}${MOB_TYPE} ${HEAD_TYPE}"
+  player: "${NAME} Head"
+  giant: "${MOB_SUBTYPES_DESC}${MOB_TYPE}'s Toe"
+
+# Translations for entity subtype adjectives in head names
+entity-subtype-names:
+  angry: "Angry"											#Bee/Wolf
+  pollinated: "Pollinated"									#Bee
+  charged: "Charged"										#Creeper
+  snow: "block.minecraft.snow"								#Fox
+  sleeping: "Sleeping"										#Fox
+  screaming: "Screaming"									#Ghast
+  chestnut: "Chestnut"										#Horse
+  creamy: "Creamy"											#Horse/Llama/TraderLlama
+  dark_brown: "Dark Brown"									#Horse
+  low_crackiness: "Slightly Damaged"						#IronGolem
+  medium_crackiness: "Damaged"								#IronGolem
+  high_crackiness: "Very Damaged"							#IronGolem
+  british_shorthair: "British Shorthair"					#Cat
+  calico: "Calico"											#Cat
+  ginger: "Ginger"											#Cat
+  jellie: "Jellie"											#Cat
+  persian: "Persian"										#Cat
+  ragdoll: "Ragdoll"										#Cat
+  siamese: "Siamese"										#Cat
+  tabby: "Tabby"											#Cat
+  tuxedo: "Tuxedo"											#Cat
+  aggressive: "Aggressive"									#Panda
+  lazy: "Lazy"												#Panda
+  playful: "Playful"										#Panda
+  weak: "Weak"												#Panda
+  worried: "Worried"										#Panda
+  black_and_white: "Black and White"						#Rabbit
+  salt_and_pepper: "Salt and Pepper"						#Rabbit
+  the_killer_bunny: "entity.minecraft.killer_bunny"			#Rabbit
+  toast: "Toast"											#Rabbit
+  closed: "Closed"											#Shulker
+  warm: "Warm"												#Strider
+  cold: "Cold":												#Strider
+  saddled: "Saddled"										#Strider/Pig/Horse/Donkey/Mule
+  charging: "Charging"										#Vex
+  armored: "Armored"										#Wither
+  invulnerable: "Invulnerable"								#Wither
+  baby: "Baby"												#ZombiePigman(before-1.16)
+  armorer: "entity.minecraft.villager.armorer"				#Villager/ZombieVillager
+  butcher: "entity.minecraft.villager.butcher				#Villager/ZombieVillager
+  cartographer: "entity.minecraft.villager.cartographer"	#Villager/ZombieVillager
+  cleric: "entity.minecraft.villager.cleric"				#Villager/ZombieVillager
+  farmer: "entity.minecraft.villager.farmer"				#Villager/ZombieVillager
+  fisherman: "entity.minecraft.villager.fisherman"			#Villager/ZombieVillager
+  fletcher: "entity.minecraft.villager.fletcher"			#Villager/ZombieVillager
+  leatherworker: "entity.minecraft.villager.leatherworker"	#Villager/ZombieVillager
+  librarian: "entity.minecraft.villager.librarian"			#Villager/ZombieVillager
+  mason: "entity.minecraft.villager.mason"					#Villager/ZombieVillager
+  nitwit: "entity.minecraft.villager.nitwit"				#Villager/ZombieVillager
+  shepherd: "entity.minecraft.villager.none"				#Villager/ZombieVillager
+  shepherd: "entity.minecraft.villager.shepherd"			#Villager/ZombieVillager
+  toolsmith: "entity.minecraft.villager.toolsmith"			#Villager/ZombieVillager
+  weaponsmith: "entity.minecraft.villager.weaponsmith"		#Villager/ZombieVillager
+  black: "color.minecraft.black"							#Sheep/Shulker/Horse/Cat/Rabbit
+  blue: "color.minecraft.blue"								#Sheep/Shulker/Parrot
+  brown: "color.minecraft.brown"							#Sheep/Shulker/Horse/Llama/TraderLlama/Rabbit/MushroomCow/Panda
+  cyan: "color.minecraft.cyan"								#Sheep/Shulker/Parrot
+  gray: "color.minecraft.gray"								#Sheep/Shulker/Parrot/Horse/Llama/TraderLlama
+  green: "color.minecraft.green"							#Sheep/Shulker/Parrot
+  light_blue: "color.minecraft.light_blue"					#Sheep/Shulker
+  light_gray: "color.minecraft.light_gray"					#Sheep/Shulker
+  lime: "color.minecraft.lime"								#Sheep/Shulker
+  magenta: "color.minecraft.magenta"						#Sheep/Shulker
+  orange: "color.minecraft.orange"							#Sheep/Shulker
+  pink: "color.minecraft.pink"								#Sheep/Shulker
+  purple: "color.minecraft.purple"							#Sheep/Shulker
+  red: "color.minecraft.red"								#Sheep/Shulker/Parrot/MushroomCow/Fox
+  yellow: "color.minecraft.yellow"							#Sheep/Shulker
+  white: "color.minecraft.white"							#Sheep/Shulker/Horse/Llama/TraderLlama/Rabbit/Cat
+  black_collared: "Black-Collared"							#Cat/Wolf
+  blue_collared: "Blue-Collared"							#Cat/Wolf
+  brown_collared: "Brown-Collared"							#Cat/Wolf
+  cyan_collared: "Cyan-Collared"							#Cat/Wolf
+  gray_collared: "Gray-Collared"							#Cat/Wolf
+  green_collared: "Green-Collared"							#Cat/Wolf
+  light_blue_collared: "Light-Blue-Collared"				#Cat/Wolf
+  lime_collared: "Lime-Collared"							#Cat/Wolf
+  magenta_collared: "Magenta-Collared"						#Cat/Wolf
+  orange_collared: "Orange-Collared"						#Cat/Wolf
+  pink_collared: "Pink-Collared"							#Cat/Wolf
+  purple_collared: "Purple-Collared"						#Cat/Wolf
+  red_collared: "Red-Collared"								#Cat/Wolf
+  light_gray_collared: "Light-Gray-Collared"				#Cat/Wolf
+  white_collared: "White-Collared"							#Cat/Wolf
+  yellow_collared: "Yellow-Collared"						#Cat/Wolf

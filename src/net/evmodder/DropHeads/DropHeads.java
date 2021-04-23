@@ -26,29 +26,28 @@ import net.evmodder.EvLib.Updater;
 
 //TODO:
 // * /dropheads reload
-// * jeb_ sheep head animated phasing through colors (like the jeb_ sheep)
-// * if mob has custom name, use it in head name (config option)
-// * move textures from head-textures.txt to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
-// * stray & wskele skull texture needs to match mob more accurately
+// * improve the bad textures listed at the bottom of head-textures.txt
+// * Trophies/Luck attribute
+// * move textures to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
-// * Known bugs: Charged creeper can cause 2 heads to drop (1 vanilla and 1 non-vanilla head), and the vanilla charged creeper behead bypasses logs
-// * to fix above bug, cancel vanilla charge creeper head drops
-// * Work with Trophies/Luck attribute
-// * ability to TRANSLATE all msgs in plugin by putting in config
-// * un-dye heads with cauldron
+// * BUG: Charged creeper can cause 2 heads to drop (1 vanilla and 1 non-vanilla head), and the vanilla charged creeper behead bypasses logs
+// * BUG: to fix above bug, cancel vanilla charge creeper head drops
+// * un-dye heads (sheep,shulker) with cauldron (gimmick)
+// * jeb_ sheep head animated phase through colors (gimmick)
+// * if mob has custom name, use it in head name (config option)
 //TEST:
+// * all player-visible msgs in plugin are translated using translations.yml
 // * hide behead msgs for vanished players
 // * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
 // * Cracked iron golem head / repair with ingot
 // * place-head-block, overwrite-blocks, facing-direction, place-as: KILLER/VICTIM/SERVER
-// * middle-click copy with correct item name
+// * middle-click copy with correct item name // WORKS well enough; can still bug out if u middle-click twice
 // * head-item-drop-mode
 // * hollow skeletal skulls
 // * /droprate - check (TODO: or edit) per mob (& cmd for spawn modifiers)
 // * prevent placing heads
 // * update-textures=true (head-textures.txt file overwritten when plugin is updated)
 // * new permissions for head click-info
-// * translated tropical fish heads
 /*
  * log:
  *   enable: true
