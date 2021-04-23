@@ -85,8 +85,10 @@ public class HeadAPI {
 		PREFER_VANILLA_HEADS = pl.getConfig().getBoolean("prefer-vanilla-heads", true);
 
 		//---------- <Load translations> ----------------------------------------------------------------------
-		YamlConfiguration translationsFile = FileIO.loadConfig(pl, "translations.yml", pl.getResource("/translations.yml"), /*notifyIfNew=*/false);
-		YamlConfiguration embeddedTranslationsFile = FileIO.loadConfig(pl, "translations-temp-DELETE.yml", pl.getResource("/translations.yml"), false);
+		YamlConfiguration translationsFile = FileIO.loadConfig(pl, "translations.yml",
+				getClass().getResourceAsStream("/translations.yml"), /*notifyIfNew=*/false);
+		YamlConfiguration embeddedTranslationsFile = FileIO.loadConfig(pl, "translations-temp-DELETE.yml",
+				getClass().getResourceAsStream("/translations.yml"), false);
 		translationsFile.setDefaults(embeddedTranslationsFile);
 		FileIO.deleteFile("translations-temp-DELETE.yml");
 		LOCAL_HEAD = new TranslationComponent(translationsFile.getString("head-type-names.head", "Head"));
@@ -96,7 +98,7 @@ public class HeadAPI {
 		headNameFormats = new HashMap<EntityType, String>();
 		headNameFormats.put(EntityType.UNKNOWN, "${MOB_SUBTYPES_DESC}${MOB_TYPE} ${HEAD_TYPE}"); // Default for mobs
 		headNameFormats.put(EntityType.PLAYER, "${NAME} Head"); // Default for players
-		ConfigurationSection entityHeadFormatsConfig = pl.getConfig().getConfigurationSection("head-name-format");
+		ConfigurationSection entityHeadFormatsConfig = translationsFile.getConfigurationSection("head-name-format");
 		if(entityHeadFormatsConfig != null) entityHeadFormatsConfig.getValues(/*deep=*/false)
 			.forEach((entityName, entityHeadNameFormat) -> {
 				if(entityHeadNameFormat instanceof String == false){
@@ -111,7 +113,7 @@ public class HeadAPI {
 		DEFAULT_HEAD_NAME_FORMAT = headNameFormats.get(EntityType.UNKNOWN);
 
 		entitySubtypeNames = new HashMap<String, TranslationComponent>();
-		ConfigurationSection entitySubtypeNamesConfig = pl.getConfig().getConfigurationSection("entity-subtype-names");
+		ConfigurationSection entitySubtypeNamesConfig = translationsFile.getConfigurationSection("entity-subtype-names");
 		if(entitySubtypeNamesConfig != null) entitySubtypeNamesConfig.getValues(/*deep=*/false)
 			.forEach((subtypeName, localSubtypeName) -> {
 			if(localSubtypeName instanceof String == false){
@@ -124,7 +126,7 @@ public class HeadAPI {
 		String hardcodedList = FileIO.loadResource(pl, "head-textures.txt");
 		loadTextures(hardcodedList, /*logMissingEntities=*/true, /*logUnknownEntities=*/false);
 //		String localList = FileIO.loadFile("head-textures.txt", hardcodedList);  // This version does not preserve comments
-		String localList = FileIO.loadFile("head-textures.txt", pl.getResource("/head-textures.txt"));
+		String localList = FileIO.loadFile("head-textures.txt", getClass().getResourceAsStream("/head-textures.txt"));
 		loadTextures(localList, /*logMissingEntities=*/false, /*logUnknownEntities=*/true);
 
 		//TODO: decide whether this feature is worth keeping
