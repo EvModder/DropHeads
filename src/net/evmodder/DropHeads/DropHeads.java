@@ -36,6 +36,7 @@ import net.evmodder.EvLib.Updater;
 // * un-dye heads (sheep,shulker) with cauldron (gimmick)
 // * jeb_ sheep head animated phase through colors (gimmick)
 // * if mob has custom name, use it in head name (config option)
+// * option to use pre-jappa textures (eg: BLAZE|PRE_JAPPA), defaults to true if serverVersion==13
 //TEST:
 // * all player-visible msgs in plugin are translated using translations.yml
 // * hide behead msgs for vanished players
