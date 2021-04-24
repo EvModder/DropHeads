@@ -28,6 +28,7 @@ import net.evmodder.EvLib.Updater;
 // * /dropheads reload
 // * improve the bad textures listed at the bottom of head-textures.txt
 // * Trophies/Luck attribute
+// * Add SHULKER|<COLOR>|PEEKING heads
 // * move textures to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
 // * BUG: Charged creeper can cause 2 heads to drop (1 vanilla and 1 non-vanilla head), and the vanilla charged creeper behead bypasses logs

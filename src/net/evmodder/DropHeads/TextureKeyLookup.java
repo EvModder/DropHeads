@@ -42,6 +42,7 @@ public class TextureKeyLookup{
 	static RefMethod mTraderLlamaGetColor;
 	static RefMethod mVexIsCharging;
 	static RefMethod mStriderIsShivering, mStriderHasSaddle;
+	static RefMethod mShulkerGetPeek;
 	static RefMethod mGetHandle, mGetDataWatcher, mGet_FromDataWatcher;
 	static java.lang.reflect.Field ghastIsAttackingField;
 
@@ -72,9 +73,16 @@ public class TextureKeyLookup{
 				if(entity.getCustomName() != null && entity.getCustomName().equals("jeb_")) return "SHEEP|JEB";
 				else return "SHEEP|"+((Sheep)entity).getColor().name();
 			case "SHULKER":
-				//TODO: isClosed
 				DyeColor color = ((Shulker)entity).getColor();
-				return color == null ? "SHULKER" : "SHULKER|"+color.name();
+				String shulkerAndColorKey = color == null ? "SHULKER" : "SHULKER|"+color.name();
+				if(ReflectionUtils.getServerVersionString().compareTo("v1_16_R3") < 0) return shulkerAndColorKey;
+				if(mShulkerGetPeek == null){
+					try{mShulkerGetPeek = ReflectionUtils.getRefClass("org.bukkit.entity.Shulker").getMethod("getPeek");}
+					catch(RuntimeException ex){return shulkerAndColorKey;}
+				}
+				float peek = (float)mShulkerGetPeek.of(entity).call();
+				String peekState = peek == 0 ? "|CLOSED" : peek == 1 ? "" : "|PEEKING";
+				return shulkerAndColorKey + peekState;
 			case "TROPICAL_FISH":
 				return "TROPICAL_FISH|"+getTropicalFishKey(EntityUtils.getCCP((TropicalFish)entity));
 				/*CCP fishData = new CCP(f.getBodyColor(), f.getPatternColor(), f.getPattern());
