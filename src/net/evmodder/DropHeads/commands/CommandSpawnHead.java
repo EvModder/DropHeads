@@ -14,7 +14,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
@@ -206,10 +205,9 @@ public class CommandSpawnHead extends EvCommand{
 				}
 			}
 			if(head == null){
-				head = pl.getAPI().getHead(target.getBytes(), /*headName=*/"§eUNKNOWN Head");
-				ItemMeta meta = head.getItemMeta();
-				meta.setDisplayName(null);
-				head.setItemMeta(meta);
+				pl.getLogger().info("custom head neme: "+pl.getAPI().getHeadNameFromKey(/*textureKey=*/"UNKNOWN|CUSTOM", /*customName=*/target).toString());
+				head = pl.getAPI().getHead(target.getBytes(), /*headName=*/"§eCustom Head");
+				head = JunkUtils.setDisplayName(head, pl.getAPI().getHeadNameFromKey(/*textureKey=*/"UNKNOWN|CUSTOM", /*customName=*/target));
 			}
 		}
 		else if(prefix.equals(PLAYER_PREFIX) || (prefix.isEmpty()/* && ... */)){
