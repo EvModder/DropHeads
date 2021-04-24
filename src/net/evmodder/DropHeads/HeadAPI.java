@@ -289,7 +289,7 @@ public class HeadAPI {
 				break;
 		}
 		Component[] components = new Component[dataFlags.length];
-		components[0] = new TranslationComponent("entity.minecraft."+dataFlags[0].replace("UNKNOWN", "PLAYER").toUpperCase());
+		components[0] = new TranslationComponent("entity.minecraft."+dataFlags[0].replace("UNKNOWN", "PLAYER").toLowerCase());
 		for(int i=1; i<dataFlags.length; ++i){
 			TranslationComponent subtypeName = entitySubtypeNames.get(dataFlags[i]);
 			components[i] = subtypeName != null ? subtypeName : new RawTextComponent(TextUtils.capitalizeAndSpacify(dataFlags[i], /*toSpace=*/'_'));
