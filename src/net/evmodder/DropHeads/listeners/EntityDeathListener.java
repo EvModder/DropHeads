@@ -53,6 +53,7 @@ import org.bukkit.util.Vector;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.DropHeads.TextureKeyLookup;
+import net.evmodder.DropHeads.events.EntityBeheadEvent;
 import net.evmodder.DropHeads.events.HeadRollEvent;
 import net.evmodder.EvLib.EvUtils;
 import net.evmodder.EvLib.FileIO;
@@ -332,9 +333,14 @@ public class EntityDeathListener implements Listener{
 	void sendTellraw(String target, String message){
 		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+target+" "+message);
 	}
-	void dropHead(Entity entity, Event evt, Entity killer, ItemStack weapon){
+	void attemptHeadDropEvent(Entity entity, Event evt, Entity killer, ItemStack weapon){
 		ItemStack headItem = pl.getAPI().getHead(entity);
+		EntityBeheadEvent beheadEvent = new EntityBeheadEvent(killer, entity, evt, headItem);
+		pl.getServer().getPluginManager().callEvent(beheadEvent);
+		if(beheadEvent.isCancelled()) return;
+
 		for(DropMode mode : DROP_MODES){
+			if(headItem == null) break;
 			switch(mode){
 				case EVENT:
 					if(evt instanceof EntityDeathEvent) ((EntityDeathEvent)evt).getDrops().add(headItem);
@@ -384,9 +390,8 @@ public class EntityDeathListener implements Listener{
 					entity.getWorld().dropItemNaturally(entity.getLocation(), headItem);
 					headItem = null;
 					break;
-			}
-			if(headItem == null) break;
-		}
+			}//switch(mode)
+		}//for(DROP_MODES)
 		recentlyBeheadedEntities.add(entity.getUniqueId());
 
 		ListComponent message = new ListComponent();
@@ -476,7 +481,7 @@ public class EntityDeathListener implements Listener{
 					final UUID creeperUUID = killer.getUniqueId();
 					if(explodingChargedCreepers.add(creeperUUID) && !HeadUtils.dropsHeadFromChargedCreeper(victim.getType())){
 						if(DEBUG_MODE) pl.getLogger().info("Killed by charged creeper: "+victim.getType());
-						dropHead(victim, evt, killer, null);
+						attemptHeadDropEvent(victim, evt, killer, null);
 						// Free up memory after a tick (optional)
 						new BukkitRunnable(){@Override public void run(){explodingChargedCreepers.remove(creeperUUID);}}.runTaskLater(pl, 1);
 						return;
@@ -489,7 +494,8 @@ public class EntityDeathListener implements Listener{
 					if(DEBUG_MODE) pl.getLogger().info("dropheads.canlosehead=false: "+victim.getName());
 					return;
 				}
-				dropHead(victim, evt, killer, killer instanceof LivingEntity ? ((LivingEntity)killer).getEquipment().getItemInMainHand() : null);
+				attemptHeadDropEvent(victim, evt, killer,
+						killer instanceof LivingEntity ? ((LivingEntity)killer).getEquipment().getItemInMainHand() : null);
 				return;
 			}
 		}
@@ -515,7 +521,8 @@ public class EntityDeathListener implements Listener{
 		final double toolBonus = murderWeapon == null ? 0D : toolBonuses.getOrDefault(murderWeapon.getType(), 0D);
 		final int lootingLevel = murderWeapon == null ? 0 : murderWeapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
 		final boolean VANILLA_LOOTING = victim.getType() == EntityType.WITHER_SKELETON && VANILLA_WSKELE_LOOTING;
-		final double lootingMod = (lootingLevel == 0 || VANILLA_LOOTING) ? 1D : Math.min(Math.pow(LOOTING_MULT, lootingLevel), LOOTING_MULT*lootingLevel);
+		final double lootingMod = (lootingLevel == 0 || VANILLA_LOOTING)
+				? 1D : Math.min(Math.pow(LOOTING_MULT, lootingLevel), LOOTING_MULT*lootingLevel);
 		final double lootingAdd = (VANILLA_LOOTING ? 0.01D : LOOTING_ADD)*lootingLevel;
 		final double weaponMod = 1D + toolBonus;
 		final double timeAliveMod = 1D + getTimeAliveBonus(victim);
@@ -541,7 +548,7 @@ public class EntityDeathListener implements Listener{
 				notRecentEntities.addAll(recentlyBeheadedEntities);
 				new BukkitRunnable(){@Override public void run(){recentlyBeheadedEntities.removeAll(notRecentEntities);}}.runTaskLater(pl, 2);
 			}
-			dropHead(victim, evt, killer, murderWeapon);
+			attemptHeadDropEvent(victim, evt, killer, murderWeapon);
 			if(DEBUG_MODE){
 				DecimalFormat df = new DecimalFormat("0.0###");
 				pl.getLogger().info("Dropping Head: "+TextureKeyLookup.getTextureKey(victim)
@@ -603,7 +610,7 @@ public class EntityDeathListener implements Listener{
 									return;
 								}
 							}
-							dropHead(victim, evt, killer, getWeaponFromKiller(killer));
+							attemptHeadDropEvent(victim, evt, killer, getWeaponFromKiller(killer));
 						}
 						return;
 					}
