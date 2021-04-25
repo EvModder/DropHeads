@@ -287,9 +287,18 @@ public class HeadAPI {
 				if(textureKey.equals("RABBIT|THE_KILLER_BUNNY")) textureKey = "THE_KILLER_BUNNY";
 				dataFlags = textureKey.split("\\|");
 				break;
+			case "MUSHROOM_COW":
+				dataFlags = (textureKey = "MOOSHROOM"+textureKey.substring(12)).split("\\|");
+				break;
+			case "PIG_ZOMBIE":
+				dataFlags = (textureKey = "ZOMBIE_PIGMAN"+textureKey.substring(10)).split("\\|");
+				break;
+			case "UNKNOWN":
+				dataFlags = (textureKey = "PLAYER"+textureKey.substring(7)).split("\\|");
+				break;
 		}
 		Component[] components = new Component[dataFlags.length];
-		components[0] = new TranslationComponent("entity.minecraft."+dataFlags[0].replace("UNKNOWN", "PLAYER").toLowerCase());
+		components[0] = new TranslationComponent("entity.minecraft."+dataFlags[0].toLowerCase());
 		for(int i=1; i<dataFlags.length; ++i){
 			TranslationComponent subtypeName = entitySubtypeNames.get(dataFlags[i]);
 			components[i] = subtypeName != null ? subtypeName : new RawTextComponent(TextUtils.capitalizeAndSpacify(dataFlags[i], /*toSpace=*/'_'));
