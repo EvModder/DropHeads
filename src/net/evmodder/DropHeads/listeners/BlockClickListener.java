@@ -1,5 +1,6 @@
 package net.evmodder.DropHeads.listeners;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
 import org.bukkit.GameMode;
@@ -15,6 +16,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.HeadAPI.HeadNameData;
 import net.evmodder.EvLib.extras.HeadUtils;
@@ -57,8 +59,9 @@ public class BlockClickListener implements Listener{
 	public void onBlockClickEvent(PlayerInteractEvent evt){
 		if(evt.useInteractedBlock() == Result.DENY || evt.getAction() != Action.RIGHT_CLICK_BLOCK
 			|| evt.getPlayer().isSneaking() || !HeadUtils.isHead(evt.getClickedBlock().getType())) return;
+		boolean isPlayerHead = HeadUtils.isPlayerHead(evt.getClickedBlock().getType());
 
-		if(REPAIR_IRON_GOLEM_HEADS && HeadUtils.isPlayerHead(evt.getClickedBlock().getType())
+		if(REPAIR_IRON_GOLEM_HEADS && isPlayerHead
 				&& evt.getPlayer().getInventory().getItemInMainHand() != null
 				&& evt.getPlayer().getInventory().getItemInMainHand().getType() == Material.IRON_INGOT){
 			Skull skull = (Skull) evt.getClickedBlock().getState();
@@ -114,6 +117,15 @@ public class BlockClickListener implements Listener{
 		blob.replaceRawDisplayTextWithComponent("${A}", new RawTextComponent(aOrAn));
 		blob.replaceRawDisplayTextWithComponent("${NAME}", data.profileName);
 		blob.replaceRawDisplayTextWithComponent("${MOB_TYPE}", data.entityTypeNames[0]);
+		if(HEAD_DISPLAY.contains("${TEXTURE}")){
+			String code0 = "";
+			if(isPlayerHead){
+				GameProfile profile = HeadUtils.getGameProfile((Skull)evt.getClickedBlock().getState());
+				Collection<Property> textures = profile.getProperties().get("textures");
+				if(textures != null && !textures.isEmpty()) code0 = profile.getProperties().get("textures").iterator().next().getValue();
+			}
+			blob.replaceRawDisplayTextWithComponent("${TEXTURE}", new RawTextComponent(code0));
+		}
 
 		if(HEAD_DISPLAY.contains("${MOB_SUBTYPES_ASC}")){
 			ListComponent subtypeNamesAsc = new ListComponent();

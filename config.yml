@@ -89,7 +89,7 @@ head-click-listener: true
 head-click-format-players: "&7[&6DropHeads&7]&f That's ${NAME}'s Head"
 head-click-format-mobs: "&7[&6DropHeads&7]&f That's ${A} ${MOB_SUBTYPES_DESC}${MOB_TYPE}&f ${HEAD_TYPE}"
 head-click-format-hdb: "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"
-head-click-format-unknown: "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"
+head-click-format-unknown: "&7[&6DropHeads&7]&f Custom Head Texture: ${TEXTURE}"
 
 # Saves lore of heads in GameProfile when placed (used by some other plugins)
 # Only works for player-type heads, eg: won't work for minecraft:creeper_head
