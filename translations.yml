@@ -68,22 +68,26 @@ entity-subtype-names:
   shepherd: "entity.minecraft.villager.shepherd"            #Villager/ZombieVillager
   toolsmith: "entity.minecraft.villager.toolsmith"          #Villager/ZombieVillager
   weaponsmith: "entity.minecraft.villager.weaponsmith"      #Villager/ZombieVillager
-  black: "color.minecraft.black"                            #Sheep/Shulker/Horse/Cat/Rabbit
-  blue: "color.minecraft.blue"                              #Sheep/Shulker/Parrot
-  brown: "color.minecraft.brown"                            #Sheep/Shulker/Horse/Llama/TraderLlama/Rabbit/MushroomCow/Panda
-  cyan: "color.minecraft.cyan"                              #Sheep/Shulker/Parrot
-  gray: "color.minecraft.gray"                              #Sheep/Shulker/Parrot/Horse/Llama/TraderLlama
-  green: "color.minecraft.green"                            #Sheep/Shulker/Parrot
-  light_blue: "color.minecraft.light_blue"                  #Sheep/Shulker
-  light_gray: "color.minecraft.light_gray"                  #Sheep/Shulker
-  lime: "color.minecraft.lime"                              #Sheep/Shulker
-  magenta: "color.minecraft.magenta"                        #Sheep/Shulker
-  orange: "color.minecraft.orange"                          #Sheep/Shulker
-  pink: "color.minecraft.pink"                              #Sheep/Shulker
-  purple: "color.minecraft.purple"                          #Sheep/Shulker
-  red: "color.minecraft.red"                                #Sheep/Shulker/Parrot/MushroomCow/Fox
-  yellow: "color.minecraft.yellow"                          #Sheep/Shulker
-  white: "color.minecraft.white"                            #Sheep/Shulker/Horse/Llama/TraderLlama/Rabbit/Cat
+  peeking: "Peeking"                                        #Shulker
+  closed: "Closed"                                          #Shulker
+  sideways: "Sideways"                                      #Shulker
+  upside_down: "Upside Down"                                #Shulker
+  black: "color.minecraft.black"                            #Shulker/Sheep/Horse/Cat/Rabbit
+  blue: "color.minecraft.blue"                              #Shulker/Sheep/Parrot
+  brown: "color.minecraft.brown"                            #Shulker/Sheep/Horse/Llama/TraderLlama/Rabbit/MushroomCow/Panda
+  cyan: "color.minecraft.cyan"                              #Shulker/Sheep/Parrot
+  gray: "color.minecraft.gray"                              #Shulker/Sheep/Parrot/Horse/Llama/TraderLlama
+  green: "color.minecraft.green"                            #Shulker/Sheep/Parrot
+  light_blue: "color.minecraft.light_blue"                  #Shulker/Sheep
+  light_gray: "color.minecraft.light_gray"                  #Shulker/Sheep
+  lime: "color.minecraft.lime"                              #Shulker/Sheep
+  magenta: "color.minecraft.magenta"                        #Shulker/Sheep
+  orange: "color.minecraft.orange"                          #Shulker/Sheep
+  pink: "color.minecraft.pink"                              #Shulker/Sheep
+  purple: "color.minecraft.purple"                          #Shulker/Sheep
+  red: "color.minecraft.red"                                #Shulker/Sheep/Parrot/MushroomCow/Fox
+  yellow: "color.minecraft.yellow"                          #Shulker/Sheep
+  white: "color.minecraft.white"                            #Shulker/Sheep/Horse/Llama/TraderLlama/Rabbit/Cat
   black_collared: "Black-Collared"                          #Cat/Wolf
   blue_collared: "Blue-Collared"                            #Cat/Wolf
   brown_collared: "Brown-Collared"                          #Cat/Wolf

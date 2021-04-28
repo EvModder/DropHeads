@@ -284,21 +284,31 @@ public class HeadAPI {
 				}
 				break;
 			case "RABBIT":
-				if(textureKey.equals("RABBIT|THE_KILLER_BUNNY")) textureKey = "THE_KILLER_BUNNY";
+				if(textureKey.contains("RABBIT|THE_KILLER_BUNNY")){
+					textureKey = textureKey.replace("RABBIT|THE_KILLER_BUNNY", "KILLER_BUNNY");
+					dataFlags = textureKey.split("\\|");
+				}
+				break;
+			case "SHULKER":
+				textureKey = textureKey
+						.replace("|SIDE_UP", "|SIDEWAYS")
+						.replace("|SIDE_DOWN", "|SIDEWAYS")
+						.replace("|SIDE_LEFT", "|SIDEWAYS")
+						.replace("|SIDE_RIGHT", "|SIDEWAYS")
+						.replace("|GRUMM", "|UPSIDE_DOWN");
 				dataFlags = textureKey.split("\\|");
-				break;
-			case "MUSHROOM_COW":
-				dataFlags = (textureKey = "MOOSHROOM"+textureKey.substring(12)).split("\\|");
-				break;
-			case "PIG_ZOMBIE":
-				dataFlags = (textureKey = "ZOMBIE_PIGMAN"+textureKey.substring(10)).split("\\|");
 				break;
 			case "UNKNOWN":
 				dataFlags = (textureKey = "PLAYER"+textureKey.substring(7)).split("\\|");
 				break;
 		}
 		Component[] components = new Component[dataFlags.length];
-		components[0] = new TranslationComponent("entity.minecraft."+dataFlags[0].toLowerCase());
+		try{
+			components[0] = TellrawUtils.getBestGuessLocalizedDisplayName(EntityType.valueOf(dataFlags[0]));
+		}
+		catch(IllegalArgumentException ex){ // Unable to parse EntityType
+			components[0] = new TranslationComponent("entity.minecraft."+dataFlags[0].toLowerCase());
+		}
 		for(int i=1; i<dataFlags.length; ++i){
 			TranslationComponent subtypeName = entitySubtypeNames.get(dataFlags[i]);
 			components[i] = subtypeName != null ? subtypeName : new RawTextComponent(TextUtils.capitalizeAndSpacify(dataFlags[i], /*toSpace=*/'_'));
@@ -306,7 +316,7 @@ public class HeadAPI {
 		return components;
 	}
 
-	public TranslationComponent getHeadTypeName(HeadType headType){
+	public TranslationComponent getHeadTypeName(HeadType headType){//TODO: prefer avoiding public?
 		if(headType == null) return LOCAL_HEAD;
 		switch(headType){
 			case SKULL: return LOCAL_SKULL;
@@ -314,7 +324,7 @@ public class HeadAPI {
 			case HEAD: default: return LOCAL_HEAD;
 		}
 	}
-	public Component getHeadNameFromKey(@Nonnull String textureKey, @Nonnull String customName){
+	public Component getHeadNameFromKey(@Nonnull String textureKey, @Nonnull String customName){//TODO: prefer avoiding public?
 		// Attempt to parse out an EntityType
 		EntityType eType;
 		int i = textureKey.indexOf('|');
@@ -564,7 +574,11 @@ public class HeadAPI {
 		if(!SADDLES_ENABLED && textureKey.endsWith("|SADDLED")) textureKey = textureKey.substring(0, textureKey.length()-8);
 		if(CRACKED_IRON_GOLEMS_ENABLED && entity.getType() == EntityType.IRON_GOLEM) textureKey += "|HIGH_CRACKINESS";
 		if(HOLLOW_SKULLS_ENABLED && EntityUtils.isSkeletal(entity.getType())) textureKey += "|HOLLOW";
-		if(GRUM_ENABLED && HeadUtils.hasGrummName(entity)) textureKey += "|GRUMM";
+		if(GRUM_ENABLED && HeadUtils.hasGrummName(entity)){
+			if(entity.getType() == EntityType.SHULKER) textureKey = textureKey
+					.replace("|SIDE_UP", "").replace("|SIDE_DOWN", "").replace("|SIDE_LEFT", "").replace("|SIDE_RIGHT", "");
+			textureKey += "|GRUMM";
+		}
 		ItemStack head = getHead(entity.getType(), textureKey);
 //		if(head.getDisplayName().contains("${NAME}")){
 //			replace ${NAME} with entity.getCustomName() in item display name

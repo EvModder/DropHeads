@@ -37,6 +37,7 @@ import net.evmodder.EvLib.Updater;
 // * jeb_ sheep head animated phase through colors (gimmick)
 // * if mob has custom name, use it in head name (config option)
 // * option to use pre-jappa textures (eg: BLAZE|PRE_JAPPA), defaults to true if serverVersion==13
+// * Add horse-head sup-type (style): NONE, WHITE, WHITE_DOTS, BLACK_DOTS, WHITEFIELD
 //TEST:
 // * all player-visible msgs in plugin are translated using translations.yml
 // * hide behead msgs for vanished players

@@ -1,6 +1,7 @@
 package net.evmodder.DropHeads;
 
 import org.bukkit.DyeColor;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Horse;
@@ -29,9 +30,50 @@ public class TextureKeyLookup{
 			return EntityUtils.getTropicalFishEnglishName(ccp).toUpperCase().replace(' ', '_');
 		}
 		else{
-			return new StringBuilder(ccp.bodyColor.name()).append('|').append(ccp.patternColor.name())
+			return new StringBuilder("TROPICAL_FISH|")
+					.append(ccp.bodyColor.name()).append('|').append(ccp.patternColor.name())
 					.append('|').append(ccp.pattern.name()).toString();
 		}
+	}
+	static BlockFace turnLeft(BlockFace face){
+		switch(face){
+			case NORTH: return BlockFace.WEST;
+			case WEST: return BlockFace.SOUTH;
+			case SOUTH: return BlockFace.EAST;
+			case EAST: return BlockFace.NORTH;
+			default: return null;
+		}
+	}
+	static String getShulkerKey(Shulker shulker){
+		DyeColor color = shulker.getColor();
+		String shulkerAndColorKey = color == null ? "SHULKER" : "SHULKER|"+color.name();
+		org.bukkit.Bukkit.getLogger().info("shulker facing: "+shulker.getFacing());
+
+		if(ReflectionUtils.getServerVersionString().compareTo("v1_16_R3") < 0) return shulkerAndColorKey;
+		if(mShulkerGetAttachedFace == null){
+			try{
+				RefClass classShulker = ReflectionUtils.getRefClass("org.bukkit.entity.Shulker");
+				mShulkerGetPeek = classShulker.getMethod("getPeek");
+				mShulkerGetAttachedFace = classShulker.getMethod("getAttachedFace");
+			}
+			catch(RuntimeException ex){return shulkerAndColorKey;}
+		}
+		float peek = (float)mShulkerGetPeek.of(shulker).call();
+		String peekState = peek == 0 ? "|CLOSED" : peek == 1 ? "" : "|PEEKING";
+		BlockFace attachedFace = (BlockFace)mShulkerGetAttachedFace.of(shulker).call();
+		String rotation;
+		switch(attachedFace){
+			case UP:
+				rotation = "|GRUMM"; break;
+			case NORTH: case SOUTH: case EAST: case WEST:
+				if(shulker.getFacing() == BlockFace.UP) rotation = "|SIDE_UP";
+				else if(shulker.getFacing() == BlockFace.DOWN) rotation = "|SIDE_DOWN";
+				else if(shulker.getFacing() == turnLeft(attachedFace)) rotation = "|SIDE_LEFT";
+				else rotation = "|SIDE_RIGHT";
+				break;
+			default: case DOWN: rotation = "";
+		}
+		return shulkerAndColorKey + peekState + rotation;
 	}
 
 	static RefMethod mVillagerType, mZombieVillagerType;
@@ -42,7 +84,7 @@ public class TextureKeyLookup{
 	static RefMethod mTraderLlamaGetColor;
 	static RefMethod mVexIsCharging;
 	static RefMethod mStriderIsShivering, mStriderHasSaddle;
-	static RefMethod mShulkerGetPeek;
+	static RefMethod mShulkerGetPeek, mShulkerGetAttachedFace;
 	static RefMethod mGetHandle, mGetDataWatcher, mGet_FromDataWatcher;
 	static java.lang.reflect.Field ghastIsAttackingField;
 
@@ -73,18 +115,9 @@ public class TextureKeyLookup{
 				if(entity.getCustomName() != null && entity.getCustomName().equals("jeb_")) return "SHEEP|JEB";
 				else return "SHEEP|"+((Sheep)entity).getColor().name();
 			case "SHULKER":
-				DyeColor color = ((Shulker)entity).getColor();
-				String shulkerAndColorKey = color == null ? "SHULKER" : "SHULKER|"+color.name();
-				if(ReflectionUtils.getServerVersionString().compareTo("v1_16_R3") < 0) return shulkerAndColorKey;
-				if(mShulkerGetPeek == null){
-					try{mShulkerGetPeek = ReflectionUtils.getRefClass("org.bukkit.entity.Shulker").getMethod("getPeek");}
-					catch(RuntimeException ex){return shulkerAndColorKey;}
-				}
-				float peek = (float)mShulkerGetPeek.of(entity).call();
-				String peekState = peek == 0 ? "|CLOSED" : peek == 1 ? "" : "|PEEKING";
-				return shulkerAndColorKey + peekState;
+				return getShulkerKey((Shulker)entity);
 			case "TROPICAL_FISH":
-				return "TROPICAL_FISH|"+getTropicalFishKey(EntityUtils.getCCP((TropicalFish)entity));
+				return getTropicalFishKey(EntityUtils.getCCP((TropicalFish)entity));
 				/*CCP fishData = new CCP(f.getBodyColor(), f.getPatternColor(), f.getPattern());
 				String name = HeadUtils.tropicalFishNames.get(fishData);
 				if(name == null) name = EvUtils.getNormalizedName(entity.getType());
@@ -119,7 +152,8 @@ public class TextureKeyLookup{
 				if(catType.equals("BLACK")) catType = "TUXEDO";
 				if(catType.equals("ALL_BLACK")) catType = "BLACK";
 				if(((Tameable)entity).isTamed()){
-					if(mCatGetCollarColor == null) mCatGetCollarColor = ReflectionUtils.getRefClass("org.bukkit.entity.Cat").getMethod("getCollarColor");
+					if(mCatGetCollarColor == null) mCatGetCollarColor =
+							ReflectionUtils.getRefClass("org.bukkit.entity.Cat").getMethod("getCollarColor");
 					return "CAT|"+catType+"|"+((DyeColor)mCatGetCollarColor.of(entity).call()).name()+"_COLLARED";
 				}
 				return "CAT|"+catType;
