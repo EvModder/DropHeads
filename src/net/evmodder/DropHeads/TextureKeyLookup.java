@@ -66,10 +66,11 @@ public class TextureKeyLookup{
 			case UP:
 				rotation = "|GRUMM"; break;
 			case NORTH: case SOUTH: case EAST: case WEST:
-				if(shulker.getFacing() == BlockFace.UP) rotation = "|SIDE_UP";
+				if(peekState.equals("|CLOSED")) rotation = "|SIDEWAYS";
+				else if(shulker.getFacing() == BlockFace.UP) rotation = "|SIDE_UP";
 				else if(shulker.getFacing() == BlockFace.DOWN) rotation = "|SIDE_DOWN";
 				else if(shulker.getFacing() == turnLeft(attachedFace)) rotation = "|SIDE_LEFT";
-				else rotation = "|SIDE_RIGHT";
+				else/*if(shulker.getFacing() == turnRight(attachedFace))*/rotation = "|SIDE_RIGHT";
 				break;
 			default: case DOWN: rotation = "";
 		}

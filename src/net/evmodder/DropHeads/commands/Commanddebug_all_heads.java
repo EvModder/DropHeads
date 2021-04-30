@@ -57,12 +57,13 @@ public class Commanddebug_all_heads extends EvCommand{
 		Set<String> textureKeys = new TreeSet<>();
 		textureKeys.addAll(pl.getAPI().getTextures().keySet());
 		sender.sendMessage("Total # texture keys: "+textureKeys.size());
-		if(noGrumm) textureKeys.removeIf(key -> key.endsWith("|GRUMM"));
+		if(noGrumm) textureKeys.removeIf(key -> key.endsWith("|GRUMM") && !key.startsWith("SHULKER|"));
 		if(!SHOW_PLAIN_IF_HAS_DATA_TAG){
 			// Don't show "FOX" if we have "FOX|RED", or "SHEEP" if we have "SHEEP|WHITE" etc
 			HashSet<String> hasSubKey = new HashSet<>();
 			HashSet<String> hasMultipleSubKeys = new HashSet<>();
 			for(String key : textureKeys){
+				if(key.startsWith("SHULKER")) continue;
 				int i = key.lastIndexOf('|');
 				if(i != -1){
 					String badKey;
