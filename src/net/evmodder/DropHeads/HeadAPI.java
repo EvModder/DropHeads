@@ -307,7 +307,7 @@ public class HeadAPI {
 			components[0] = TellrawUtils.getBestGuessLocalizedDisplayName(EntityType.valueOf(dataFlags[0]));
 		}
 		catch(IllegalArgumentException ex){ // Unable to parse EntityType
-			components[0] = new TranslationComponent("entity.minecraft."+dataFlags[0].toLowerCase());
+			components[0] = new TranslationComponent(TextUtils.capitalizeAndSpacify(EntityUtils.getNormalizedEntityName(dataFlags[0]), '_'));
 		}
 		for(int i=1; i<dataFlags.length; ++i){
 			TranslationComponent subtypeName = entitySubtypeNames.get(dataFlags[i]);
