@@ -5,7 +5,7 @@ description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite,
 #6=translations, hex colors, wskele helmet drops, [item display], item display name rewrite, 1.17 mobs
-#1=new blaze head, fixed /gethead code:xxx, closed shulkers
+#1=new blaze head, fixed /gethead code:xxx, closed shulkers, sideways shulkers, updated all head textures to the standard 64x64, blue/lgray collared wolf
 version: 3.6.1
 api-version: 1.13
 softdepend: [HeadDatabase]
