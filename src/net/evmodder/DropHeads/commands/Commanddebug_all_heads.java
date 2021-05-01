@@ -1,10 +1,11 @@
 package net.evmodder.DropHeads.commands;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.stream.Collectors;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -24,6 +25,8 @@ public class Commanddebug_all_heads extends EvCommand{
 	final private DropHeads pl;
 	final boolean DISPLAY_3D = false;
 	final boolean SHOW_PLAIN_IF_HAS_DATA_TAG = false;
+	enum OrderBy{ALPHABETICAL, NUM_SUBKEYS_ASC}
+	final OrderBy orderBy = OrderBy.NUM_SUBKEYS_ASC;
 
 	public Commanddebug_all_heads(DropHeads plugin){
 		super(plugin);
@@ -45,6 +48,11 @@ public class Commanddebug_all_heads extends EvCommand{
 	@Override
 	public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){return null;}
 
+	String getRootParentKey(String key){
+		int i = key.indexOf('|');
+		return i == -1 ? key : key.substring(0, i);
+	}
+
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String args[]){
 		if(sender instanceof Player == false){
@@ -54,7 +62,8 @@ public class Commanddebug_all_heads extends EvCommand{
 		boolean noGrumm = args.length != 1 || !args[0].toLowerCase().equals("true");
 		sender.sendMessage("Skipping Grumm heads: "+noGrumm);
 
-		Set<String> textureKeys = new TreeSet<>();
+		// Get & filter head keys
+		List<String> textureKeys = new ArrayList<>();
 		textureKeys.addAll(pl.getAPI().getTextures().keySet());
 		sender.sendMessage("Total # texture keys: "+textureKeys.size());
 		if(noGrumm) textureKeys.removeIf(key -> key.endsWith("|GRUMM") && !key.startsWith("SHULKER|"));
@@ -63,7 +72,7 @@ public class Commanddebug_all_heads extends EvCommand{
 			HashSet<String> hasSubKey = new HashSet<>();
 			HashSet<String> hasMultipleSubKeys = new HashSet<>();
 			for(String key : textureKeys){
-				if(key.startsWith("SHULKER")) continue;
+				if(key.startsWith("SHULKER") || key.equals("BEE") || key.equals("WOLF") || key.startsWith("CAT|")) continue;
 				int i = key.lastIndexOf('|');
 				if(i != -1){
 					String badKey;
@@ -78,6 +87,29 @@ public class Commanddebug_all_heads extends EvCommand{
 			}
 			textureKeys.removeAll(hasMultipleSubKeys);
 		}
+
+		// Sort head keys
+		HashMap<String, Integer> numSubKeys = new HashMap<>();
+		pl.getAPI().getTextures().keySet().forEach(key -> {
+			String rootKey = getRootParentKey(key);
+			numSubKeys.put(rootKey, numSubKeys.getOrDefault(rootKey, 0) + 1);
+		});
+		textureKeys = textureKeys.stream()
+			.sorted((s1, s2) -> {
+				String root1 = getRootParentKey(s1), root2 = getRootParentKey(s2);
+				switch(orderBy){
+					case NUM_SUBKEYS_ASC:
+						if(numSubKeys.get(root1) < numSubKeys.get(root2)) return -2;
+						if(numSubKeys.get(root1) > numSubKeys.get(root2)) return +2;
+					case ALPHABETICAL:
+					default:
+						if(root1.compareTo(root2) != 0) return root1.compareTo(root2);
+						return s1.compareTo(s2);
+				}
+			})
+			.collect(Collectors.toList());
+
+		// Place heads
 		final long numHeads = textureKeys.size();
 		sender.sendMessage("Placing "+numHeads+" heads...");
 
