@@ -71,8 +71,8 @@ public class Commanddebug_all_heads extends EvCommand{
 			// Don't show "FOX" if we have "FOX|RED", or "SHEEP" if we have "SHEEP|WHITE" etc
 			HashSet<String> hasSubKey = new HashSet<>();
 			HashSet<String> hasMultipleSubKeys = new HashSet<>();
+			hasMultipleSubKeys.add("CAT");
 			for(String key : textureKeys){
-				if(key.startsWith("SHULKER") || key.equals("BEE") || key.equals("WOLF") || key.startsWith("CAT|")) continue;
 				int i = key.lastIndexOf('|');
 				if(i != -1){
 					String badKey;
@@ -82,7 +82,10 @@ public class Commanddebug_all_heads extends EvCommand{
 					}
 					else badKey = key.substring(0, i);
 					// Only remove if we have 2+ sub categories for a key
-					if(!hasSubKey.add(badKey)) hasMultipleSubKeys.add(badKey);
+					if(!hasSubKey.add(badKey)){
+						if(key.startsWith("SHULKER") || key.startsWith("BEE") || key.startsWith("WOLF") || key.startsWith("CAT")) continue;
+						hasMultipleSubKeys.add(badKey);
+					}
 				}
 			}
 			textureKeys.removeAll(hasMultipleSubKeys);
