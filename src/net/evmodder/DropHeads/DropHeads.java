@@ -28,7 +28,6 @@ import net.evmodder.EvLib.Updater;
 // * /dropheads reload
 // * improve the bad textures listed at the bottom of head-textures.txt
 // * Trophies/Luck attribute
-// * Add SHULKER|PEEKING heads
 // * move textures to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
 // * BUG: Charged creeper can cause 2 heads to drop (1 vanilla and 1 non-vanilla head), and the vanilla charged creeper behead bypasses logs
@@ -36,8 +35,6 @@ import net.evmodder.EvLib.Updater;
 // * un-dye heads (sheep,shulker) with cauldron (gimmick)
 // * jeb_ sheep head animated phase through colors (gimmick)
 // * if mob has custom name, use it in head name (config option)
-// * option to use pre-jappa textures (eg: BLAZE|PRE_JAPPA), defaults to true if serverVersion==13
-// * Add horse-head sup-type (style): NONE, WHITE, WHITE_DOTS, BLACK_DOTS, WHITEFIELD
 //TEST:
 // * all player-visible msgs in plugin are translated using translations.yml
 // * hide behead msgs for vanished players
