@@ -29,13 +29,13 @@ public class CommandDropRate extends EvCommand{
 	final HashMap<String, Double> dropChances;
 	final double DEFAULT_DROP_CHANCE;
 	
-	final String DROP_CHANCE_FOR = "§6Drop chance for §e%s§6: §b%s%";
-	final String DROP_CHANCE_FOR_NOT_FOUND = "§6Drop chance for \"§c%s\"§6 not found! §7(unknown mobs default to §b0%§7)";
+	final String DROP_CHANCE_FOR = "§6Drop chance for §e%s§6: §b%s%%";
+	final String DROP_CHANCE_FOR_NOT_FOUND = "§6Drop chance for \"§c%s\"§6 not found! §7(unknown mobs default to §b0%%§7)";
 	final String OTHER_THINGS_THAT_AFFECT_DROPRATE = "§7Other things that can affect droprate: ";
 	final String VICTIM_MUST_HAVE_PERM = "Victim must have '§fdropheads.canlosehead§7' perm (default=true)";
 	final String KILLER_MUST_HAVE_PERM = "You must have the '§fdropheads.canbehead§7' perm";
-	final String ALWAYS_BEHEAD_ALERT = "Perm '§fdropheads.alwaysbehead§7' raises rate to 100%";
-	final String SPECIFIC_WEAPONS_ALERT = "Specific murder weapons are required {%s}";
+	final String ALWAYS_BEHEAD_ALERT = "Perm '§fdropheads.alwaysbehead§7' raises rate to 100%%";
+	final String SPECIFIC_WEAPONS_ALERT = "Specific murder weapons are required %s";
 	final String RATE_MODIFIER_HEADER = "Rate modifiers: ";
 	final String SPAWN_REASON = "§fSpawnReason§7, ", TIME_ALIVE = "§fTimeAlive§7, ", WEAPON_TYPE = "§fWeaponType§7, ", LOOTING = "§fLooting§7";
 	final String VANILLA_WITHER_SKELETON_BEHAVIOR_ALERT = "Vanilla wither_skeleton looting rate is enabled";
@@ -140,7 +140,7 @@ public class CommandDropRate extends EvCommand{
 		if(entity == null && target.equals("PLAYER")) builder.append('\n').append(VICTIM_MUST_HAVE_PERM);
 		if(!sender.hasPermission("dropheads.canbehead")) builder.append('\n').append(KILLER_MUST_HAVE_PERM);// (true/false for you)
 		if(sender.hasPermission("dropheads.alwaysbehead")) builder.append('\n').append(ALWAYS_BEHEAD_ALERT);// (true/false for you)
-		if(!REQUIRED_TOOLS.isEmpty()) builder.append('\n').append(String.format(SPECIFIC_WEAPONS_ALERT, "${REQUIRED_TOOLS}"));
+		if(!REQUIRED_TOOLS.isEmpty()) builder.append('\n').append(String.format(SPECIFIC_WEAPONS_ALERT, REQUIRED_TOOLS.toString()));
 		builder.append('\n').append(RATE_MODIFIER_HEADER);
 		if(USING_SPAWN_MODIFIERS && !target.equals("PLAYER") &&
 				(entity == null || Math.abs(1F - JunkUtils.getSpawnCauseModifier(entity)) > 0.001F))
