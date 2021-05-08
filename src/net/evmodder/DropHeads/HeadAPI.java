@@ -58,7 +58,8 @@ public class HeadAPI {
 	final boolean GRUM_ENABLED, SADDLES_ENABLED, HOLLOW_SKULLS_ENABLED, CRACKED_IRON_GOLEMS_ENABLED;
 	final boolean UPDATE_PLAYER_HEADS, UPDATE_ZOMBIE_PIGMEN_HEADS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_VANILLA_HEADS;
 	final TranslationComponent LOCAL_HEAD, LOCAL_SKULL, LOCAL_TOE;
-	final HashMap<EntityType, String> headNameFormats;
+	final HashMap<EntityType, /*headNameFormat=*/String> headNameFormats;
+	final HashMap</*textureKey=*/String, /*headNameFormat=*/String> exactTextureKeyHeadNameFormats;
 	final String DEFAULT_HEAD_NAME_FORMAT;
 	final TreeMap<String, String> textures; // Key="ENTITY_NAME|DATA", Value="eyJ0ZXh0dXJl..."
 	final HashMap<String, TranslationComponent> entitySubtypeNames;
@@ -95,6 +96,15 @@ public class HeadAPI {
 		LOCAL_SKULL = new TranslationComponent(translationsFile.getString("head-type-names.skull", "Skull"));
 		LOCAL_TOE = new TranslationComponent(translationsFile.getString("head-type-names.toe", "Toe"));
 
+		exactTextureKeyHeadNameFormats = new HashMap<String, String>();
+		ConfigurationSection textureKeyHeadFormatsConfig = translationsFile.getConfigurationSection("texturekey-head-name-format");
+		if(textureKeyHeadFormatsConfig != null) textureKeyHeadFormatsConfig.getValues(/*deep=*/false)
+		.forEach((textureKey, textureKeyHeadNameFormat) -> {
+			if(textureKeyHeadNameFormat instanceof String == false){
+				pl.getLogger().severe("Invalid (non-enclosed-String) value for "+textureKey+" in translations.yml: "+textureKeyHeadNameFormat);
+			}
+			exactTextureKeyHeadNameFormats.put(textureKey.toUpperCase(), (String)textureKeyHeadNameFormat);
+		});
 		headNameFormats = new HashMap<EntityType, String>();
 		headNameFormats.put(EntityType.UNKNOWN, "${MOB_SUBTYPES_DESC}${MOB_TYPE} ${HEAD_TYPE}"); // Default for mobs
 		headNameFormats.put(EntityType.PLAYER, "${NAME} Head"); // Default for players
@@ -244,12 +254,12 @@ public class HeadAPI {
 					dataFlags = textureKey.split("\\|");
 				}
 				break;
-			case "SHEEP":
-				if(textureKey.contains("|WHITE")){
-					textureKey = textureKey.replace("|WHITE", "");
-					dataFlags = textureKey.split("\\|");
-				}
-				break;
+//			case "SHEEP":
+//				if(textureKey.contains("|WHITE")){
+//					textureKey = textureKey.replace("|WHITE", "");
+//					dataFlags = textureKey.split("\\|");
+//				}
+//				break;
 			case "OCELOT":
 				if(dataFlags.length == 2){
 					switch(dataFlags[1]){
@@ -261,12 +271,12 @@ public class HeadAPI {
 					dataFlags = textureKey.split("\\|");
 				}
 				break;
-			case "PANDA":
-				if(textureKey.contains("|NORMAL")){
-					textureKey = textureKey.replace("|NORMAL", "");
-					dataFlags = textureKey.split("\\|");
-				}
-				break;
+//			case "PANDA":
+//				if(textureKey.contains("|NORMAL")){
+//					textureKey = textureKey.replace("|NORMAL", "");
+//					dataFlags = textureKey.split("\\|");
+//				}
+//				break;
 			case "SKELETON": case "WITHER_SKELETON": case "SKELETON_HORSE": case "STRAY":
 				if(textureKey.contains("|HOLLOW")){
 					textureKey = textureKey.replace("|HOLLOW", "");
@@ -328,7 +338,7 @@ public class HeadAPI {
 		// Attempt to parse out an EntityType
 		EntityType eType;
 		int i = textureKey.indexOf('|');
-		String nameStr = (i == -1 ? textureKey : textureKey.substring(0, i)).toUpperCase();
+		final String nameStr = (i == -1 ? textureKey : textureKey.substring(0, i)).toUpperCase();
 		try{eType = EntityType.valueOf(nameStr);}
 		catch(IllegalArgumentException ex){
 			if(!textures.containsKey(textureKey)){ // If preloaded in textures, it is probably a mob from a different MC version
@@ -338,11 +348,12 @@ public class HeadAPI {
 		}
 
 		// Call the actual getNameFromKey()
-		Component[] entityTypeNames = getTypeAndSubtypeNamesFromKey(/*eType, */textureKey);
+		final Component[] entityTypeNames = getTypeAndSubtypeNamesFromKey(/*eType, */textureKey);
 
-		String headNameFormat = headNameFormats.getOrDefault(eType, DEFAULT_HEAD_NAME_FORMAT);
-		Pattern pattern = Pattern.compile("\\$\\{(NAME|HEAD_TYPE|MOB_TYPE|MOB_SUBTYPES_ASC|MOB_SUBTYPES_DESC)\\}");
-		Matcher matcher = pattern.matcher(headNameFormat);
+		final String headNameFormat = exactTextureKeyHeadNameFormats.getOrDefault(textureKey,
+				headNameFormats.getOrDefault(eType, DEFAULT_HEAD_NAME_FORMAT));
+		final Pattern pattern = Pattern.compile("\\$\\{(NAME|HEAD_TYPE|MOB_TYPE|MOB_SUBTYPES_ASC|MOB_SUBTYPES_DESC)\\}");
+		final Matcher matcher = pattern.matcher(headNameFormat);
 		ArrayList<Component> withComps = new ArrayList<>();
 		boolean containsTranslation = false;
 		while(matcher.find()){

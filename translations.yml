@@ -105,3 +105,12 @@ entity-subtype-names:
   white_collared: "White-Collared"                          #Cat/Wolf
   yellow_collared: "Yellow-Collared"                        #Cat/Wolf
   custom: "item.minecraft.firework_star.custom_color"       #unknown texture-code heads
+
+# WARNING: This overrides all other translation settings; you can use this
+# to SPECIFICALLY set the head name for any texture key in head-textures.txt
+texturekey-head-name-format:
+  SHEEP|WHITE: "${MOB_TYPE} ${HEAD_TYPE}"
+  SHEEP|WHITE|GRUMM: "Grumm ${MOB_TYPE} ${HEAD_TYPE}"
+  PANDA|NORMAL: "${MOB_TYPE} ${HEAD_TYPE}"
+  PANDA|NORMAL|GRUMM: "Grumm ${MOB_TYPE} ${HEAD_TYPE}"
+#  TROPICAL_FISH|TRIGGERFISH: "Triggered Feesh Haed"

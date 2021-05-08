@@ -8,9 +8,11 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 import javax.annotation.Nonnull;
 import net.evmodder.DropHeads.listeners.EntityDeathListener.AnnounceMode;
@@ -194,6 +196,28 @@ public class JunkUtils{
 //		if(equipment.getBootsDropChance() >= 1f) itemsThatWillDrop.add(equipment.getBoots());
 //		return itemsThatWillDrop;
 //	}
+
+	static RefMethod essMethodGetUser, essMethodIsVanished;
+	static RefMethod vanishMethodGetManager, vanishMethodIsVanished;
+	public final static boolean isVanished(Player p){
+		Plugin essPlugin = p.getServer().getPluginManager().getPlugin("Essentials");
+		if(essPlugin != null){
+			if(essMethodGetUser == null){
+				essMethodGetUser = ReflectionUtils.getRefClass("com.earth2me.essentials.Essentials").getMethod("getUser", Player.class);
+				essMethodIsVanished = ReflectionUtils.getRefClass("com.earth2me.essentials.User").getMethod("isVanished");
+			}
+			return (boolean)essMethodIsVanished.of(essMethodGetUser.of(essPlugin).call(p)).call();
+		}
+		Plugin vanishPlugin = p.getServer().getPluginManager().getPlugin("VanishNoPacket");
+		if(vanishPlugin != null){
+			if(vanishMethodGetManager == null){
+				vanishMethodGetManager = ReflectionUtils.getRefClass("org.kitteh.vanish.VanishPlugin").getMethod("getManager");
+				vanishMethodIsVanished = ReflectionUtils.getRefClass("org.kitteh.vanish.VanishManager").getMethod("isVanished", Player.class);
+			}
+			return (boolean)vanishMethodIsVanished.of(vanishMethodGetManager.of(vanishPlugin).call()).call(p);
+		}
+		return p.getServer().getOnlinePlayers().stream().allMatch(p2 -> p2.isOp() || p2.getUniqueId().equals(p.getUniqueId()) || !p2.canSee(p));
+	}
 
 	public final static ItemStack giveItemToEntity(Entity entity, ItemStack item){
 		if(entity instanceof InventoryHolder){

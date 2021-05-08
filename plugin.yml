@@ -5,10 +5,10 @@ description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite,
 #6=translations, hex colors, wskele helmet drops, [item display], item display name rewrite, 1.17 mobs
-#2=
+#2="texturekey-head-name-format", drop rates for 1.17 mobs, off->direct announce fix, hide behead msgs for vanished ppl
 version: 3.6.2
 api-version: 1.13
-softdepend: [HeadDatabase]
+softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 
 commands:
   spawnhead:
@@ -120,7 +120,7 @@ permissions:
       dropheads.silentbehead.vanished: true
       dropheads.silentbehead.invisible: true
 
-  dropheads.silentbehead.vanished: ## NOTE: THIS PERMISSION IS UPCOMING, NOT YET SUPPORTED
+  dropheads.silentbehead.vanished:
     description: Permission to suppress the behead message while vanished
     default: true
 

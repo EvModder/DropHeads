@@ -15,6 +15,7 @@ MINECART_HOPPER: 0
 MINECART_MOB_SPAWNER: 0
 MINECART_TNT: 0
 
+AXOLOTL:            0.007
 BAT:                0.010  // PH=0.005
 BEE:                0.006  // PH=0.002
 BLAZE:              0.005  // PH=0.002
@@ -35,6 +36,8 @@ EVOKER:             0.005  // PH=0.005
 FOX:                0.005  // PH=0.002
 GHAST:              0.007  // PH=0.005
 GIANT:              0.050
+GLOW_SQUID:         0.004
+GOAT:               0.005
 GUARDIAN:           0.004  // PH=0.025
 HOGLIN:             0.004  // PH=0.002
 HORSE:              0.006  // PH=0.002

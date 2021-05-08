@@ -428,11 +428,15 @@ public class EntityDeathListener implements Listener{
 			if(DEBUG_MODE) pl.getLogger().info(/*"Tellraw message: "+*/message.toPlainText());
 
 			AnnounceMode mode = mobAnnounceModes.getOrDefault(entity.getType(), DEFAULT_ANNOUNCE);
-			if(killer.hasPermission("dropheads.silentbehead") ||
-					(killer.hasPermission("dropheads.silentbehead.invisible")
-							&& killer instanceof Player && ((Player)killer).hasPotionEffect(PotionEffectType.INVISIBILITY))){
-				mode = AnnounceMode.DIRECT;
-			}
+			if((mode != AnnounceMode.OFF || mode != AnnounceMode.DIRECT) && (
+				killer.hasPermission("dropheads.silentbehead") ||
+				(killer.hasPermission("dropheads.silentbehead.invisible")
+					&& killer instanceof LivingEntity && ((LivingEntity)killer).hasPotionEffect(PotionEffectType.INVISIBILITY)
+				) ||
+				(killer.hasPermission("dropheads.silentbehead.vanished")
+					&& killer instanceof Player && JunkUtils.isVanished((Player)killer)
+				)
+			)) mode = AnnounceMode.DIRECT;
 			switch(mode){
 				case GLOBAL:
 					if(entity instanceof Player && REPLACE_DEATH_MESSAGE && evt != null && PRIORITY != EventPriority.MONITOR){
