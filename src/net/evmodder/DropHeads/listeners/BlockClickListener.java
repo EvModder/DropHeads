@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Skull;
+import org.bukkit.configuration.Configuration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -29,28 +30,29 @@ import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
 public class BlockClickListener implements Listener{
 	final private DropHeads pl;
 	final boolean SHOW_CLICK_INFO, REPAIR_IRON_GOLEM_HEADS;
-	final String HEAD_DISPLAY_PLAYERS, HEAD_DISPLAY_MOBS, HEAD_DISPLAY_HDB, HEAD_DISPLAY_UNKNOWN;
+	final String HEAD_DISPLAY_PLAYERS, HEAD_DISPLAY_MOBS, HEAD_DISPLAY_HDB, HEAD_DISPLAY_UNKNOWN, MOB_SUBTYPES_SEPARATOR;
 	final long clickMessageDelayTicks = 10; // So they dont spam themselves TODO: move to config
 	final HashSet<UUID> recentClickers;
 
-	public BlockClickListener(){
+	public BlockClickListener(Configuration translations){
 		pl = DropHeads.getPlugin();
 		REPAIR_IRON_GOLEM_HEADS = pl.getConfig().getBoolean("cracked-iron-golem-heads", false);
 		if(SHOW_CLICK_INFO = pl.getConfig().getBoolean("head-click-listener", true)){
 			// That's <a> <Swamp Amorsmith Zombie Villager> <Head>
 			// That's <EvDoc>'s Head
 			HEAD_DISPLAY_PLAYERS = TextUtils.translateAlternateColorCodes('&',
-					pl.getConfig().getString("head-click-format-players", "&7[&6DropHeads&7]&f That's ${NAME}'s Head"));
+					translations.getString("head-click-format-players", "&7[&6DropHeads&7]&f That's ${NAME}'s Head"));
 			HEAD_DISPLAY_MOBS = TextUtils.translateAlternateColorCodes('&',
-					pl.getConfig().getString("head-click-format-mobs", "&7[&6DropHeads&7]&f That's ${A} ${MOB_TYPE} ${HEAD_TYPE}"));
+					translations.getString("head-click-format-mobs", "&7[&6DropHeads&7]&f That's ${A} ${MOB_TYPE} ${HEAD_TYPE}"));
 			HEAD_DISPLAY_HDB = TextUtils.translateAlternateColorCodes('&',
-					pl.getConfig().getString("head-click-format-hdb", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"));
+					translations.getString("head-click-format-hdb", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"));
 			HEAD_DISPLAY_UNKNOWN = TextUtils.translateAlternateColorCodes('&',
-					pl.getConfig().getString("head-click-format-unknown", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"));
+					translations.getString("head-click-format-unknown", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"));
+			MOB_SUBTYPES_SEPARATOR = translations.getString("mob-subtype-separator", " ");
 			recentClickers = new HashSet<UUID>();
 		}
 		else{
-			HEAD_DISPLAY_PLAYERS = HEAD_DISPLAY_MOBS = HEAD_DISPLAY_HDB = HEAD_DISPLAY_UNKNOWN = null;
+			HEAD_DISPLAY_PLAYERS = HEAD_DISPLAY_MOBS = HEAD_DISPLAY_HDB = HEAD_DISPLAY_UNKNOWN = MOB_SUBTYPES_SEPARATOR = null;
 			recentClickers = null;
 		}
 	}
@@ -131,7 +133,7 @@ public class BlockClickListener implements Listener{
 			ListComponent subtypeNamesAsc = new ListComponent();
 			for(int i=1; i<data.entityTypeNames.length; ++i){
 				subtypeNamesAsc.addComponent(data.entityTypeNames[i]);
-				/*if(i != data.entityTypeNames.length-1) */subtypeNamesAsc.addComponent(" ");
+				/*if(i != data.entityTypeNames.length-1) */subtypeNamesAsc.addComponent(MOB_SUBTYPES_SEPARATOR);
 			}
 			blob.replaceRawDisplayTextWithComponent("${MOB_SUBTYPES_ASC}", subtypeNamesAsc);
 		}
@@ -139,7 +141,7 @@ public class BlockClickListener implements Listener{
 			ListComponent subtypeNamesDesc = new ListComponent();
 			for(int i=data.entityTypeNames.length-1; i>0; --i){
 				subtypeNamesDesc.addComponent(data.entityTypeNames[i]);
-				/*if(i != 1) */subtypeNamesDesc.addComponent(" ");
+				/*if(i != 1) */subtypeNamesDesc.addComponent(MOB_SUBTYPES_SEPARATOR);
 			}
 			blob.replaceRawDisplayTextWithComponent("${MOB_SUBTYPES_DESC}", subtypeNamesDesc);
 		}

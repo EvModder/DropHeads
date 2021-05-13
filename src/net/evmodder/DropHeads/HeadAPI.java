@@ -22,8 +22,9 @@ import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Skull;
+import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.craftbukkit.libs.org.apache.commons.lang3.StringUtils;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
@@ -46,7 +47,6 @@ import net.evmodder.EvLib.extras.TellrawUtils.Component;
 import net.evmodder.EvLib.extras.TellrawUtils.Format;
 import net.evmodder.EvLib.extras.TellrawUtils.FormatFlag;
 import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
-import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
 import net.evmodder.EvLib.extras.TextUtils;
 import net.evmodder.EvLib.extras.EntityUtils.CCP;
@@ -55,12 +55,13 @@ public class HeadAPI {
 	final private DropHeads pl;
 	private HeadDatabaseAPI hdbAPI = null;
 //	private int MAX_HDB_ID = -1;
+	final Configuration translationsFile; // protected scope; only used by head-click-listener
 	final boolean GRUM_ENABLED, SADDLES_ENABLED, HOLLOW_SKULLS_ENABLED, CRACKED_IRON_GOLEMS_ENABLED;
 	final boolean UPDATE_PLAYER_HEADS, UPDATE_ZOMBIE_PIGMEN_HEADS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_VANILLA_HEADS;
 	final TranslationComponent LOCAL_HEAD, LOCAL_SKULL, LOCAL_TOE;
 	final HashMap<EntityType, /*headNameFormat=*/String> headNameFormats;
 	final HashMap</*textureKey=*/String, /*headNameFormat=*/String> exactTextureKeyHeadNameFormats;
-	final String DEFAULT_HEAD_NAME_FORMAT;
+	final String DEFAULT_HEAD_NAME_FORMAT, MOB_SUBTYPES_SEPARATOR;
 	final TreeMap<String, String> textures; // Key="ENTITY_NAME|DATA", Value="eyJ0ZXh0dXJl..."
 	final HashMap<String, TranslationComponent> entitySubtypeNames;
 
@@ -86,9 +87,9 @@ public class HeadAPI {
 		PREFER_VANILLA_HEADS = pl.getConfig().getBoolean("prefer-vanilla-heads", true);
 
 		//---------- <Load translations> ----------------------------------------------------------------------
-		YamlConfiguration translationsFile = FileIO.loadConfig(pl, "translations.yml",
+		translationsFile = FileIO.loadConfig(pl, "translations.yml",
 				getClass().getResourceAsStream("/translations.yml"), /*notifyIfNew=*/false);
-		YamlConfiguration embeddedTranslationsFile = FileIO.loadConfig(pl, "translations-temp-DELETE.yml",
+		Configuration embeddedTranslationsFile = FileIO.loadConfig(pl, "translations-temp-DELETE.yml",
 				getClass().getResourceAsStream("/translations.yml"), false);
 		translationsFile.setDefaults(embeddedTranslationsFile);
 		FileIO.deleteFile("translations-temp-DELETE.yml");
@@ -96,15 +97,16 @@ public class HeadAPI {
 		LOCAL_SKULL = new TranslationComponent(translationsFile.getString("head-type-names.skull", "Skull"));
 		LOCAL_TOE = new TranslationComponent(translationsFile.getString("head-type-names.toe", "Toe"));
 
+		MOB_SUBTYPES_SEPARATOR = translationsFile.getString("mob-subtype-separator", " ");
 		exactTextureKeyHeadNameFormats = new HashMap<String, String>();
 		ConfigurationSection textureKeyHeadFormatsConfig = translationsFile.getConfigurationSection("texturekey-head-name-format");
 		if(textureKeyHeadFormatsConfig != null) textureKeyHeadFormatsConfig.getValues(/*deep=*/false)
-		.forEach((textureKey, textureKeyHeadNameFormat) -> {
-			if(textureKeyHeadNameFormat instanceof String == false){
-				pl.getLogger().severe("Invalid (non-enclosed-String) value for "+textureKey+" in translations.yml: "+textureKeyHeadNameFormat);
-			}
-			exactTextureKeyHeadNameFormats.put(textureKey.toUpperCase(), (String)textureKeyHeadNameFormat);
-		});
+			.forEach((textureKey, textureKeyHeadNameFormat) -> {
+				if(textureKeyHeadNameFormat instanceof String == false){
+					pl.getLogger().severe("Invalid (non-enclosed-String) value for "+textureKey+" in translations.yml: "+textureKeyHeadNameFormat);
+				}
+				exactTextureKeyHeadNameFormats.put(textureKey.toUpperCase(), (String)textureKeyHeadNameFormat);
+			});
 		headNameFormats = new HashMap<EntityType, String>();
 		headNameFormats.put(EntityType.UNKNOWN, "${MOB_SUBTYPES_DESC}${MOB_TYPE} ${HEAD_TYPE}"); // Default for mobs
 		headNameFormats.put(EntityType.PLAYER, "${NAME} Head"); // Default for players
@@ -354,6 +356,7 @@ public class HeadAPI {
 				headNameFormats.getOrDefault(eType, DEFAULT_HEAD_NAME_FORMAT));
 		final Pattern pattern = Pattern.compile("\\$\\{(NAME|HEAD_TYPE|MOB_TYPE|MOB_SUBTYPES_ASC|MOB_SUBTYPES_DESC)\\}");
 		final Matcher matcher = pattern.matcher(headNameFormat);
+		String translatedHeadNameFormat = headNameFormat;
 		ArrayList<Component> withComps = new ArrayList<>();
 		boolean containsTranslation = false;
 		while(matcher.find()){
@@ -370,29 +373,21 @@ public class HeadAPI {
 					case "MOB_TYPE":
 						withComps.add(entityTypeNames[0]);
 						break;
-					case "MOB_SUBTYPES_ASC": {
-						ListComponent subtypeNamesAsc = new ListComponent();
-						for(int j=1; j<entityTypeNames.length; ++j){
-							subtypeNamesAsc.addComponent(entityTypeNames[j]);
-							/*if(j != entityTypeNames.length-1) */subtypeNamesAsc.addComponent(" ");
-						}
-						withComps.add(subtypeNamesAsc);
+					case "MOB_SUBTYPES_ASC":
+						translatedHeadNameFormat = translatedHeadNameFormat.replaceFirst("${MOB_SUBTYPES_ASC}",
+								StringUtils.repeat("%s"+MOB_SUBTYPES_SEPARATOR, entityTypeNames.length-1));
+						for(int j=1; j<entityTypeNames.length; ++j) withComps.add(entityTypeNames[j]);
 						break;
-					}
-					case "MOB_SUBTYPES_DESC": {
-						ListComponent subtypeNamesDesc = new ListComponent();
-						for(int j=entityTypeNames.length-1; j>0; --j){
-							subtypeNamesDesc.addComponent(entityTypeNames[j]);
-							/*if(j != 1) */subtypeNamesDesc.addComponent(" ");
-						}
-						withComps.add(subtypeNamesDesc);
+					case "MOB_SUBTYPES_DESC":
+						translatedHeadNameFormat = translatedHeadNameFormat.replaceFirst("${MOB_SUBTYPES_DESC}",
+								StringUtils.repeat("%s"+MOB_SUBTYPES_SEPARATOR, entityTypeNames.length-1));
+						for(int j=entityTypeNames.length-1; j>0; --j) withComps.add(entityTypeNames[j]);
 						break;
-					}
 				}//switch (matcher.group)
 			}//else (!="NAME")
 		}//while (matcher.find)
 		return containsTranslation
-			? new TranslationComponent(matcher.replaceAll("%s"), withComps.toArray(new Component[0]),
+			? new TranslationComponent(pattern.matcher(translatedHeadNameFormat).replaceAll("%s"), withComps.toArray(new Component[0]),
 				/*insert=*/null, /*click=*/null, /*hover=*/null, /*color=*/null, /*formats=*/new FormatFlag(Format.ITALIC, false))
 			: new RawTextComponent(headNameFormat.replace("${NAME}", customName),
 				/*insert=*/null, /*click=*/null, /*hover=*/null, /*color=*/null, /*formats=*/new FormatFlag(Format.ITALIC, false));

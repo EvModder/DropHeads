@@ -87,7 +87,7 @@ public final class DropHeads extends EvPlugin{
 			getServer().getPluginManager().registerEvents(new ItemDropListener(), this);
 		}
 		if(config.getBoolean("head-click-listener", true) || config.getBoolean("cracked-iron-golem-heads", false)){
-			getServer().getPluginManager().registerEvents(new BlockClickListener(), this);
+			getServer().getPluginManager().registerEvents(new BlockClickListener(api.translationsFile), this);
 		}
 		if(config.getBoolean("save-custom-lore", true)){
 			getServer().getPluginManager().registerEvents(new LoreStoreBlockPlaceListener(), this);
