@@ -374,12 +374,12 @@ public class HeadAPI {
 						withComps.add(entityTypeNames[0]);
 						break;
 					case "MOB_SUBTYPES_ASC":
-						translatedHeadNameFormat = translatedHeadNameFormat.replaceFirst("${MOB_SUBTYPES_ASC}",
+						translatedHeadNameFormat = translatedHeadNameFormat.replace("${MOB_SUBTYPES_ASC}",
 								StringUtils.repeat("%s"+MOB_SUBTYPES_SEPARATOR, entityTypeNames.length-1));
 						for(int j=1; j<entityTypeNames.length; ++j) withComps.add(entityTypeNames[j]);
 						break;
 					case "MOB_SUBTYPES_DESC":
-						translatedHeadNameFormat = translatedHeadNameFormat.replaceFirst("${MOB_SUBTYPES_DESC}",
+						translatedHeadNameFormat = translatedHeadNameFormat.replace("${MOB_SUBTYPES_DESC}",
 								StringUtils.repeat("%s"+MOB_SUBTYPES_SEPARATOR, entityTypeNames.length-1));
 						for(int j=entityTypeNames.length-1; j>0; --j) withComps.add(entityTypeNames[j]);
 						break;
