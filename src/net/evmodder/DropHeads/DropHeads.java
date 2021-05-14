@@ -48,17 +48,6 @@ import net.evmodder.EvLib.Updater;
 // * prevent placing heads
 // * update-textures=true (head-textures.txt file overwritten when plugin is updated)
 // * new permissions for head click-info
-/*
- * log:
- *   enable: true
- *   filename: 'dropheads-log.txt'
- *   log-mob-behead: true
- *   log-player-behead: true
- *   log-head-command: true
- *   format-mob-behead: '${timestamp},mob decapitated,${victim},${killer},${item}'
- *   format-player-behead: '${timestamp},player decapitated,${victim},${killer},${item}'
- *   format-head-command: '${timestamp},gethead command,${sender},${head}'
- */
 
 public final class DropHeads extends EvPlugin{
 	private static DropHeads instance; public static DropHeads getPlugin(){return instance;}

@@ -59,7 +59,7 @@ public class Commanddebug_all_heads extends EvCommand{
 			sender.sendMessage(ChatColor.RED+"This command can only be run by in-game players!");
 			return true;
 		}
-		boolean noGrumm = args.length != 1 || !args[0].toLowerCase().equals("true");
+		boolean noGrumm = args.length == 0 || !args[args.length-1].toLowerCase().equals("true");
 		sender.sendMessage("Skipping Grumm heads: "+noGrumm);
 
 		// Get & filter head keys
@@ -147,8 +147,14 @@ public class Commanddebug_all_heads extends EvCommand{
 		}
 		else{
 			int dimX, dimY;
-			dimX = dimY = (int)Math.sqrt(numHeads);
-			if(dimX*dimY < numHeads) if((++dimX)*dimY < numHeads) ++dimY;
+			if(args[0].matches("^[1-9][0-9]*$")){
+				dimX = Integer.parseInt(args[0]);
+				dimY = (int)Math.ceil(numHeads/(double)dimX);
+			}
+			else{
+				dimX = dimY = (int)Math.sqrt(numHeads);
+				if(dimX*dimY < numHeads) if((++dimX)*dimY < numHeads) ++dimY;
+			}
 			final int dX = dimX, dY = dimY;
 	
 			for(int x=0; x<dX; ++x) for(int y=0; y<dY; ++y){
@@ -157,7 +163,7 @@ public class Commanddebug_all_heads extends EvCommand{
 					return true;
 				}
 			}
-			sender.sendMessage("Dimensions: "+dX+","+dY);
+			sender.sendMessage("Dimensions: "+dX+"x"+dY);
 			Iterator<String> it = textureKeys.iterator();
 			//pl.getServer().getScheduler()(pl, new Runnable(){public void run(){
 				for(int y=dY; y>0 && it.hasNext(); --y) for(int x=dX; x>0 && it.hasNext(); --x){
