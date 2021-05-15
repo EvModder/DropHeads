@@ -42,7 +42,7 @@ public class CommandSpawnHead extends EvCommand{
 	final String NO_PERMISSION_TO_SPAWN_HDB_HEADS = ChatColor.RED + "You do not have permission to spawn HeadDatabase heads";
 	final String NO_PERMISSION_TO_SPAWN_CODE_HEADS = ChatColor.RED + "You do not have permission to spawn heads with custom texture codes";
 	final String NO_PERMISSION_TO_SPAWN_PLAYER_HEADS = ChatColor.RED + "You do not have permission to spawn player heads";
-	final String ERROR_UNKNOWN_MOB_TEXTURE = ChatColor.RED + "Unable to find head texture for mob: %s";
+	final String ERROR_UNKNOWN_MOB_TEXTURE = ChatColor.RED + "Unable to find head texture for "+MOB_PREFIX+"%s";
 	final String GETTING_HEAD_WITH_DATA_VALUE = ChatColor.GRAY + "Getting entity head with data value: %s";
 	final String ERROR_UNKNOWN_DATA_VALUE = ChatColor.RED + "Unknown data value for %s: " + ChatColor.YELLOW + "%s";
 	final String ERROR_HDB_NOT_INSTALLED = ChatColor.RED + "HeadDatabase plugin needs to be installed to enable ID lookup";
@@ -164,7 +164,7 @@ public class CommandSpawnHead extends EvCommand{
 				sender.sendMessage(NO_PERMISSION_TO_SPAWN_MOB_HEADS);
 				return true;
 			}
-			if(!pl.getAPI().textureExists(target)){
+			if(!pl.getAPI().textureExists(target) && !pl.getAPI().textureExists(textureKey)){
 				sender.sendMessage(String.format(ERROR_UNKNOWN_MOB_TEXTURE, target));
 				return false;
 			}
