@@ -60,8 +60,12 @@ public class BlockClickListener implements Listener{
 	@EventHandler(ignoreCancelled = true)
 	public void onBlockClickEvent(PlayerInteractEvent evt){
 		if(evt.useInteractedBlock() == Result.DENY || evt.getAction() != Action.RIGHT_CLICK_BLOCK
-			|| evt.getPlayer().isSneaking() || !HeadUtils.isHead(evt.getClickedBlock().getType())) return;
-		boolean isPlayerHead = HeadUtils.isPlayerHead(evt.getClickedBlock().getType());
+			|| evt.getPlayer().isSneaking() || !HeadUtils.isHead(evt.getClickedBlock().getType())
+			|| !recentClickers.add(evt.getPlayer().getUniqueId())) return;
+		final UUID uuid = evt.getPlayer().getUniqueId();
+		new BukkitRunnable(){@Override public void run(){recentClickers.remove(uuid);}}.runTaskLater(pl, clickMessageDelayTicks);
+
+		final boolean isPlayerHead = HeadUtils.isPlayerHead(evt.getClickedBlock().getType());
 
 		if(REPAIR_IRON_GOLEM_HEADS && isPlayerHead
 				&& evt.getPlayer().getInventory().getItemInMainHand() != null
@@ -92,9 +96,7 @@ public class BlockClickListener implements Listener{
 			}
 		}//if REPAIR_IRON_GOLEM_HEADS
 
-		if(!SHOW_CLICK_INFO || !evt.getPlayer().hasPermission("dropheads.clickinfo") || !recentClickers.add(evt.getPlayer().getUniqueId())) return;
-		final UUID uuid = evt.getPlayer().getUniqueId();
-		new BukkitRunnable(){@Override public void run(){recentClickers.remove(uuid);}}.runTaskLater(pl, clickMessageDelayTicks);
+		if(!SHOW_CLICK_INFO || !evt.getPlayer().hasPermission("dropheads.clickinfo")) return;
 
 		final HeadNameData data = pl.getAPI().getHeadNameData(evt.getClickedBlock().getState());
 
