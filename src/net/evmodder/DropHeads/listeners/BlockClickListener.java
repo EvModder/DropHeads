@@ -41,13 +41,17 @@ public class BlockClickListener implements Listener{
 			// That's <a> <Swamp Amorsmith Zombie Villager> <Head>
 			// That's <EvDoc>'s Head
 			HEAD_DISPLAY_PLAYERS = TextUtils.translateAlternateColorCodes('&',
-					translations.getString("head-click-format-players", "&7[&6DropHeads&7]&f That's ${NAME}'s Head"));
+					translations.getString("head-click-format-players",
+							pl.getConfig().getString("head-click-format-players", "&7[&6DropHeads&7]&f That's ${NAME}'s Head")));
 			HEAD_DISPLAY_MOBS = TextUtils.translateAlternateColorCodes('&',
-					translations.getString("head-click-format-mobs", "&7[&6DropHeads&7]&f That's ${A} ${MOB_TYPE} ${HEAD_TYPE}"));
+					translations.getString("head-click-format-mobs",
+							pl.getConfig().getString("head-click-format-mobs", "&7[&6DropHeads&7]&f That's ${A} ${MOB_TYPE} ${HEAD_TYPE}")));
 			HEAD_DISPLAY_HDB = TextUtils.translateAlternateColorCodes('&',
-					translations.getString("head-click-format-hdb", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"));
+					translations.getString("head-click-format-hdb",
+							pl.getConfig().getString("head-click-format-hdb", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head")));
 			HEAD_DISPLAY_UNKNOWN = TextUtils.translateAlternateColorCodes('&',
-					translations.getString("head-click-format-unknown", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"));
+					translations.getString("head-click-format-unknown",
+							pl.getConfig().getString("head-click-format-unknown", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head")));
 			MOB_SUBTYPES_SEPARATOR = translations.getString("mob-subtype-separator", " ");
 			recentClickers = new HashSet<UUID>();
 		}
