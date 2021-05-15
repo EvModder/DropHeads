@@ -483,7 +483,7 @@ public class EntityDeathListener implements Listener{
 					}
 					// Limit to 1 head per charged creeper explosion (mimics vanilla)
 					final UUID creeperUUID = killer.getUniqueId();
-					if(explodingChargedCreepers.add(creeperUUID) && !HeadUtils.dropsHeadFromChargedCreeper(victim.getType())){
+					if(explodingChargedCreepers.add(creeperUUID)){
 						if(DEBUG_MODE) pl.getLogger().info("Killed by charged creeper: "+victim.getType());
 						attemptHeadDropEvent(victim, evt, killer, null);
 						// Free up memory after a tick (optional)
@@ -569,6 +569,57 @@ public class EntityDeathListener implements Listener{
 		}
 	}
 
+	/**
+	 * Checks for wither skeletons dropping skulls they were wearing in the helmet slot,
+	 * handles the case where killed by a charged creeper, 
+	 * @param victim The WitherSkeleton that was killed
+	 * @param killer The entity that did the killing
+	 * @param evt The parent EntityDeathEvent that was triggered
+	 * @return True if no further handling is necessary, False if we should still call onEntityDeath()
+	 */
+	boolean handleWitherSkeltonDeathEvent(Entity victim, Entity killer, EntityDeathEvent evt){
+		int newSkullsDropped = 0;
+		Iterator<ItemStack> it = evt.getDrops().iterator();
+		ArrayList<ItemStack> removedSkulls = new ArrayList<>();//TODO: remove this hacky fix once Bukkit/Spigot gets their shit sorted
+		// Remove vanilla-dropped wither skeleton skulls so they aren't dropped twice.
+		while(it.hasNext()){
+			ItemStack next = it.next();
+			if(next.getType() == Material.WITHER_SKELETON_SKULL){
+				it.remove();
+				++newSkullsDropped;
+				//TODO: remove this hacky fix once Bukkit/Spigot gets their shit sorted
+				if(!next.equals(new ItemStack(Material.WITHER_SKELETON_SKULL))) removedSkulls.add(next);
+			}
+		}
+		// However, if it is wearing a head in an armor slot, don't remove the drop.
+		for(ItemStack i : EvUtils.getEquipmentGuaranteedToDrop(evt.getEntity())){
+			if(i != null && i.getType() == Material.WITHER_SKELETON_SKULL){evt.getDrops().add(i); --newSkullsDropped;}
+			//TODO: remove this hacky fix below once Bukkit/Spigot gets their shit sorted
+			if(i != null && i.getType() == Material.AIR && newSkullsDropped > 1){
+				evt.getDrops().add(removedSkulls.isEmpty()
+						? new ItemStack(Material.WITHER_SKELETON_SKULL)
+						: removedSkulls.remove(removedSkulls.size()-1));
+				--newSkullsDropped;
+			}
+		}
+		if(newSkullsDropped > 1 && DEBUG_MODE) pl.getLogger().warning("Multiple non-DropHeads wither skull drops detected!");
+		if(VANILLA_WSKELE_HANDLING || mobChances.getOrDefault(EntityType.WITHER_SKELETON, 0.025D) == 0.025D){
+			// newSkullsDropped should always be 0 or 1 by this point
+			if((newSkullsDropped == 1 || (killer != null && killer.hasPermission("dropheads.alwaysbehead.wither_skeleton")))
+					&& victim.hasPermission("dropheads.canlosehead") && (killer == null || killer.hasPermission("dropheads.canbehead"))){
+				// Don't drop the skull if another skull drop has already caused by the same charged creeper.
+				if(killer != null && killer instanceof Creeper && ((Creeper)killer).isPowered() && CHARGED_CREEPER_DROPS &&
+					!explodingChargedCreepers.add(killer.getUniqueId()))
+				{
+					return true;
+				}
+				for(int i=0; i<newSkullsDropped; ++i) attemptHeadDropEvent(victim, evt, killer, getWeaponFromKiller(killer));
+			}
+			return true;
+		}
+		return false;
+	}
+
 	class DeathEventExecutor implements EventExecutor{
 		@Override public void execute(Listener listener, Event originalEvent){
 			if(originalEvent instanceof EntityDeathEvent){
@@ -578,54 +629,22 @@ public class EntityDeathListener implements Listener{
 						? ((EntityDamageByEntityEvent)victim.getLastDamageCause()).getDamager()
 						: null;
 
-				// Remove vanilla-dropped wither skeleton skulls so they aren't dropped twice.
-				if(victim.getType() == EntityType.WITHER_SKELETON){
-					int newSkullsDropped = 0;
+				if(victim.getType() == EntityType.WITHER_SKELETON && handleWitherSkeltonDeathEvent(victim, killer, evt)){
+					return;
+				}
+				// Remove vanilla-dropped heads from charged creeper kills
+				if(CHARGED_CREEPER_DROPS && HeadUtils.dropsHeadFromChargedCreeper(victim.getType())
+						&& killer != null && killer instanceof Creeper && ((Creeper)killer).isPowered()){
 					Iterator<ItemStack> it = evt.getDrops().iterator();
-					ArrayList<ItemStack> removedSkulls = new ArrayList<>();//TODO: remove this hacky fix once Bukkit/Spigot gets their shit sorted
-					while(it.hasNext()){
-						ItemStack next = it.next();
-						if(next.getType() == Material.WITHER_SKELETON_SKULL){
-							it.remove();
-							++newSkullsDropped;
-							//TODO: remove this hacky fix once Bukkit/Spigot gets their shit sorted
-							if(!next.equals(new ItemStack(Material.WITHER_SKELETON_SKULL))) removedSkulls.add(next);
-						}
-					}
-					// However, if it is wearing a head in an armor slot, don't remove the drop.
-					for(ItemStack i : EvUtils.getEquipmentGuaranteedToDrop(evt.getEntity())){
-						if(i != null && i.getType() == Material.WITHER_SKELETON_SKULL){evt.getDrops().add(i); --newSkullsDropped;}
-						//TODO: remove this hacky fix below once Bukkit/Spigot gets their shit sorted
-						if(i != null && i.getType() == Material.AIR && newSkullsDropped > 1){
-							evt.getDrops().add(removedSkulls.isEmpty()
-									? new ItemStack(Material.WITHER_SKELETON_SKULL)
-									: removedSkulls.remove(removedSkulls.size()-1));
-							--newSkullsDropped;
-						}
-					}
-					if(newSkullsDropped > 1 && DEBUG_MODE) pl.getLogger().warning("Multiple non-DropHeads wither skull drops detected!");
-					if(VANILLA_WSKELE_HANDLING || mobChances.getOrDefault(EntityType.WITHER_SKELETON, 0.025D) == 0.025D){
-						// newSkullsDropped should always be 0 or 1 by this point
-						if((newSkullsDropped == 1 || (killer != null && killer.hasPermission("dropheads.alwaysbehead.wither_skeleton")))
-								&& victim.hasPermission("dropheads.canlosehead") && (killer == null || killer.hasPermission("dropheads.canbehead"))){
-							// Don't drop the skull if another skull drop has already caused by the same charged creeper.
-							if(killer != null && killer instanceof Creeper && ((Creeper)killer).isPowered() && CHARGED_CREEPER_DROPS){
-								if(!explodingChargedCreepers.add(killer.getUniqueId())/* && !HeadUtils.dropsHeadFromChargedCreeper(victim.getType())*/){
-									return;
-								}
-							}
-							attemptHeadDropEvent(victim, evt, killer, getWeaponFromKiller(killer));
-						}
-						return;
-					}
+					while(it.hasNext()) if(HeadUtils.getEntityFromHead(it.next().getType()) == victim.getType()){it.remove(); break;}
 				}
 				onEntityDeath(victim, killer, evt);
 			}
-			if(originalEvent instanceof VehicleDestroyEvent){
+			else if(originalEvent instanceof VehicleDestroyEvent){
 				final VehicleDestroyEvent evt = (VehicleDestroyEvent) originalEvent;
 				onEntityDeath(/*victim=*/evt.getVehicle(), /*killer=*/evt.getAttacker(), evt);
 			}
-			if(originalEvent instanceof HangingBreakByEntityEvent){
+			else if(originalEvent instanceof HangingBreakByEntityEvent){
 				final HangingBreakByEntityEvent evt = (HangingBreakByEntityEvent) originalEvent;
 				onEntityDeath(/*victim=*/evt.getEntity(), /*killer=*/evt.getRemover(), evt);
 			}
