@@ -20,8 +20,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Skull;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.craftbukkit.libs.org.apache.commons.lang3.StringUtils;
@@ -230,7 +228,16 @@ public class HeadAPI {
 	public Map<String, String> getTextures(){return Collections.unmodifiableMap(textures);}
 	public HeadDatabaseAPI getHeadDatabaseAPI(){return hdbAPI;}//TODO: prefer avoiding public
 
-	Component[] getTypeAndSubtypeNamesFromKey(/*EntityType entity, */String textureKey){
+	//TODO: prefer avoiding public for these head-name-component getters?
+	public TranslationComponent getHeadTypeName(HeadType headType){
+		if(headType == null) return LOCAL_HEAD;
+		switch(headType){
+			case SKULL: return LOCAL_SKULL;
+			case TOE: return LOCAL_TOE;
+			case HEAD: default: return LOCAL_HEAD;
+		}
+	}
+	public Component[] getEntityTypeAndSubtypeNamesFromKey(/*EntityType entity, */String textureKey){
 		if(textureKey.equals("PLAYER|GRUMM")) return new Component[]{new RawTextComponent("Grumm")};
 		String[] dataFlags = textureKey.split("\\|");
 		switch(/*entity != null ? entity.name() : */dataFlags[0]){
@@ -327,16 +334,7 @@ public class HeadAPI {
 		}
 		return components;
 	}
-
-	public TranslationComponent getHeadTypeName(HeadType headType){//TODO: prefer avoiding public?
-		if(headType == null) return LOCAL_HEAD;
-		switch(headType){
-			case SKULL: return LOCAL_SKULL;
-			case TOE: return LOCAL_TOE;
-			case HEAD: default: return LOCAL_HEAD;
-		}
-	}
-	public Component getHeadNameFromKey(@Nonnull String textureKey, @Nonnull String customName){//TODO: prefer avoiding public?
+	public Component getHeadNameFromKey(@Nonnull String textureKey, @Nonnull String customName){
 		// Attempt to parse out an EntityType
 		EntityType eType;
 		int i = textureKey.indexOf('|');
@@ -350,7 +348,7 @@ public class HeadAPI {
 		}
 
 		// Call the actual getNameFromKey()
-		final Component[] entityTypeNames = getTypeAndSubtypeNamesFromKey(/*eType, */textureKey);
+		final Component[] entityTypeNames = getEntityTypeAndSubtypeNamesFromKey(/*eType, */textureKey);
 
 		final String headNameFormat = exactTextureKeyHeadNameFormats.getOrDefault(textureKey,
 				headNameFormats.getOrDefault(eType, DEFAULT_HEAD_NAME_FORMAT));
@@ -393,79 +391,7 @@ public class HeadAPI {
 				/*insert=*/null, /*click=*/null, /*hover=*/null, /*color=*/null, /*formats=*/new FormatFlag(Format.ITALIC, false));
 	}
 
-	// TODO: Hide this part of the API (head naming), it is only used in the BlockClickListener.
-	public class HeadNameData{
-		// Only 1 of these 3 is ever defined.
-		public String hdbId, textureKey;
-		public OfflinePlayer player;
-		// All 3 of these are always defined.
-		public Component[] entityTypeNames;
-		public Component profileName;
-		public HeadType headType;
-	}
-	HeadNameData getHeadNameData(GameProfile profile){
-		HeadNameData data = new HeadNameData();
-		if(profile == null){
-			data.textureKey = EntityType.PLAYER.name();  // This is considered a mob head
-			data.headType = HeadUtils.getDroppedHeadType(EntityType.PLAYER);  // "Head"
-			data.entityTypeNames = getTypeAndSubtypeNamesFromKey(EntityType.PLAYER.name());  // "Player"
-			data.profileName = data.entityTypeNames[0];
-			return data;
-		}
-		String fullProfileName = profile.getName();
-		if(fullProfileName != null/* && SAVE_CUSTOM_LORE*/){
-			int idx = fullProfileName.indexOf('>');
-			if(idx != -1) profile = new GameProfile(profile.getId(), fullProfileName.substring(0, idx));
-		}
-		//hdb
-		if(hdbAPI != null && (data.hdbId = hdbAPI.getItemID(HeadUtils.getPlayerHead(profile))) != null && hdbAPI.isHead(data.hdbId)){
-			data.headType = HeadUtils.getDroppedHeadType(EntityType.UNKNOWN);  // "Head"
-			data.entityTypeNames = getTypeAndSubtypeNamesFromKey(EntityType.UNKNOWN.name());  // "Unknown"
-			String hdbHeadName = hdbAPI.getItemHead(data.hdbId).getItemMeta().getDisplayName();
-			int idx = hdbHeadName.lastIndexOf(' ');
-			data.profileName = new RawTextComponent(idx == -1 ? hdbHeadName : hdbHeadName.substring(0, idx));
-		}
-		//player
-		else if(profile.getId() != null && (data.player = pl.getServer().getOfflinePlayer(profile.getId())) != null && data.player.getName() != null){
-			data.headType = HeadUtils.getDroppedHeadType(EntityType.PLAYER);  // "Head"
-			data.entityTypeNames = getTypeAndSubtypeNamesFromKey(EntityType.PLAYER.name());  // "Player"
-			data.profileName = new RawTextComponent(UPDATE_PLAYER_HEADS || profile.getName() == null ? data.player.getName() : profile.getName());
-		}
-		//mob
-		else if(profile.getName() != null && textures.containsKey(profile.getName())){
-			data.textureKey = profile.getName();
-			int idx = data.textureKey.indexOf('|');
-			String eTypeName = (idx == -1 ? data.textureKey : data.textureKey.substring(0, idx)).toUpperCase();
-			try{data.headType = HeadUtils.getDroppedHeadType(EntityType.valueOf(eTypeName));}
-			catch(IllegalArgumentException ex){data.headType = HeadUtils.getDroppedHeadType(EntityType.UNKNOWN);}  // "Head"
-			data.entityTypeNames = getTypeAndSubtypeNamesFromKey(data.textureKey);
-			data.profileName = new RawTextComponent(profile.getName());
-		}
-		//unknown
-		else{
-			data.headType = HeadUtils.getDroppedHeadType(EntityType.UNKNOWN);  // "Head"
-			data.entityTypeNames = getTypeAndSubtypeNamesFromKey(EntityType.UNKNOWN.name());  // "Unknown"
-			data.profileName = profile.getName() != null ? new RawTextComponent(profile.getName()) : data.entityTypeNames[0];
-		}
-		if(data.hdbId != null && !hdbAPI.isHead(data.hdbId)) data.hdbId = null;
-		if(data.player != null && data.player.getName() == null) data.player = null;
-		return data;
-	}
-	public HeadNameData getHeadNameData(BlockState skull){
-		if(HeadUtils.isPlayerHead(skull.getType())){
-			return getHeadNameData(HeadUtils.getGameProfile((Skull)skull));
-		}
-		//else: creeper, zombie, dragon, (wither)skeleton
-		EntityType entityType = HeadUtils.getEntityFromHead(skull.getType());
-		HeadNameData data = new HeadNameData();
-		data.textureKey = entityType.name();
-		data.headType = HeadUtils.getDroppedHeadType(entityType);
-		data.entityTypeNames = getTypeAndSubtypeNamesFromKey(entityType.name());
-		data.profileName = data.entityTypeNames[0];
-		return data;
-	}
-
-	ItemStack makeTextureSkull(String textureKey/*, boolean saveTypeInLore, boolean unstackable*/){
+	ItemStack makeHeadFromTexture(String textureKey/*, boolean saveTypeInLore, boolean unstackable*/){
 		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
 		item = JunkUtils.setDisplayName(item, getHeadNameFromKey(textureKey, /*customName=*/""));
 		SkullMeta meta = (SkullMeta) item.getItemMeta();
@@ -485,10 +411,8 @@ public class HeadAPI {
 		item.setItemMeta(meta);
 		return item;
 	}
-
-	// Calling HeadUtils.makeSkull(eType) directly is bad.
 	@SuppressWarnings("deprecation")
-	ItemStack makeSkull_wrapper(EntityType eType){
+	ItemStack headUtils_makeSkull_wrapper(EntityType eType){// Calling HeadUtils.makeSkull(eType) directly is bad.
 		ItemStack head = HeadUtils.makeSkull(eType);
 		JunkUtils.setDisplayName(head, getHeadNameFromKey(eType.name(), /*customName=*/""));
 		if(SAVE_TYPE_IN_LORE){
@@ -505,8 +429,7 @@ public class HeadAPI {
 		}
 		return head;
 	}
-	// Calling hdbAPI.getItemHead(id) directly is bad.
-	ItemStack getItemHead_wrapper(String hdbId){
+	ItemStack hdb_getItemHead_wrapper(String hdbId){// Calling hdbAPI.getItemHead(id) directly is bad.
 		ItemStack hdbHead = hdbAPI.getItemHead(hdbId);
 		GameProfile profile = HeadUtils.getGameProfile((SkullMeta)hdbHead.getItemMeta());
 		ItemStack head = HeadUtils.getPlayerHead(profile);
@@ -541,7 +464,7 @@ public class HeadAPI {
 			// If this is a custom data head (still contains a '|') or eType is null AND the key exists, use it
 			boolean hasCustomData = textureKey.replace("|HOLLOW", "").indexOf('|') != -1;
 			if((hasCustomData || eType == null || eType == EntityType.UNKNOWN || !PREFER_VANILLA_HEADS) && textures.containsKey(textureKey)){
-				return makeTextureSkull(textureKey/*, saveTypeInLore*/);
+				return makeHeadFromTexture(textureKey/*, saveTypeInLore*/);
 			}
 		}
 		if(eType == null) return null;
@@ -561,8 +484,8 @@ public class HeadAPI {
 			case ENDER_DRAGON:
 				return new ItemStack(Material.DRAGON_HEAD);
 			default:
-				if(textures.containsKey(eType.name())) return makeTextureSkull(eType.name());
-				return makeSkull_wrapper(eType);
+				if(textures.containsKey(eType.name())) return makeHeadFromTexture(eType.name());
+				return headUtils_makeSkull_wrapper(eType);
 			}
 	}
 
@@ -607,7 +530,7 @@ public class HeadAPI {
 					profileName = /*profileName.replace("PIG_ZOMBIE", */"ZOMBIFIED_PIGLIN"/*)*/;
 				}
 				if(profileName.equals("OCELOT|WILD_OCELOT")) profileName = "OCELOT";
-				return makeTextureSkull(profileName);
+				return makeHeadFromTexture(profileName);
 			}
 		}
 		if(UPDATE_PLAYER_HEADS && profile.getId() != null){
@@ -617,7 +540,7 @@ public class HeadAPI {
 		ItemStack head = HeadUtils.getPlayerHead(profile);
 		if(hdbAPI != null){
 			String id = hdbAPI.getItemID(head);
-			if(id != null && hdbAPI.isHead(id)) return getItemHead_wrapper(id);
+			if(id != null && hdbAPI.isHead(id)) return hdb_getItemHead_wrapper(id);
 		}
 		SkullMeta meta = (SkullMeta)head.getItemMeta();
 		if(profileName != null){
