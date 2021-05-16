@@ -36,6 +36,7 @@ import net.evmodder.EvLib.Updater;
 // * jeb_ sheep head animated phase through colors (gimmick)
 // * if mob has custom name, use it in head name (config option)
 //TEST:
+// * wearing enderman head to look at endermen safely
 // * all player-visible msgs in plugin are translated using translations.yml
 // * hide behead msgs for vanished players
 // * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
@@ -87,6 +88,9 @@ public final class DropHeads extends EvPlugin{
 		}
 		if(config.getBoolean("prevent-head-placement", false)){
 			getServer().getPluginManager().registerEvents(new PreventBlockPlaceListener(), this);
+		}
+		if(!config.getStringList("endermen-camouflage-heads").isEmpty()){
+			getServer().getPluginManager().registerEvents(new EndermanProvokeListener(), this);
 		}
 
 		new CommandSpawnHead(this);

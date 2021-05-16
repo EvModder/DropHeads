@@ -147,6 +147,9 @@ prefer-vanilla-heads: true
 # to the normal texture by placing them and clicking on them with iron ingots
 cracked-iron-golem-heads: false
 
+# A list of mob heads a player can wear to avoid provoking endermen
+endermen-camouflage-heads: []
+
 # Changes the death "Event Priority" that DropHeads registers at
 # Low values => DropHeads runs BEFORE other plugins; high values => runs AFTER
 # Possible values: [LOWEST, LOW, NORMAL, HIGH, HIGHEST, MONITOR]
