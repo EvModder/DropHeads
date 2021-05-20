@@ -147,7 +147,7 @@ public class Commanddebug_all_heads extends EvCommand{
 		}
 		else{
 			int dimX, dimY;
-			if(args[0].matches("^[1-9][0-9]*$")){
+			if(args.length > 0 && args[0].matches("^[1-9][0-9]*$")){
 				dimX = Integer.parseInt(args[0]);
 				dimY = (int)Math.ceil(numHeads/(double)dimX);
 			}

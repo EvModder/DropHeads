@@ -25,6 +25,7 @@ import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.EvLib.extras.HeadUtils;
 import net.evmodder.EvLib.extras.TellrawUtils;
 import net.evmodder.EvLib.extras.TextUtils;
+import net.evmodder.EvLib.extras.WebUtils;
 import net.evmodder.EvLib.extras.HeadUtils.HeadType;
 import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
@@ -101,7 +102,7 @@ public class BlockClickListener implements Listener{
 		}
 		//player
 		else if(profile.getId() != null && (data.player = pl.getServer().getOfflinePlayer(profile.getId())) != null
-				&& data.player.getName() != null){
+				&& (data.player.hasPlayedBefore() || WebUtils.checkPlayerExists(profile.getId().toString()))){
 			data.headType = HeadUtils.getDroppedHeadType(EntityType.PLAYER);  // "Head"
 			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(EntityType.PLAYER.name());  // "Player"
 			data.profileName = new RawTextComponent(UPDATE_PLAYER_HEADS || profile.getName() == null ? data.player.getName() : profile.getName());

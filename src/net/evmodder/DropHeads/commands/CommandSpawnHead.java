@@ -1,7 +1,9 @@
 package net.evmodder.DropHeads.commands;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -34,7 +36,7 @@ public class CommandSpawnHead extends EvCommand{
 	final int MAX_IDS_SHOWN = 200;
 	final int JSON_LIMIT = 15000;
 
-	// TODO: Move this to a localization file
+	// TODO: Move this to a localization file, and maybe re-add aliases (code:,url:,value:)
 	final String MOB_PREFIX = "mob:", PLAYER_PREFIX = "player:", HDB_PREFIX = "hdb:", SELF_PREFIX = "self:", CODE_PREFIX = "code:";
 
 	final String CMD_MUST_BE_RUN_BY_A_PLAYER = ChatColor.RED + "This command can only be run by in-game players!";
@@ -47,6 +49,7 @@ public class CommandSpawnHead extends EvCommand{
 	final String ERROR_UNKNOWN_DATA_VALUE = ChatColor.RED + "Unknown data value for %s: " + ChatColor.YELLOW + "%s";
 	final String ERROR_HDB_NOT_INSTALLED = ChatColor.RED + "HeadDatabase plugin needs to be installed to enable ID lookup";
 	final String ERROR_HDB_HEAD_NOT_FOUND = ChatColor.RED + "Could not find head with HDB id: %s";
+	final String ERROR_UNKNOWN_RAW_TEXTURE = ChatColor.RED + "Unable to find texture for url/code: %s";
 	final String ERROR_HEAD_NOT_FOUND = ChatColor.RED + "Head \"%s%s\" not found";
 	final String ERROR_NOT_ENOUGH_INV_SPACE = ChatColor.RED + "Not enough inventory space";
 	final String SUCCESSFULLY_SPAWNED_HEAD = ChatColor.GREEN + "Spawned Head: " + ChatColor.YELLOW + "%s";//todo: %s => "x64" for amount?
@@ -121,10 +124,10 @@ public class CommandSpawnHead extends EvCommand{
 		if(!target.matches("[a-zA-Z0-9_]+")) return null;
 		@SuppressWarnings("deprecation")
 		OfflinePlayer p = pl.getServer().getOfflinePlayer(target);
-		if(p.hasPlayedBefore() || WebUtils.checkExists(p.getName())) return p;
+		if(p.hasPlayedBefore() || WebUtils.checkPlayerExists(p.getName())) return p;
 		try{
 			p = pl.getServer().getOfflinePlayer(UUID.fromString(target));
-			if(p.hasPlayedBefore() || WebUtils.checkExists(p.getName())) return p;
+			if(p.hasPlayedBefore() || WebUtils.checkPlayerExists(p.getName())) return p;
 		}catch(IllegalArgumentException ex){}
 		return null;
 	}
@@ -144,6 +147,7 @@ public class CommandSpawnHead extends EvCommand{
 		String fullTarget = args.length == 0 ? PLAYER_PREFIX + sender.getName() : String.join("_", args);
 		int prefixEnd = fullTarget.indexOf(':');
 		String prefix = prefixEnd == -1 ? "" : fullTarget.substring(0, prefixEnd + 1).toLowerCase();
+		if(prefix.equals("http:") || prefix.equals("https:")){prefix = CODE_PREFIX; prefixEnd = -1;}
 		String textureKey = fullTarget.substring(prefixEnd + 1);
 
 		String target, extraData;
@@ -194,20 +198,28 @@ public class CommandSpawnHead extends EvCommand{
 			ItemStack unwrappedHDBhead = pl.getAPI().getHeadDatabaseAPI().getItemHead(target);
 			head = pl.getAPI().getHead(HeadUtils.getGameProfile((SkullMeta)unwrappedHDBhead.getItemMeta()));
 		}
-		else if(prefix.equals(CODE_PREFIX) || (prefix.isEmpty() && target.length() > TextUtils.MAX_PLAYERNAME_MONO_WIDTH && searchForPlayer(target) == null)){
+		else if(prefix.equals(CODE_PREFIX) || (prefix.isEmpty() && target.length() > TextUtils.MAX_PLAYERNAME_MONO_WIDTH
+				&& searchForPlayer(target) == null)){
 			if(!sender.hasPermission("dropheads.spawn.code")){
 				sender.sendMessage(NO_PERMISSION_TO_SPAWN_CODE_HEADS);
 				return true;
 			}
+			String url = WebUtils.getTextureURL(target);
+			if(url == null){
+				sender.sendMessage(String.format(ERROR_UNKNOWN_RAW_TEXTURE, target));
+				return false;
+			}
+			target = Base64.getEncoder().encodeToString(
+					("{\"textures\":{\"SKIN\":{\"url\":\""+url+"\"}}}").getBytes(StandardCharsets.ISO_8859_1));
+			System.out.println("recovered url: "+WebUtils.getTextureURL(new String(target.getBytes())));
 			for(Entry<String, String> entry : pl.getAPI().getTextures().entrySet()){
 				if(entry.getValue().equals(target)){
-					head = pl.getAPI().getHead((EntityType)null, textureKey);
+					head = pl.getAPI().getHead((EntityType)null, entry.getKey());
+					break;
 				}
 			}
 			if(head == null){
-				pl.getLogger().info("custom head neme: "+pl.getAPI().getHeadNameFromKey(/*textureKey=*/"UNKNOWN|CUSTOM", /*customName=*/target).toString());
-				head = pl.getAPI().getHead(target.getBytes(), /*headName=*/"§eCustom Head");
-				head = JunkUtils.setDisplayName(head, pl.getAPI().getHeadNameFromKey(/*textureKey=*/"UNKNOWN|CUSTOM", /*customName=*/target));
+				head = pl.getAPI().getHead(target.getBytes());
 			}
 		}
 		else if(prefix.equals(PLAYER_PREFIX) || (prefix.isEmpty()/* && ... */)){
