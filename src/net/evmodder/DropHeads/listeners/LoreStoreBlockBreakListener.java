@@ -32,9 +32,9 @@ public class LoreStoreBlockBreakListener implements Listener{
 		if(loreStart == -1) return null;
 
 		List<String> lore = Arrays.asList(profile.getName().substring(loreStart + 1).split("\\n", -1));
-		String textureKey = profile.getName().substring(0, loreStart);
+		String preLoreProfileName = profile.getName().substring(0, loreStart);
 
-		GameProfile profileWithoutLore = new GameProfile(profile.getId(), textureKey);
+		GameProfile profileWithoutLore = new GameProfile(profile.getId(), preLoreProfileName);
 		ItemStack headItem = DropHeads.getPlugin().getAPI().getHead(profileWithoutLore);
 		if(lore.size() > 1 || (lore.size() == 1 && !lore.get(0).isEmpty())){
 			ItemMeta meta = headItem.getItemMeta();

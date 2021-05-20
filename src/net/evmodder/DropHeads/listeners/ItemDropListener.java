@@ -32,7 +32,7 @@ public class ItemDropListener implements Listener{
 		ItemStack refreshedItem = pl.getAPI().getHead(originalProfile); // Gets a refreshed texture by textureKey (profile name)
 		if(refreshedItem == null) return;
 		GameProfile refreshedProfile = HeadUtils.getGameProfile((SkullMeta)refreshedItem.getItemMeta());
-		HeadUtils.setGameProfile(originalMeta, refreshedProfile); // This is what actually refreshes the texture
+		HeadUtils.setGameProfile(originalMeta, refreshedProfile); // This refreshes the texture
 
 //		if(!originalMeta.hasDisplayName() || FORCE_NAME_UPDATE) originalMeta.setDisplayName(refreshedItem.getItemMeta().getDisplayName());
 		if(!originalMeta.hasLore() || FORCE_LORE_UPDATE) originalMeta.setLore(refreshedItem.getItemMeta().getLore());
@@ -41,6 +41,6 @@ public class ItemDropListener implements Listener{
 		if(!originalMeta.hasDisplayName() || FORCE_NAME_UPDATE) originalItem = JunkUtils.setDisplayName(originalItem,
 				TellrawUtils.parseComponentFromString(JunkUtils.getDisplayName(refreshedItem)));
 
-		evt.getEntity().setItemStack(originalItem); // TODO: not sure if this is necessary
+		evt.getEntity().setItemStack(originalItem);
 	}
 }
