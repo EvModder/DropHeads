@@ -2,8 +2,11 @@ package net.evmodder.DropHeads;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,7 +32,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import com.mojang.authlib.GameProfile;
@@ -47,6 +49,7 @@ import net.evmodder.EvLib.extras.TellrawUtils.FormatFlag;
 import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
 import net.evmodder.EvLib.extras.TextUtils;
+import net.evmodder.EvLib.extras.WebUtils;
 import net.evmodder.EvLib.extras.EntityUtils.CCP;
 
 public class HeadAPI {
@@ -189,7 +192,14 @@ public class HeadAPI {
 			int i = head.indexOf(":");
 			if(i != -1){
 				String texture = head.substring(i+1).trim();
-				if(texture.replace("xxx", "").trim().isEmpty()) continue; //TODO: remove the xxx's
+				if(texture.replace("xxx", "").isEmpty()) continue; //TODO: remove the xxx's
+				if(texture.length() > 50 && texture.length() < 80 //TODO: usually exactly 64
+						&& texture.chars().allMatch(ch -> (ch >= 'a' && ch <= 'f') || (ch >= '0' && ch <= '9'))){
+					// Convert from Mojang server texture id to Base64-encoded json
+					texture = Base64.getEncoder().encodeToString(
+							("{\"textures\":{\"SKIN\":{\"url\":\"http://textures.minecraft.net/texture/"+texture+"\"}}}")
+								.getBytes(StandardCharsets.ISO_8859_1));
+				}
 
 				String key = head.substring(0, i).toUpperCase();
 				if(textures.put(key, texture) != null) continue; // Don't bother checking EntityType if this head has already been added
@@ -220,7 +230,7 @@ public class HeadAPI {
 		while(it.hasNext()){
 			Entry<String, String> e = it.next();
 			String redirect = e.getValue();
-			while((redirect=textures.get(redirect)) != null) e.setValue(redirect);
+			for(int i=0; i<5 && (redirect=textures.get(redirect)) != null; ++i) e.setValue(redirect);
 		}
 	}
 
@@ -447,8 +457,8 @@ public class HeadAPI {
 	}
 
 	/**
-	 * Get a custom head from an entity type and texture key (e.g., FOX|SNOW|SLEEPING)
-	 * @param type The entity type for the head
+	 * Get a custom head from an entity type or texture key (e.g., FOX|SNOW|SLEEPING)
+	 * @param type The entity type for the head, can be null
 	 * @param textureKey The texture key for the head
 	 * @return The result head ItemStack
 	 */
@@ -516,6 +526,27 @@ public class HeadAPI {
 	}
 
 	/**
+	 * Get a custom head from a Base64 code
+	 * @param code The Base64 encoded skin texture URL
+	 * @return The result head ItemStack
+	 */
+	public ItemStack getHead(byte[] code){
+		String strCode = new String(code);
+		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+		head = JunkUtils.setDisplayName(head, pl.getAPI().getHeadNameFromKey(/*textureKey=*/"UNKNOWN|CUSTOM", /*customName=*/strCode));
+		GameProfile profile = new GameProfile(/*uuid=*/UUID.nameUUIDFromBytes(code), /*name=*/strCode);
+		profile.getProperties().put("textures", new Property("textures", strCode));
+		if(MAKE_UNSTACKABLE) profile.getProperties().put("random_uuid", new Property("random_uuid", UUID.randomUUID().toString()));
+		SkullMeta meta = (SkullMeta)head.getItemMeta();
+		if(SAVE_TYPE_IN_LORE){
+			meta.setLore(Arrays.asList(ChatColor.DARK_GRAY+CODE_PREFIX+(strCode.length() > 18 ? strCode.substring(0, 16)+"..." : strCode)));
+		}
+		HeadUtils.setGameProfile(meta, profile);
+		head.setItemMeta(meta);
+		return head;
+	}
+
+	/**
 	 * Get a custom head from a GameProfile
 	 * @param profile The profile information to create a head
 	 * @return The result head ItemStack
@@ -523,9 +554,9 @@ public class HeadAPI {
 	public ItemStack getHead(GameProfile profile/*, boolean saveTypeInLore, boolean unstackable*/){
 		if(profile == null) return null;
 		String profileName = profile.getName();
-		if(profileName != null){
+		if(profileName != null){ //-------------------- Handle Entities with textureKey
 			/*if(SAVE_CUSTOM_LORE){*/int idx = profileName.indexOf('>'); if(idx != -1) profileName = profileName.substring(0, idx);/*}*/
-			if(textures.containsKey(profileName)){//Refresh this EntityHead texture
+			if(textures.containsKey(profileName)){
 				if(UPDATE_ZOMBIE_PIGMEN_HEADS && profileName.startsWith("PIG_ZOMBIE")){
 					profileName = /*profileName.replace("PIG_ZOMBIE", */"ZOMBIFIED_PIGLIN"/*)*/;
 				}
@@ -533,51 +564,42 @@ public class HeadAPI {
 				return makeHeadFromTexture(profileName);
 			}
 		}
-		if(UPDATE_PLAYER_HEADS && profile.getId() != null){
-			OfflinePlayer p = pl.getServer().getOfflinePlayer(profile.getId());
-			if(p != null && p.getName() != null) profileName = p.getName();
-		}
 		ItemStack head = HeadUtils.getPlayerHead(profile);
-		if(hdbAPI != null){
+		if(hdbAPI != null){  //-------------------- Handle HeadDatabase
 			String id = hdbAPI.getItemID(head);
 			if(id != null && hdbAPI.isHead(id)) return hdb_getItemHead_wrapper(id);
 		}
-		SkullMeta meta = (SkullMeta)head.getItemMeta();
-		if(profileName != null){
-			if(profileName.startsWith("MHF_")) meta.setDisplayName(ChatColor.YELLOW+profileName);
-			else{
-				head = JunkUtils.setDisplayName(head, getHeadNameFromKey("PLAYER", /*customName=*/profileName));
-				meta = (SkullMeta)head.getItemMeta();
+		OfflinePlayer p = null;  //-------------------- Handle players
+		if(profile.getId() != null && (p=pl.getServer().getOfflinePlayer(profile.getId())) != null
+				&& (p.hasPlayedBefore() || WebUtils.checkPlayerExists(profile.getId().toString()))){
+			if(UPDATE_PLAYER_HEADS){
+				profile = new GameProfile(p.getUniqueId(), profileName=p.getName());
+				head = HeadUtils.getPlayerHead(profile);
 			}
-			if(SAVE_TYPE_IN_LORE) meta.setLore(Arrays.asList(
-					ChatColor.DARK_GRAY + (profileName.startsWith("MHF_") ? MHF_PREFIX : PLAYER_PREFIX) + profileName));
-			head.setItemMeta(meta);
+			boolean isMHF = profileName != null && profileName.startsWith("MHF_");
+			if(profileName != null){
+				head = JunkUtils.setDisplayName(head, isMHF
+					? new RawTextComponent(ChatColor.YELLOW+profileName, /*insert=*/null, /*click=*/null, /*hover=*/null,
+							/*color=*/null, /*formats=*/new FormatFlag(Format.ITALIC, false))
+					: getHeadNameFromKey("PLAYER", /*customName=*/profileName));
+			}
+			if(SAVE_TYPE_IN_LORE){
+				SkullMeta meta = (SkullMeta)head.getItemMeta();
+				meta.setLore(Arrays.asList(ChatColor.DARK_GRAY +(isMHF ? MHF_PREFIX : PLAYER_PREFIX) + profileName));
+				head.setItemMeta(meta);
+			}
+		}
+		//-------------------- Handle raw textures
+		else if(profile.getProperties() != null && profile.getProperties().containsKey("textures")){
+			Collection<Property> textures = profile.getProperties().get("textures");
+			if(textures != null && !textures.isEmpty()){
+				String code0 = profile.getProperties().get("textures").iterator().next().getValue();
+				return getHead(code0.getBytes());
+			}
 		}
 		if(MAKE_UNSTACKABLE){
 			profile.getProperties().put("random_uuid", new Property("random_uuid", UUID.randomUUID().toString()));
-			HeadUtils.setGameProfile(meta, profile);
-			head.setItemMeta(meta);
-		}
-		return head;
-	}
-
-	/**
-	 * Get a custom head from a Base64 code and display name
-	 * @param code The Base64 encoded skin texture URL
-	 * @param name The display name to use on the result head ItemStack
-	 * @return The result head ItemStack
-	 */
-	public ItemStack getHead(byte[] code, String name){
-		ItemStack head = HeadUtils.makeSkull(new String(code), name);
-		if(SAVE_TYPE_IN_LORE){
-			ItemMeta meta = head.getItemMeta();
-			meta.setLore(Arrays.asList(ChatColor.DARK_GRAY+CODE_PREFIX+code));
-			head.setItemMeta(meta);
-		}
-		if(MAKE_UNSTACKABLE){
-			SkullMeta meta = (SkullMeta) head.getItemMeta();
-			GameProfile profile = HeadUtils.getGameProfile(meta);
-			profile.getProperties().put("random_uuid", new Property("random_uuid", UUID.randomUUID().toString()));
+			SkullMeta meta = (SkullMeta)head.getItemMeta();
 			HeadUtils.setGameProfile(meta, profile);
 			head.setItemMeta(meta);
 		}

@@ -30,17 +30,12 @@ import net.evmodder.EvLib.Updater;
 // * Trophies/Luck attribute
 // * move textures to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
-// * BUG: Charged creeper can cause 2 heads to drop (1 vanilla and 1 non-vanilla head), and the vanilla charged creeper behead bypasses logs
-// * BUG: to fix above bug, cancel vanilla charge creeper head drops
 // * un-dye heads (sheep,shulker) with cauldron (gimmick)
 // * jeb_ sheep head animated phase through colors (gimmick)
-// * if mob has custom name, use it in head name (config option)
+// * ALL player-visible msgs in plugin translated in translations.yml
 //TEST:
-// * wearing enderman head to look at endermen safely
-// * all player-visible msgs in plugin are translated using translations.yml
 // * hide behead msgs for vanished players
 // * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
-// * Cracked iron golem head / repair with ingot
 // * place-head-block, overwrite-blocks, facing-direction, place-as: KILLER/VICTIM/SERVER
 // * middle-click copy with correct item name // WORKS well enough; can still bug out if u middle-click twice
 // * head-item-drop-mode
@@ -48,7 +43,6 @@ import net.evmodder.EvLib.Updater;
 // * /droprate - check (TODO: or edit) per mob (& cmd for spawn modifiers)
 // * prevent placing heads
 // * update-textures=true (head-textures.txt file overwritten when plugin is updated)
-// * new permissions for head click-info
 
 public final class DropHeads extends EvPlugin{
 	private static DropHeads instance; public static DropHeads getPlugin(){return instance;}
