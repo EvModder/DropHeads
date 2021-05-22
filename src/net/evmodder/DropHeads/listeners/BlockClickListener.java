@@ -79,6 +79,7 @@ public class BlockClickListener implements Listener{
 	}
 	HeadNameData getHeadNameData(GameProfile profile){
 		HeadNameData data = new HeadNameData();
+		GameProfile tempProfile = null;
 		if(profile == null){
 			data.textureKey = EntityType.PLAYER.name();  // This is considered a mob head
 			data.headType = HeadUtils.getDroppedHeadType(EntityType.PLAYER);  // "Head"
@@ -100,13 +101,6 @@ public class BlockClickListener implements Listener{
 			int idx = hdbHeadName.lastIndexOf(' ');
 			data.profileName = new RawTextComponent(idx == -1 ? hdbHeadName : hdbHeadName.substring(0, idx));
 		}
-		//player
-		else if(profile.getId() != null && (data.player = pl.getServer().getOfflinePlayer(profile.getId())) != null
-				&& (data.player.hasPlayedBefore() || WebUtils.checkPlayerExists(profile.getId().toString()))){
-			data.headType = HeadUtils.getDroppedHeadType(EntityType.PLAYER);  // "Head"
-			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(EntityType.PLAYER.name());  // "Player"
-			data.profileName = new RawTextComponent(UPDATE_PLAYER_HEADS || profile.getName() == null ? data.player.getName() : profile.getName());
-		}
 		//mob
 		else if(profile.getName() != null && pl.getAPI().textureExists(profile.getName())){
 			data.textureKey = profile.getName();
@@ -116,6 +110,15 @@ public class BlockClickListener implements Listener{
 			catch(IllegalArgumentException ex){data.headType = HeadUtils.getDroppedHeadType(EntityType.UNKNOWN);}  // "Head"
 			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(data.textureKey);
 			data.profileName = new RawTextComponent(profile.getName());
+		}
+		//player
+		else if(profile.getId() != null && (data.player = pl.getServer().getOfflinePlayer(profile.getId())) != null
+				&& (data.player.hasPlayedBefore() || (tempProfile=WebUtils.getGameProfile(profile.getId().toString())) != null)){
+			data.headType = HeadUtils.getDroppedHeadType(EntityType.PLAYER);  // "Head"
+			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(EntityType.PLAYER.name());  // "Player"
+			data.profileName = new RawTextComponent(UPDATE_PLAYER_HEADS || profile.getName() == null 
+					? tempProfile == null ? data.player.getName() : tempProfile.getName()
+					: profile.getName());
 		}
 		//unknown
 		else{
@@ -185,8 +188,8 @@ public class BlockClickListener implements Listener{
 		final HeadNameData data = getHeadNameData(evt.getClickedBlock().getState());
 
 		final String HEAD_DISPLAY;
-		if(data.player != null){if(!evt.getPlayer().hasPermission("dropheads.clickinfo.players")) return; HEAD_DISPLAY = HEAD_DISPLAY_PLAYERS;}
-		else if(data.textureKey != null){if(!evt.getPlayer().hasPermission("dropheads.clickinfo.mobs")) return; HEAD_DISPLAY = HEAD_DISPLAY_MOBS;}
+		if(data.textureKey != null){if(!evt.getPlayer().hasPermission("dropheads.clickinfo.mobs")) return; HEAD_DISPLAY = HEAD_DISPLAY_MOBS;}
+		else if(data.player != null){if(!evt.getPlayer().hasPermission("dropheads.clickinfo.players")) return; HEAD_DISPLAY = HEAD_DISPLAY_PLAYERS;}
 		else if(data.hdbId != null){if(!evt.getPlayer().hasPermission("dropheads.clickinfo.hdb")) return; HEAD_DISPLAY = HEAD_DISPLAY_HDB;}
 		else{if(!evt.getPlayer().hasPermission("dropheads.clickinfo.unknown")) return; HEAD_DISPLAY = HEAD_DISPLAY_UNKNOWN;}
 

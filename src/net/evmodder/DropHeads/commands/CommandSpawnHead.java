@@ -7,10 +7,8 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import org.bukkit.ChatColor;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
@@ -120,16 +118,16 @@ public class CommandSpawnHead extends EvCommand{
 		return tabCompletes;
 	}
 
-	private OfflinePlayer searchForPlayer(String target){
-		if(!target.matches("[a-zA-Z0-9_]+")) return null;
-		@SuppressWarnings("deprecation")
-		OfflinePlayer p = pl.getServer().getOfflinePlayer(target);
-		if(p.hasPlayedBefore() || WebUtils.checkPlayerExists(p.getName())) return p;
-		try{
-			p = pl.getServer().getOfflinePlayer(UUID.fromString(target));
-			if(p.hasPlayedBefore() || WebUtils.checkPlayerExists(p.getName())) return p;
-		}catch(IllegalArgumentException ex){}
-		return null;
+	private GameProfile searchForPlayer(String target){
+		if(!target.matches("[a-zA-Z0-9_-]+")) return null;
+//		@SuppressWarnings("deprecation")
+//		OfflinePlayer p = pl.getServer().getOfflinePlayer(target);
+//		if(p != null && p.hasPlayedBefore()) return new GameProfile(p.getUniqueId(), p.getName());
+//		try{
+//			p = pl.getServer().getOfflinePlayer(UUID.fromString(target));
+//			if(p != null && p.hasPlayedBefore()) return new GameProfile(p.getUniqueId(), p.getName());
+//		}catch(IllegalArgumentException ex){}
+		return WebUtils.getGameProfile(target);
 	}
 
 	@Override public boolean onCommand(CommandSender sender, Command command, String label, String[] args){
@@ -223,15 +221,15 @@ public class CommandSpawnHead extends EvCommand{
 			}
 		}
 		else if(prefix.equals(PLAYER_PREFIX) || (prefix.isEmpty()/* && ... */)){
-			OfflinePlayer p = searchForPlayer(target);
-			if(p != null){
+			GameProfile profile = searchForPlayer(target);
+			if(profile != null){
 				if(!sender.hasPermission("dropheads.spawn.players")
-						&& (!p.getName().equals(sender.getName()) || !sender.hasPermission("dropheads.spawn.self"))){
+						&& (!profile.getName().equals(sender.getName()) || !sender.hasPermission("dropheads.spawn.self"))){
 					sender.sendMessage(NO_PERMISSION_TO_SPAWN_PLAYER_HEADS);
 					return true;
 				}
-				target = p.getName();
-				head = pl.getAPI().getHead(new GameProfile(p.getUniqueId(), p.getName()));
+				target = profile.getName();
+				head = pl.getAPI().getHead(profile);
 			}
 		}
 

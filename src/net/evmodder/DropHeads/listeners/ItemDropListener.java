@@ -38,8 +38,9 @@ public class ItemDropListener implements Listener{
 		if(!originalMeta.hasLore() || FORCE_LORE_UPDATE) originalMeta.setLore(refreshedItem.getItemMeta().getLore());
 		originalItem.setItemMeta(originalMeta);
 
-		if(!originalMeta.hasDisplayName() || FORCE_NAME_UPDATE) originalItem = JunkUtils.setDisplayName(originalItem,
-				TellrawUtils.parseComponentFromString(JunkUtils.getDisplayName(refreshedItem)));
+		if((!originalMeta.hasDisplayName() || FORCE_NAME_UPDATE) && refreshedItem.getItemMeta().hasDisplayName())
+			originalItem = JunkUtils.setDisplayName(originalItem,
+					TellrawUtils.parseComponentFromString(JunkUtils.getDisplayName(refreshedItem)));
 
 		evt.getEntity().setItemStack(originalItem);
 	}

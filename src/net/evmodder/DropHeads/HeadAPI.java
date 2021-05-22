@@ -570,10 +570,12 @@ public class HeadAPI {
 			if(id != null && hdbAPI.isHead(id)) return hdb_getItemHead_wrapper(id);
 		}
 		OfflinePlayer p = null;  //-------------------- Handle players
+		GameProfile pProfile = null;
 		if(profile.getId() != null && (p=pl.getServer().getOfflinePlayer(profile.getId())) != null
-				&& (p.hasPlayedBefore() || WebUtils.checkPlayerExists(profile.getId().toString()))){
+				&& (p.hasPlayedBefore() || (pProfile=WebUtils.getGameProfile(profile.getId().toString())) != null)){
 			if(UPDATE_PLAYER_HEADS){
-				profile = new GameProfile(p.getUniqueId(), profileName=p.getName());
+				profile = pProfile == null ? new GameProfile(p.getUniqueId(), p.getName()) : pProfile;
+				profileName = profile.getName();
 				head = HeadUtils.getPlayerHead(profile);
 			}
 			boolean isMHF = profileName != null && profileName.startsWith("MHF_");
