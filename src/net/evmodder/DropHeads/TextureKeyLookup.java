@@ -27,9 +27,13 @@ public class TextureKeyLookup{
 	@SuppressWarnings("deprecation")
 	static String getTropicalFishKey(CCP ccp){
 		if(EntityUtils.getCommonTropicalFishId(ccp) != null){
-			return EntityUtils.getTropicalFishEnglishName(ccp).toUpperCase().replace(' ', '_');
+			System.out.println("name: "+EntityUtils.getTropicalFishEnglishName(ccp).toUpperCase().replace(' ', '_'));
+			return "TROPICAL_FISH|"+EntityUtils.getTropicalFishEnglishName(ccp).toUpperCase().replace(' ', '_');
 		}
 		else{
+			System.out.println("fallback name: "+new StringBuilder("TROPICAL_FISH|")
+					.append(ccp.bodyColor.name()).append('|').append(ccp.patternColor.name())
+					.append('|').append(ccp.pattern.name()).toString());
 			return new StringBuilder("TROPICAL_FISH|")
 					.append(ccp.bodyColor.name()).append('|').append(ccp.patternColor.name())
 					.append('|').append(ccp.pattern.name()).toString();
@@ -77,7 +81,8 @@ public class TextureKeyLookup{
 		return shulkerAndColorKey + peekState + rotation;
 	}
 
-	static RefMethod mVillagerType, mZombieVillagerType;
+	static RefMethod mGetVillagerType, mGetZombieVillagerType;
+	static RefMethod mBeeHasNectar, mBeeGetAnger, mBeeHasStung;
 	static RefMethod mCatGetType, mCatGetCollarColor;
 	static RefMethod mFoxGetType, mFoxIsSleeping;
 	static RefMethod mMushroomCowGetVariant;
@@ -124,6 +129,17 @@ public class TextureKeyLookup{
 				if(name == null) name = EvUtils.getNormalizedName(entity.getType());
 				String code = "wow i need to figure this out huh";
 				return HeadUtils.makeSkull(code, name);*/
+			case "BEE":
+				if(mBeeHasNectar == null){
+					RefClass classBee = ReflectionUtils.getRefClass("org.bukkit.entity.Bee");
+					mBeeHasNectar = classBee.getMethod("hasNectar");
+					mBeeHasStung = classBee.getMethod("hasStung");
+					mBeeGetAnger = classBee.getMethod("getAnger");
+				}
+				String pollinated = mBeeHasNectar.of(entity).call().equals(true) ? "|POLLINATED" : "";
+				String angry = ((int)mBeeGetAnger.of(entity).call()) > 0 ? "|ANGRY" : "";
+				String usedSting = mBeeHasStung.of(entity).call().equals(true) ? "|STUNG" : "";
+				return "BEE" + pollinated + angry + usedSting;
 			case "VEX":
 				if(ReflectionUtils.getServerVersionString().compareTo("v1_13_R3") < 0) return "VEX";
 				if(mVexIsCharging == null) mVexIsCharging = ReflectionUtils.getRefClass("org.bukkit.entity.Vex").getMethod("isCharging");
@@ -131,18 +147,18 @@ public class TextureKeyLookup{
 				else return "VEX";
 			case "VILLAGER":
 				String villagerProfession = ((Villager)entity).getProfession().name();
-				if(mVillagerType == null){
-					try{mVillagerType = ReflectionUtils.getRefClass("org.bukkit.entity.Villager").getMethod("getVillagerType");}
+				if(mGetVillagerType == null){
+					try{mGetVillagerType = ReflectionUtils.getRefClass("org.bukkit.entity.Villager").getMethod("getVillagerType");}
 					catch(RuntimeException ex){return "VILLAGER|"+villagerProfession;}
 				}
-				return "VILLAGER|"+villagerProfession+"|"+((Enum)mVillagerType.of(entity).call()).name();
+				return "VILLAGER|"+villagerProfession+"|"+((Enum)mGetVillagerType.of(entity).call()).name();
 			case "ZOMBIE_VILLAGER":
 				String zombieVillagerProfession = ((ZombieVillager)entity).getVillagerProfession().name();
-				if(mZombieVillagerType == null){
-					try{mZombieVillagerType = ReflectionUtils.getRefClass("org.bukkit.entity.ZombieVillager").getMethod("getVillagerType");}
+				if(mGetZombieVillagerType == null){
+					try{mGetZombieVillagerType = ReflectionUtils.getRefClass("org.bukkit.entity.ZombieVillager").getMethod("getVillagerType");}
 					catch(RuntimeException ex){return "ZOMBIE_VILLAGER|"+zombieVillagerProfession;}
 				}
-				return "ZOMBIE_VILLAGER|"+zombieVillagerProfession+"|"+((Enum)mZombieVillagerType.of(entity).call()).name();
+				return "ZOMBIE_VILLAGER|"+zombieVillagerProfession+"|"+((Enum)mGetZombieVillagerType.of(entity).call()).name();
 			case "OCELOT":
 				String catType = ((Ocelot)entity).getCatType().name();
 				return catType.equals("WILD_OCELOT") ? "OCELOT" : "OCELOT|"+catType;
