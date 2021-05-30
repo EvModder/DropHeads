@@ -1,5 +1,6 @@
 package net.evmodder.DropHeads.listeners;
 
+import java.util.Base64;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
@@ -208,7 +209,7 @@ public class BlockClickListener implements Listener{
 		blob.replaceRawDisplayTextWithComponent("${A}", new RawTextComponent(aOrAn));
 		blob.replaceRawDisplayTextWithComponent("${NAME}", data.profileName);
 		blob.replaceRawDisplayTextWithComponent("${MOB_TYPE}", data.entityTypeNames[0]);
-		if(HEAD_DISPLAY.contains("${TEXTURE}")){
+		if(HEAD_DISPLAY.contains("${TEXTURE}") || HEAD_DISPLAY.contains("${BASE64}") || HEAD_DISPLAY.contains("${URL}")){
 			String code0 = "";
 			if(isPlayerHead){
 				GameProfile profile = HeadUtils.getGameProfile((Skull)evt.getClickedBlock().getState());
@@ -216,6 +217,12 @@ public class BlockClickListener implements Listener{
 				if(textures != null && !textures.isEmpty()) code0 = profile.getProperties().get("textures").iterator().next().getValue();
 			}
 			blob.replaceRawDisplayTextWithComponent("${TEXTURE}", new RawTextComponent(code0));
+			blob.replaceRawDisplayTextWithComponent("${BASE64}", new RawTextComponent(code0));
+			if(HEAD_DISPLAY.contains("${URL}")){
+				String json = new String(Base64.getDecoder().decode(code0));
+				String url = json.substring(json.indexOf("\"url\":")+7, json.lastIndexOf('"')).trim();
+				blob.replaceRawDisplayTextWithComponent("${URL}", new RawTextComponent(url));
+			}
 		}
 
 		if(HEAD_DISPLAY.contains("${MOB_SUBTYPES_ASC}")){
