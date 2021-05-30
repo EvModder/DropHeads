@@ -245,6 +245,12 @@ public class JunkUtils{
 		return nearestFace;
 	}
 
+	public final static String repeat(String str, int n){
+		StringBuilder b = new StringBuilder();
+		for(int i=0; i<n; ++i) b.append(str);
+		return b.toString();
+	}
+
 	public interface TestFunc{boolean test(int num);}
 	public final static int binarySearch(TestFunc f, int a, int b){
 		while(a < b-1){

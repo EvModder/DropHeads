@@ -25,7 +25,6 @@ import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.craftbukkit.libs.org.apache.commons.lang3.StringUtils;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
@@ -383,12 +382,12 @@ public class HeadAPI {
 						break;
 					case "MOB_SUBTYPES_ASC":
 						translatedHeadNameFormat = translatedHeadNameFormat.replace("${MOB_SUBTYPES_ASC}",
-								StringUtils.repeat("%s"+MOB_SUBTYPES_SEPARATOR, entityTypeNames.length-1));
+								JunkUtils.repeat("%s"+MOB_SUBTYPES_SEPARATOR, entityTypeNames.length-1));
 						for(int j=1; j<entityTypeNames.length; ++j) withComps.add(entityTypeNames[j]);
 						break;
 					case "MOB_SUBTYPES_DESC":
 						translatedHeadNameFormat = translatedHeadNameFormat.replace("${MOB_SUBTYPES_DESC}",
-								StringUtils.repeat("%s"+MOB_SUBTYPES_SEPARATOR, entityTypeNames.length-1));
+								JunkUtils.repeat("%s"+MOB_SUBTYPES_SEPARATOR, entityTypeNames.length-1));
 						for(int j=entityTypeNames.length-1; j>0; --j) withComps.add(entityTypeNames[j]);
 						break;
 				}//switch (matcher.group)
