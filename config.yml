@@ -31,6 +31,10 @@ player-heads-only: false
 # texture features based on mob traits or subtype
 simple-mob-heads-only: false
 
+# Use pre-JAPPA style heads, from before the Minecraft 1.14 texture update
+# https://minecraft.fandom.com/wiki/Texture_Update
+use-legacy-head-textures: false
+
 # Whether to keep entity heads updated with the latest vanilla textures
 refresh-textures: true
 
@@ -65,8 +69,12 @@ show-grumm-in-tab-complete: false
 drop-saddled-heads: false
 
 # Should skeletal mob heads use hollow textures on the bottom?
-# Note: This is only possible due to HD textures, which Mojang might patch
+# Note: This relies on HD textures, which Mojang might patch
 hollow-skeletal-skulls: false
+
+# Should slimes drop semi-transparent heads, similar to their ingame model?
+# Note: This relies on HD textures, which Mojang might patch
+transparent-slime-heads: false
 
 # Enable plugin auto-updates (checks for new versions and head textures)
 # Note: Disable if your console shows DropHeads errors on startup

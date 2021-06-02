@@ -56,7 +56,7 @@ public class HeadAPI {
 	private HeadDatabaseAPI hdbAPI = null;
 //	private int MAX_HDB_ID = -1;
 	final Configuration translationsFile; // protected scope; only used by head-click-listener
-	final boolean GRUM_ENABLED, SADDLES_ENABLED, HOLLOW_SKULLS_ENABLED, CRACKED_IRON_GOLEMS_ENABLED;
+	final boolean GRUM_ENABLED, SADDLES_ENABLED, HOLLOW_SKULLS_ENABLED, TRANSPARENT_SLIME_ENABLED, CRACKED_IRON_GOLEMS_ENABLED, USE_PRE_JAPPA;
 	final boolean UPDATE_PLAYER_HEADS, UPDATE_ZOMBIE_PIGMEN_HEADS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_VANILLA_HEADS;
 	final TranslationComponent LOCAL_HEAD, LOCAL_SKULL, LOCAL_TOE;
 	final HashMap<EntityType, /*headNameFormat=*/String> headNameFormats;
@@ -74,7 +74,9 @@ public class HeadAPI {
 		GRUM_ENABLED = pl.getConfig().getBoolean("drop-grumm-heads", true);
 		SADDLES_ENABLED = pl.getConfig().getBoolean("drop-saddled-heads", true);
 		HOLLOW_SKULLS_ENABLED = pl.getConfig().getBoolean("hollow-skeletal-skulls", false);
+		TRANSPARENT_SLIME_ENABLED = pl.getConfig().getBoolean("transparent-slime-heads", false);
 		CRACKED_IRON_GOLEMS_ENABLED = pl.getConfig().getBoolean("cracked-iron-golem-heads", false);
+		USE_PRE_JAPPA = pl.getConfig().getBoolean("use-legacy-head-textures", false);
 		UPDATE_PLAYER_HEADS = pl.getConfig().getBoolean("update-on-skin-change", true);
 		boolean zombifiedPiglensExist = false;
 		try{EntityType.valueOf("ZOMBIFIED_PIGLIN"); zombifiedPiglensExist = true;} catch(IllegalArgumentException ex){}
@@ -301,6 +303,11 @@ public class HeadAPI {
 					dataFlags = textureKey.split("\\|");
 				}
 				break;
+			case "SLIME":
+				if(textureKey.contains("|TRANSPARENT")){
+					textureKey = textureKey.replace("|TRANSPARENT", "");
+					dataFlags = textureKey.split("\\|");
+				}
 			case "IRON_GOLEM":
 				if(dataFlags.length == 2){
 					textureKey = textureKey
@@ -330,18 +337,20 @@ public class HeadAPI {
 				dataFlags = (textureKey = "PLAYER"+textureKey.substring(7)).split("\\|");
 				break;
 		}
-		Component[] components = new Component[dataFlags.length];
+		ArrayList<Component> components = new ArrayList<>();//[dataFlags.length];
 		try{
-			components[0] = TellrawUtils.getBestGuessLocalizedDisplayName(EntityType.valueOf(dataFlags[0]));
+			components.add(TellrawUtils.getBestGuessLocalizedDisplayName(EntityType.valueOf(dataFlags[0])));
 		}
 		catch(IllegalArgumentException ex){ // Unable to parse EntityType
-			components[0] = new TranslationComponent(TextUtils.capitalizeAndSpacify(EntityUtils.getNormalizedEntityName(dataFlags[0]), '_'));
+			components.add(new TranslationComponent(TextUtils.capitalizeAndSpacify(EntityUtils.getNormalizedEntityName(dataFlags[0]), '_')));
 		}
 		for(int i=1; i<dataFlags.length; ++i){
 			TranslationComponent subtypeName = entitySubtypeNames.get(dataFlags[i]);
-			components[i] = subtypeName != null ? subtypeName : new RawTextComponent(TextUtils.capitalizeAndSpacify(dataFlags[i], /*toSpace=*/'_'));
+			Component comp = subtypeName != null ? subtypeName :
+					new RawTextComponent(TextUtils.capitalizeAndSpacify(dataFlags[i], /*toSpace=*/'_'));
+			if(!comp.toPlainText().isEmpty()) components.add(comp);
 		}
-		return components;
+		return components.toArray(new Component[0]);
 	}
 	public Component getHeadNameFromKey(@Nonnull String textureKey, @Nonnull String customName){
 		// Attempt to parse out an EntityType
@@ -512,6 +521,8 @@ public class HeadAPI {
 		if(!SADDLES_ENABLED && textureKey.endsWith("|SADDLED")) textureKey = textureKey.substring(0, textureKey.length()-8);
 		if(CRACKED_IRON_GOLEMS_ENABLED && entity.getType() == EntityType.IRON_GOLEM) textureKey += "|HIGH_CRACKINESS";
 		if(HOLLOW_SKULLS_ENABLED && EntityUtils.isSkeletal(entity.getType())) textureKey += "|HOLLOW";
+		if(TRANSPARENT_SLIME_ENABLED && entity.getType() == EntityType.SLIME) textureKey += "|TRANSPARENT";
+		if(USE_PRE_JAPPA) textureKey += "|PRE_JAPPA";
 		if(GRUM_ENABLED && HeadUtils.hasGrummName(entity)){
 			if(entity.getType() == EntityType.SHULKER) textureKey = textureKey
 					.replace("|SIDE_UP", "").replace("|SIDE_DOWN", "").replace("|SIDE_LEFT", "").replace("|SIDE_RIGHT", "");

@@ -115,6 +115,7 @@ entity-subtype-names:
   white_collared: "White-Collared"                          #Cat/Wolf
   yellow_collared: "Yellow-Collared"                        #Cat/Wolf
   custom: "item.minecraft.firework_star.custom_color"       #unknown texture-code heads
+  pre_jappa: ""                                             # All mobs before the 1.14 texture update
 
 # WARNING: This overrides all other translation settings; you can use this
 # to SPECIFICALLY set the head name for any texture key in head-textures.txt

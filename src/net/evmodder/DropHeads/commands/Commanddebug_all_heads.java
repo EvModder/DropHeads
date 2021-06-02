@@ -60,13 +60,16 @@ public class Commanddebug_all_heads extends EvCommand{
 			return true;
 		}
 		boolean noGrumm = args.length == 0 || !args[args.length-1].toLowerCase().equals("true");
+		boolean noPreJappa = args.length < 2 || !args[args.length-2].toLowerCase().equals("true");
 		sender.sendMessage("Skipping Grumm heads: "+noGrumm);
+		sender.sendMessage("Skipping Pre-JAPPA heads: "+noPreJappa);
 
 		// Get & filter head keys
 		List<String> textureKeys = new ArrayList<>();
 		textureKeys.addAll(pl.getAPI().getTextures().keySet());
 		sender.sendMessage("Total # texture keys: "+textureKeys.size());
 		if(noGrumm) textureKeys.removeIf(key -> key.endsWith("|GRUMM") && !key.startsWith("SHULKER|"));
+		if(noPreJappa) textureKeys.removeIf(key -> key.contains("|PRE_JAPPA"));
 		if(!SHOW_PLAIN_IF_HAS_DATA_TAG){
 			// Don't show "FOX" if we have "FOX|RED", or "SHEEP" if we have "SHEEP|WHITE" etc
 			HashSet<String> hasSubKey = new HashSet<>();
