@@ -29,6 +29,8 @@ import net.evmodder.EvLib.extras.TextUtils;
 import net.evmodder.EvLib.extras.WebUtils;
 import net.evmodder.EvLib.extras.HeadUtils.HeadType;
 import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
+import net.evmodder.EvLib.extras.TellrawUtils.TextClickAction;
+import net.evmodder.EvLib.extras.TellrawUtils.ClickEvent;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
 import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
@@ -222,7 +224,7 @@ public class BlockClickListener implements Listener{
 				String json = new String(Base64.getDecoder().decode(code0))
 						.replace(" ", "").replace("\n", "").replace("\r", "").replace("\t", "");
 				String url = json.substring(json.indexOf("\"url\":")+7, json.lastIndexOf('"')).trim();
-				blob.replaceRawDisplayTextWithComponent("${URL}", new RawTextComponent(url));
+				blob.replaceRawDisplayTextWithComponent("${URL}", new RawTextComponent(url, new TextClickAction(ClickEvent.OPEN_URL, url)));
 			}
 		}
 
