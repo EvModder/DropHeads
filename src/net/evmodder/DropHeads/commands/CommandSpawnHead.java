@@ -202,14 +202,14 @@ public class CommandSpawnHead extends EvCommand{
 				sender.sendMessage(NO_PERMISSION_TO_SPAWN_CODE_HEADS);
 				return true;
 			}
-			String url = WebUtils.getTextureURL(target);
+			String url = WebUtils.getTextureURL(target, /*verify=*/true);
 			if(url == null){
 				sender.sendMessage(String.format(ERROR_UNKNOWN_RAW_TEXTURE, target));
 				return false;
 			}
 			target = Base64.getEncoder().encodeToString(
 					("{\"textures\":{\"SKIN\":{\"url\":\""+url+"\"}}}").getBytes(StandardCharsets.ISO_8859_1));
-			System.out.println("recovered url: "+WebUtils.getTextureURL(new String(target.getBytes())));
+//			pl.getLogger().fine("recovered url: "+WebUtils.getTextureURL(new String(target.getBytes()), /*verify=*/true));
 			for(Entry<String, String> entry : pl.getAPI().getTextures().entrySet()){
 				if(entry.getValue().equals(target)){
 					head = pl.getAPI().getHead((EntityType)null, entry.getKey());

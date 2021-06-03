@@ -469,7 +469,6 @@ public class EntityDeathListener implements Listener{
 
 
 	void onEntityDeath(@Nonnull final Entity victim, final Entity killer, final Event evt){
-		if(PLAYER_HEADS_ONLY && victim instanceof Player == false) return;
 		if(killer != null){
 			if(!killer.hasPermission("dropheads.canbehead")){
 				if(DEBUG_MODE) pl.getLogger().info("dropheads.canbehead=false: "+killer.getName());
@@ -636,7 +635,11 @@ public class EntityDeathListener implements Listener{
 				if(CHARGED_CREEPER_DROPS && HeadUtils.dropsHeadFromChargedCreeper(victim.getType())
 						&& killer != null && killer instanceof Creeper && ((Creeper)killer).isPowered()){
 					Iterator<ItemStack> it = evt.getDrops().iterator();
-					while(it.hasNext()) if(HeadUtils.getEntityFromHead(it.next().getType()) == victim.getType()){it.remove(); break;}
+					while(it.hasNext()){
+						Material headType = it.next().getType();
+						try{if(HeadUtils.getEntityFromHead(headType) == victim.getType()){it.remove(); break;}}
+						catch(IllegalArgumentException ex){}
+					}
 				}
 				onEntityDeath(victim, killer, evt);
 			}

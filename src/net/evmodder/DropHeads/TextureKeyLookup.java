@@ -98,8 +98,7 @@ public class TextureKeyLookup{
 	public static String getTextureKey(Entity entity){
 		switch(entity.getType().name()){
 			case "CREEPER":
-				if(((Creeper)entity).isPowered()) return "CREEPER|CHARGED";
-				else return "CREEPER";
+				return ((Creeper)entity).isPowered() ? "CREEPER|CHARGED" : "CREEPER";
 			case "WOLF":
 				if(((Wolf)entity).isTamed()) return "WOLF|"+((Wolf)entity).getCollarColor().name()+"_COLLARED";
 				if(((Wolf)entity).isAngry()) return "WOLF|ANGRY";
