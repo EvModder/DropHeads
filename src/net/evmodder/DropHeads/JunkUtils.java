@@ -93,8 +93,8 @@ public class JunkUtils{
 	final static RefMethod asNMSCopyMethod = craftItemStackClazz.getMethod("asNMSCopy", ItemStack.class);
 
 	// NMS Method to serialize a net.minecraft.server.vX_X.ItemStack to a valid JSON string
-	final static RefClass nmsItemStackClazz = ReflectionUtils.getRefClass("{nms}.ItemStack");
-	final static RefClass nbtTagCompoundClazz = ReflectionUtils.getRefClass("{nms}.NBTTagCompound");
+	final static RefClass nmsItemStackClazz = ReflectionUtils.getRefClass("{nms}.ItemStack", "{nm}.world.item.ItemStack");
+	final static RefClass nbtTagCompoundClazz = ReflectionUtils.getRefClass("{nms}.NBTTagCompound", "{nm}.nbt.NBTTagCompound");
 	final static RefMethod saveNmsItemStackMethod = nmsItemStackClazz.getMethod("save", nbtTagCompoundClazz);
 
 	// https://www.spigotmc.org/threads/tut-item-tooltips-with-the-chatcomponent-api.65964/
@@ -162,9 +162,10 @@ public class JunkUtils{
 	// Similar as above, but for Entity instead of ItemStack
 	final static RefClass craftEntityClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftEntity");
 	final static RefMethod entityGetHandleMethod = craftEntityClazz.getMethod("getHandle");
-	final static RefClass nmsEntityClazz = ReflectionUtils.getRefClass("{nms}.Entity");
+	final static RefClass nmsEntityClazz = ReflectionUtils.getRefClass("{nms}.Entity", "{nm}.world.entity.Entity");
 	final static RefMethod saveNmsEntityMethod = nmsEntityClazz.getMethod("save", nbtTagCompoundClazz);
 	public final static String convertEntityToJson(Entity entity){//TODO: not currently used
+		
 		Object nmsNbtTagCompoundObj = nbtTagCompoundClazz.getConstructor().create();
 		Object nmsEntityObj = entityGetHandleMethod.of(entity).call();
 		Object entityAsJsonObject = saveNmsEntityMethod.of(nmsEntityObj).call(nmsNbtTagCompoundObj);

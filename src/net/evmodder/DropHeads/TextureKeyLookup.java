@@ -208,9 +208,10 @@ public class TextureKeyLookup{
 				boolean isScreaming = false;
 				if(ghastIsAttackingField == null){
 					mGetHandle = ReflectionUtils.getRefClass("{cb}.entity.CraftEntity").getMethod("getHandle");
-					RefClass classEntityGhast = ReflectionUtils.getRefClass("{nms}.EntityGhast");
-					RefClass classDataWatcher = ReflectionUtils.getRefClass("{nms}.DataWatcher");
-					RefClass classDataWatcherObject = ReflectionUtils.getRefClass("{nms}.DataWatcherObject");
+					RefClass classEntityGhast = ReflectionUtils.getRefClass("{nms}.EntityGhast", "{nm}.world.entity.monster.EntityGhast");
+					RefClass classDataWatcher = ReflectionUtils.getRefClass("{nms}.DataWatcher", "{nm}.network.syncher.DataWatcher");
+					RefClass classDataWatcherObject = ReflectionUtils
+							.getRefClass("{nms}.DataWatcherObject","{nm}.network.syncher.DataWatcherObject");
 					mGetDataWatcher = classEntityGhast.getMethod("getDataWatcher");
 					mGet_FromDataWatcher = classDataWatcher.getMethod("get", classDataWatcherObject);
 					//TODO: monitor for change: BuildTools/work/decompile-ee3ecae0/net/minecraft/server/EntityGhast.java
