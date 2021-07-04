@@ -220,7 +220,7 @@ public class BlockClickListener implements Listener{
 			}
 			blob.replaceRawDisplayTextWithComponent("${TEXTURE}", new RawTextComponent(code0));
 			blob.replaceRawDisplayTextWithComponent("${BASE64}", new RawTextComponent(code0));
-			if(HEAD_DISPLAY.contains("${URL}")){
+			if(HEAD_DISPLAY.contains("${URL}") && !code0.isEmpty()){
 				String json = new String(Base64.getDecoder().decode(code0))
 						.replace(" ", "").replace("\n", "").replace("\r", "").replace("\t", "");
 				String url = json.substring(json.indexOf("\"url\":")+7, json.lastIndexOf('"')).trim();
