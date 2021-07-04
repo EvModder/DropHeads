@@ -292,7 +292,7 @@ public class EntityDeathListener implements Listener{
 		}
 		// Dynamically add all the children perms of "dropheads.alywaysbehead.<entity>"
 		Permission alwaysBeheadPerm = pl.getServer().getPluginManager().getPermission("dropheads.alwaysbehead");
-		try{
+		if(alwaysBeheadPerm != null) try{
 			for(EntityType entity : EntityType.values()){
 				Permission alwaysBeheadPermForEntity = new Permission(
 						alwaysBeheadPerm.getName()+"."+entity.name().toLowerCase(),

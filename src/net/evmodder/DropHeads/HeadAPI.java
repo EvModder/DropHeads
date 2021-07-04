@@ -515,7 +515,11 @@ public class HeadAPI {
 	public ItemStack getHead(Entity entity/*, boolean saveTypeInLore, boolean unstackable*/){
 		if(entity.getType() == EntityType.PLAYER){
 			OfflinePlayer player = (OfflinePlayer)entity;
-			return getHead(new GameProfile(player.getUniqueId(), player.getName()));
+			ItemStack head = getHead(new GameProfile(player.getUniqueId(), player.getName()));
+			SkullMeta meta = (SkullMeta)head.getItemMeta();
+			meta.setOwningPlayer(player);
+			head.setItemMeta(meta);
+			return head;
 		}
 		String textureKey = TextureKeyLookup.getTextureKey(entity);
 		if(!SADDLES_ENABLED && textureKey.endsWith("|SADDLED")) textureKey = textureKey.substring(0, textureKey.length()-8);
