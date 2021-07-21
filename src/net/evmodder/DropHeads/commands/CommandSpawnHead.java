@@ -210,11 +210,15 @@ public class CommandSpawnHead extends EvCommand{
 			target = Base64.getEncoder().encodeToString(
 					("{\"textures\":{\"SKIN\":{\"url\":\""+url+"\"}}}").getBytes(StandardCharsets.ISO_8859_1));
 //			pl.getLogger().fine("recovered url: "+WebUtils.getTextureURL(new String(target.getBytes()), /*verify=*/true));
+			String longestMatchingKey = "";
 			for(Entry<String, String> entry : pl.getAPI().getTextures().entrySet()){
-				if(entry.getValue().equals(target)){
-					head = pl.getAPI().getHead((EntityType)null, entry.getKey());
+				if(entry.getValue().equals(target) && entry.getKey().length() > longestMatchingKey.length()){
+					longestMatchingKey = entry.getKey();
 					break;
 				}
+			}
+			if(!longestMatchingKey.isEmpty()) {
+				head = pl.getAPI().getHead((EntityType)null, longestMatchingKey);
 			}
 			if(head == null){
 				head = pl.getAPI().getHead(target.getBytes());
