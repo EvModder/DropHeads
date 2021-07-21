@@ -21,15 +21,10 @@ public class ItemDropListener implements Listener{
 		FORCE_LORE_UPDATE = pl.getConfig().getBoolean("refresh-item-lores", false);
 	}
 
-	private boolean isHeadDatabaseHead(ItemStack head){
-		String id = pl.getAPI().getHeadDatabaseAPI().getItemID(head);
-		return id != null && pl.getAPI().getHeadDatabaseAPI().isHead(id);
-	}
-
 	@EventHandler(ignoreCancelled = true)
 	public void onBarf(ItemSpawnEvent evt){
 		if(!HeadUtils.isPlayerHead(evt.getEntity().getItemStack().getType()) || !evt.getEntity().getItemStack().hasItemMeta()
-				|| isHeadDatabaseHead(evt.getEntity().getItemStack())) return;
+				|| pl.getAPI().isHeadDatabaseHead(evt.getEntity().getItemStack())) return;
 
 		ItemStack originalItem = evt.getEntity().getItemStack();
 		SkullMeta originalMeta = (SkullMeta) originalItem.getItemMeta();

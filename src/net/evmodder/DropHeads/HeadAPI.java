@@ -238,6 +238,11 @@ public class HeadAPI {
 	public boolean textureExists(String textureKey){return textures.containsKey(textureKey);}
 	public Map<String, String> getTextures(){return Collections.unmodifiableMap(textures);}
 	public HeadDatabaseAPI getHeadDatabaseAPI(){return hdbAPI;}//TODO: prefer avoiding public
+	public boolean isHeadDatabaseHead(ItemStack head){
+		if(hdbAPI == null) return false;
+		String id = hdbAPI.getItemID(head);
+		return id != null && hdbAPI.isHead(id);
+	}
 
 	//TODO: prefer avoiding public for these head-name-component getters?
 	public TranslationComponent getHeadTypeName(HeadType headType){
