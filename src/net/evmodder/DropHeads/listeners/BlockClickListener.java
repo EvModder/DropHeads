@@ -115,7 +115,7 @@ public class BlockClickListener implements Listener{
 			data.profileName = new RawTextComponent(profile.getName());
 		}
 		//player
-		else if(profile.getId() != null && (data.player = pl.getServer().getOfflinePlayer(profile.getId())) != null
+		else if((profile.getId()) != null && (data.player = pl.getServer().getOfflinePlayer(profile.getId())) != null
 				&& (data.player.hasPlayedBefore() || (tempProfile=WebUtils.getGameProfile(profile.getId().toString())) != null)){
 			data.headType = HeadUtils.getDroppedHeadType(EntityType.PLAYER);  // "Head"
 			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(EntityType.PLAYER.name());  // "Player"
@@ -133,9 +133,22 @@ public class BlockClickListener implements Listener{
 		if(data.player != null && data.player.getName() == null) data.player = null;
 		return data;
 	}
+	@SuppressWarnings("deprecation")
 	HeadNameData getHeadNameData(BlockState skull){
 		if(HeadUtils.isPlayerHead(skull.getType())){
-			return getHeadNameData(HeadUtils.getGameProfile((Skull)skull));
+			HeadNameData headData = getHeadNameData(HeadUtils.getGameProfile((Skull)skull));
+			if(((Skull)skull).hasOwner() && headData.player == null){
+				OfflinePlayer player = ((Skull)skull).getOwningPlayer();
+				GameProfile profile = WebUtils.getGameProfile(player.getUniqueId().toString());
+				if(player.hasPlayedBefore() || profile != null){
+					headData.player = player;
+					if(player.getName() != null) headData.profileName = new RawTextComponent(player.getName());
+					else if(profile != null && profile.getName() != null) headData.profileName = new RawTextComponent(profile.getName());
+					else if(((Skull)skull).getOwner() != null) headData.profileName = new RawTextComponent(((Skull)skull).getOwner());
+					else headData.profileName = new RawTextComponent(EntityType.UNKNOWN.name());
+				}
+			}
+			return headData;
 		}
 		//else: creeper, zombie, dragon, (wither)skeleton
 		EntityType entityType = HeadUtils.getEntityFromHead(skull.getType());
@@ -199,7 +212,7 @@ public class BlockClickListener implements Listener{
 		final TranslationComponent headTypeName = pl.getAPI().getHeadTypeName(data.headType);
 		final String aOrAn =
 				(data.textureKey != null ? pl.getAPI().getHeadNameFromKey(data.textureKey, /*customName=*/"").toPlainText()
-					: data.player != null ? data.player.getName() : data.profileName.toPlainText())
+					: data.player != null && data.player.getName() != null ? data.player.getName() : data.profileName.toPlainText())
 				.matches("[aeiouAEIOU].*") ? "an" : "a"; // Yes, an imperfect solution, I know. :/
 
 		evt.setCancelled(true);
