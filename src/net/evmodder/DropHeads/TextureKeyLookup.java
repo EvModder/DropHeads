@@ -51,7 +51,7 @@ public class TextureKeyLookup{
 	static String getShulkerKey(Shulker shulker){
 		DyeColor color = shulker.getColor();
 		String shulkerAndColorKey = color == null ? "SHULKER" : "SHULKER|"+color.name();
-		org.bukkit.Bukkit.getLogger().info("shulker facing: "+shulker.getFacing());
+		//org.bukkit.Bukkit.getLogger().info("shulker facing: "+shulker.getFacing());
 
 		if(ReflectionUtils.getServerVersionString().compareTo("v1_16_R3") < 0) return shulkerAndColorKey;
 		if(mShulkerGetAttachedFace == null){
@@ -115,6 +115,7 @@ public class TextureKeyLookup{
 			case "PARROT":
 				return "PARROT|"+((Parrot)entity).getVariant().name();
 			case "RABBIT":
+				if(entity.getCustomName() != null && entity.getCustomName().equals("Toast")) return "RABBIT|TOAST";
 				return "RABBIT|"+((Rabbit)entity).getRabbitType().name();
 			case "SHEEP":
 				if(entity.getCustomName() != null && entity.getCustomName().equals("jeb_")) return "SHEEP|JEB";
@@ -223,7 +224,7 @@ public class TextureKeyLookup{
 					Object entityGhast = mGetHandle.of(entity).call();
 					Object dataWatcher = mGetDataWatcher.of(entityGhast).call();
 					isScreaming = mGet_FromDataWatcher.of(dataWatcher).call(datawatcherobject).equals(true);
-					org.bukkit.Bukkit.getLogger().info("Ghast isAttacking: "+isScreaming);
+					//org.bukkit.Bukkit.getLogger().info("Ghast isAttacking: "+isScreaming);
 				}
 				catch(IllegalArgumentException | IllegalAccessException e){}
 				if(isScreaming) return "GHAST|SCREAMING";//TODO: Add this to the Bukkit API

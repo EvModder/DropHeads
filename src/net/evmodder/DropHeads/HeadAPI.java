@@ -164,7 +164,7 @@ public class HeadAPI {
 
 		boolean hdbInstalled = true;
 		try{Class.forName("me.arcaniax.hdb.api.DatabaseLoadEvent");}
-		catch(ClassNotFoundException ex){hdbInstalled = false;}
+		catch(ClassNotFoundException | IllegalStateException ex){hdbInstalled = false;}
 
 		if(hdbInstalled) pl.getServer().getPluginManager().registerEvents(new Listener(){
 			@EventHandler public void onDatabaseLoad(DatabaseLoadEvent e){
@@ -410,13 +410,14 @@ public class HeadAPI {
 	}
 
 	ItemStack makeHeadFromTexture(String textureKey/*, boolean saveTypeInLore, boolean unstackable*/){
+		String code = textures.get(textureKey);
+		if(code == null || code.isEmpty()) return null;
 		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
 		item = JunkUtils.setDisplayName(item, getHeadNameFromKey(textureKey, /*customName=*/""));
 		SkullMeta meta = (SkullMeta) item.getItemMeta();
 
 		UUID uuid = UUID.nameUUIDFromBytes(textureKey.getBytes());// Stable UUID for this textureKey
 		GameProfile profile = new GameProfile(uuid, textureKey);// Initialized with UUID and name
-		String code = textures.get(textureKey);
 		if(code != null) profile.getProperties().put("textures", new Property("textures", code));
 		if(MAKE_UNSTACKABLE) profile.getProperties().put("random_uuid", new Property("random_uuid", UUID.randomUUID().toString()));
 		HeadUtils.setGameProfile(meta, profile);

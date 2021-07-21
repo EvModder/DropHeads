@@ -33,6 +33,7 @@ import net.evmodder.EvLib.Updater;
 // * un-dye heads (sheep,shulker) with cauldron (gimmick)
 // * jeb_ sheep head animated phase through colors (gimmick)
 // * ALL player-visible msgs in plugin translated in translations.yml
+// * dont have PIG_ZOMBIE in the plugin folder copy of head-textures.txt (fixes console error)
 //TEST:
 // * hide behead msgs for vanished players
 // * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
