@@ -164,7 +164,7 @@ public class HeadAPI {
 
 		boolean hdbInstalled = true;
 		try{Class.forName("me.arcaniax.hdb.api.DatabaseLoadEvent");}
-		catch(ClassNotFoundException | IllegalStateException ex){hdbInstalled = false;}
+		catch(Exception ex){hdbInstalled = false;}
 
 		if(hdbInstalled) pl.getServer().getPluginManager().registerEvents(new Listener(){
 			@EventHandler public void onDatabaseLoad(DatabaseLoadEvent e){
