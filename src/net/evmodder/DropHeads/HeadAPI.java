@@ -593,7 +593,7 @@ public class HeadAPI {
 		GameProfile pProfile = null;
 		if(profile.getId() != null && (p=pl.getServer().getOfflinePlayer(profile.getId())) != null
 				&& (p.hasPlayedBefore() || (pProfile=WebUtils.getGameProfile(profile.getId().toString())) != null)){
-			if(UPDATE_PLAYER_HEADS){
+			if(UPDATE_PLAYER_HEADS || !profile.isComplete() || profile.isLegacy()){
 				profile = pProfile == null ? new GameProfile(p.getUniqueId(), p.getName()) : pProfile;
 				profileName = profile.getName();
 				head = HeadUtils.getPlayerHead(profile);

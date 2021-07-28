@@ -115,7 +115,7 @@ public class BlockClickListener implements Listener{
 			data.profileName = new RawTextComponent(profile.getName());
 		}
 		//player
-		else if((profile.getId()) != null && (data.player = pl.getServer().getOfflinePlayer(profile.getId())) != null
+		else if(profile.getId() != null && (data.player = pl.getServer().getOfflinePlayer(profile.getId())) != null
 				&& (data.player.hasPlayedBefore() || (tempProfile=WebUtils.getGameProfile(profile.getId().toString())) != null)){
 			data.headType = HeadUtils.getDroppedHeadType(EntityType.PLAYER);  // "Head"
 			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(EntityType.PLAYER.name());  // "Player"
