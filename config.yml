@@ -46,7 +46,7 @@ refresh-item-lores: false
 
 # When a player changes their skin, should old heads be updated to the
 # new texture? Note: to trigger refresh, heads must be mined or dropped
-update-on-skin-change: false
+update-on-skin-change: true
 
 # Whether to disable head item stacking (stack to 1 instead of 64)
 # Note: Currently only affects custom (non-vanilla) heads
