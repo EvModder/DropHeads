@@ -117,7 +117,8 @@ public class EntityDeathListener implements Listener{
 		LOOTING_MULT = pl.getConfig().getDouble("looting-mutliplier", 1D);
 		if(LOOTING_ADD >= 1) pl.getLogger().warning("looting-addition is set to 1.0 or greater, this means heads will ALWAYS drop when looting is used!");
 		if(LOOTING_MULT < 1) pl.getLogger().warning("looting-multiplier is set below 1.0, this means looting will DECREASE the chance of head drops!");
-		REPLACE_DEATH_MESSAGE = pl.getConfig().getBoolean("behead-announcement-replaces-death-message", true);
+		REPLACE_DEATH_MESSAGE = pl.getConfig().getBoolean("behead-announcement-replaces-player-death-message",
+				pl.getConfig().getBoolean("behead-announcement-replaces-death-message", true));
 		PRIORITY = JunkUtils.parseEnumOrDefault(pl.getConfig().getString("death-listener-priority", "LOW"), EventPriority.LOW);
 		DEBUG_MODE = pl.getConfig().getBoolean("debug-messages", true);
 		final boolean ENABLE_LOG = pl.getConfig().getBoolean("log.enable", false);

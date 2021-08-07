@@ -6,7 +6,7 @@ behead-announcement:
 #  wither_skeleton: 'OFF'
 
 # Replaces death messages if player behead announcement is GLOBAL
-behead-announcement-replaces-death-message: true
+behead-announcement-replaces-player-death-message: true
 
 # The messages used to announce beheading
 message-beheaded: '&6${VICTIM}&r was decapitated'
