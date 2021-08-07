@@ -109,28 +109,12 @@ fix-creative-nbt-copy: true
 # Note: Applies to custom player/mob heads, but not to WITHER_SKULL etc.
 show-head-type-in-lore: true
 
+# Adds support for DropHeads-namespaced heads in the vanilla "/give" command
+# WARNING: This feature is in BETA and is relatively untested
+substitute-dropheads-in-give-command: true
+
 # Only drop heads if the killer used an axe; overrides 'must-use'
 must-use-axe: false
-
-# How the head item from a beheading should be handled, options are:
-# EVENT - add the head to normally dropped loot,
-# SPAWN - spawn the head separately from the event,
-# PLACE - place the head on the ground if spot is available (within 3 blocks)
-# PLACE_BY_KILLER - same as PLACE but checks if killer has build permissions
-# PLACE_BY_VICTIM - same as PLACE but checks if victim has build permissions
-# GIVE - try to put the head directly into the killer's inventory
-# You can do multiple of these in a list; i.e., ['GIVE', 'SPAWN'] will try to
-# give a head to the killer, but will drop the item if their inventory is full
-head-item-drop-mode: 'EVENT'
-
-head-place-overwrite-blocks: ['AIR', 'WATER', 'GRASS']
-
-# (Optional) Select weapons required to be used in order to get heads to drop
-# If this list is empty, any weapon can be used to get heads
-must-use:
-#  - IRON_SWORD
-#  - DIAMOND_AXE
-#  - WOOD_HOE
 
 # Drop chances are multiplied by this number for each level of looting
 looting-mutliplier: 1.01
@@ -158,10 +142,25 @@ cracked-iron-golem-heads: false
 # A list of mob heads a player can wear to avoid provoking endermen
 endermen-camouflage-heads: []
 
-# Changes the death "Event Priority" that DropHeads registers at
-# Low values => DropHeads runs BEFORE other plugins; high values => runs AFTER
-# Possible values: [LOWEST, LOW, NORMAL, HIGH, HIGHEST, MONITOR]
-death-listener-priority: LOW
+# How the head item from a beheading should be handled, options are:
+# EVENT - add the head to normally dropped loot,
+# SPAWN - spawn the head separately from the event,
+# PLACE - place the head on the ground if spot is available (within 3 blocks)
+# PLACE_BY_KILLER - same as PLACE but checks if killer has build permissions
+# PLACE_BY_VICTIM - same as PLACE but checks if victim has build permissions
+# GIVE - try to put the head directly into the killer's inventory
+# You can do multiple of these in a list; i.e., ['GIVE', 'SPAWN'] will try to
+# give a head to the killer, but will drop the item if their inventory is full
+head-item-drop-mode: 'EVENT'
+
+head-place-overwrite-blocks: ['AIR', 'WATER', 'GRASS']
+
+# (Optional) Select weapons required to be used in order to get heads to drop
+# If this list is empty, any weapon can be used to get heads
+must-use:
+#  - IRON_SWORD
+#  - DIAMOND_AXE
+#  - WOOD_HOE
 
 # (Optional) Let certain tools have a higher chance of beheading
 # The number is the percent increase in drop chance when using that tool
@@ -188,6 +187,11 @@ time-alive-modifiers:
   1d: 2.0
   1w: 3.0
   30w6d11h55m33s: 10.0
+
+# Changes the death "Event Priority" that DropHeads registers at
+# Low values => DropHeads runs BEFORE other plugins; high values => runs AFTER
+# Possible values: [LOWEST, LOW, NORMAL, HIGH, HIGHEST, MONITOR]
+death-listener-priority: LOW
 
 # Whether to enable logging for certain events
 log:
