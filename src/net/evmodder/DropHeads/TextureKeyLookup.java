@@ -88,6 +88,7 @@ public class TextureKeyLookup{
 	static RefMethod mMushroomCowGetVariant;
 	static RefMethod mPandaGetMainGene, mPandaGetHiddenGene;
 	static RefMethod mTraderLlamaGetColor;
+	static RefMethod mAxolotlGetVariant;
 	static RefMethod mVexIsCharging;
 	static RefMethod mStriderIsShivering, mStriderHasSaddle;
 	static RefMethod mShulkerGetPeek, mShulkerGetAttachedFace;
@@ -204,6 +205,10 @@ public class TextureKeyLookup{
 				if(mTraderLlamaGetColor == null) mTraderLlamaGetColor =
 						ReflectionUtils.getRefClass("org.bukkit.entity.TraderLlama").getMethod("getColor");
 				return "TRADER_LLAMA|"+((Enum)mTraderLlamaGetColor.of(entity).call()).name();
+			case "AXOLOTL":
+				if(mAxolotlGetVariant == null) mAxolotlGetVariant =
+				ReflectionUtils.getRefClass("org.bukkit.entity.Axolotl").getMethod("getVariant");
+				return "AXOLOTL|"+((Enum)mAxolotlGetVariant.of(entity).call()).name();
 			case "GHAST":
 				//https://wiki.vg/Entity_metadata#Ghast => isAttacking=15="" (1.13 - 1.15)
 				boolean isScreaming = false;

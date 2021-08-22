@@ -55,7 +55,6 @@ entity-subtype-names:
   salt_and_pepper: "Salt and Pepper"                        #Rabbit
   the_killer_bunny: "entity.minecraft.killer_bunny"         #Rabbit
   toast: "Toast"                                            #Rabbit
-  closed: "Closed"                                          #Shulker
   warm: "Warm"                                              #Strider
   cold: "Cold"                                              #Strider
   saddled: "Saddled"                                        #Strider/Pig/Horse/Donkey/Mule
@@ -64,7 +63,7 @@ entity-subtype-names:
   invulnerable: "Invulnerable"                              #Wither
   baby: "Baby"                                              #ZombiePigman(before-1.16)
   armorer: "entity.minecraft.villager.armorer"              #Villager/ZombieVillager
-  butcher: "entity.minecraft.villager.butcher"               #Villager/ZombieVillager
+  butcher: "entity.minecraft.villager.butcher"              #Villager/ZombieVillager
   cartographer: "entity.minecraft.villager.cartographer"    #Villager/ZombieVillager
   cleric: "entity.minecraft.villager.cleric"                #Villager/ZombieVillager
   farmer: "entity.minecraft.villager.farmer"                #Villager/ZombieVillager
@@ -78,6 +77,11 @@ entity-subtype-names:
   shepherd: "entity.minecraft.villager.shepherd"            #Villager/ZombieVillager
   toolsmith: "entity.minecraft.villager.toolsmith"          #Villager/ZombieVillager
   weaponsmith: "entity.minecraft.villager.weaponsmith"      #Villager/ZombieVillager
+  blue: "color.minecraft.blue"                              #Axolotl
+  cyan: color.minecraft.cyan"                               #Axolotl
+  gold: "color.minecraft.yellow"                            #Axolotl
+  lucy: "color.minecraft.pink"                              #Axolotl
+  wild: "color.minecraft.brown"                             #Axolotl
   peeking: "Peeking"                                        #Shulker
   closed: "Closed"                                          #Shulker
   sideways: "Sideways"                                      #Shulker
