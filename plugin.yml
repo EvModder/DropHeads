@@ -5,16 +5,16 @@ description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
 #6=translations, hex colors, wskele helmet drops, [item display], item display name rewrite, 1.17 mobs
-#10=lag when clicking certain heads, enable texture-updating by default
-version: 3.6.10
+#11=axolotl variants, /give <selector> <head> <amount> (selector, tab complete, aliases, cleanup), middle-click console error, player-lookup optimizations,
+version: 3.6.11
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 
 commands:
   spawnhead:
     description: Get a player or mob head
-    usage: /gethead [name] [amount]
-    aliases: [gethead,getskull,dhspawn,spawn-head,head,phspawn,skull]
+    usage: /gethead [giveto] [target] [amount]
+    aliases: [gethead,givehead,getskull,giveskull,dhspawn,phspawn,head,skull]
     permission: dropheads.spawn
     permission-message: You do not have permission to do this.
 
@@ -78,6 +78,7 @@ permissions:
       dropheads.spawn.self: true
       dropheads.spawn.code: true
       dropheads.spawn.hdb: true
+      dropheads.spawn.give: true
 
   dropheads.spawn.mobs:
     description: Permission to spawn in mob heads
@@ -97,6 +98,10 @@ permissions:
 
   dropheads.spawn.hdb:
     description: Permission to spawn in HeadDatabase heads
+    default: false
+
+  dropheads.spawn.give:
+    description: Permission to spawn heads in other players' inventories
     default: false
 
   dropheads.droprate:

@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -11,8 +12,10 @@ import java.util.stream.Collectors;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
@@ -24,11 +27,11 @@ import net.evmodder.EvLib.extras.HeadUtils;
 import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
 import net.evmodder.EvLib.extras.TextUtils;
 import net.evmodder.EvLib.extras.WebUtils;
+import net.evmodder.EvLib.extras.SelectorUtils.Selector;
 
 public class CommandSpawnHead extends EvCommand{
 	final private DropHeads pl;
-	final boolean SHOW_GRUMM_IN_TAB_COMPLETE;
-	final boolean SHOW_GRUMM_IN_TAB_COMPLETE_FOR_BAR = true;
+	final boolean SHOW_SUBTYPE_IN_TAB_COMPLETE_FOR_BAR = true;
 	final boolean ENABLE_LOG;
 	final String LOG_FORMAT;
 	final int MAX_IDS_SHOWN = 200;
@@ -36,6 +39,7 @@ public class CommandSpawnHead extends EvCommand{
 
 	// TODO: Move this to a localization file, and maybe re-add aliases (code:,url:,value:)
 	final String MOB_PREFIX = "mob:", PLAYER_PREFIX = "player:", HDB_PREFIX = "hdb:", SELF_PREFIX = "self:", CODE_PREFIX = "code:";
+	final String AMT_PREFIX = "amount:";
 
 	final String CMD_MUST_BE_RUN_BY_A_PLAYER = ChatColor.RED + "This command can only be run by in-game players!";
 	final String NO_PERMISSION_TO_SPAWN_MOB_HEADS = ChatColor.RED + "You do not have permission to spawn mob heads";
@@ -55,44 +59,52 @@ public class CommandSpawnHead extends EvCommand{
 	public CommandSpawnHead(DropHeads plugin){
 		super(plugin);
 		pl = plugin;
-		SHOW_GRUMM_IN_TAB_COMPLETE = pl.getConfig().getBoolean("show-grumm-in-tab-complete", false);
 		ENABLE_LOG = pl.getConfig().getBoolean("log.enable", false) && pl.getConfig().getBoolean("log.log-head-command", false);
 		LOG_FORMAT = ENABLE_LOG ? pl.getConfig().getString("log.log-head-command-format", "${TIMESTAMP},gethead command,${SENDER},${HEAD}") : null;
 	}
 
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
-		if(args.length != 1 || sender instanceof Player == false) return null;
+		if(args.length == 0 || args.length > 3) return Arrays.asList();
+		final String lastArg = args[args.length - 1];
 
 		// Check what types of heads they have permission to spawn
 		final List<String> availablePrefixes = new ArrayList<String>();
 		if(sender.hasPermission("dropheads.spawn.mobs")) availablePrefixes.add(MOB_PREFIX);
 		if(sender.hasPermission("dropheads.spawn.players")) availablePrefixes.add(PLAYER_PREFIX);
 		if(sender.hasPermission("dropheads.spawn.hdb")) availablePrefixes.add(HDB_PREFIX);
+		if(sender.hasPermission("dropheads.spawn.give") && args.length <= 1) availablePrefixes.add("@");
 		if(availablePrefixes.isEmpty()) return sender.hasPermission("dropheads.spawn.self") ? Arrays.asList(sender.getName()) : null;
+		// Remove already-used prefixes
+		for(int i = 0; i < args.length-1; ++i){
+			int prefixEnd = args[i].indexOf(':');
+			if(prefixEnd != -1){
+				String prefix = args[i].substring(0, prefixEnd + 1).toLowerCase();
+				if(prefix.equals(AMT_PREFIX)) return Arrays.asList();
+				else/* if(!prefix.equals(SELECTOR_PREFIX))*/{availablePrefixes.clear(); availablePrefixes.add(AMT_PREFIX);}
+			}
+		}
 
 		// Tab completions of prefixes
-		final List<String> tabCompletes = availablePrefixes.stream().filter(prefix -> prefix.startsWith(args[0])).collect(Collectors.toList());
+		final List<String> tabCompletes = availablePrefixes.stream().filter(prefix -> prefix.startsWith(lastArg)).collect(Collectors.toList());
 
-		int prefixEnd = args[0].indexOf(':');
+		int prefixEnd = lastArg.indexOf(':');
+		String argWithCompletePrefix = lastArg;
 		if(prefixEnd == -1 && !tabCompletes.isEmpty()){
 			if(tabCompletes.size() == 1){
-				// If there is only 1 matching prefix, show suggestions given
-				// that prefix
-				args[0] = tabCompletes.get(0);
-				prefixEnd = args[0].length() - 1;
+				// If there is only 1 matching prefix, show suggestions given that prefix
+				argWithCompletePrefix = tabCompletes.get(0);
+				prefixEnd = argWithCompletePrefix.length() - 1;
 			}
 			else return tabCompletes; // Otherwise, return the matching prefixes
 		}
 		tabCompletes.clear();
 
-		String prefix = prefixEnd == -1 ? availablePrefixes.get(0) : args[0].substring(0, prefixEnd + 1).toLowerCase();
-		String target = args[0].substring(prefixEnd + 1).toUpperCase();
+		final String prefix = prefixEnd == -1 ? availablePrefixes.get(0) : argWithCompletePrefix.substring(0, prefixEnd + 1).toLowerCase();
+		final String target = argWithCompletePrefix.substring(prefixEnd + 1).toUpperCase();
 
 		if(prefix.equals(MOB_PREFIX)){
 			for(String key : pl.getAPI().getTextures().keySet()){
-				if(key.startsWith(target) && (SHOW_GRUMM_IN_TAB_COMPLETE || !key.endsWith("|GRUMM")
-						|| (SHOW_GRUMM_IN_TAB_COMPLETE_FOR_BAR && target.contains(key.substring(0, key.length() - 5)))))
-					tabCompletes.add(prefix + key);
+				if(key.startsWith(target) && key.lastIndexOf('|') <= target.length()) tabCompletes.add(prefix + key);
 			}
 		}
 		else if(prefix.equals(PLAYER_PREFIX)){
@@ -115,6 +127,14 @@ public class CommandSpawnHead extends EvCommand{
 			// }
 		}
 		else if(prefix.equals(SELF_PREFIX)) tabCompletes.add(sender.getName());
+		else if(prefix.equals(AMT_PREFIX)){
+			//return Stream.of("64", "2304").filter(amt -> amt.startsWith(target)).map(amt -> prefix + amt).collect(Collectors.toList());
+			return Arrays.asList(prefix + target);
+		}
+		else if(prefix.equals("@")){
+			tabCompletes.addAll(Arrays.asList("@a", "@e", "@p", "@r", "@s"));
+			pl.getServer().getOnlinePlayers().forEach(p -> tabCompletes.add(p.getName()));
+		}
 		return tabCompletes;
 	}
 
@@ -131,15 +151,30 @@ public class CommandSpawnHead extends EvCommand{
 	}
 
 	@Override public boolean onCommand(CommandSender sender, Command command, String label, String[] args){
-		if(sender instanceof Player == false){
-			sender.sendMessage(CMD_MUST_BE_RUN_BY_A_PLAYER);
-			return true;
+		int amount = 1;
+		String lastArg = args.length > 0 ? args[args.length - 1] : "";
+		if(lastArg.matches("(?i:"+AMT_PREFIX+")[0-9]+")){
+			amount = Integer.parseInt(lastArg.substring(lastArg.indexOf(':') + 1));
+			args = Arrays.copyOfRange(args, 0, args.length - 1);
 		}
 
-		int amount = 1;
-		if(args.length > 0 && args[args.length - 1].matches("[0-9]+")){
-			amount = Integer.parseInt(args[args.length - 1]);
-			args = Arrays.copyOfRange(args, 0, args.length - 1);
+		ArrayList<InventoryHolder> giveTargets = new ArrayList<>();
+		if(args.length > 1){
+			try{
+				Collection<Entity> selected = Selector.fromString(sender, args[0]).resolve();
+				if(selected != null && selected.size() > 0 && selected.stream().allMatch(e -> e != null && e instanceof InventoryHolder)){
+					for(Entity e : selected) giveTargets.add((InventoryHolder)e);
+					args = Arrays.copyOfRange(args, 1, args.length);
+				}
+			}
+			catch(Exception ex){}
+		}
+		if(giveTargets.isEmpty()){
+			if(sender instanceof Player) giveTargets.add((Player)sender);
+			else{
+				sender.sendMessage(CMD_MUST_BE_RUN_BY_A_PLAYER);
+				return true;
+			}
 		}
 
 		String fullTarget = args.length == 0 ? PLAYER_PREFIX + sender.getName() : String.join("_", args);
@@ -244,15 +279,19 @@ public class CommandSpawnHead extends EvCommand{
 			successMessage.addComponent(SUCCESSFULLY_SPAWNED_HEAD);
 			successMessage.replaceRawDisplayTextWithComponent("%s", JunkUtils.getItemDisplayNameComponent(head, JSON_LIMIT));
 			head.setAmount(amount);
-			HashMap<Integer, ItemStack> leftovers = ((Player)sender).getInventory().addItem(head);
-			if(!leftovers.isEmpty()){
-				sender.sendMessage(ERROR_NOT_ENOUGH_INV_SPACE);
-				if(leftovers.values().iterator().next().getAmount() == amount) return true;
+			for(InventoryHolder giveTarget : giveTargets) {
+				HashMap<Integer, ItemStack> leftovers = giveTarget.getInventory().addItem(head);
+				if(!leftovers.isEmpty()){
+					sender.sendMessage(ERROR_NOT_ENOUGH_INV_SPACE);
+					if(leftovers.values().iterator().next().getAmount() == amount) return true;
+				}
 			}
 			pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+sender.getName()+" "+successMessage.toString());
 			if(ENABLE_LOG){
 				String logEntry = LOG_FORMAT.replaceAll("(?i)\\$\\{HEAD\\}", target).replaceAll("(?i)\\$\\{SENDER\\}", sender.getName())
-						.replaceAll("(?i)\\$\\{TIMESTAMP\\}", "" + System.currentTimeMillis());
+						.replaceAll("(?i)\\$\\{TIMESTAMP\\}", "" + System.currentTimeMillis())
+						.replaceAll("(?i)\\$\\{AMOUNT\\}", "" + amount)
+						.replaceAll("(?i)\\$\\{RECIPIENT\\}", giveTargets.toString());
 				pl.writeToLogFile(logEntry);
 			}
 		}

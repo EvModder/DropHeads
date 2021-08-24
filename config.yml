@@ -63,7 +63,6 @@ charged-creeper-drops: true
 # A Minecraft easter egg is that mobs named 'Dinnerbone' or 'Grumm' are
 # upside down.. If you want their heads to share this trait, set to true
 drop-grumm-heads: true
-show-grumm-in-tab-complete: false
 
 # Should heads of saddled mobs have altered textures (when applicable)?
 drop-saddled-heads: false
