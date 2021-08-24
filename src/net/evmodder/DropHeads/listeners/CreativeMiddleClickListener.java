@@ -1,7 +1,9 @@
 package net.evmodder.DropHeads.listeners;
 
+import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.block.Skull;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
@@ -22,13 +24,9 @@ public class CreativeMiddleClickListener implements Listener{
 		if(evt.getAction() == InventoryAction.PLACE_ALL && evt.getClick() == ClickType.CREATIVE && evt.getSlotType() == SlotType.QUICKBAR
 				&& evt.getCursor() != null && HeadUtils.isPlayerHead(evt.getCursor().getType())){
 
-			Block headBlock;
-			try{headBlock = evt.getWhoClicked().getTargetBlockExact(10);}
-			catch(Exception ex){
-				try{headBlock = evt.getWhoClicked().getTargetBlock(null, 10);}
-				catch(Exception ex2){headBlock = null;}
-			}
-			if(headBlock != null && HeadUtils.isPlayerHead(headBlock.getType())){
+			Player player = Bukkit.getPlayer(evt.getWhoClicked().getUniqueId());
+			Block headBlock = player.getTargetBlockExact(10);
+			if(HeadUtils.isPlayerHead(headBlock.getType())){
 				ItemStack itemWithAddedLore = LoreStoreBlockBreakListener.getItemWithLore(headBlock);
 				if(itemWithAddedLore != null){  // Only used when 'save-custom-lore' = true
 					evt.setCursor(itemWithAddedLore);
