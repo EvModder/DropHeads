@@ -71,6 +71,17 @@ public class BlockClickListener implements Listener{
 		}
 	}
 
+	static GameProfile stripCustomLoreAndNamespace(GameProfile profile){
+		if(profile != null && profile.getName() != null){
+			String name = profile.getName();
+			int idx = name.indexOf('>'); if(idx != -1) name = name.substring(0, idx);
+			if(name.startsWith("dropheads:")) name = name.substring(10);
+
+			if(!name.equals(profile.getName())) return new GameProfile(profile.getId(), name);
+		}
+		return profile;
+	}
+
 	class HeadNameData{
 		// Only 1 of these 3 is ever defined.
 		public String hdbId, textureKey;
@@ -90,11 +101,7 @@ public class BlockClickListener implements Listener{
 			data.profileName = data.entityTypeNames[0];
 			return data;
 		}
-		String fullProfileName = profile.getName();
-		if(fullProfileName != null/* && SAVE_CUSTOM_LORE*/){
-			int idx = fullProfileName.indexOf('>');
-			if(idx != -1) profile = new GameProfile(profile.getId(), fullProfileName.substring(0, idx));
-		}
+		profile = stripCustomLoreAndNamespace(profile);
 		//hdb
 		final HeadDatabaseAPI hdbAPI = pl.getAPI().getHeadDatabaseAPI();
 		if(hdbAPI != null && (data.hdbId = hdbAPI.getItemID(HeadUtils.getPlayerHead(profile))) != null && hdbAPI.isHead(data.hdbId)){
@@ -174,7 +181,7 @@ public class BlockClickListener implements Listener{
 				&& evt.getPlayer().getInventory().getItemInMainHand() != null
 				&& evt.getPlayer().getInventory().getItemInMainHand().getType() == Material.IRON_INGOT){
 			Skull skull = (Skull) evt.getClickedBlock().getState();
-			GameProfile profile = HeadUtils.getGameProfile(skull);
+			GameProfile profile = stripCustomLoreAndNamespace(HeadUtils.getGameProfile(skull));
 			if(profile != null && profile.getName() != null && profile.getName().startsWith("IRON_GOLEM|")){
 				ItemStack newHeadItem = null;
 				if(profile.getName().contains("|HIGH_CRACKINESS")){

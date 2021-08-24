@@ -422,7 +422,7 @@ public class HeadAPI {
 		SkullMeta meta = (SkullMeta) item.getItemMeta();
 
 		UUID uuid = UUID.nameUUIDFromBytes(textureKey.getBytes());// Stable UUID for this textureKey
-		GameProfile profile = new GameProfile(uuid, textureKey);// Initialized with UUID and name
+		GameProfile profile = new GameProfile(uuid, /*name=*/"dropheads:"+textureKey);// Initialized with UUID and name
 		if(code != null) profile.getProperties().put("textures", new Property("textures", code));
 		if(MAKE_UNSTACKABLE) profile.getProperties().put("random_uuid", new Property("random_uuid", UUID.randomUUID().toString()));
 		HeadUtils.setGameProfile(meta, profile);
@@ -554,7 +554,7 @@ public class HeadAPI {
 		String strCode = new String(code);
 		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 		head = JunkUtils.setDisplayName(head, pl.getAPI().getHeadNameFromKey(/*textureKey=*/"UNKNOWN|CUSTOM", /*customName=*/strCode));
-		GameProfile profile = new GameProfile(/*uuid=*/UUID.nameUUIDFromBytes(code), /*name=*/strCode);
+		GameProfile profile = new GameProfile(/*uuid=*/UUID.nameUUIDFromBytes(code), /*name=*/null/*strCode*/);
 		profile.getProperties().put("textures", new Property("textures", strCode));
 		if(MAKE_UNSTACKABLE) profile.getProperties().put("random_uuid", new Property("random_uuid", UUID.randomUUID().toString()));
 		SkullMeta meta = (SkullMeta)head.getItemMeta();
@@ -576,7 +576,9 @@ public class HeadAPI {
 		String profileName = profile.getName();
 		if(profileName != null){ //-------------------- Handle Entities with textureKey
 			/*if(SAVE_CUSTOM_LORE){*/int idx = profileName.indexOf('>'); if(idx != -1) profileName = profileName.substring(0, idx);/*}*/
-			if(textures.containsKey(profileName)){
+			final boolean isDropHeadsHead = profileName.startsWith("dropheads:");
+			if(isDropHeadsHead) profileName = profileName.substring(10);
+			if(isDropHeadsHead || textures.containsKey(profileName)){
 				if(UPDATE_ZOMBIE_PIGMEN_HEADS && profileName.startsWith("PIG_ZOMBIE")){
 					profileName = /*profileName.replace("PIG_ZOMBIE", */"ZOMBIFIED_PIGLIN"/*)*/;
 				}
