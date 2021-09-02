@@ -1,5 +1,6 @@
 package net.evmodder.DropHeads;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -17,7 +18,9 @@ import org.bukkit.util.Vector;
 import javax.annotation.Nonnull;
 import net.evmodder.DropHeads.listeners.EntityDeathListener.AnnounceMode;
 import net.evmodder.EvLib.extras.NBTTagUtils;
+import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTBase;
 import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTTag;
+import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTTagList;
 import net.evmodder.EvLib.extras.ReflectionUtils;
 import net.evmodder.EvLib.extras.TellrawUtils;
 import net.evmodder.EvLib.extras.TextUtils;
@@ -86,6 +89,27 @@ public class JunkUtils{
 		RefNBTTag tag = NBTTagUtils.getTag(item);
 		RefNBTTag display = tag.hasKey("display") ? (RefNBTTag)tag.get("display") : new RefNBTTag();
 		return display.hasKey("Name") ? display.getString("Name") : null;
+	}
+
+	public final static ItemStack setLore(@Nonnull ItemStack item, @Nonnull Component... lore){
+		RefNBTTag tag = NBTTagUtils.getTag(item);
+		RefNBTTag display = tag.hasKey("display") ? (RefNBTTag)tag.get("display") : new RefNBTTag();
+		RefNBTTagList loreList = new RefNBTTagList();
+		for(Component loreLine : lore) loreList.add(new RefNBTTag(loreLine.toString()));
+		display.set("Lore", loreList);
+		tag.set("display", display);
+		return NBTTagUtils.setTag(item, tag);
+	}
+
+	public final static ArrayList<String> getLore(@Nonnull ItemStack item){
+		RefNBTTag tag = NBTTagUtils.getTag(item);
+		RefNBTTag display = tag.hasKey("display") ? (RefNBTTag)tag.get("display") : new RefNBTTag();
+		if(!display.hasKey("Lore")) return null;
+		RefNBTTagList loreTag = (RefNBTTagList)display.get("Lore");
+		RefNBTBase loreLine = loreTag.get(0);
+		ArrayList<String> loreComps = new ArrayList<>();
+		for(int i=0; loreLine!=null; loreLine=loreTag.get(++i)) loreComps.add(loreLine.toString());
+		return loreComps;
 	}
 
 	// ItemStack methods to get a net.minecraft.server.ItemStack object for serialization

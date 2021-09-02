@@ -417,32 +417,35 @@ public class HeadAPI {
 	ItemStack makeHeadFromTexture(String textureKey/*, boolean saveTypeInLore, boolean unstackable*/){
 		String code = textures.get(textureKey);
 		if(code == null || code.isEmpty()) return null;
-		ItemStack item = new ItemStack(Material.PLAYER_HEAD);
-		item = JunkUtils.setDisplayName(item, getHeadNameFromKey(textureKey, /*customName=*/""));
-		SkullMeta meta = (SkullMeta) item.getItemMeta();
+		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+		head = JunkUtils.setDisplayName(head, getHeadNameFromKey(textureKey, /*customName=*/""));
 
 		UUID uuid = UUID.nameUUIDFromBytes(textureKey.getBytes());// Stable UUID for this textureKey
 		GameProfile profile = new GameProfile(uuid, /*name=*/"dropheads:"+textureKey);// Initialized with UUID and name
 		if(code != null) profile.getProperties().put("textures", new Property("textures", code));
 		if(MAKE_UNSTACKABLE) profile.getProperties().put("random_uuid", new Property("random_uuid", UUID.randomUUID().toString()));
-		HeadUtils.setGameProfile(meta, profile);
-
 		if(SAVE_TYPE_IN_LORE){
 			int i = textureKey.indexOf('|');
 			String entityTypeName = (i == -1 ? textureKey : textureKey.substring(0, i)).toLowerCase();
-			meta.setLore(Arrays.asList(ChatColor.DARK_GRAY + MOB_PREFIX + entityTypeName));
+			head = JunkUtils.setLore(head, new RawTextComponent(
+					ChatColor.DARK_GRAY + MOB_PREFIX + entityTypeName,
+					/*insert=*/null, /*click=*/null, /*hover=*/null,
+					/*color=*/null, /*formats=*/new FormatFlag(Format.ITALIC, false)));
 		}
-		item.setItemMeta(meta);
-		return item;
+		SkullMeta meta = (SkullMeta) head.getItemMeta();
+		HeadUtils.setGameProfile(meta, profile);
+		head.setItemMeta(meta);
+		return head;
 	}
 	@SuppressWarnings("deprecation")
 	ItemStack headUtils_makeSkull_wrapper(EntityType eType){// Calling HeadUtils.makeSkull(eType) directly is bad.
 		ItemStack head = HeadUtils.makeSkull(eType);
-		JunkUtils.setDisplayName(head, getHeadNameFromKey(eType.name(), /*customName=*/""));
+		head = JunkUtils.setDisplayName(head, getHeadNameFromKey(eType.name(), /*customName=*/""));
 		if(SAVE_TYPE_IN_LORE){
-			SkullMeta meta = (SkullMeta) head.getItemMeta();
-			meta.setLore(Arrays.asList(ChatColor.DARK_GRAY + MOB_PREFIX + eType.name().toLowerCase()));
-			head.setItemMeta(meta);
+			head = JunkUtils.setLore(head, new RawTextComponent(
+					ChatColor.DARK_GRAY + MOB_PREFIX + eType.name().toLowerCase(),
+					/*insert=*/null, /*click=*/null, /*hover=*/null,
+					/*color=*/null, /*formats=*/new FormatFlag(Format.ITALIC, false)));
 		}
 		if(MAKE_UNSTACKABLE){
 			SkullMeta meta = (SkullMeta) head.getItemMeta();
@@ -557,10 +560,13 @@ public class HeadAPI {
 		GameProfile profile = new GameProfile(/*uuid=*/UUID.nameUUIDFromBytes(code), /*name=*/null/*strCode*/);
 		profile.getProperties().put("textures", new Property("textures", strCode));
 		if(MAKE_UNSTACKABLE) profile.getProperties().put("random_uuid", new Property("random_uuid", UUID.randomUUID().toString()));
-		SkullMeta meta = (SkullMeta)head.getItemMeta();
 		if(SAVE_TYPE_IN_LORE){
-			meta.setLore(Arrays.asList(ChatColor.DARK_GRAY+CODE_PREFIX+(strCode.length() > 18 ? strCode.substring(0, 16)+"..." : strCode)));
+			head = JunkUtils.setLore(head, new RawTextComponent(
+					ChatColor.DARK_GRAY + CODE_PREFIX + (strCode.length() > 18 ? strCode.substring(0, 16)+"..." : strCode),
+					/*insert=*/null, /*click=*/null, /*hover=*/null,
+					/*color=*/null, /*formats=*/new FormatFlag(Format.ITALIC, false)));
 		}
+		SkullMeta meta = (SkullMeta)head.getItemMeta();
 		HeadUtils.setGameProfile(meta, profile);
 		head.setItemMeta(meta);
 		return head;
@@ -608,9 +614,10 @@ public class HeadAPI {
 					: getHeadNameFromKey("PLAYER", /*customName=*/profileName));
 			}
 			if(SAVE_TYPE_IN_LORE){
-				SkullMeta meta = (SkullMeta)head.getItemMeta();
-				meta.setLore(Arrays.asList(ChatColor.DARK_GRAY +(isMHF ? MHF_PREFIX : PLAYER_PREFIX) + profileName));
-				head.setItemMeta(meta);
+				head = JunkUtils.setLore(head, new RawTextComponent(
+						ChatColor.DARK_GRAY +(isMHF ? MHF_PREFIX : PLAYER_PREFIX) + profileName,
+						/*insert=*/null, /*click=*/null, /*hover=*/null,
+						/*color=*/null, /*formats=*/new FormatFlag(Format.ITALIC, false)));
 			}
 		}
 		//-------------------- Handle raw textures
