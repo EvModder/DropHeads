@@ -18,8 +18,8 @@ import org.bukkit.util.Vector;
 import javax.annotation.Nonnull;
 import net.evmodder.DropHeads.listeners.EntityDeathListener.AnnounceMode;
 import net.evmodder.EvLib.extras.NBTTagUtils;
-import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTBase;
-import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTTag;
+import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTTagString;
+import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTTagCompound;
 import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTTagList;
 import net.evmodder.EvLib.extras.ReflectionUtils;
 import net.evmodder.EvLib.extras.TellrawUtils;
@@ -78,37 +78,40 @@ public class JunkUtils{
 	}
 
 	public final static ItemStack setDisplayName(@Nonnull ItemStack item, @Nonnull Component name){
-		RefNBTTag tag = NBTTagUtils.getTag(item);
-		RefNBTTag display = tag.hasKey("display") ? (RefNBTTag)tag.get("display") : new RefNBTTag();
+		RefNBTTagCompound tag = NBTTagUtils.getTag(item);
+		RefNBTTagCompound display = tag.hasKey("display") ? (RefNBTTagCompound)tag.get("display") : new RefNBTTagCompound();
 		display.setString("Name", name.toString());
 		tag.set("display", display);
 		return NBTTagUtils.setTag(item, tag);
 	}
 
 	public final static String getDisplayName(ItemStack item){
-		RefNBTTag tag = NBTTagUtils.getTag(item);
-		RefNBTTag display = tag.hasKey("display") ? (RefNBTTag)tag.get("display") : new RefNBTTag();
+		RefNBTTagCompound tag = NBTTagUtils.getTag(item);
+		RefNBTTagCompound display = tag.hasKey("display") ? (RefNBTTagCompound)tag.get("display") : new RefNBTTagCompound();
 		return display.hasKey("Name") ? display.getString("Name") : null;
 	}
 
 	public final static ItemStack setLore(@Nonnull ItemStack item, @Nonnull Component... lore){
-		RefNBTTag tag = NBTTagUtils.getTag(item);
-		RefNBTTag display = tag.hasKey("display") ? (RefNBTTag)tag.get("display") : new RefNBTTag();
+		RefNBTTagCompound tag = NBTTagUtils.getTag(item);
+		RefNBTTagCompound display = tag.hasKey("display") ? (RefNBTTagCompound)tag.get("display") : new RefNBTTagCompound();
 		RefNBTTagList loreList = new RefNBTTagList();
-		for(Component loreLine : lore) loreList.add(new RefNBTTag(loreLine.toString()));
+		for(Component loreLine : lore){
+			RefNBTTagString refString = new RefNBTTagString(loreLine.toString());
+			loreList.add(refString);
+		}
 		display.set("Lore", loreList);
 		tag.set("display", display);
 		return NBTTagUtils.setTag(item, tag);
 	}
 
 	public final static ArrayList<String> getLore(@Nonnull ItemStack item){
-		RefNBTTag tag = NBTTagUtils.getTag(item);
-		RefNBTTag display = tag.hasKey("display") ? (RefNBTTag)tag.get("display") : new RefNBTTag();
+		RefNBTTagCompound tag = NBTTagUtils.getTag(item);
+		RefNBTTagCompound display = tag.hasKey("display") ? (RefNBTTagCompound)tag.get("display") : new RefNBTTagCompound();
 		if(!display.hasKey("Lore")) return null;
 		RefNBTTagList loreTag = (RefNBTTagList)display.get("Lore");
-		RefNBTBase loreLine = loreTag.get(0);
+		RefNBTTagString loreLine = (RefNBTTagString)loreTag.get(0);
 		ArrayList<String> loreComps = new ArrayList<>();
-		for(int i=0; loreLine!=null; loreLine=loreTag.get(++i)) loreComps.add(loreLine.toString());
+		for(int i=0; loreLine!=null; loreLine=(RefNBTTagString)loreTag.get(++i)) loreComps.add(loreLine.toString());
 		return loreComps;
 	}
 
@@ -148,7 +151,7 @@ public class JunkUtils{
 	public final static Component getItemDisplayNameComponent(ItemStack item, int JSON_LIMIT){
 		String rarityColor = TypeUtils.getRarityColor(item).name().toLowerCase();
 		if(item.hasItemMeta() && item.getItemMeta().hasDisplayName()){
-			String rawDisplayName = ((RefNBTTag)NBTTagUtils.getTag(item).get("display")).getString("Name");
+			String rawDisplayName = ((RefNBTTagCompound)NBTTagUtils.getTag(item).get("display")).getString("Name");
 			FormatFlag[] formats = new FormatFlag[]{new FormatFlag(Format.ITALIC, true)};
 			return new ListComponent(
 					new RawTextComponent(/*text=*/"", /*insert=*/null, /*click=*/null, /*hover=*/null, /*color=*/rarityColor, /*formats=*/formats),
@@ -165,7 +168,7 @@ public class JunkUtils{
 		TextHoverAction hoverAction = new TextHoverAction(HoverEvent.SHOW_ITEM, JunkUtils.convertItemStackToJson(item, JSON_LIMIT));
 		String rarityColor = TypeUtils.getRarityColor(item).name().toLowerCase();
 		if(item.hasItemMeta() && item.getItemMeta().hasDisplayName()){
-			String rawDisplayName = ((RefNBTTag)NBTTagUtils.getTag(item).get("display")).getString("Name");
+			String rawDisplayName = ((RefNBTTagCompound)NBTTagUtils.getTag(item).get("display")).getString("Name");
 			FormatFlag[] formats = new FormatFlag[]{new FormatFlag(Format.ITALIC, true)};
 			return new ListComponent(
 					new RawTextComponent(/*text=*/"[", /*insert=*/null, /*click=*/null, hoverAction, /*color=*/rarityColor, /*formats=*/null),

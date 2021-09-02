@@ -428,9 +428,9 @@ public class HeadAPI {
 			int i = textureKey.indexOf('|');
 			String entityTypeName = (i == -1 ? textureKey : textureKey.substring(0, i)).toLowerCase();
 			head = JunkUtils.setLore(head, new RawTextComponent(
-					ChatColor.DARK_GRAY + MOB_PREFIX + entityTypeName,
+					MOB_PREFIX + entityTypeName,
 					/*insert=*/null, /*click=*/null, /*hover=*/null,
-					/*color=*/null, /*formats=*/new FormatFlag(Format.ITALIC, false)));
+					/*color=*/"dark_gray", /*formats=*/new FormatFlag(Format.ITALIC, false)));
 		}
 		SkullMeta meta = (SkullMeta) head.getItemMeta();
 		HeadUtils.setGameProfile(meta, profile);
@@ -443,9 +443,9 @@ public class HeadAPI {
 		head = JunkUtils.setDisplayName(head, getHeadNameFromKey(eType.name(), /*customName=*/""));
 		if(SAVE_TYPE_IN_LORE){
 			head = JunkUtils.setLore(head, new RawTextComponent(
-					ChatColor.DARK_GRAY + MOB_PREFIX + eType.name().toLowerCase(),
+					MOB_PREFIX + eType.name().toLowerCase(),
 					/*insert=*/null, /*click=*/null, /*hover=*/null,
-					/*color=*/null, /*formats=*/new FormatFlag(Format.ITALIC, false)));
+					/*color=*/"dark_gray", /*formats=*/new FormatFlag(Format.ITALIC, false)));
 		}
 		if(MAKE_UNSTACKABLE){
 			SkullMeta meta = (SkullMeta) head.getItemMeta();
@@ -460,11 +460,14 @@ public class HeadAPI {
 		ItemStack hdbHead = hdbAPI.getItemHead(hdbId);
 		GameProfile profile = HeadUtils.getGameProfile((SkullMeta)hdbHead.getItemMeta());
 		ItemStack head = HeadUtils.getPlayerHead(profile);
+		if(SAVE_TYPE_IN_LORE){
+			head = JunkUtils.setLore(head, new RawTextComponent(
+					HDB_PREFIX + hdbId,
+					/*insert=*/null, /*click=*/null, /*hover=*/null,
+					/*color=*/"dark_gray", /*formats=*/new FormatFlag(Format.ITALIC, false)));
+		}
 		SkullMeta meta = (SkullMeta)head.getItemMeta();
 		meta.setDisplayName(hdbHead.getItemMeta().getDisplayName());
-		if(SAVE_TYPE_IN_LORE){
-			meta.setLore(Arrays.asList(ChatColor.DARK_GRAY + HDB_PREFIX + hdbId));
-		}
 		if(MAKE_UNSTACKABLE){
 			profile.getProperties().put("random_uuid", new Property("random_uuid", UUID.randomUUID().toString()));
 			HeadUtils.setGameProfile(meta, profile);
@@ -562,9 +565,9 @@ public class HeadAPI {
 		if(MAKE_UNSTACKABLE) profile.getProperties().put("random_uuid", new Property("random_uuid", UUID.randomUUID().toString()));
 		if(SAVE_TYPE_IN_LORE){
 			head = JunkUtils.setLore(head, new RawTextComponent(
-					ChatColor.DARK_GRAY + CODE_PREFIX + (strCode.length() > 18 ? strCode.substring(0, 16)+"..." : strCode),
+					CODE_PREFIX + (strCode.length() > 18 ? strCode.substring(0, 16)+"..." : strCode),
 					/*insert=*/null, /*click=*/null, /*hover=*/null,
-					/*color=*/null, /*formats=*/new FormatFlag(Format.ITALIC, false)));
+					/*color=*/"dark_gray", /*formats=*/new FormatFlag(Format.ITALIC, false)));
 		}
 		SkullMeta meta = (SkullMeta)head.getItemMeta();
 		HeadUtils.setGameProfile(meta, profile);
@@ -615,9 +618,9 @@ public class HeadAPI {
 			}
 			if(SAVE_TYPE_IN_LORE){
 				head = JunkUtils.setLore(head, new RawTextComponent(
-						ChatColor.DARK_GRAY +(isMHF ? MHF_PREFIX : PLAYER_PREFIX) + profileName,
+						(isMHF ? MHF_PREFIX : PLAYER_PREFIX) + profileName,
 						/*insert=*/null, /*click=*/null, /*hover=*/null,
-						/*color=*/null, /*formats=*/new FormatFlag(Format.ITALIC, false)));
+						/*color=*/"dark_gray", /*formats=*/new FormatFlag(Format.ITALIC, false)));
 			}
 		}
 		//-------------------- Handle raw textures

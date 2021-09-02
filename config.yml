@@ -109,7 +109,7 @@ fix-creative-nbt-copy: true
 show-head-type-in-lore: true
 
 # Adds support for DropHeads-namespaced heads in the vanilla "/give" command
-# WARNING: This feature is in BETA and is relatively untested
+# WARNING: This feature is in EARLY-BETA and may not end up being supported
 substitute-dropheads-in-give-command: true
 
 # Only drop heads if the killer used an axe; overrides 'must-use'

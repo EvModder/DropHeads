@@ -33,6 +33,7 @@ import net.evmodder.EvLib.Updater;
 // * un-dye heads (sheep,shulker) with cauldron (gimmick)
 // * jeb_ sheep head animated phase through colors (gimmick)
 // * ALL player-visible msgs in plugin translated in translations.yml
+// * full /minecraft:give command support
 //TEST:
 // * Trophies/Luck attribute
 // * hide behead msgs for vanished players
@@ -84,7 +85,7 @@ public final class DropHeads extends EvPlugin{
 		if(config.getBoolean("prevent-head-placement", false)){
 			getServer().getPluginManager().registerEvents(new PreventBlockPlaceListener(), this);
 		}
-		if(config.getBoolean("substitute-dropheads-in-give-command", true)){
+		if(config.getBoolean("substitute-dropheads-in-give-command", false)){
 			getServer().getPluginManager().registerEvents(new GiveCommandPreprocessListener(), this);
 		}
 		if(!config.getStringList("endermen-camouflage-heads").isEmpty()){
