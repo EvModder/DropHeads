@@ -1,5 +1,6 @@
 package net.evmodder.DropHeads.listeners;
 
+import java.util.List;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ItemSpawnEvent;
@@ -10,6 +11,7 @@ import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
 import net.evmodder.EvLib.extras.TellrawUtils;
+import net.evmodder.EvLib.extras.TellrawUtils.Component;
 
 public class ItemDropListener implements Listener{
 	final private DropHeads pl;
@@ -36,13 +38,19 @@ public class ItemDropListener implements Listener{
 		HeadUtils.setGameProfile(originalMeta, refreshedProfile); // This refreshes the texture
 
 //		if(!originalMeta.hasDisplayName() || FORCE_NAME_UPDATE) originalMeta.setDisplayName(refreshedItem.getItemMeta().getDisplayName());
-		if(!originalMeta.hasLore() || FORCE_LORE_UPDATE) originalMeta.setLore(refreshedItem.getItemMeta().getLore());
+//		if(!originalMeta.hasLore() || FORCE_LORE_UPDATE) originalMeta.setLore(refreshedItem.getItemMeta().getLore());
 		originalItem.setItemMeta(originalMeta);
 
-		if((!originalMeta.hasDisplayName() || FORCE_NAME_UPDATE) && refreshedItem.getItemMeta().hasDisplayName())
+		if((!originalMeta.hasDisplayName() || FORCE_NAME_UPDATE) && refreshedItem.getItemMeta().hasDisplayName()){
 			originalItem = JunkUtils.setDisplayName(originalItem,
 					TellrawUtils.parseComponentFromString(JunkUtils.getDisplayName(refreshedItem)));
-
+		}
+		if((!originalMeta.hasLore() || FORCE_LORE_UPDATE) && refreshedItem.getItemMeta().hasLore()){
+			List<String> lores = JunkUtils.getLore(refreshedItem);
+			Component[] loreComps = new Component[lores.size()];
+			for(int i=0; i<lores.size(); ++i) loreComps[i] = TellrawUtils.parseComponentFromString(lores.get(i));
+			originalItem = JunkUtils.setLore(originalItem, loreComps);
+		}
 		evt.getEntity().setItemStack(originalItem);
 	}
 }

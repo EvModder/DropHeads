@@ -11,10 +11,12 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
+import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
+import net.evmodder.EvLib.extras.TellrawUtils;
+import net.evmodder.EvLib.extras.TellrawUtils.Component;
 
 public class LoreStoreBlockBreakListener implements Listener{
 	// This listener is only registered when 'save-custom-lore' = true
@@ -37,9 +39,9 @@ public class LoreStoreBlockBreakListener implements Listener{
 		GameProfile profileWithoutLore = new GameProfile(profile.getId(), preLoreProfileName);
 		ItemStack headItem = DropHeads.getPlugin().getAPI().getHead(profileWithoutLore);
 		if(lore.size() > 1 || (lore.size() == 1 && !lore.get(0).isEmpty())){
-			ItemMeta meta = headItem.getItemMeta();
-			meta.setLore(lore);
-			headItem.setItemMeta(meta);
+			Component[] loreComps = new Component[lore.size()];
+			for(int i=0; i<lore.size(); ++i) loreComps[i] = TellrawUtils.parseComponentFromString(lore.get(i));
+			headItem = JunkUtils.setLore(headItem, loreComps);
 		}
 		return headItem;
 	}

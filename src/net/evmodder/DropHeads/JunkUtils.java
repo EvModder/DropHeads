@@ -110,9 +110,17 @@ public class JunkUtils{
 		if(!display.hasKey("Lore")) return null;
 		RefNBTTagList loreTag = (RefNBTTagList)display.get("Lore");
 		RefNBTTagString loreLine = (RefNBTTagString)loreTag.get(0);
-		ArrayList<String> loreComps = new ArrayList<>();
-		for(int i=0; loreLine!=null; loreLine=(RefNBTTagString)loreTag.get(++i)) loreComps.add(loreLine.toString());
-		return loreComps;
+		ArrayList<String> loreCompStrs = new ArrayList<>();
+		try{for(int i=0; loreLine!=null; loreLine=(RefNBTTagString)loreTag.get(++i)){
+			String loreStr = loreLine.toString();
+			if(loreStr.startsWith("\"'") && loreStr.endsWith("'\"")){
+				if(loreStr.startsWith("\"'{") && loreStr.endsWith("}'\"")) loreStr = TextUtils.unescapeString(loreStr.substring(2, loreStr.length()-2));
+				else loreStr = '"'+TextUtils.unescapeString(loreStr.substring(2, loreStr.length()-2))+'"';
+			}
+			loreCompStrs.add(loreStr);
+		}}
+		catch(RuntimeException e){/*caused by IndexOutOfBoundsException*/}
+		return loreCompStrs;
 	}
 
 	// ItemStack methods to get a net.minecraft.server.ItemStack object for serialization
