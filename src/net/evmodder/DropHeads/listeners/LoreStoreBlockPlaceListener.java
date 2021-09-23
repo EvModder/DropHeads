@@ -29,11 +29,12 @@ public class LoreStoreBlockPlaceListener implements Listener{
 		GameProfile profile = HeadUtils.getGameProfile(meta);
 		if(profile == null || profile.getName() == null) return; // We can't append lore to an invalid GameProfile...
 
+		List<String> customLore = JunkUtils.getLore(headItem);
 		List<String> defaultLore = JunkUtils.getLore(DropHeads.getPlugin().getAPI().getHead(profile));
-		if(defaultLore.equals(JunkUtils.getLore(headItem))) return; // Nothing to save!
+		if(defaultLore.equals(customLore)) return; // Nothing to save!
 
 		final String texturekey = profile.getName();
-		final String combinedLore = String.join("\n", meta.getLore());
+		final String combinedLore = String.join("\n", customLore);
 		GameProfile profileWithLore = new GameProfile(profile.getId(), texturekey+">"+combinedLore);
 		profileWithLore.getProperties().putAll("textures", profile.getProperties().get("textures"));
 

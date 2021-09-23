@@ -42,6 +42,7 @@ refresh-textures: true
 refresh-item-names: false
 
 # Whether to reset the item lore for a head when refreshing its texture
+# This setting is ignored if 'save-custom-lore' is true
 refresh-item-lores: false
 
 # When a player changes their skin, should old heads be updated to the
@@ -99,7 +100,8 @@ head-click-listener: true
 # Only works for player-type heads, eg: won't work for minecraft:creeper_head
 # WARNING: This feature is in BETA and is relatively untested
 # WARNING: Lore will still get lost if the head is broken by a non-player
-save-custom-lore: false
+# WARNING: This setting overrides 'refresh-item-lores'
+save-custom-lore: true
 
 # Corrects custom lore and name when CTRL-copying a placed head in creative
 fix-creative-nbt-copy: true

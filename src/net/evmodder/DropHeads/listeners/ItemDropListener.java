@@ -20,7 +20,7 @@ public class ItemDropListener implements Listener{
 	public ItemDropListener(){
 		pl = DropHeads.getPlugin();
 		FORCE_NAME_UPDATE = pl.getConfig().getBoolean("refresh-item-names", false);
-		FORCE_LORE_UPDATE = pl.getConfig().getBoolean("refresh-item-lores", false);
+		FORCE_LORE_UPDATE = pl.getConfig().getBoolean("refresh-item-lores", false) && !pl.getConfig().getBoolean("save-custom-lore", true);
 	}
 
 	@EventHandler(ignoreCancelled = true)

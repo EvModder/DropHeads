@@ -115,7 +115,7 @@ public class JunkUtils{
 			String loreStr = loreLine.toString();
 			if(loreStr.startsWith("\"'") && loreStr.endsWith("'\"")){
 				if(loreStr.startsWith("\"'{") && loreStr.endsWith("}'\"")) loreStr = TextUtils.unescapeString(loreStr.substring(2, loreStr.length()-2));
-				else loreStr = '"'+TextUtils.unescapeString(loreStr.substring(2, loreStr.length()-2))+'"';
+				else loreStr = TextUtils.unescapeString(loreStr.substring(2, loreStr.length()-2));
 			}
 			loreCompStrs.add(loreStr);
 		}}
