@@ -62,13 +62,12 @@ public class BlockClickListener implements Listener{
 							pl.getConfig().getString("head-click-format-unknown", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head")));
 			MOB_SUBTYPES_SEPARATOR = translations.getString("mob-subtype-separator", " ");
 			UPDATE_PLAYER_HEADS = pl.getConfig().getBoolean("update-on-skin-change", true);
-			recentClickers = new HashSet<UUID>();
 		}
 		else{
 			HEAD_DISPLAY_PLAYERS = HEAD_DISPLAY_MOBS = HEAD_DISPLAY_HDB = HEAD_DISPLAY_UNKNOWN = MOB_SUBTYPES_SEPARATOR = null;
 			UPDATE_PLAYER_HEADS = false;
-			recentClickers = null;
 		}
+		recentClickers = new HashSet<UUID>();
 	}
 
 	static GameProfile stripCustomLoreAndNamespace(GameProfile profile){
