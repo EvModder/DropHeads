@@ -42,6 +42,7 @@ import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.permissions.Permissible;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.EventExecutor;
@@ -100,6 +101,7 @@ public class EntityDeathListener implements Listener{
 	final HashMap<EntityType, HashMap<String, Double>> subtypeMobChances;
 	final HashMap<EntityType, AnnounceMode> mobAnnounceModes;
 	final HashMap<Material, Double> toolBonuses;
+	final HashMap<String, Double> droprateMultiplierPerms;
 	final TreeMap<Long, Double> timeAliveBonuses;
 	final HashSet<UUID> explodingChargedCreepers, recentlyBeheadedEntities;
 
@@ -114,7 +116,7 @@ public class EntityDeathListener implements Listener{
 		VANILLA_WSKELE_HANDLING = pl.getConfig().getBoolean("vanilla-wither-skeleton-skulls", false);
 		VANILLA_WSKELE_LOOTING = pl.getConfig().getBoolean("vanilla-wither-skeleton-looting-behavior", false);
 		LOOTING_ADD = pl.getConfig().getDouble("looting-addition", 0.01D);
-		LOOTING_MULT = pl.getConfig().getDouble("looting-mutliplier", 1D);
+		LOOTING_MULT = pl.getConfig().getDouble("looting-multiplier", pl.getConfig().getDouble("looting-mutliplier", 1D));
 		if(LOOTING_ADD >= 1) pl.getLogger().warning("looting-addition is set to 1.0 or greater, this means heads will ALWAYS drop when looting is used!");
 		if(LOOTING_MULT < 1) pl.getLogger().warning("looting-multiplier is set below 1.0, this means looting will DECREASE the chance of head drops!");
 		REPLACE_DEATH_MESSAGE = pl.getConfig().getBoolean("behead-announcement-replaces-player-death-message",
@@ -198,6 +200,13 @@ public class EntityDeathListener implements Listener{
 				timeAliveBonuses.put(time, specificTimeAliveModifiers.getDouble(formattedTime));
 			}
 			catch(NumberFormatException ex){pl.getLogger().severe("Error parsing time string: \""+formattedTime+'"');}
+		}
+
+		droprateMultiplierPerms = new HashMap<String, Double>();
+		ConfigurationSection customDropratePerms = pl.getConfig().getConfigurationSection("custom-droprate-multiplier-permissions");
+		if(customDropratePerms != null) for(String perm : customDropratePerms.getKeys(false)){
+			try{droprateMultiplierPerms.put(perm, customDropratePerms.getDouble(perm));}
+			catch(NumberFormatException ex){pl.getLogger().severe("Error parsing droprate multiplier for perm: \""+perm+'"');}
 		}
 
 		//Load individual mobs' drop chances
@@ -330,6 +339,13 @@ public class EntityDeathListener implements Listener{
 					killer instanceof Projectile && killer.hasMetadata("ShotUsing") ? (ItemStack)killer.getMetadata("ShotUsing").get(0).value() :
 					null
 				: null;
+	}
+	public double getPermsBasedDropRateModifier(Permissible killer){
+		if(killer == null) return 1D;
+		return droprateMultiplierPerms.entrySet().stream().parallel()
+				.filter(e -> killer.hasPermission(e.getKey()))
+				.map(e -> e.getValue())
+				.reduce(1D, (a, b) -> a * b);
 	}
 	void sendTellraw(String target, String message){
 		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+target+" "+message);
@@ -532,7 +548,8 @@ public class EntityDeathListener implements Listener{
 		final double timeAliveMod = 1D + getTimeAliveBonus(victim);
 		final double spawnCauseMod = JunkUtils.getSpawnCauseModifier(victim);
 		final double rawDropChance = getRawDropChance(victim);
-		final double dropChance = rawDropChance*spawnCauseMod*timeAliveMod*weaponMod*lootingMod + lootingAdd;
+		final double permMod = getPermsBasedDropRateModifier(killer);
+		final double dropChance = rawDropChance*spawnCauseMod*timeAliveMod*weaponMod*lootingMod*permMod + lootingAdd;
 
 		final double dropRoll = rand.nextDouble();
 		HeadRollEvent rollEvent = new HeadRollEvent(killer, victim, dropChance, dropRoll, dropRoll < dropChance);

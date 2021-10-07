@@ -604,7 +604,7 @@ public class HeadAPI {
 		GameProfile pProfile = null;
 		if(profile.getId() != null && (p=pl.getServer().getOfflinePlayer(profile.getId())) != null
 				&& (p.hasPlayedBefore() || (pProfile=WebUtils.getGameProfile(profile.getId().toString())) != null)){
-			if(UPDATE_PLAYER_HEADS || !profile.isComplete() || profile.isLegacy() || profile.getName() == null){
+			if(UPDATE_PLAYER_HEADS/* || !profile.isComplete() || profile.isLegacy() || profile.getName() == null*/){
 				profile = pProfile != null ? pProfile : new GameProfile(p.getUniqueId(), p.getName());
 				profileName = profile.getName();
 				head = HeadUtils.getPlayerHead(profile);

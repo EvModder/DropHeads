@@ -37,7 +37,8 @@ public class CommandDropRate extends EvCommand{
 	final String ALWAYS_BEHEAD_ALERT = "Perm '§fdropheads.alwaysbehead§7' raises rate to 100%%";
 	final String SPECIFIC_WEAPONS_ALERT = "Specific murder weapons are required %s";
 	final String RATE_MODIFIER_HEADER = "Rate modifiers: ";
-	final String SPAWN_REASON = "§fSpawnReason§7, ", TIME_ALIVE = "§fTimeAlive§7, ", WEAPON_TYPE = "§fWeaponType§7, ", LOOTING = "§fLooting§7";
+	final String SPAWN_REASON = "§fSpawnReason§7, ", TIME_ALIVE = "§fTimeAlive§7, ",
+				WEAPON_TYPE = "§fWeaponType§7, ", PERMS = "§fModifierPerms§7, ", LOOTING = "§fLooting§7";
 	final String VANILLA_WITHER_SKELETON_BEHAVIOR_ALERT = "Vanilla wither_skeleton looting rate is enabled";
 
 	public CommandDropRate(DropHeads plugin, EntityDeathListener deathListener) {
@@ -148,6 +149,7 @@ public class CommandDropRate extends EvCommand{
 		if(USING_TIME_ALIVE_MODIFIERS && (entity == null || Math.abs(deathListener.getTimeAliveBonus(entity)) > 0.001))
 			builder.append(TIME_ALIVE/* <red>-XX% to <green>+YY% */);
 		if(USING_TOOL_MODIFIERS) builder.append(WEAPON_TYPE/* <red>-XX% to <green>+YY% */);
+		if(deathListener.getPermsBasedDropRateModifier(sender) != 1D) builder.append(PERMS/* x2, x0.2, x5... */);
 		if(VANILLA_WITHER_SKELETON_LOOTING && target.equals("WITHER_SKELETON")) builder.append('\n').append(VANILLA_WITHER_SKELETON_BEHAVIOR_ALERT);
 		else if(USING_LOOTING_MODIFIERS) builder.append(LOOTING/* (level 3: <green>+XX%) */);
 		sender.sendMessage(builder.toString());

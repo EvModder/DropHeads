@@ -118,7 +118,7 @@ substitute-dropheads-in-give-command: true
 must-use-axe: false
 
 # Drop chances are multiplied by this number for each level of looting
-looting-mutliplier: 1.01
+looting-multiplier: 1.01
 
 # This number is added to the drop chance for each level of looting
 looting-addition: 0.0
@@ -193,6 +193,11 @@ time-alive-modifiers:
 # Low values => DropHeads runs BEFORE other plugins; high values => runs AFTER
 # Possible values: [LOWEST, LOW, NORMAL, HIGH, HIGHEST, MONITOR]
 death-listener-priority: LOW
+
+# Set drop chance multipliers for custom permission groups
+custom-droprate-multiplier-permissions:
+#  dropheads.group.droprate2x: 2.0
+#  dropheads.group.droprate150percent: 1.5
 
 # Whether to enable logging for certain events
 log:
