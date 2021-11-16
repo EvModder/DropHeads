@@ -57,13 +57,14 @@ public class HeadAPI {
 //	private int MAX_HDB_ID = -1;
 	final Configuration translationsFile; // protected scope; only used by head-click-listener
 	final boolean GRUM_ENABLED, SADDLES_ENABLED, HOLLOW_SKULLS_ENABLED, TRANSPARENT_SLIME_ENABLED, CRACKED_IRON_GOLEMS_ENABLED, USE_PRE_JAPPA;
-	final boolean UPDATE_PLAYER_HEADS, UPDATE_ZOMBIE_PIGMEN_HEADS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_VANILLA_HEADS;
+	final boolean UPDATE_PLAYER_HEADS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_VANILLA_HEADS;
 	final TranslationComponent LOCAL_HEAD, LOCAL_SKULL, LOCAL_TOE;
 	final HashMap<EntityType, /*headNameFormat=*/String> headNameFormats;
 	final HashMap</*textureKey=*/String, /*headNameFormat=*/String> exactTextureKeyHeadNameFormats;
 	final String DEFAULT_HEAD_NAME_FORMAT, MOB_SUBTYPES_SEPARATOR;
 	final TreeMap<String, String> textures; // Key="ENTITY_NAME|DATA", Value="eyJ0ZXh0dXJl..."
 	final HashMap<String, TranslationComponent> entitySubtypeNames;
+	final HashMap<String, String> replaceHeadsFromTo; // key & value are textureKeys
 
 	// TODO: Move these to a localization file
 	final String MOB_PREFIX = "mob:", PLAYER_PREFIX = "player:", MHF_PREFIX = "player:", HDB_PREFIX = "hdb:", CODE_PREFIX = "code:";
@@ -80,9 +81,22 @@ public class HeadAPI {
 		UPDATE_PLAYER_HEADS = pl.getConfig().getBoolean("update-on-skin-change", true);
 		boolean zombifiedPiglensExist = false;
 		try{EntityType.valueOf("ZOMBIFIED_PIGLIN"); zombifiedPiglensExist = true;} catch(IllegalArgumentException ex){}
-		UPDATE_ZOMBIE_PIGMEN_HEADS = zombifiedPiglensExist &&
+		final boolean UPDATE_ZOMBIE_PIGMEN_HEADS = zombifiedPiglensExist &&
 				pl.getConfig().getBoolean("update-zombie-pigman-heads",
-				pl.getConfig().getBoolean("update-zombie-pigmen-heads", true));
+				pl.getConfig().getBoolean("update-zombie-pigmen-heads", false));
+		replaceHeadsFromTo = new HashMap<String, String>();
+		if(UPDATE_ZOMBIE_PIGMEN_HEADS){
+			replaceHeadsFromTo.put("PIG_ZOMBIE", "ZOMBIFIED_PIGLIN");
+			replaceHeadsFromTo.put("PIG_ZOMBIE|BABY", "ZOMBIFIED_PIGLIN");
+			replaceHeadsFromTo.put("PIG_ZOMBIE|PRE_JAPPA", "ZOMBIFIED_PIGLIN");
+			replaceHeadsFromTo.put("PIG_ZOMBIE|GRUMM", "ZOMBIFIED_PIGLIN|GRUMM");
+			replaceHeadsFromTo.put("PIG_ZOMBIE|BABY|GRUMM", "ZOMBIFIED_PIGLIN|GRUMM");
+			replaceHeadsFromTo.put("PIG_ZOMBIE|PRE_JAPPA|GRUMM", "ZOMBIFIED_PIGLIN|GRUMM");
+		}
+		ConfigurationSection replaceHeadsList = pl.getConfig().getConfigurationSection("replace-heads");
+		if(replaceHeadsList != null) for(String fromHead : replaceHeadsList.getKeys(false)){
+			replaceHeadsFromTo.put(fromHead, /*toHead=*/replaceHeadsList.getString(fromHead));
+		}
 //		SAVE_CUSTOM_LORE = pl.getConfig().getBoolean("save-custom-lore", false);
 		SAVE_TYPE_IN_LORE = pl.getConfig().getBoolean("show-head-type-in-lore", false);
 		MAKE_UNSTACKABLE = pl.getConfig().getBoolean("make-heads-unstackable", false);
@@ -588,9 +602,7 @@ public class HeadAPI {
 			final boolean isDropHeadsHead = profileName.startsWith("dropheads:");
 			if(isDropHeadsHead) profileName = profileName.substring(10);
 			if(isDropHeadsHead || textures.containsKey(profileName)){
-				if(UPDATE_ZOMBIE_PIGMEN_HEADS && profileName.startsWith("PIG_ZOMBIE")){
-					profileName = /*profileName.replace("PIG_ZOMBIE", */"ZOMBIFIED_PIGLIN"/*)*/;
-				}
+				profileName = replaceHeadsFromTo.getOrDefault(profileName, profileName);
 				if(profileName.equals("OCELOT|WILD_OCELOT")) profileName = "OCELOT";
 				return makeHeadFromTexture(profileName);
 			}

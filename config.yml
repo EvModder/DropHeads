@@ -199,6 +199,12 @@ custom-droprate-multiplier-permissions:
 #  dropheads.group.droprate2x: 2.0
 #  dropheads.group.droprate150percent: 1.5
 
+# Attempt to replace headA with headB whenever possible (server-wide)
+# The head on the left is replaced with the one on the right when updated
+replace-heads:
+  'PIG_ZOMBIE': 'ZOMBIFIED_PIGLIN'
+#  'ILLUSIONER': 'VILLAGER|FLETCHER|SWAMP'
+
 # Whether to enable logging for certain events
 log:
   enable: true
