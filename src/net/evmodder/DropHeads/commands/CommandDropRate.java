@@ -1,6 +1,7 @@
 package net.evmodder.DropHeads.commands;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,7 +37,7 @@ public class CommandDropRate extends EvCommand{
 	final String KILLER_MUST_HAVE_PERM = "You must have the '§fdropheads.canbehead§7' perm";
 	final String ALWAYS_BEHEAD_ALERT = "Perm '§fdropheads.alwaysbehead§7' raises rate to 100%%";
 	final String SPECIFIC_WEAPONS_ALERT = "Specific murder weapons are required %s";
-	final String RATE_MODIFIER_HEADER = "Rate modifiers: ";
+	final String RATE_MODIFIER_HEADER = "§7Rate modifiers: ";
 	final String SPAWN_REASON = "§fSpawnReason§7, ", TIME_ALIVE = "§fTimeAlive§7, ",
 				WEAPON_TYPE = "§fWeaponType§7, ", PERMS = "§fModifierPerms§7, ", LOOTING = "§fLooting§7";
 	final String VANILLA_WITHER_SKELETON_BEHAVIOR_ALERT = "Vanilla wither_skeleton looting rate is enabled";
@@ -137,22 +138,28 @@ public class CommandDropRate extends EvCommand{
 			}
 		}
 
-		StringBuilder builder = new StringBuilder(OTHER_THINGS_THAT_AFFECT_DROPRATE);
-		if(entity == null && target.equals("PLAYER")) builder.append('\n').append(VICTIM_MUST_HAVE_PERM);
-		if(!sender.hasPermission("dropheads.canbehead")) builder.append('\n').append(KILLER_MUST_HAVE_PERM);// (true/false for you)
-		if(sender.hasPermission("dropheads.alwaysbehead")) builder.append('\n').append(ALWAYS_BEHEAD_ALERT);// (true/false for you)
-		if(!REQUIRED_TOOLS.isEmpty()) builder.append('\n').append(String.format(SPECIFIC_WEAPONS_ALERT, REQUIRED_TOOLS.toString()));
-		builder.append('\n').append(RATE_MODIFIER_HEADER);
+		ArrayList<String> modifiers = new ArrayList<>();
+		if(entity == null && target.equals("PLAYER")) modifiers.add(VICTIM_MUST_HAVE_PERM);
+		if(!sender.hasPermission("dropheads.canbehead")) modifiers.add(KILLER_MUST_HAVE_PERM);// (true/false for you)
+		if(sender.hasPermission("dropheads.alwaysbehead")) modifiers.add(ALWAYS_BEHEAD_ALERT);// (true/false for you)
+		if(!REQUIRED_TOOLS.isEmpty()) modifiers.add(String.format(SPECIFIC_WEAPONS_ALERT, REQUIRED_TOOLS.toString()));
+		modifiers.add(RATE_MODIFIER_HEADER);
 		if(USING_SPAWN_MODIFIERS && !target.equals("PLAYER") &&
 				(entity == null || Math.abs(1F - JunkUtils.getSpawnCauseModifier(entity)) > 0.001F))
-			builder.append(SPAWN_REASON/* <red>-XX% to <green>+YY% */);
+			modifiers.add(SPAWN_REASON/* <red>-XX% to <green>+YY% */);
 		if(USING_TIME_ALIVE_MODIFIERS && (entity == null || Math.abs(deathListener.getTimeAliveBonus(entity)) > 0.001))
-			builder.append(TIME_ALIVE/* <red>-XX% to <green>+YY% */);
-		if(USING_TOOL_MODIFIERS) builder.append(WEAPON_TYPE/* <red>-XX% to <green>+YY% */);
-		if(deathListener.getPermsBasedDropRateModifier(sender) != 1D) builder.append(PERMS/* x2, x0.2, x5... */);
-		if(VANILLA_WITHER_SKELETON_LOOTING && target.equals("WITHER_SKELETON")) builder.append('\n').append(VANILLA_WITHER_SKELETON_BEHAVIOR_ALERT);
-		else if(USING_LOOTING_MODIFIERS) builder.append(LOOTING/* (level 3: <green>+XX%) */);
-		sender.sendMessage(builder.toString());
+			modifiers.add(TIME_ALIVE/* <red>-XX% to <green>+YY% */);
+		if(USING_TOOL_MODIFIERS) modifiers.add(WEAPON_TYPE/* <red>-XX% to <green>+YY% */);
+		final double playerPermModifier = deathListener.getPermsBasedDropRateModifier(sender);
+		if(playerPermModifier != 1D) modifiers.add(PERMS+"(x"+new DecimalFormat("0.##").format(playerPermModifier)+")");
+		if(VANILLA_WITHER_SKELETON_LOOTING && target.equals("WITHER_SKELETON")) modifiers.add(VANILLA_WITHER_SKELETON_BEHAVIOR_ALERT);
+		else if(USING_LOOTING_MODIFIERS) modifiers.add(LOOTING/* (level 3: <green>+XX%) */);
+
+		StringBuilder builder = new StringBuilder(OTHER_THINGS_THAT_AFFECT_DROPRATE);
+		for(String modifier : modifiers){
+			builder.append("\n§f").append(modifier).append("§7, ");
+		}
+		sender.sendMessage(builder.substring(0, builder.length()-4));
 		return true;
 	}
 }
