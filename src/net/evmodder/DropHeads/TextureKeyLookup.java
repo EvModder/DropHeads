@@ -90,6 +90,7 @@ public class TextureKeyLookup{
 	static RefMethod mTraderLlamaGetColor;
 	static RefMethod mAxolotlGetVariant;
 	static RefMethod mVexIsCharging;
+	static RefMethod mGoatIsScreaming;
 	static RefMethod mStriderIsShivering, mStriderHasSaddle;
 	static RefMethod mShulkerGetPeek, mShulkerGetAttachedFace;
 	static RefMethod mGetHandle, mGetDataWatcher, mGet_FromDataWatcher;
@@ -234,6 +235,11 @@ public class TextureKeyLookup{
 				catch(IllegalArgumentException | IllegalAccessException e){}
 				if(isScreaming) return "GHAST|SCREAMING";//TODO: Add this to the Bukkit API
 				else return "GHAST";
+			case "GOAT":
+				if(ReflectionUtils.getServerVersionString().compareTo("v1_17_??") < 0) return "GOAT";
+				if(mGoatIsScreaming == null) mGoatIsScreaming = ReflectionUtils.getRefClass("org.bukkit.entity.Goat").getMethod("isScreaming");
+				if(mGoatIsScreaming.of(entity).call().equals(true)) return "GOAT|SCREAMING";
+				else return "GOAT";
 			case "STRIDER":
 				if(mStriderIsShivering == null){
 					RefClass classStrider = ReflectionUtils.getRefClass("org.bukkit.entity.Strider");
