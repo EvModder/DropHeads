@@ -198,7 +198,7 @@ public class JunkUtils{
 	final static RefClass craftEntityClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftEntity");
 	final static RefMethod entityGetHandleMethod = craftEntityClazz.getMethod("getHandle");
 	final static RefClass nmsEntityClazz = ReflectionUtils.getRefClass("{nms}.Entity", "{nm}.world.entity.Entity");
-	final static RefMethod saveNmsEntityMethod = nmsEntityClazz.getMethod("save", nbtTagCompoundClazz);
+	final static RefMethod saveNmsEntityMethod = nmsEntityClazz.findMethod(/*isStatic=*/false, nbtTagCompoundClazz, nbtTagCompoundClazz);
 	public final static String convertEntityToJson(Entity entity){//TODO: not currently used
 		
 		Object nmsNbtTagCompoundObj = nbtTagCompoundClazz.getConstructor().create();
