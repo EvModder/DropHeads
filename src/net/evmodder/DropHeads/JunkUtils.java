@@ -72,6 +72,7 @@ public class JunkUtils{
 	}
 	public final static double getSpawnCauseModifier(Entity e){
 		//return e.hasMetadata("SpawnReason") ? e.getMetadata("SpawnReason").get(0).asDouble() : 1D;
+//		if(e == null) return 1D;
 		if(e.hasMetadata("SpawnReason")) return e.getMetadata("SpawnReason").get(0).asDouble();
 		for(String tag : e.getScoreboardTags()) if(tag.startsWith("SpawnReasonModifier:")) return Float.parseFloat(tag.substring(20));
 		return 1D;
@@ -131,6 +132,11 @@ public class JunkUtils{
 	final static RefClass nmsItemStackClazz = ReflectionUtils.getRefClass("{nms}.ItemStack", "{nm}.world.item.ItemStack");
 	final static RefClass nbtTagCompoundClazz = ReflectionUtils.getRefClass("{nms}.NBTTagCompound", "{nm}.nbt.NBTTagCompound");
 	final static RefMethod saveNmsItemStackMethod = nmsItemStackClazz.findMethod(/*isStatic=*/false, nbtTagCompoundClazz, nbtTagCompoundClazz);
+	static{
+//		net.minecraft.world.item.ItemStack is;
+//		net.minecraft.nbt.NBTTagCompound e;
+//		net.minecraft.nbt.NBTTagList l;
+	}
 
 	// https://www.spigotmc.org/threads/tut-item-tooltips-with-the-chatcomponent-api.65964/
 	/**

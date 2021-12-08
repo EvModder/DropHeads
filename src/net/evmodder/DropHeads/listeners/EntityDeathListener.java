@@ -84,7 +84,7 @@ public class EntityDeathListener implements Listener{
 	final boolean USE_PLAYER_DISPLAYNAMES = false;//TODO: move to config, when possible
 	final boolean CROSS_DIMENSIONAL_BROADCAST = true;//TODO: move to config
 	final int LOCAL_RANGE = 200;//TODO: move to config
-	final int JSON_LIMIT = 15000;//TODO: move to config
+	public final int JSON_LIMIT = 15000;//TODO: move to config
 	final BlockFace[] possibleHeadRotations = new BlockFace[]{
 			BlockFace.NORTH, BlockFace.NORTH_EAST, BlockFace.NORTH_WEST,
 			BlockFace.SOUTH, BlockFace.SOUTH_EAST, BlockFace.SOUTH_WEST,
@@ -115,8 +115,8 @@ public class EntityDeathListener implements Listener{
 		CHARGED_CREEPER_DROPS = pl.getConfig().getBoolean("charged-creeper-drops", true);
 		VANILLA_WSKELE_HANDLING = pl.getConfig().getBoolean("vanilla-wither-skeleton-skulls", false);
 		VANILLA_WSKELE_LOOTING = pl.getConfig().getBoolean("vanilla-wither-skeleton-looting-behavior", false);
-		LOOTING_ADD = pl.getConfig().getDouble("looting-addition", 0.01D);
-		LOOTING_MULT = pl.getConfig().getDouble("looting-multiplier", pl.getConfig().getDouble("looting-mutliplier", 1D));
+		LOOTING_ADD = pl.getConfig().getDouble("looting-addition", 0D);
+		LOOTING_MULT = pl.getConfig().getDouble("looting-multiplier", pl.getConfig().getDouble("looting-mutliplier", 1.01D));
 		if(LOOTING_ADD >= 1) pl.getLogger().warning("looting-addition is set to 1.0 or greater, this means heads will ALWAYS drop when looting is used!");
 		if(LOOTING_MULT < 1) pl.getLogger().warning("looting-multiplier is set below 1.0, this means looting will DECREASE the chance of head drops!");
 		REPLACE_DEATH_MESSAGE = pl.getConfig().getBoolean("behead-announcement-replaces-player-death-message",

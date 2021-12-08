@@ -161,7 +161,7 @@ head-place-overwrite-blocks: ['AIR', 'WATER', 'GRASS']
 must-use:
 #  - IRON_SWORD
 #  - DIAMOND_AXE
-#  - WOOD_HOE
+#  - WOODEN_HOE
 
 # (Optional) Let certain tools have a higher chance of beheading
 # The number is the percent increase in drop chance when using that tool
