@@ -217,6 +217,24 @@ public class EntityDeathListener implements Listener{
 		if(PLAYER_HEADS_ONLY){
 			pl.getServer().getPluginManager().registerEvent(PlayerDeathEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
 			DEFAULT_CHANCE = 0D;
+			String defaultChances = FileIO.loadResource(pl, "head-drop-rates.txt");
+			String chances = FileIO.loadFile("head-drop-rates.txt", defaultChances);
+			for(final String line : chances.split("\n")){
+				final String[] parts = line.split(":");
+				if(parts.length < 2 || !parts[0].trim().toUpperCase().equals("PLAYER")) continue;
+				final String value = parts[1].trim();
+				try{
+					double dropChance = Double.parseDouble(value);
+					if(dropChance < 0D || dropChance > 1D){
+						pl.getLogger().warning("Invalid value: "+value);
+						pl.getLogger().warning("Drop chance should be a decimal between 0 and 1");
+						if(dropChance > 1D && dropChance <= 100D) dropChance /= 100D;
+						else continue;
+					}
+					mobChances.put(EntityType.PLAYER, dropChance);
+				}
+				catch(NumberFormatException ex){pl.getLogger().severe("Invalid value: "+value);}
+			}
 		}
 		else{
 			String defaultChances = FileIO.loadResource(pl, "head-drop-rates.txt");
@@ -317,15 +335,16 @@ public class EntityDeathListener implements Listener{
 	}
 
 	public double getRawDropChance(Entity e){
-		HashMap<String, Double> eTypeChances = subtypeMobChances.get(e.getType());
-		if(eTypeChances != null){
+		HashMap<String, Double> eSubtypeChances = subtypeMobChances.get(e.getType());
+		if(eSubtypeChances != null){
 			String textureKey = TextureKeyLookup.getTextureKey(e);
 			int keyDataTagIdx = textureKey.lastIndexOf('|');
-			while(keyDataTagIdx != -1 && !eTypeChances.containsKey(textureKey)){
+			Double subtypeChance = null;
+			while(keyDataTagIdx != -1 && (subtypeChance=eSubtypeChances.get(textureKey)) == null){
 				textureKey = textureKey.substring(0, keyDataTagIdx);
 				keyDataTagIdx = textureKey.lastIndexOf('|');
 			}
-			if(eTypeChances.containsKey(textureKey)) return eTypeChances.get(textureKey);
+			if(subtypeChance != null) return subtypeChance;
 		}
 		return mobChances.getOrDefault(e.getType(), DEFAULT_CHANCE);
 	}
