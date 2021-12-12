@@ -493,7 +493,7 @@ public class CommandSpawnHead extends EvCommand{
 					}
 					if(notEnoughInvSpaceWarned.size() == giveTargets.size()) return true;
 				}
-				else if(!isSelf && firstHeadSoAddRecipients){
+				else if(firstHeadSoAddRecipients && (!isSelf || giveTargets.size() > 1)){
 					recipientComps.add(new SelectorComponent(giveTarget.getUniqueId(), USE_PLAYER_DISPLAYNAMES));
 				}
 			}
@@ -507,24 +507,18 @@ public class CommandSpawnHead extends EvCommand{
 				: (amtOfEachHead.size() > 1 ? SUCCESSFULLY_MULTI_GAVE_HEADS : SUCCESSFULLY_MULTI_GAVE_HEAD);
 
 		// TODO: This assumes the message has a default color & formats when it actually might not.
-		final Component msgColorAndFormats = TellrawUtils.getCurrentColorAndFormatProperties(messageFormatStr);
+		final Component msgColorAndFormatsPlusComma = new ListComponent(
+				TellrawUtils.getCurrentColorAndFormatProperties(messageFormatStr), new RawTextComponent(", "));
 
 		ListComponent recipientListComp = new ListComponent();
 		ListComponent headItemListComp = new ListComponent();
-		if(recipientComps.size() == 1) recipientListComp.addComponent(recipientComps.get(0));
-		else if(recipientComps.size() > 1){
-			// TODO: line below assumes [recipient-list] is the LAST "%", which might not be a good assumption.
-			final Component recipientColorAndFormats = TellrawUtils.getCurrentColorAndFormatProperties(
-					messageFormatStr.substring(0, messageFormatStr.lastIndexOf('%')));
-			if(recipientColorAndFormats != null) recipientListComp.addComponent(recipientColorAndFormats);
-			for(int i=0; i<recipientComps.size(); ++i){
-//				recipientListComp.addComponent(recipientColor);
-				recipientListComp.addComponent(recipientComps.get(i));
-				if(i != recipientComps.size()-1){
-					if(!recipientColorAndFormats.samePropertiesAs(msgColorAndFormats)) recipientListComp.addComponent(msgColorAndFormats);
-					recipientListComp.addComponent(", ");
-				}
-			}
+		// TODO: line below assumes [recipient-list] is the LAST "%", which might not be a good assumption.
+		final Component recipientColorAndFormats = TellrawUtils.getCurrentColorAndFormatProperties(
+				messageFormatStr.substring(0, messageFormatStr.lastIndexOf('%')));
+		if(recipientColorAndFormats != null) recipientListComp.addComponent(recipientColorAndFormats);
+		for(int i=0; i<recipientComps.size(); ++i){
+			recipientListComp.addComponent(recipientComps.get(i));
+			if(i != recipientComps.size()-1) recipientListComp.addComponent(msgColorAndFormatsPlusComma);
 		}
 		if(amtOfEachHead.size() == 1){
 			final Integer amt = amtOfEachHead.values().iterator().next();
@@ -533,25 +527,25 @@ public class CommandSpawnHead extends EvCommand{
 		}
 		else{
 			// TODO: line below assumes [head-list] is the FIRST "%", which might not be a good assumption.
-			final Component headColorAndFormats = TellrawUtils.getCurrentColorAndFormatProperties(
-					messageFormatStr.substring(0, messageFormatStr.indexOf('%')));
-			final Component amtColorAndFormats = TellrawUtils.getCurrentColorAndFormatProperties(ITEM_WITH_AMOUNT_FORMAT);
-			if(headColorAndFormats != null) headItemListComp.addComponent(headColorAndFormats);
+//			final Component headColorAndFormats = TellrawUtils.getCurrentColorAndFormatProperties(
+//					messageFormatStr.substring(0, messageFormatStr.indexOf('%')));
+//			final Component amtColorAndFormats = TellrawUtils.getCurrentColorAndFormatProperties(ITEM_WITH_AMOUNT_FORMAT);
+			//TODO: uncomment line below once TranslationComponent supports properly applying color codes from "jsonKey" to "with"/children
+			headItemListComp.addComponent("");
+//			if(headColorAndFormats != null) headItemListComp.addComponent(headColorAndFormats);
 			for(int i=0; i<headNameComps.size(); ++i){
 				Integer amt = amtOfEachHead.get(headNameComps.get(i).toString());
 				if(amt > 1){
 					headItemListComp.addComponent(new TranslationComponent(ITEM_WITH_AMOUNT_FORMAT,
 							headNameComps.get(i), new RawTextComponent(amt.toString())));
 					if(i != headNameComps.size()-1){
-						if(!amtColorAndFormats.samePropertiesAs(msgColorAndFormats)) headItemListComp.addComponent(msgColorAndFormats);
-						headItemListComp.addComponent(", ");
+						headItemListComp.addComponent(msgColorAndFormatsPlusComma);
 					}
 				}
 				else{
 					headItemListComp.addComponent(headNameComps.get(i));
 					if(i != headNameComps.size()-1){
-						if(!headColorAndFormats.samePropertiesAs(msgColorAndFormats)) headItemListComp.addComponent(msgColorAndFormats);
-						headItemListComp.addComponent(", ");
+						headItemListComp.addComponent(msgColorAndFormatsPlusComma);
 					}
 				}
 			}
@@ -559,7 +553,7 @@ public class CommandSpawnHead extends EvCommand{
 		final TranslationComponent successMessage = recipientListComp.isEmpty()
 				? new TranslationComponent(messageFormatStr, headItemListComp)
 				: new TranslationComponent(messageFormatStr, headItemListComp, recipientListComp);
-		pl.getLogger().info("tellraw toString: "+successMessage.toString());
+//		pl.getLogger().info("tellraw toString: "+successMessage.toString());
 		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+sender.getName()+" "+successMessage.toString());
 		return true;
 	}
