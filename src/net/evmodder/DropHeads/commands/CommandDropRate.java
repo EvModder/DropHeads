@@ -27,7 +27,7 @@ import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
 public class CommandDropRate extends EvCommand{
 	final private DropHeads pl;
 	EntityDeathListener deathListener;
-	final boolean ONLY_SHOW_VALID_ENTITIES = false; //TODO: Disabled this because it seems bugged!
+	final boolean ONLY_SHOW_VALID_ENTITIES = true;
 	final boolean USING_SPAWN_MODIFIERS, USING_REQUIRED_WEAPONS, USING_LOOTING_MODIFIERS, USING_TIME_ALIVE_MODIFIERS, VANILLA_WITHER_SKELETON_LOOTING;
 	final HashMap<String, Double> dropChances;
 	final HashMap<Material, Double> weaponBonuses;

@@ -11,6 +11,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
@@ -86,8 +87,9 @@ public class JunkUtils{
 		return NBTTagUtils.setTag(item, tag);
 	}
 
-	public final static String getDisplayName(ItemStack item){
+	public final static String getDisplayName(@Nonnull ItemStack item){
 		RefNBTTagCompound tag = NBTTagUtils.getTag(item);
+		if(tag == null) return null;
 		RefNBTTagCompound display = tag.hasKey("display") ? (RefNBTTagCompound)tag.get("display") : new RefNBTTagCompound();
 		return display.hasKey("Name") ? display.getString("Name") : null;
 	}
@@ -132,11 +134,6 @@ public class JunkUtils{
 	final static RefClass nmsItemStackClazz = ReflectionUtils.getRefClass("{nms}.ItemStack", "{nm}.world.item.ItemStack");
 	final static RefClass nbtTagCompoundClazz = ReflectionUtils.getRefClass("{nms}.NBTTagCompound", "{nm}.nbt.NBTTagCompound");
 	final static RefMethod saveNmsItemStackMethod = nmsItemStackClazz.findMethod(/*isStatic=*/false, nbtTagCompoundClazz, nbtTagCompoundClazz);
-	static{
-//		net.minecraft.world.item.ItemStack is;
-//		net.minecraft.nbt.NBTTagCompound e;
-//		net.minecraft.nbt.NBTTagList l;
-	}
 
 	// https://www.spigotmc.org/threads/tut-item-tooltips-with-the-chatcomponent-api.65964/
 	/**
@@ -162,10 +159,10 @@ public class JunkUtils{
 		return itemAsJsonObject.toString();
 	}
 
-	public final static Component getItemDisplayNameComponent(ItemStack item, int JSON_LIMIT){
+	public final static Component getItemDisplayNameComponent(@Nonnull ItemStack item){
 		String rarityColor = TypeUtils.getRarityColor(item).name().toLowerCase();
-		if(item.hasItemMeta() && item.getItemMeta().hasDisplayName()){
-			String rawDisplayName = ((RefNBTTagCompound)NBTTagUtils.getTag(item).get("display")).getString("Name");
+		String rawDisplayName = JunkUtils.getDisplayName(item);
+		if(rawDisplayName != null){
 			FormatFlag[] formats = new FormatFlag[]{new FormatFlag(Format.ITALIC, true)};
 			return new ListComponent(
 					new RawTextComponent(/*text=*/"", /*insert=*/null, /*click=*/null, /*hover=*/null, /*color=*/rarityColor, /*formats=*/formats),
@@ -178,11 +175,11 @@ public class JunkUtils{
 					TellrawUtils.getLocalizedDisplayName(item));
 		}
 	}
-	public final static Component getMurderItemComponent(ItemStack item, int JSON_LIMIT){
+	public final static Component getMurderItemComponent(@Nonnull ItemStack item, int JSON_LIMIT){
 		TextHoverAction hoverAction = new TextHoverAction(HoverEvent.SHOW_ITEM, JunkUtils.convertItemStackToJson(item, JSON_LIMIT));
 		String rarityColor = TypeUtils.getRarityColor(item).name().toLowerCase();
-		if(item.hasItemMeta() && item.getItemMeta().hasDisplayName()){
-			String rawDisplayName = ((RefNBTTagCompound)NBTTagUtils.getTag(item).get("display")).getString("Name");
+		String rawDisplayName = JunkUtils.getDisplayName(item);
+		if(rawDisplayName != null){
 			FormatFlag[] formats = new FormatFlag[]{new FormatFlag(Format.ITALIC, true)};
 			return new ListComponent(
 					new RawTextComponent(/*text=*/"[", /*insert=*/null, /*click=*/null, hoverAction, /*color=*/rarityColor, /*formats=*/null),
@@ -238,6 +235,37 @@ public class JunkUtils{
 //		if(equipment.getBootsDropChance() >= 1f) itemsThatWillDrop.add(equipment.getBoots());
 //		return itemsThatWillDrop;
 //	}
+
+	public final static boolean setIfEmpty(@Nonnull EntityEquipment equipment, @Nonnull ItemStack item, @Nonnull EquipmentSlot slot){
+		switch(slot){
+			case HAND:
+				if(equipment.getItemInMainHandDropChance() >= 1f && equipment.getItemInMainHand() != null) return false;
+				equipment.setItemInMainHand(item);
+				return true;
+			case OFF_HAND:
+				if(equipment.getItemInOffHandDropChance() >= 1f && equipment.getItemInOffHand() != null) return false;
+				equipment.setItemInOffHand(item);
+				return true;
+			case HEAD:
+				if(equipment.getHelmetDropChance() >= 1f && equipment.getHelmet() != null) return false;
+				equipment.setHelmet(item);
+				return true;
+			case CHEST:
+				if(equipment.getChestplateDropChance() >= 1f && equipment.getChestplate() != null) return false;
+				equipment.setChestplate(item);
+				return true;
+			case LEGS:
+				if(equipment.getLeggingsDropChance() >= 1f && equipment.getLeggings() != null) return false;
+				equipment.setLeggings(item);
+				return true;
+			case FEET:
+				if(equipment.getBootsDropChance() >= 1f && equipment.getBoots() != null) return false;
+				equipment.setBoots(item);
+				return true;
+			default:
+				return false;
+		}
+	}
 
 	static RefMethod essMethodGetUser, essMethodIsVanished;
 	static RefMethod vanishMethodGetManager, vanishMethodIsVanished;
