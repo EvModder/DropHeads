@@ -334,6 +334,24 @@ public class EntityDeathListener implements Listener{
 		catch(IllegalArgumentException ex){/*The permissions are already defined; perhaps this is just a plugin or server reload*/}
 	}
 
+	public double getRawDropChance(String textureKey){
+		int keyDataTagIdx = textureKey.indexOf('|');
+		final String entityName = keyDataTagIdx == -1 ? textureKey : textureKey.substring(0, keyDataTagIdx);
+		EntityType eType;
+		try{eType = EntityType.valueOf(entityName.toUpperCase());}
+		catch(IllegalArgumentException ex){return DEFAULT_CHANCE;}
+		final HashMap<String, Double> eSubtypeChances = subtypeMobChances.get(eType);
+		if(eSubtypeChances != null){
+			keyDataTagIdx = textureKey.lastIndexOf('|');
+			Double subtypeChance = null;
+			while(keyDataTagIdx != -1 && (subtypeChance=eSubtypeChances.get(textureKey)) == null){
+				textureKey = textureKey.substring(0, keyDataTagIdx);
+				keyDataTagIdx = textureKey.lastIndexOf('|');
+			}
+			if(subtypeChance != null) return subtypeChance;
+		}
+		return mobChances.getOrDefault(eType, DEFAULT_CHANCE);
+	}
 	public double getRawDropChance(Entity e){
 		HashMap<String, Double> eSubtypeChances = subtypeMobChances.get(e.getType());
 		if(eSubtypeChances != null){

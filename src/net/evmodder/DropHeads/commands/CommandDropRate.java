@@ -2,6 +2,7 @@ package net.evmodder.DropHeads.commands;
 
 import java.text.DecimalFormat;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.bukkit.Material;
@@ -29,7 +30,7 @@ public class CommandDropRate extends EvCommand{
 	EntityDeathListener deathListener;
 	final boolean ONLY_SHOW_VALID_ENTITIES = true;
 	final boolean USING_SPAWN_MODIFIERS, USING_REQUIRED_WEAPONS, USING_LOOTING_MODIFIERS, USING_TIME_ALIVE_MODIFIERS, VANILLA_WITHER_SKELETON_LOOTING;
-	final HashMap<String, Double> dropChances;
+	final HashSet<String> entityNames;
 	final HashMap<Material, Double> weaponBonuses;
 	final double DEFAULT_DROP_CHANCE;
 	final double LOOTING_ADD, LOOTING_MULT;
@@ -76,21 +77,21 @@ public class CommandDropRate extends EvCommand{
 
 		//String defaultChances = FileIO.loadResource(pl, "head-drop-rates.txt"); // Already done in EntityDeathListener
 		String chances = FileIO.loadFile("head-drop-rates.txt", "");
-		dropChances = new HashMap<String, Double>();
+		entityNames = new HashSet<String>();
 		double chanceForUnknown = 0D;
 		for(String line : chances.split("\n")){
 			String[] parts = line.replace(" ", "").replace("\t", "").toUpperCase().split(":");
 			if(parts.length < 2) continue;
 			parts[0] = parts[0].replace("DEFAULT", "UNKNOWN");
 			try{
-				double dropChance = Double.parseDouble(parts[1]);
+				final double dropChance = Double.parseDouble(parts[1]);
 				if(parts[0].equals("UNKNOWN")) chanceForUnknown = dropChance;
 				if(ONLY_SHOW_VALID_ENTITIES){
 					int dataTagSep = parts[0].indexOf('|');
 					String eName = dataTagSep == -1 ? parts[0] : parts[0].substring(0, dataTagSep);
 					EntityType.valueOf(eName); // If entity does not exist, this drops to the catch below
 				}
-				dropChances.put(parts[0], dropChance);
+				entityNames.add(parts[0]);
 			}
 			catch(NumberFormatException ex){}
 			catch(IllegalArgumentException ex){}
@@ -108,7 +109,7 @@ public class CommandDropRate extends EvCommand{
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
 		if(args.length == 1){
 			args[0] = args[0].toUpperCase();
-			return dropChances.keySet().stream().filter(name -> name.startsWith(args[0])).collect(Collectors.toList());
+			return entityNames.stream().filter(name -> name.startsWith(args[0])).collect(Collectors.toList());
 		}
 		return null;
 	}
@@ -157,8 +158,10 @@ public class CommandDropRate extends EvCommand{
 			}
 		}
 		else{
-			rawChance = dropChances.get(target);
-			if(rawChance != null) sender.sendMessage(String.format(RAW_DROP_CHANCE_FOR, target, df.format(rawChance*100D), df.format(rawChance*100D)));
+			rawChance = deathListener.getRawDropChance(target);
+			if(rawChance != DEFAULT_DROP_CHANCE){
+				sender.sendMessage(String.format(RAW_DROP_CHANCE_FOR, target, df.format(rawChance*100D), df.format(rawChance*100D)));
+			}
 			else{
 				sender.sendMessage(String.format(DROP_CHANCE_FOR_NOT_FOUND, target));
 				return false;
