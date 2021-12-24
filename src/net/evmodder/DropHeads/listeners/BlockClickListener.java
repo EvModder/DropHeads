@@ -166,6 +166,19 @@ public class BlockClickListener implements Listener{
 		return data;
 	}
 
+	private boolean isVowel(char ch){
+		switch(Character.toLowerCase(ch)){
+			case 'a':
+			case 'e':
+			case 'i':
+			case 'o':
+			case 'u':
+				return true;
+			default:
+				return false;
+		}
+	}
+
 	@EventHandler(ignoreCancelled = true)
 	public void onBlockClickEvent(PlayerInteractEvent evt){
 		if(evt.useInteractedBlock() == Result.DENY || evt.getAction() != Action.RIGHT_CLICK_BLOCK
@@ -216,10 +229,11 @@ public class BlockClickListener implements Listener{
 		else{if(!evt.getPlayer().hasPermission("dropheads.clickinfo.unknown")) return; HEAD_DISPLAY = HEAD_DISPLAY_UNKNOWN;}
 
 		final TranslationComponent headTypeName = pl.getAPI().getHeadTypeName(data.headType);
-		final String aOrAn =
-				(data.textureKey != null ? pl.getAPI().getHeadNameFromKey(data.textureKey, /*customName=*/"").toPlainText()
-					: data.player != null && data.player.getName() != null ? data.player.getName() : data.profileName.toPlainText())
-				.matches("[aeiouAEIOU].*") ? "an" : "a"; // Yes, an imperfect solution, I know. :/
+		final String aOrAn = isVowel((
+			data.textureKey != null ? pl.getAPI().getHeadNameFromKey(data.textureKey, /*customName=*/"").toPlainText() :
+			data.player != null && data.player.getName() != null ? data.player.getName() :
+			data.profileName.toPlainText()
+		).charAt(0)) ? "an" : "a"; // Yes, an imperfect solution, I know. :/
 
 		evt.setCancelled(true);
 		ListComponent blob = TellrawUtils.convertHexColorsToComponents(HEAD_DISPLAY);
