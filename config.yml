@@ -118,7 +118,7 @@ substitute-dropheads-in-give-command: true
 must-use-axe: false
 
 # Drop chances are multiplied by this number for each level of looting
-looting-multiplier: 1.01
+looting-multiplier: 1.1
 
 # This number is added to the drop chance for each level of looting
 looting-addition: 0.0

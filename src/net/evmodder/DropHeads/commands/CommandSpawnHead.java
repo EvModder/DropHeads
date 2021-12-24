@@ -13,7 +13,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -359,7 +359,7 @@ public class CommandSpawnHead extends EvCommand{
 		for(int i=0; i<args.length; ++i){
 			if(args[i].matches("(?i:"+AMT_PREFIX+")[0-9]+")){
 				amount = Integer.parseInt(args[i].substring(AMT_PREFIX.length()));
-				args = ArrayUtils.remove(args, i);
+				args = (String[])ArrayUtils.remove(args, i);
 				break;
 			}
 		}
@@ -374,7 +374,7 @@ public class CommandSpawnHead extends EvCommand{
 						return true;
 					}
 				}
-				args = ArrayUtils.remove(args, i);
+				args = (String[])ArrayUtils.remove(args, i);
 				break;
 			}
 		}
@@ -382,7 +382,7 @@ public class CommandSpawnHead extends EvCommand{
 		for(int i=0; i<args.length; ++i){
 			if(args[i].matches("(?i:"+GIVETO_PREFIX+").*")){
 				giveTo = args[i].substring(GIVETO_PREFIX.length());
-				args = ArrayUtils.remove(args, i);
+				args = (String[])ArrayUtils.remove(args, i);
 				break;
 			}
 		}

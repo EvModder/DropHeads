@@ -578,8 +578,7 @@ public class EntityDeathListener implements Listener{
 		final double toolBonus = murderWeapon == null ? 0D : toolBonuses.getOrDefault(murderWeapon.getType(), 0D);
 		final int lootingLevel = murderWeapon == null ? 0 : murderWeapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
 		final boolean VANILLA_LOOTING = victim.getType() == EntityType.WITHER_SKELETON && VANILLA_WSKELE_LOOTING;
-		final double lootingMod = (lootingLevel == 0 || VANILLA_LOOTING)
-				? 1D : Math.min(Math.pow(LOOTING_MULT, lootingLevel), LOOTING_MULT*lootingLevel);
+		final double lootingMod = (lootingLevel == 0 || VANILLA_LOOTING) ? 1D : Math.pow(LOOTING_MULT, lootingLevel);
 		final double lootingAdd = (VANILLA_LOOTING ? 0.01D : LOOTING_ADD)*lootingLevel;
 		final double weaponMod = 1D + toolBonus;
 		final double timeAliveMod = 1D + getTimeAliveBonus(victim);
