@@ -42,6 +42,7 @@ import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.permissions.Permissible;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.EventExecutor;
@@ -83,7 +84,7 @@ public class EntityDeathListener implements Listener{
 	final boolean USE_PLAYER_DISPLAYNAMES = false;//TODO: move to config, when possible
 	final boolean CROSS_DIMENSIONAL_BROADCAST = true;//TODO: move to config
 	final int LOCAL_RANGE = 200;//TODO: move to config
-	final int JSON_LIMIT = 15000;//TODO: move to config
+	public final int JSON_LIMIT = 15000;//TODO: move to config
 	final BlockFace[] possibleHeadRotations = new BlockFace[]{
 			BlockFace.NORTH, BlockFace.NORTH_EAST, BlockFace.NORTH_WEST,
 			BlockFace.SOUTH, BlockFace.SOUTH_EAST, BlockFace.SOUTH_WEST,
@@ -100,6 +101,7 @@ public class EntityDeathListener implements Listener{
 	final HashMap<EntityType, HashMap<String, Double>> subtypeMobChances;
 	final HashMap<EntityType, AnnounceMode> mobAnnounceModes;
 	final HashMap<Material, Double> toolBonuses;
+	final HashMap<String, Double> droprateMultiplierPerms;
 	final TreeMap<Long, Double> timeAliveBonuses;
 	final HashSet<UUID> explodingChargedCreepers, recentlyBeheadedEntities;
 
@@ -113,11 +115,12 @@ public class EntityDeathListener implements Listener{
 		CHARGED_CREEPER_DROPS = pl.getConfig().getBoolean("charged-creeper-drops", true);
 		VANILLA_WSKELE_HANDLING = pl.getConfig().getBoolean("vanilla-wither-skeleton-skulls", false);
 		VANILLA_WSKELE_LOOTING = pl.getConfig().getBoolean("vanilla-wither-skeleton-looting-behavior", false);
-		LOOTING_ADD = pl.getConfig().getDouble("looting-addition", 0.01D);
-		LOOTING_MULT = pl.getConfig().getDouble("looting-mutliplier", 1D);
+		LOOTING_ADD = pl.getConfig().getDouble("looting-addition", 0D);
+		LOOTING_MULT = pl.getConfig().getDouble("looting-multiplier", pl.getConfig().getDouble("looting-mutliplier", 1.01D));
 		if(LOOTING_ADD >= 1) pl.getLogger().warning("looting-addition is set to 1.0 or greater, this means heads will ALWAYS drop when looting is used!");
 		if(LOOTING_MULT < 1) pl.getLogger().warning("looting-multiplier is set below 1.0, this means looting will DECREASE the chance of head drops!");
-		REPLACE_DEATH_MESSAGE = pl.getConfig().getBoolean("behead-announcement-replaces-death-message", true);
+		REPLACE_DEATH_MESSAGE = pl.getConfig().getBoolean("behead-announcement-replaces-player-death-message",
+				pl.getConfig().getBoolean("behead-announcement-replaces-death-message", true));
 		PRIORITY = JunkUtils.parseEnumOrDefault(pl.getConfig().getString("death-listener-priority", "LOW"), EventPriority.LOW);
 		DEBUG_MODE = pl.getConfig().getBoolean("debug-messages", true);
 		final boolean ENABLE_LOG = pl.getConfig().getBoolean("log.enable", false);
@@ -199,6 +202,13 @@ public class EntityDeathListener implements Listener{
 			catch(NumberFormatException ex){pl.getLogger().severe("Error parsing time string: \""+formattedTime+'"');}
 		}
 
+		droprateMultiplierPerms = new HashMap<String, Double>();
+		ConfigurationSection customDropratePerms = pl.getConfig().getConfigurationSection("custom-droprate-multiplier-permissions");
+		if(customDropratePerms != null) for(String perm : customDropratePerms.getKeys(false)){
+			try{droprateMultiplierPerms.put(perm, customDropratePerms.getDouble(perm));}
+			catch(NumberFormatException ex){pl.getLogger().severe("Error parsing droprate multiplier for perm: \""+perm+'"');}
+		}
+
 		//Load individual mobs' drop chances
 		mobChances = new HashMap<EntityType, Double>();
 		subtypeMobChances = new HashMap<EntityType, HashMap<String, Double>>();
@@ -207,6 +217,24 @@ public class EntityDeathListener implements Listener{
 		if(PLAYER_HEADS_ONLY){
 			pl.getServer().getPluginManager().registerEvent(PlayerDeathEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
 			DEFAULT_CHANCE = 0D;
+			String defaultChances = FileIO.loadResource(pl, "head-drop-rates.txt");
+			String chances = FileIO.loadFile("head-drop-rates.txt", defaultChances);
+			for(final String line : chances.split("\n")){
+				final String[] parts = line.split(":");
+				if(parts.length < 2 || !parts[0].trim().toUpperCase().equals("PLAYER")) continue;
+				final String value = parts[1].trim();
+				try{
+					double dropChance = Double.parseDouble(value);
+					if(dropChance < 0D || dropChance > 1D){
+						pl.getLogger().warning("Invalid value: "+value);
+						pl.getLogger().warning("Drop chance should be a decimal between 0 and 1");
+						if(dropChance > 1D && dropChance <= 100D) dropChance /= 100D;
+						else continue;
+					}
+					mobChances.put(EntityType.PLAYER, dropChance);
+				}
+				catch(NumberFormatException ex){pl.getLogger().severe("Invalid value: "+value);}
+			}
 		}
 		else{
 			String defaultChances = FileIO.loadResource(pl, "head-drop-rates.txt");
@@ -306,16 +334,35 @@ public class EntityDeathListener implements Listener{
 		catch(IllegalArgumentException ex){/*The permissions are already defined; perhaps this is just a plugin or server reload*/}
 	}
 
-	public double getRawDropChance(Entity e){
-		HashMap<String, Double> eTypeChances = subtypeMobChances.get(e.getType());
-		if(eTypeChances != null){
-			String textureKey = TextureKeyLookup.getTextureKey(e);
-			int keyDataTagIdx = textureKey.lastIndexOf('|');
-			while(keyDataTagIdx != -1 && !eTypeChances.containsKey(textureKey)){
+	public double getRawDropChance(String textureKey){
+		int keyDataTagIdx = textureKey.indexOf('|');
+		final String entityName = keyDataTagIdx == -1 ? textureKey : textureKey.substring(0, keyDataTagIdx);
+		EntityType eType;
+		try{eType = EntityType.valueOf(entityName.toUpperCase());}
+		catch(IllegalArgumentException ex){return DEFAULT_CHANCE;}
+		final HashMap<String, Double> eSubtypeChances = subtypeMobChances.get(eType);
+		if(eSubtypeChances != null){
+			keyDataTagIdx = textureKey.lastIndexOf('|');
+			Double subtypeChance = null;
+			while(keyDataTagIdx != -1 && (subtypeChance=eSubtypeChances.get(textureKey)) == null){
 				textureKey = textureKey.substring(0, keyDataTagIdx);
 				keyDataTagIdx = textureKey.lastIndexOf('|');
 			}
-			if(eTypeChances.containsKey(textureKey)) return eTypeChances.get(textureKey);
+			if(subtypeChance != null) return subtypeChance;
+		}
+		return mobChances.getOrDefault(eType, DEFAULT_CHANCE);
+	}
+	public double getRawDropChance(Entity e){
+		HashMap<String, Double> eSubtypeChances = subtypeMobChances.get(e.getType());
+		if(eSubtypeChances != null){
+			String textureKey = TextureKeyLookup.getTextureKey(e);
+			int keyDataTagIdx = textureKey.lastIndexOf('|');
+			Double subtypeChance = null;
+			while(keyDataTagIdx != -1 && (subtypeChance=eSubtypeChances.get(textureKey)) == null){
+				textureKey = textureKey.substring(0, keyDataTagIdx);
+				keyDataTagIdx = textureKey.lastIndexOf('|');
+			}
+			if(subtypeChance != null) return subtypeChance;
 		}
 		return mobChances.getOrDefault(e.getType(), DEFAULT_CHANCE);
 	}
@@ -329,6 +376,13 @@ public class EntityDeathListener implements Listener{
 					killer instanceof Projectile && killer.hasMetadata("ShotUsing") ? (ItemStack)killer.getMetadata("ShotUsing").get(0).value() :
 					null
 				: null;
+	}
+	public double getPermsBasedDropRateModifier(Permissible killer){
+		if(killer == null) return 1D;
+		return droprateMultiplierPerms.entrySet().stream().parallel()
+				.filter(e -> killer.hasPermission(e.getKey()))
+				.map(e -> e.getValue())
+				.reduce(1D, (a, b) -> a * b);
 	}
 	void sendTellraw(String target, String message){
 		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+target+" "+message);
@@ -524,14 +578,14 @@ public class EntityDeathListener implements Listener{
 		final double toolBonus = murderWeapon == null ? 0D : toolBonuses.getOrDefault(murderWeapon.getType(), 0D);
 		final int lootingLevel = murderWeapon == null ? 0 : murderWeapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
 		final boolean VANILLA_LOOTING = victim.getType() == EntityType.WITHER_SKELETON && VANILLA_WSKELE_LOOTING;
-		final double lootingMod = (lootingLevel == 0 || VANILLA_LOOTING)
-				? 1D : Math.min(Math.pow(LOOTING_MULT, lootingLevel), LOOTING_MULT*lootingLevel);
+		final double lootingMod = (lootingLevel == 0 || VANILLA_LOOTING) ? 1D : Math.pow(LOOTING_MULT, lootingLevel);
 		final double lootingAdd = (VANILLA_LOOTING ? 0.01D : LOOTING_ADD)*lootingLevel;
 		final double weaponMod = 1D + toolBonus;
 		final double timeAliveMod = 1D + getTimeAliveBonus(victim);
 		final double spawnCauseMod = JunkUtils.getSpawnCauseModifier(victim);
 		final double rawDropChance = getRawDropChance(victim);
-		final double dropChance = rawDropChance*spawnCauseMod*timeAliveMod*weaponMod*lootingMod + lootingAdd;
+		final double permMod = getPermsBasedDropRateModifier(killer);
+		final double dropChance = rawDropChance*spawnCauseMod*timeAliveMod*weaponMod*lootingMod*permMod + lootingAdd;
 
 		final double dropRoll = rand.nextDouble();
 		HeadRollEvent rollEvent = new HeadRollEvent(killer, victim, dropChance, dropRoll, dropRoll < dropChance);

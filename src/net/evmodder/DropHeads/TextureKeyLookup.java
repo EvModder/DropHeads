@@ -88,11 +88,14 @@ public class TextureKeyLookup{
 	static RefMethod mMushroomCowGetVariant;
 	static RefMethod mPandaGetMainGene, mPandaGetHiddenGene;
 	static RefMethod mTraderLlamaGetColor;
+	static RefMethod mAxolotlGetVariant;
 	static RefMethod mVexIsCharging;
+	static RefMethod mGoatIsScreaming;
 	static RefMethod mStriderIsShivering, mStriderHasSaddle;
 	static RefMethod mShulkerGetPeek, mShulkerGetAttachedFace;
 	static RefMethod mGetHandle, mGetDataWatcher, mGet_FromDataWatcher;
 	static java.lang.reflect.Field ghastIsAttackingField;
+	static RefMethod mGhastIsCharging;
 
 	@SuppressWarnings("rawtypes")
 	public static String getTextureKey(Entity entity){
@@ -204,6 +207,10 @@ public class TextureKeyLookup{
 				if(mTraderLlamaGetColor == null) mTraderLlamaGetColor =
 						ReflectionUtils.getRefClass("org.bukkit.entity.TraderLlama").getMethod("getColor");
 				return "TRADER_LLAMA|"+((Enum)mTraderLlamaGetColor.of(entity).call()).name();
+			case "AXOLOTL":
+				if(mAxolotlGetVariant == null) mAxolotlGetVariant =
+				ReflectionUtils.getRefClass("org.bukkit.entity.Axolotl").getMethod("getVariant");
+				return "AXOLOTL|"+((Enum)mAxolotlGetVariant.of(entity).call()).name();
 			case "GHAST":
 				//https://wiki.vg/Entity_metadata#Ghast => isAttacking=15="" (1.13 - 1.15)
 				boolean isScreaming = false;
@@ -211,24 +218,30 @@ public class TextureKeyLookup{
 					mGetHandle = ReflectionUtils.getRefClass("{cb}.entity.CraftEntity").getMethod("getHandle");
 					RefClass classEntityGhast = ReflectionUtils.getRefClass("{nms}.EntityGhast", "{nm}.world.entity.monster.EntityGhast");
 					RefClass classDataWatcher = ReflectionUtils.getRefClass("{nms}.DataWatcher", "{nm}.network.syncher.DataWatcher");
-					RefClass classDataWatcherObject = ReflectionUtils
-							.getRefClass("{nms}.DataWatcherObject","{nm}.network.syncher.DataWatcherObject");
-					mGetDataWatcher = classEntityGhast.getMethod("getDataWatcher");
-					mGet_FromDataWatcher = classDataWatcher.getMethod("get", classDataWatcherObject);
-					//TODO: monitor for change: BuildTools/work/decompile-ee3ecae0/net/minecraft/server/EntityGhast.java
-					ghastIsAttackingField = classEntityGhast.getField("b").getRealField();
+					RefClass classDataWatcherObject = ReflectionUtils.getRefClass("{nms}.DataWatcherObject","{nm}.network.syncher.DataWatcherObject");
+					// Only one field with this type: BuildTools/work/decompile-ee3ecae0/net/minecraft/world/entity/monster/EntityGhast.java
+					ghastIsAttackingField = classEntityGhast.findField(classDataWatcherObject).getRealField();
 					ghastIsAttackingField.setAccessible(true);
+					mGetDataWatcher = classEntityGhast.findMethod(/*isStatic=*/false, classDataWatcher);//.getMethod("getDataWatcher");
+					mGet_FromDataWatcher = classDataWatcher.findMethod(/*isStatic=*/false, 
+							/*returnType=*/Object.class,/*classDataWatcherObject.getRealClass().getTypeParameters()[0]*/
+							/*argType(s)=*/classDataWatcherObject);//.getMethod("get", classDataWatcherObject);
 				}
 				try{
 					Object datawatcherobject = ghastIsAttackingField.get(null);
 					Object entityGhast = mGetHandle.of(entity).call();
 					Object dataWatcher = mGetDataWatcher.of(entityGhast).call();
 					isScreaming = mGet_FromDataWatcher.of(dataWatcher).call(datawatcherobject).equals(true);
-					//org.bukkit.Bukkit.getLogger().info("Ghast isAttacking: "+isScreaming);
+//					org.bukkit.Bukkit.getLogger().info("Ghast isCharging: "+mGet_FromDataWatcher.of(dataWatcher).call(datawatcherobject).toString());
 				}
 				catch(IllegalArgumentException | IllegalAccessException e){}
 				if(isScreaming) return "GHAST|SCREAMING";//TODO: Add this to the Bukkit API
 				else return "GHAST";
+			case "GOAT":
+				if(ReflectionUtils.getServerVersionString().compareTo("v1_17_??") < 0) return "GOAT";
+				if(mGoatIsScreaming == null) mGoatIsScreaming = ReflectionUtils.getRefClass("org.bukkit.entity.Goat").getMethod("isScreaming");
+				if(mGoatIsScreaming.of(entity).call().equals(true)) return "GOAT|SCREAMING";
+				else return "GOAT";
 			case "STRIDER":
 				if(mStriderIsShivering == null){
 					RefClass classStrider = ReflectionUtils.getRefClass("org.bukkit.entity.Strider");

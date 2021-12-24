@@ -1,5 +1,6 @@
 package net.evmodder.DropHeads;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -10,6 +11,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
@@ -17,7 +19,9 @@ import org.bukkit.util.Vector;
 import javax.annotation.Nonnull;
 import net.evmodder.DropHeads.listeners.EntityDeathListener.AnnounceMode;
 import net.evmodder.EvLib.extras.NBTTagUtils;
-import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTTag;
+import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTTagString;
+import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTTagCompound;
+import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTTagList;
 import net.evmodder.EvLib.extras.ReflectionUtils;
 import net.evmodder.EvLib.extras.TellrawUtils;
 import net.evmodder.EvLib.extras.TextUtils;
@@ -69,23 +73,57 @@ public class JunkUtils{
 	}
 	public final static double getSpawnCauseModifier(Entity e){
 		//return e.hasMetadata("SpawnReason") ? e.getMetadata("SpawnReason").get(0).asDouble() : 1D;
+//		if(e == null) return 1D;
 		if(e.hasMetadata("SpawnReason")) return e.getMetadata("SpawnReason").get(0).asDouble();
 		for(String tag : e.getScoreboardTags()) if(tag.startsWith("SpawnReasonModifier:")) return Float.parseFloat(tag.substring(20));
 		return 1D;
 	}
 
 	public final static ItemStack setDisplayName(@Nonnull ItemStack item, @Nonnull Component name){
-		RefNBTTag tag = NBTTagUtils.getTag(item);
-		RefNBTTag display = tag.hasKey("display") ? (RefNBTTag)tag.get("display") : new RefNBTTag();
+		RefNBTTagCompound tag = NBTTagUtils.getTag(item);
+		RefNBTTagCompound display = tag.hasKey("display") ? (RefNBTTagCompound)tag.get("display") : new RefNBTTagCompound();
 		display.setString("Name", name.toString());
 		tag.set("display", display);
 		return NBTTagUtils.setTag(item, tag);
 	}
 
-	public final static String getDisplayName(ItemStack item){
-		RefNBTTag tag = NBTTagUtils.getTag(item);
-		RefNBTTag display = tag.hasKey("display") ? (RefNBTTag)tag.get("display") : new RefNBTTag();
+	public final static String getDisplayName(@Nonnull ItemStack item){
+		RefNBTTagCompound tag = NBTTagUtils.getTag(item);
+		if(tag == null) return null;
+		RefNBTTagCompound display = tag.hasKey("display") ? (RefNBTTagCompound)tag.get("display") : new RefNBTTagCompound();
 		return display.hasKey("Name") ? display.getString("Name") : null;
+	}
+
+	public final static ItemStack setLore(@Nonnull ItemStack item, @Nonnull Component... lore){
+		RefNBTTagCompound tag = NBTTagUtils.getTag(item);
+		RefNBTTagCompound display = tag.hasKey("display") ? (RefNBTTagCompound)tag.get("display") : new RefNBTTagCompound();
+		RefNBTTagList loreList = new RefNBTTagList();
+		for(Component loreLine : lore){
+			RefNBTTagString refString = new RefNBTTagString(loreLine.toString());
+			loreList.add(refString);
+		}
+		display.set("Lore", loreList);
+		tag.set("display", display);
+		return NBTTagUtils.setTag(item, tag);
+	}
+
+	public final static ArrayList<String> getLore(@Nonnull ItemStack item){
+		RefNBTTagCompound tag = NBTTagUtils.getTag(item);
+		RefNBTTagCompound display = tag.hasKey("display") ? (RefNBTTagCompound)tag.get("display") : new RefNBTTagCompound();
+		if(!display.hasKey("Lore")) return null;
+		RefNBTTagList loreTag = (RefNBTTagList)display.get("Lore");
+		RefNBTTagString loreLine = (RefNBTTagString)loreTag.get(0);
+		ArrayList<String> loreCompStrs = new ArrayList<>();
+		try{for(int i=0; loreLine!=null; loreLine=(RefNBTTagString)loreTag.get(++i)){
+			String loreStr = loreLine.toString();
+			if(loreStr.startsWith("\"'") && loreStr.endsWith("'\"")){
+				if(loreStr.startsWith("\"'{") && loreStr.endsWith("}'\"")) loreStr = TextUtils.unescapeString(loreStr.substring(2, loreStr.length()-2));
+				else loreStr = TextUtils.unescapeString(loreStr.substring(2, loreStr.length()-2));
+			}
+			loreCompStrs.add(loreStr);
+		}}
+		catch(RuntimeException e){/*caused by IndexOutOfBoundsException*/}
+		return loreCompStrs;
 	}
 
 	// ItemStack methods to get a net.minecraft.server.ItemStack object for serialization
@@ -95,7 +133,7 @@ public class JunkUtils{
 	// NMS Method to serialize a net.minecraft.server.vX_X.ItemStack to a valid JSON string
 	final static RefClass nmsItemStackClazz = ReflectionUtils.getRefClass("{nms}.ItemStack", "{nm}.world.item.ItemStack");
 	final static RefClass nbtTagCompoundClazz = ReflectionUtils.getRefClass("{nms}.NBTTagCompound", "{nm}.nbt.NBTTagCompound");
-	final static RefMethod saveNmsItemStackMethod = nmsItemStackClazz.getMethod("save", nbtTagCompoundClazz);
+	final static RefMethod saveNmsItemStackMethod = nmsItemStackClazz.findMethod(/*isStatic=*/false, nbtTagCompoundClazz, nbtTagCompoundClazz);
 
 	// https://www.spigotmc.org/threads/tut-item-tooltips-with-the-chatcomponent-api.65964/
 	/**
@@ -121,10 +159,10 @@ public class JunkUtils{
 		return itemAsJsonObject.toString();
 	}
 
-	public final static Component getItemDisplayNameComponent(ItemStack item, int JSON_LIMIT){
+	public final static Component getItemDisplayNameComponent(@Nonnull ItemStack item){
 		String rarityColor = TypeUtils.getRarityColor(item).name().toLowerCase();
-		if(item.hasItemMeta() && item.getItemMeta().hasDisplayName()){
-			String rawDisplayName = ((RefNBTTag)NBTTagUtils.getTag(item).get("display")).getString("Name");
+		String rawDisplayName = JunkUtils.getDisplayName(item);
+		if(rawDisplayName != null){
 			FormatFlag[] formats = new FormatFlag[]{new FormatFlag(Format.ITALIC, true)};
 			return new ListComponent(
 					new RawTextComponent(/*text=*/"", /*insert=*/null, /*click=*/null, /*hover=*/null, /*color=*/rarityColor, /*formats=*/formats),
@@ -137,11 +175,11 @@ public class JunkUtils{
 					TellrawUtils.getLocalizedDisplayName(item));
 		}
 	}
-	public final static Component getMurderItemComponent(ItemStack item, int JSON_LIMIT){
+	public final static Component getMurderItemComponent(@Nonnull ItemStack item, int JSON_LIMIT){
 		TextHoverAction hoverAction = new TextHoverAction(HoverEvent.SHOW_ITEM, JunkUtils.convertItemStackToJson(item, JSON_LIMIT));
 		String rarityColor = TypeUtils.getRarityColor(item).name().toLowerCase();
-		if(item.hasItemMeta() && item.getItemMeta().hasDisplayName()){
-			String rawDisplayName = ((RefNBTTag)NBTTagUtils.getTag(item).get("display")).getString("Name");
+		String rawDisplayName = JunkUtils.getDisplayName(item);
+		if(rawDisplayName != null){
 			FormatFlag[] formats = new FormatFlag[]{new FormatFlag(Format.ITALIC, true)};
 			return new ListComponent(
 					new RawTextComponent(/*text=*/"[", /*insert=*/null, /*click=*/null, hoverAction, /*color=*/rarityColor, /*formats=*/null),
@@ -163,7 +201,7 @@ public class JunkUtils{
 	final static RefClass craftEntityClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftEntity");
 	final static RefMethod entityGetHandleMethod = craftEntityClazz.getMethod("getHandle");
 	final static RefClass nmsEntityClazz = ReflectionUtils.getRefClass("{nms}.Entity", "{nm}.world.entity.Entity");
-	final static RefMethod saveNmsEntityMethod = nmsEntityClazz.getMethod("save", nbtTagCompoundClazz);
+	final static RefMethod saveNmsEntityMethod = nmsEntityClazz.findMethod(/*isStatic=*/false, nbtTagCompoundClazz, nbtTagCompoundClazz);
 	public final static String convertEntityToJson(Entity entity){//TODO: not currently used
 		
 		Object nmsNbtTagCompoundObj = nbtTagCompoundClazz.getConstructor().create();
@@ -197,6 +235,37 @@ public class JunkUtils{
 //		if(equipment.getBootsDropChance() >= 1f) itemsThatWillDrop.add(equipment.getBoots());
 //		return itemsThatWillDrop;
 //	}
+
+	public final static boolean setIfEmpty(@Nonnull EntityEquipment equipment, @Nonnull ItemStack item, @Nonnull EquipmentSlot slot){
+		switch(slot){
+			case HAND:
+				if(equipment.getItemInMainHandDropChance() >= 1f && equipment.getItemInMainHand() != null) return false;
+				equipment.setItemInMainHand(item);
+				return true;
+			case OFF_HAND:
+				if(equipment.getItemInOffHandDropChance() >= 1f && equipment.getItemInOffHand() != null) return false;
+				equipment.setItemInOffHand(item);
+				return true;
+			case HEAD:
+				if(equipment.getHelmetDropChance() >= 1f && equipment.getHelmet() != null) return false;
+				equipment.setHelmet(item);
+				return true;
+			case CHEST:
+				if(equipment.getChestplateDropChance() >= 1f && equipment.getChestplate() != null) return false;
+				equipment.setChestplate(item);
+				return true;
+			case LEGS:
+				if(equipment.getLeggingsDropChance() >= 1f && equipment.getLeggings() != null) return false;
+				equipment.setLeggings(item);
+				return true;
+			case FEET:
+				if(equipment.getBootsDropChance() >= 1f && equipment.getBoots() != null) return false;
+				equipment.setBoots(item);
+				return true;
+			default:
+				return false;
+		}
+	}
 
 	static RefMethod essMethodGetUser, essMethodIsVanished;
 	static RefMethod vanishMethodGetManager, vanishMethodIsVanished;

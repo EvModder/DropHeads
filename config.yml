@@ -6,7 +6,7 @@ behead-announcement:
 #  wither_skeleton: 'OFF'
 
 # Replaces death messages if player behead announcement is GLOBAL
-behead-announcement-replaces-death-message: true
+behead-announcement-replaces-player-death-message: true
 
 # The messages used to announce beheading
 message-beheaded: '&6${VICTIM}&r was decapitated'
@@ -42,6 +42,7 @@ refresh-textures: true
 refresh-item-names: false
 
 # Whether to reset the item lore for a head when refreshing its texture
+# This setting is ignored if 'save-custom-lore' is true
 refresh-item-lores: false
 
 # When a player changes their skin, should old heads be updated to the
@@ -63,7 +64,6 @@ charged-creeper-drops: true
 # A Minecraft easter egg is that mobs named 'Dinnerbone' or 'Grumm' are
 # upside down.. If you want their heads to share this trait, set to true
 drop-grumm-heads: true
-show-grumm-in-tab-complete: false
 
 # Should heads of saddled mobs have altered textures (when applicable)?
 drop-saddled-heads: false
@@ -100,7 +100,8 @@ head-click-listener: true
 # Only works for player-type heads, eg: won't work for minecraft:creeper_head
 # WARNING: This feature is in BETA and is relatively untested
 # WARNING: Lore will still get lost if the head is broken by a non-player
-save-custom-lore: false
+# WARNING: This setting overrides 'refresh-item-lores'
+save-custom-lore: true
 
 # Corrects custom lore and name when CTRL-copying a placed head in creative
 fix-creative-nbt-copy: true
@@ -109,31 +110,15 @@ fix-creative-nbt-copy: true
 # Note: Applies to custom player/mob heads, but not to WITHER_SKULL etc.
 show-head-type-in-lore: true
 
+# Adds support for DropHeads-namespaced heads in the vanilla "/give" command
+# WARNING: This feature is in EARLY-BETA and may not end up being supported
+substitute-dropheads-in-give-command: true
+
 # Only drop heads if the killer used an axe; overrides 'must-use'
 must-use-axe: false
 
-# How the head item from a beheading should be handled, options are:
-# EVENT - add the head to normally dropped loot,
-# SPAWN - spawn the head separately from the event,
-# PLACE - place the head on the ground if spot is available (within 3 blocks)
-# PLACE_BY_KILLER - same as PLACE but checks if killer has build permissions
-# PLACE_BY_VICTIM - same as PLACE but checks if victim has build permissions
-# GIVE - try to put the head directly into the killer's inventory
-# You can do multiple of these in a list; i.e., ['GIVE', 'SPAWN'] will try to
-# give a head to the killer, but will drop the item if their inventory is full
-head-item-drop-mode: 'EVENT'
-
-head-place-overwrite-blocks: ['AIR', 'WATER', 'GRASS']
-
-# (Optional) Select weapons required to be used in order to get heads to drop
-# If this list is empty, any weapon can be used to get heads
-must-use:
-#  - IRON_SWORD
-#  - DIAMOND_AXE
-#  - WOOD_HOE
-
 # Drop chances are multiplied by this number for each level of looting
-looting-mutliplier: 1.01
+looting-multiplier: 1.1
 
 # This number is added to the drop chance for each level of looting
 looting-addition: 0.0
@@ -158,10 +143,25 @@ cracked-iron-golem-heads: false
 # A list of mob heads a player can wear to avoid provoking endermen
 endermen-camouflage-heads: []
 
-# Changes the death "Event Priority" that DropHeads registers at
-# Low values => DropHeads runs BEFORE other plugins; high values => runs AFTER
-# Possible values: [LOWEST, LOW, NORMAL, HIGH, HIGHEST, MONITOR]
-death-listener-priority: LOW
+# How the head item from a beheading should be handled, options are:
+# EVENT - add the head to normally dropped loot,
+# SPAWN - spawn the head separately from the event,
+# PLACE - place the head on the ground if spot is available (within 3 blocks)
+# PLACE_BY_KILLER - same as PLACE but checks if killer has build permissions
+# PLACE_BY_VICTIM - same as PLACE but checks if victim has build permissions
+# GIVE - try to put the head directly into the killer's inventory
+# You can do multiple of these in a list; i.e., ['GIVE', 'SPAWN'] will try to
+# give a head to the killer, but will drop the item if their inventory is full
+head-item-drop-mode: 'EVENT'
+
+head-place-overwrite-blocks: ['AIR', 'WATER', 'GRASS']
+
+# (Optional) Select weapons required to be used in order to get heads to drop
+# If this list is empty, any weapon can be used to get heads
+must-use:
+#  - IRON_SWORD
+#  - DIAMOND_AXE
+#  - WOODEN_HOE
 
 # (Optional) Let certain tools have a higher chance of beheading
 # The number is the percent increase in drop chance when using that tool
@@ -188,6 +188,22 @@ time-alive-modifiers:
   1d: 2.0
   1w: 3.0
   30w6d11h55m33s: 10.0
+
+# Changes the death "Event Priority" that DropHeads registers at
+# Low values => DropHeads runs BEFORE other plugins; high values => runs AFTER
+# Possible values: [LOWEST, LOW, NORMAL, HIGH, HIGHEST, MONITOR]
+death-listener-priority: LOW
+
+# Set drop chance multipliers for custom permission groups
+custom-droprate-multiplier-permissions:
+#  dropheads.group.droprate2x: 2.0
+#  dropheads.group.droprate150percent: 1.5
+
+# Attempt to replace headA with headB whenever possible (server-wide)
+# The head on the left is replaced with the one on the right when updated
+replace-heads:
+  'PIG_ZOMBIE': 'ZOMBIFIED_PIGLIN'
+#  'ILLUSIONER': 'VILLAGER|FLETCHER|SWAMP'
 
 # Whether to enable logging for certain events
 log:

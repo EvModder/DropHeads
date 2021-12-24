@@ -11,13 +11,16 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
+import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
+import net.evmodder.EvLib.extras.TellrawUtils;
+import net.evmodder.EvLib.extras.TellrawUtils.Component;
 
 public class LoreStoreBlockBreakListener implements Listener{
 	// This listener is only registered when 'save-custom-lore' = true
+	// data merge entity @e[type=item,distance=..5,limit=1] {Item:{tag:{display:{Lore:['{"text":"mob:cave_spider","color":"dark_gray","italic":false}','"e"']}}}}
 
 	// Returns null unless the block is a skull that contains encodes lore text
 	static ItemStack getItemWithLore(Block block){
@@ -27,8 +30,7 @@ public class LoreStoreBlockBreakListener implements Listener{
 		GameProfile profile = HeadUtils.getGameProfile(skull);
 		if(profile == null || profile.getName() == null) return null;
 
-		int endCustomName = profile.getName().lastIndexOf('"');
-		int loreStart = profile.getName().indexOf('>', endCustomName + 1);
+		int loreStart = profile.getName().indexOf('>');
 		if(loreStart == -1) return null;
 
 		List<String> lore = Arrays.asList(profile.getName().substring(loreStart + 1).split("\\n", -1));
@@ -37,9 +39,10 @@ public class LoreStoreBlockBreakListener implements Listener{
 		GameProfile profileWithoutLore = new GameProfile(profile.getId(), preLoreProfileName);
 		ItemStack headItem = DropHeads.getPlugin().getAPI().getHead(profileWithoutLore);
 		if(lore.size() > 1 || (lore.size() == 1 && !lore.get(0).isEmpty())){
-			ItemMeta meta = headItem.getItemMeta();
-			meta.setLore(lore);
-			headItem.setItemMeta(meta);
+			
+			Component[] loreComps = new Component[lore.size()];
+			for(int i=0; i<lore.size(); ++i) loreComps[i] = TellrawUtils.parseComponentFromString(lore.get(i));
+			headItem = JunkUtils.setLore(headItem, loreComps);
 		}
 		return headItem;
 	}

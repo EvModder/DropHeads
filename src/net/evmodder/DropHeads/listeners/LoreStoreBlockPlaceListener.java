@@ -11,6 +11,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
+import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
 
 public class LoreStoreBlockPlaceListener implements Listener{
@@ -27,12 +28,13 @@ public class LoreStoreBlockPlaceListener implements Listener{
 		SkullMeta meta = (SkullMeta) headItem.getItemMeta();
 		GameProfile profile = HeadUtils.getGameProfile(meta);
 		if(profile == null || profile.getName() == null) return; // We can't append lore to an invalid GameProfile...
-		
-		List<String> defaultLore = DropHeads.getPlugin().getAPI().getHead(profile).getItemMeta().getLore();
-		if(defaultLore.equals(meta.getLore())) return; // Nothing to save!
+
+		List<String> customLore = JunkUtils.getLore(headItem);
+		List<String> defaultLore = JunkUtils.getLore(DropHeads.getPlugin().getAPI().getHead(profile));
+		if(defaultLore.equals(customLore)) return; // Nothing to save!
 
 		final String texturekey = profile.getName();
-		final String combinedLore = String.join("\n", meta.getLore());
+		final String combinedLore = String.join("\n", customLore);
 		GameProfile profileWithLore = new GameProfile(profile.getId(), texturekey+">"+combinedLore);
 		profileWithLore.getProperties().putAll("textures", profile.getProperties().get("textures"));
 

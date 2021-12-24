@@ -26,15 +26,16 @@ import net.evmodder.EvLib.Updater;
 
 //TODO:
 // * /dropheads reload
+// * Refactor CommandSpawnHead (split it up!)
 // * improve the bad textures listed at the bottom of head-textures.txt
-// * Trophies/Luck attribute
 // * move textures to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
 // * un-dye heads (sheep,shulker) with cauldron (gimmick)
 // * jeb_ sheep head animated phase through colors (gimmick)
 // * ALL player-visible msgs in plugin translated in translations.yml
-// * dont have PIG_ZOMBIE in the plugin folder copy of head-textures.txt (fixes console error)
+// * full /minecraft:give command support
 //TEST:
+// * Trophies/Luck attribute
 // * hide behead msgs for vanished players
 // * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
 // * place-head-block, overwrite-blocks, facing-direction, place-as: KILLER/VICTIM/SERVER
@@ -83,6 +84,9 @@ public final class DropHeads extends EvPlugin{
 		}
 		if(config.getBoolean("prevent-head-placement", false)){
 			getServer().getPluginManager().registerEvents(new PreventBlockPlaceListener(), this);
+		}
+		if(config.getBoolean("substitute-dropheads-in-give-command", false)){
+			getServer().getPluginManager().registerEvents(new GiveCommandPreprocessListener(), this);
 		}
 		if(!config.getStringList("endermen-camouflage-heads").isEmpty()){
 			getServer().getPluginManager().registerEvents(new EndermanProvokeListener(), this);
