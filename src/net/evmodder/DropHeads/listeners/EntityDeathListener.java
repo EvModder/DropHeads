@@ -104,6 +104,7 @@ public class EntityDeathListener implements Listener{
 	final HashMap<String, Double> droprateMultiplierPerms;
 	final TreeMap<Long, Double> timeAliveBonuses;
 	final HashSet<UUID> explodingChargedCreepers, recentlyBeheadedEntities;
+	private String currentBeheadTextureKey; // TODO: A dumb optimization I should probably remove somtime.
 
 	public EntityDeathListener(){
 		pl = DropHeads.getPlugin();
@@ -204,8 +205,9 @@ public class EntityDeathListener implements Listener{
 
 		droprateMultiplierPerms = new HashMap<String, Double>();
 		ConfigurationSection customDropratePerms = pl.getConfig().getConfigurationSection("custom-droprate-multiplier-permissions");
-		if(customDropratePerms != null) for(String perm : customDropratePerms.getKeys(false)){
-			try{droprateMultiplierPerms.put(perm, customDropratePerms.getDouble(perm));}
+		if(customDropratePerms != null) for(String perm : customDropratePerms.getKeys(/*recursive=*/true)){
+			//TODO: This will generate ["dropheads", "dropheads.group", "dropheads.group.2x", ...] because of how Bukkit/YML works
+			try{droprateMultiplierPerms.put(perm, customDropratePerms.getDouble(perm, 1D));}
 			catch(NumberFormatException ex){pl.getLogger().severe("Error parsing droprate multiplier for perm: \""+perm+'"');}
 		}
 
@@ -355,7 +357,8 @@ public class EntityDeathListener implements Listener{
 	public double getRawDropChance(Entity e){
 		HashMap<String, Double> eSubtypeChances = subtypeMobChances.get(e.getType());
 		if(eSubtypeChances != null){
-			String textureKey = TextureKeyLookup.getTextureKey(e);
+			if(currentBeheadTextureKey == null) currentBeheadTextureKey = TextureKeyLookup.getTextureKey(e);
+			String textureKey = currentBeheadTextureKey;
 			int keyDataTagIdx = textureKey.lastIndexOf('|');
 			Double subtypeChance = null;
 			while(keyDataTagIdx != -1 && (subtypeChance=eSubtypeChances.get(textureKey)) == null){
@@ -523,6 +526,7 @@ public class EntityDeathListener implements Listener{
 
 
 	void onEntityDeath(@Nonnull final Entity victim, final Entity killer, final Event evt){
+		currentBeheadTextureKey = null;
 		if(killer != null){
 			if(!killer.hasPermission("dropheads.canbehead")){
 				if(DEBUG_MODE) pl.getLogger().info("dropheads.canbehead=false: "+killer.getName());
@@ -608,7 +612,8 @@ public class EntityDeathListener implements Listener{
 			attemptHeadDropEvent(victim, evt, killer, murderWeapon);
 			if(DEBUG_MODE){
 				DecimalFormat df = new DecimalFormat("0.0###");
-				pl.getLogger().info("Dropping Head: "+TextureKeyLookup.getTextureKey(victim)
+				if(currentBeheadTextureKey == null) currentBeheadTextureKey = TextureKeyLookup.getTextureKey(victim);
+				pl.getLogger().info("Dropping Head: "+currentBeheadTextureKey
 					+"\nKiller: "+(killer != null ? killer.getType() : "none")
 					+", Weapon: "+(murderWeapon != null ? murderWeapon.getType() : "none")
 					+"\nRaw chance: "+df.format(rawDropChance*100D)+"%\nMultipliers >> "+
