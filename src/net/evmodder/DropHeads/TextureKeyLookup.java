@@ -1,6 +1,7 @@
 package net.evmodder.DropHeads;
 
 import org.bukkit.DyeColor;
+import org.bukkit.Location;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
@@ -27,13 +28,13 @@ public class TextureKeyLookup{
 	@SuppressWarnings("deprecation")
 	static String getTropicalFishKey(CCP ccp){
 		if(EntityUtils.getCommonTropicalFishId(ccp) != null){
-			System.out.println("name: "+EntityUtils.getTropicalFishEnglishName(ccp).toUpperCase().replace(' ', '_'));
+//			System.out.println("name: "+EntityUtils.getTropicalFishEnglishName(ccp).toUpperCase().replace(' ', '_'));
 			return "TROPICAL_FISH|"+EntityUtils.getTropicalFishEnglishName(ccp).toUpperCase().replace(' ', '_');
 		}
 		else{
-			System.out.println("fallback name: "+new StringBuilder("TROPICAL_FISH|")
-					.append(ccp.bodyColor.name()).append('|').append(ccp.patternColor.name())
-					.append('|').append(ccp.pattern.name()).toString());
+//			System.out.println("fallback name: "+new StringBuilder("TROPICAL_FISH|")
+//					.append(ccp.bodyColor.name()).append('|').append(ccp.patternColor.name())
+//					.append('|').append(ccp.pattern.name()).toString());
 			return new StringBuilder("TROPICAL_FISH|")
 					.append(ccp.bodyColor.name()).append('|').append(ccp.patternColor.name())
 					.append('|').append(ccp.pattern.name()).toString();
@@ -47,6 +48,18 @@ public class TextureKeyLookup{
 			case EAST: return BlockFace.NORTH;
 			default: return null;
 		}
+	}
+	static BlockFace getNearest6dBlockFace(Location from, Location to){
+		double diffX = Math.abs(to.getX() - from.getX());
+		double diffY = Math.abs(to.getY() - from.getY());
+		double diffZ = Math.abs(to.getZ() - from.getZ());
+		if(diffX > diffY && diffX > diffZ){
+			return to.getX() > from.getX() ? BlockFace.EAST : BlockFace.WEST;
+		}
+		if(diffZ > diffY){
+			return to.getZ() > from.getZ() ? BlockFace.SOUTH : BlockFace.NORTH;
+		}
+		return to.getY() > from.getY() ? BlockFace.UP : BlockFace.DOWN;
 	}
 	static String getShulkerKey(Shulker shulker){
 		DyeColor color = shulker.getColor();
@@ -63,7 +76,8 @@ public class TextureKeyLookup{
 			catch(RuntimeException ex){return shulkerAndColorKey;}
 		}
 		float peek = (float)mShulkerGetPeek.of(shulker).call();
-		String peekState = peek == 0 ? "|CLOSED" : peek == 1 ? "" : "|PEEKING";
+		//TODO: Add textures for "peeking" shulkers
+		String peekState = peek == 0 ? "|CLOSED" : peek == 1 ? "" : ""/*"|PEEKING"*/;
 		BlockFace attachedFace = (BlockFace)mShulkerGetAttachedFace.of(shulker).call();
 		String rotation;
 		switch(attachedFace){
@@ -71,10 +85,19 @@ public class TextureKeyLookup{
 				rotation = "|GRUMM"; break;
 			case NORTH: case SOUTH: case EAST: case WEST:
 				if(peekState.equals("|CLOSED")) rotation = "|SIDEWAYS";
-				else if(shulker.getFacing() == BlockFace.UP) rotation = "|SIDE_UP";
-				else if(shulker.getFacing() == BlockFace.DOWN) rotation = "|SIDE_DOWN";
-				else if(shulker.getFacing() == turnLeft(attachedFace)) rotation = "|SIDE_LEFT";
-				else/*if(shulker.getFacing() == turnRight(attachedFace))*/rotation = "|SIDE_RIGHT";
+//				else if(shulker.getFacing() == BlockFace.UP) rotation = "|SIDE_UP";
+//				else if(shulker.getFacing() == BlockFace.DOWN) rotation = "|SIDE_DOWN";
+//				else if(shulker.getFacing() == turnLeft(attachedFace)) rotation = "|SIDE_LEFT";
+//				else/*if(shulker.getFacing() == turnRight(attachedFace))*/rotation = "|SIDE_RIGHT";
+				//error("shulker facing: "+shulker.getFacing().name()); // TODO: Spigot bug report (always SOUTH for sideways shulkers)!
+				else if(shulker.getTarget() != null && shulker.getTarget().getEyeLocation() != null){
+					BlockFace realFacing = getNearest6dBlockFace(shulker.getEyeLocation(), shulker.getTarget().getEyeLocation());
+					if(realFacing == BlockFace.UP) rotation = "|SIDE_UP";
+					else if(realFacing == BlockFace.DOWN) rotation = "|SIDE_DOWN";
+					else if(realFacing == turnLeft(attachedFace)) rotation = "|SIDE_LEFT";
+					else/*if(realFacing == turnRight(attachedFace))*/rotation = "|SIDE_RIGHT";
+				}
+				else rotation = "";
 				break;
 			default: case DOWN: rotation = "";
 		}
