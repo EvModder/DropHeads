@@ -1639,7 +1639,7 @@ ZOMBIE_VILLAGER|TOOLSMITH|TAIGA|GRUMM: e89f6d375619e54018ba6f6f1352c62164c6756cc
 ZOMBIE_VILLAGER|WEAPONSMITH|TAIGA|GRUMM: e60e6cbae6a5f4c61fdbe6dd1c071dcb62f36cf96996b26eb638737da204cf0c
 
 //
-//ADD: TropicalFish, Carpeted llamas, Axolotl, WitherSkeleton|HOLLOW
+//ADD: TropicalFish, Carpeted llamas, WitherSkeleton|HOLLOW, "Peeking" shulkers, 1.19 mobs
 //TEST: Cat, Wolf, Villager, ZombieVillager, DamagedIronGolem(?), ArmoredWither(?), Axolotl, Goat
 //IMPROVE: Clownfish, Goatfish, Queen_Angelfish, Tomato_Clownfish, stray->Stray|HOLLOW, wskele->WitherSkeleton|HOLLOW, ElderGuardian(eye)
 //MAKE: pre-JAPPAs for:
