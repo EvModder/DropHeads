@@ -1,23 +1,21 @@
 package net.evmodder.DropHeads.commands;
 
 import java.text.DecimalFormat;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
+import net.evmodder.DropHeads.DropChanceAPI;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.JunkUtils;
-import net.evmodder.DropHeads.listeners.EntityDeathListener;
 import net.evmodder.EvLib.EvCommand;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
@@ -27,13 +25,12 @@ import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
 
 public class CommandDropRate extends EvCommand{
 	final private DropHeads pl;
-	EntityDeathListener deathListener;
+	final private DropChanceAPI dropChanceAPI;
 	final boolean ONLY_SHOW_VALID_ENTITIES = true;
 	final boolean USING_SPAWN_MODIFIERS, USING_REQUIRED_WEAPONS, USING_LOOTING_MODIFIERS, USING_TIME_ALIVE_MODIFIERS, VANILLA_WITHER_SKELETON_LOOTING;
 	final HashSet<String> entityNames;
-	final HashMap<Material, Double> weaponBonuses;
 	final double DEFAULT_DROP_CHANCE;
-	final double LOOTING_ADD, LOOTING_MULT;
+	final int JSON_LIMIT;
 	
 	final String RAW_DROP_CHANCE_FOR = "§6Drop chance for §e%s§6: §b%s%%";
 	final String DROP_CHANCE_FOR_NOT_FOUND = "§6Drop chance for \"§c%s§6\" not found! §7(defaults to §b0%%§7)";
@@ -53,14 +50,16 @@ public class CommandDropRate extends EvCommand{
 	final TranslationComponent LOOTING_COMP = new TranslationComponent("enchantment.minecraft.looting");
 	final Component VANILLA_WITHER_SKELETON_BEHAVIOR_ALERT = new RawTextComponent("\n§7Vanilla wither_skeleton looting rate is enabled");
 
-	public CommandDropRate(DropHeads plugin, EntityDeathListener deathListener) {
+	public CommandDropRate(DropHeads plugin, DropChanceAPI dropChanceAPI) {
 		super(plugin);
 		pl = plugin;
-		this.deathListener = deathListener;
-		if(USING_REQUIRED_WEAPONS = !deathListener.mustUseTools.isEmpty()){
+		this.dropChanceAPI = dropChanceAPI;
+		JSON_LIMIT = pl.getConfig().getInt("message-json-limit", 15000);
+
+		if(USING_REQUIRED_WEAPONS = !dropChanceAPI.mustUseTools.isEmpty()){
 			ListComponent requiredWeapons = new ListComponent();
 			boolean isFirstElement = true;
-			for(Material mat : deathListener.mustUseTools){
+			for(Material mat : dropChanceAPI.mustUseTools){
 				if(!isFirstElement) requiredWeapons.addComponent(new RawTextComponent("§7, §f"));
 				else isFirstElement = false;
 				requiredWeapons.addComponent(new TranslationComponent("item.minecraft."+mat.name().toLowerCase()));
@@ -68,9 +67,7 @@ public class CommandDropRate extends EvCommand{
 			SPECIFIC_WEAPONS = new TranslationComponent(SPECIFIC_WEAPONS_TEXT, requiredWeapons);
 		}
 		USING_SPAWN_MODIFIERS = pl.getConfig().getBoolean("track-mob-spawns", true);
-		LOOTING_ADD = pl.getConfig().getDouble("looting-addition", 0.01D);
-		LOOTING_MULT = pl.getConfig().getDouble("looting-multiplier", pl.getConfig().getDouble("looting-mutliplier", 1D));
-		USING_LOOTING_MODIFIERS = LOOTING_MULT != 1D || LOOTING_ADD != 0D;
+		USING_LOOTING_MODIFIERS = dropChanceAPI.LOOTING_MULT != 1D || dropChanceAPI.LOOTING_ADD != 0D;
 		USING_TIME_ALIVE_MODIFIERS = pl.getConfig().isConfigurationSection("time-alive-modifiers")
 				&& !pl.getConfig().getConfigurationSection("time-alive-modifiers").getKeys(false).isEmpty();
 		VANILLA_WITHER_SKELETON_LOOTING = pl.getConfig().getBoolean("vanilla-wither-skeleton-looting-behavior", true);
@@ -97,13 +94,6 @@ public class CommandDropRate extends EvCommand{
 			catch(IllegalArgumentException ex){}
 		}
 		DEFAULT_DROP_CHANCE = chanceForUnknown;
-
-		weaponBonuses = new HashMap<Material, Double>();
-		ConfigurationSection specificToolModifiers = pl.getConfig().getConfigurationSection("specific-tool-modifiers");
-		if(specificToolModifiers != null) for(String toolName : specificToolModifiers.getKeys(false)){
-			Material mat = Material.getMaterial(toolName.toUpperCase());
-			if(mat != null) weaponBonuses.put(mat, specificToolModifiers.getDouble(toolName));
-		}
 	}
 
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
@@ -153,12 +143,12 @@ public class CommandDropRate extends EvCommand{
 						+" §7(dropheads.canlosehead=§cfalse§7)");
 			}
 			else{
-				rawChance = deathListener.getRawDropChance(entity);
+				rawChance = dropChanceAPI.getRawDropChance(entity);
 				sender.sendMessage(String.format(RAW_DROP_CHANCE_FOR, entity instanceof Player ? entity.getName() : target, df.format(rawChance*100D)));
 			}
 		}
 		else{
-			rawChance = deathListener.getRawDropChance(target);
+			rawChance = dropChanceAPI.getRawDropChance(target);
 			if(rawChance != DEFAULT_DROP_CHANCE){
 				sender.sendMessage(String.format(RAW_DROP_CHANCE_FOR, target, df.format(rawChance*100D), df.format(rawChance*100D)));
 			}
@@ -173,19 +163,20 @@ public class CommandDropRate extends EvCommand{
 		if(entity != null && !entity.hasPermission("dropheads.canlosehead")){rawChance=-1D;droprateDetails.addComponent(VICTIM_MUST_HAVE_PERM);}
 		if(!sender.hasPermission("dropheads.canbehead")){rawChance=-1D;droprateDetails.addComponent(KILLER_MUST_HAVE_PERM);}
 		if(sender.hasPermission("dropheads.alwaysbehead")){rawChance=-1D;droprateDetails.addComponent(ALWAYS_BEHEAD_PERM);}
-		if(USING_REQUIRED_WEAPONS && (weapon == null || !deathListener.mustUseTools.contains(weapon.getType()))){
+		if(USING_REQUIRED_WEAPONS && (weapon == null || !dropChanceAPI.mustUseTools.contains(weapon.getType()))){
 			rawChance=-1D;droprateDetails.addComponent(SPECIFIC_WEAPONS);
 		}
 
 		// Multipliers:
-		final double weaponMod = weapon == null ? 1D : 1D+weaponBonuses.getOrDefault(weapon.getType(), 0D);
+		final double weaponMod = weapon == null ? 1D : 1D+dropChanceAPI.weaponBonuses.getOrDefault(weapon.getType(), 0D);
 		final int lootingLevel = weapon == null ? 0 : weapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
 		final boolean VANILLA_LOOTING = target.equals("WITHER_SKELETON") && VANILLA_WITHER_SKELETON_LOOTING;
-		final double lootingMod = (lootingLevel == 0 || VANILLA_LOOTING) ? 1D : Math.min(Math.pow(LOOTING_MULT, lootingLevel), LOOTING_MULT*lootingLevel);
-		final double lootingAdd = (VANILLA_LOOTING ? 0.01D : LOOTING_ADD)*lootingLevel;
-		final double timeAliveMod = entity == null ? 1D : 1D + deathListener.getTimeAliveBonus(entity);
+		final double lootingMod = (lootingLevel == 0 || VANILLA_LOOTING) ? 1D
+				: Math.min(Math.pow(dropChanceAPI.LOOTING_MULT, lootingLevel), dropChanceAPI.LOOTING_MULT*lootingLevel);
+		final double lootingAdd = (VANILLA_LOOTING ? 0.01D : dropChanceAPI.LOOTING_ADD)*lootingLevel;
+		final double timeAliveMod = entity == null ? 1D : 1D + dropChanceAPI.getTimeAliveBonus(entity);
 		final double spawnCauseMod = entity == null ? 1D : JunkUtils.getSpawnCauseModifier(entity);
-		final double permMod = deathListener.getPermsBasedDropRateModifier(sender);
+		final double permMod = dropChanceAPI.getPermsBasedDropRateModifier(sender);
 		final double finalDropChance = rawChance*spawnCauseMod*timeAliveMod*weaponMod*lootingMod*permMod + lootingAdd;
 		df = new DecimalFormat("0.##");
 		ListComponent droprateMultipliers = new ListComponent();
@@ -209,10 +200,10 @@ public class CommandDropRate extends EvCommand{
 				droprateMultipliers.addComponent(":§6x"+df.format(timeAliveMod)+"§7, ");
 			}
 		}
-		if(!weaponBonuses.isEmpty()){
+		if(!dropChanceAPI.weaponBonuses.isEmpty()){
 			droprateMultipliers.addComponent(WEAPON_TYPE);
 			if(Math.abs(1D-weaponMod) > 0.001D){
-				droprateMultipliers.addComponent(JunkUtils.getMurderItemComponent(weapon, deathListener.JSON_LIMIT));
+				droprateMultipliers.addComponent(JunkUtils.getMurderItemComponent(weapon, JSON_LIMIT));
 				droprateMultipliers.addComponent(":§6x"+df.format(weaponMod));
 			}
 			droprateMultipliers.addComponent("§7, ");

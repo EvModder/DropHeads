@@ -49,6 +49,7 @@ import net.evmodder.EvLib.Updater;
 public final class DropHeads extends EvPlugin{
 	private static DropHeads instance; public static DropHeads getPlugin(){return instance;}
 	private HeadAPI api; public HeadAPI getAPI(){return api;}
+	private DropChanceAPI dropChanceAPI; public DropChanceAPI getDropChanceAPI(){return dropChanceAPI;}
 	private boolean LOGFILE_ENABLED;
 	private String LOGFILE_NAME;
 
@@ -59,7 +60,9 @@ public final class DropHeads extends EvPlugin{
 		}
 		instance = this;
 		api = new HeadAPI();
-		EntityDeathListener deathListener = new EntityDeathListener();
+		dropChanceAPI = new DropChanceAPI();
+		new EntityDeathListener();
+
 		if(config.getBoolean("track-mob-spawns", true)){
 			getServer().getPluginManager().registerEvents(new EntitySpawnListener(), this);
 		}
@@ -93,7 +96,7 @@ public final class DropHeads extends EvPlugin{
 		}
 
 		new CommandSpawnHead(this);
-		new CommandDropRate(this, deathListener);
+		new CommandDropRate(this, dropChanceAPI);
 		new Commanddebug_all_heads(this);
 
 		LOGFILE_ENABLED = config.getBoolean("log.enable", false);

@@ -18,7 +18,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 import javax.annotation.Nonnull;
-import net.evmodder.DropHeads.listeners.EntityDeathListener.AnnounceMode;
+import net.evmodder.DropHeads.DropChanceAPI.AnnounceMode;
 import net.evmodder.EvLib.extras.NBTTagUtils;
 import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTTagString;
 import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTTagCompound;

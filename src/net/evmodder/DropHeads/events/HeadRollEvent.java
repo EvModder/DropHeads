@@ -6,6 +6,7 @@ import org.bukkit.event.entity.EntityEvent;
 
 public class HeadRollEvent extends EntityEvent{
 	private static final HandlerList HANDLERS = new HandlerList();
+	public static HandlerList getHandlerList(){return HANDLERS;} // This is actually required for some dumb reason.
 
 	private final Entity killer;
 	private final Entity victim;

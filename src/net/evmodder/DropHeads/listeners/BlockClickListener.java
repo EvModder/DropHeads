@@ -230,11 +230,13 @@ public class BlockClickListener implements Listener{
 		else{if(!evt.getPlayer().hasPermission("dropheads.clickinfo.unknown")) return; HEAD_DISPLAY = HEAD_DISPLAY_UNKNOWN;}
 
 		final TranslationComponent headTypeName = pl.getAPI().getHeadTypeName(data.headType);
-		final String aOrAn = isVowel(ChatColor.stripColor(
-			data.textureKey != null ? pl.getAPI().getHeadNameFromKey(data.textureKey, /*customName=*/"").toPlainText() :
-			data.player != null && data.player.getName() != null ? data.player.getName() :
-			data.profileName.toPlainText()
-		).charAt(0)) ? "an" : "a"; // Yes, an imperfect solution, I know. :/
+		final String englishName = ChatColor.stripColor(
+				data.textureKey != null ? pl.getAPI().getHeadNameFromKey(data.textureKey, /*customName=*/"").toPlainText() :
+					data.player != null && data.player.getName() != null ? data.player.getName() :
+					data.profileName.toPlainText()
+				);
+		pl.getLogger().info("englishName: "+englishName);
+		final String aOrAn = isVowel(englishName.charAt(0)) ? "an" : "a"; // Yes, an imperfect solution, I know. :/
 
 		evt.setCancelled(true);
 		ListComponent blob = TellrawUtils.convertHexColorsToComponentsWithReset(HEAD_DISPLAY);

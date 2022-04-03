@@ -14,6 +14,9 @@ message-beheaded-by-entity: '&6${VICTIM}&r was decapitated by &6${KILLER}&r'
 message-beheaded-by-entity-with-item: '&6${VICTIM}&r was decapitated by &6${KILLER}&r'
 message-beheaded-by-entity-with-item-named: '&6${KILLER}&r decapitated &6${VICTIM}&r using &7${ITEM}&r'
 
+# Limit packet size for broadcast messages; changing this is not recommended
+message-json-limit: 15000
+
 # Whether to drop heads if not killed by a player
 drop-for-nonplayer-kills: false
 
