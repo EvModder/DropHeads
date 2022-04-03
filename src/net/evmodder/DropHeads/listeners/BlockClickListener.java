@@ -4,6 +4,7 @@ import java.util.Base64;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
+import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -229,7 +230,7 @@ public class BlockClickListener implements Listener{
 		else{if(!evt.getPlayer().hasPermission("dropheads.clickinfo.unknown")) return; HEAD_DISPLAY = HEAD_DISPLAY_UNKNOWN;}
 
 		final TranslationComponent headTypeName = pl.getAPI().getHeadTypeName(data.headType);
-		final String aOrAn = isVowel((
+		final String aOrAn = isVowel(ChatColor.stripColor(
 			data.textureKey != null ? pl.getAPI().getHeadNameFromKey(data.textureKey, /*customName=*/"").toPlainText() :
 			data.player != null && data.player.getName() != null ? data.player.getName() :
 			data.profileName.toPlainText()
