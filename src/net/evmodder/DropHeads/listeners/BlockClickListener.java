@@ -236,7 +236,7 @@ public class BlockClickListener implements Listener{
 		).charAt(0)) ? "an" : "a"; // Yes, an imperfect solution, I know. :/
 
 		evt.setCancelled(true);
-		ListComponent blob = TellrawUtils.convertHexColorsToComponents(HEAD_DISPLAY);
+		ListComponent blob = TellrawUtils.convertHexColorsToComponentsWithReset(HEAD_DISPLAY);
 		blob.replaceRawDisplayTextWithComponent("${TYPE}", headTypeName);//these 3 are aliases of eachother
 		blob.replaceRawDisplayTextWithComponent("${HEAD_TYPE}", headTypeName);
 		blob.replaceRawDisplayTextWithComponent("${SKULL_TYPE}", headTypeName);

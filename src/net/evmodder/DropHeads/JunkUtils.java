@@ -3,6 +3,7 @@ package net.evmodder.DropHeads;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.bukkit.block.BlockFace;
@@ -30,7 +31,6 @@ import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
 import net.evmodder.EvLib.extras.TellrawUtils.Format;
-import net.evmodder.EvLib.extras.TellrawUtils.FormatFlag;
 import net.evmodder.EvLib.extras.TellrawUtils.HoverEvent;
 import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
@@ -163,9 +163,9 @@ public class JunkUtils{
 		String rarityColor = TypeUtils.getRarityColor(item).name().toLowerCase();
 		String rawDisplayName = JunkUtils.getDisplayName(item);
 		if(rawDisplayName != null){
-			FormatFlag[] formats = new FormatFlag[]{new FormatFlag(Format.ITALIC, true)};
 			return new ListComponent(
-					new RawTextComponent(/*text=*/"", /*insert=*/null, /*click=*/null, /*hover=*/null, /*color=*/rarityColor, /*formats=*/formats),
+					new RawTextComponent(/*text=*/"", /*insert=*/null, /*click=*/null, /*hover=*/null,
+							/*color=*/rarityColor, /*formats=*/Collections.singletonMap(Format.ITALIC, true)),
 					TellrawUtils.parseComponentFromString(rawDisplayName)
 			);
 		}
@@ -180,11 +180,11 @@ public class JunkUtils{
 		String rarityColor = TypeUtils.getRarityColor(item).name().toLowerCase();
 		String rawDisplayName = JunkUtils.getDisplayName(item);
 		if(rawDisplayName != null){
-			FormatFlag[] formats = new FormatFlag[]{new FormatFlag(Format.ITALIC, true)};
 			return new ListComponent(
 					new RawTextComponent(/*text=*/"[", /*insert=*/null, /*click=*/null, hoverAction, /*color=*/rarityColor, /*formats=*/null),
 					new ListComponent(
-							new RawTextComponent(/*text=*/"", /*insert=*/null, /*click=*/null, null, /*color=*/null, /*formats=*/formats),
+							new RawTextComponent(/*text=*/"", /*insert=*/null, /*click=*/null, null,
+									/*color=*/null, /*formats=*/Collections.singletonMap(Format.ITALIC, true)),
 							TellrawUtils.parseComponentFromString(rawDisplayName)
 					),
 					new RawTextComponent(/*text=*/"]"));
