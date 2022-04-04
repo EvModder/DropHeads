@@ -235,7 +235,6 @@ public class BlockClickListener implements Listener{
 					data.player != null && data.player.getName() != null ? data.player.getName() :
 					data.profileName.toPlainText()
 				);
-		pl.getLogger().info("englishName: "+englishName);
 		final String aOrAn = isVowel(englishName.charAt(0)) ? "an" : "a"; // Yes, an imperfect solution, I know. :/
 
 		evt.setCancelled(true);
