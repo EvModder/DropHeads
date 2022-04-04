@@ -46,9 +46,14 @@ public class ProjectileFireListener implements Listener{
 				|| (!ALLOW_NON_PLAYER_KILLS && evt.getEntity() instanceof Player == false)) return;
 
 		LivingEntity shooter = (LivingEntity) evt.getEntity().getShooter();
-		ItemStack shotUsingItem = shooter.getEquipment().getItemInMainHand();
-		if(shotUsingItem == null || !canShootProjectiles(shotUsingItem.getType())) shotUsingItem = shooter.getEquipment().getItemInOffHand();
-		if(shotUsingItem != null) evt.getEntity().setMetadata("ShotUsing", new FixedMetadataValue(pl, shotUsingItem));
+		ItemStack mainHandItem = shooter.getEquipment().getItemInMainHand();
+		ItemStack offHandItem  = shooter.getEquipment().getItemInOffHand();
+		if((mainHandItem == null || !canShootProjectiles(mainHandItem.getType())) && offHandItem != null && canShootProjectiles(offHandItem.getType())){
+			evt.getEntity().setMetadata("ShotUsing", new FixedMetadataValue(pl, offHandItem));
+		}
+		else if(mainHandItem != null){
+			evt.getEntity().setMetadata("ShotUsing", new FixedMetadataValue(pl, mainHandItem));
+		}
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)

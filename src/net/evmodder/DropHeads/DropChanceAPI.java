@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -51,14 +52,13 @@ import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
 
 public class DropChanceAPI{
-	public enum AnnounceMode {GLOBAL, LOCAL, DIRECT, OFF}; // TODO: remove public
+	private enum AnnounceMode {GLOBAL, LOCAL, DIRECT, OFF};
 	private final AnnounceMode DEFAULT_ANNOUNCE;
 	private final EventPriority PRIORITY;
 	private enum DropMode {EVENT, SPAWN, PLACE, PLACE_BY_KILLER, PLACE_BY_VICTIM, GIVE};
 	private final ArrayList<DropMode> DROP_MODES; // TODO: final HashMap<EntityType, DropMode> mobDropModes
 
 	private final boolean PLAYER_HEADS_ONLY, REPLACE_DEATH_MESSAGE, VANILLA_WSKELE_HANDLING;
-	public final double DEFAULT_CHANCE; // TODO: remove public
 	public final double LOOTING_ADD, LOOTING_MULT; // TODO: remove public
 	private final boolean DEBUG_MODE, LOG_PLAYER_BEHEAD, LOG_MOB_BEHEAD;
 	private final String LOG_MOB_FORMAT, LOG_PLAYER_FORMAT;
@@ -86,6 +86,20 @@ public class DropChanceAPI{
 	private final HashMap<String, Double> droprateMultiplierPerms;
 	private final TreeMap<Long, Double> timeAliveBonuses;
 	private final HashSet<UUID> playersToHideDeathMessageFor;
+
+	public double getDefaultDropChance(){return mobChances.get(EntityType.UNKNOWN);}
+
+	private AnnounceMode parseAnnounceMode(@Nonnull String value, AnnounceMode defaultMode){
+		value = value.toUpperCase();
+		if(value.equals("FALSE")) return AnnounceMode.OFF;
+		if(value.equals("TRUE")) return AnnounceMode.GLOBAL;
+		try{return AnnounceMode.valueOf(value);}
+		catch(IllegalArgumentException ex){
+			DropHeads.getPlugin().getLogger().severe("Unknown announcement mode: '"+value+"'");
+			DropHeads.getPlugin().getLogger().warning("Please use one of the available modes: [GLOBAL, LOCAL, OFF]");
+			return defaultMode;
+		}
+	}
 
 	public DropChanceAPI(){
 		pl = DropHeads.getPlugin();
@@ -135,16 +149,14 @@ public class DropChanceAPI{
 		else headOverwriteBlocks.add(Material.AIR);
 
 		mobAnnounceModes = new HashMap<>();
-		mobAnnounceModes.put(EntityType.UNKNOWN, JunkUtils.parseAnnounceMode(
-				pl.getConfig().getString("behead-announcement-mobs", "LOCAL"), AnnounceMode.LOCAL));
-		mobAnnounceModes.put(EntityType.PLAYER, JunkUtils.parseAnnounceMode(
-				pl.getConfig().getString("behead-announcement-players", "GLOBAL"), AnnounceMode.GLOBAL));
+		mobAnnounceModes.put(EntityType.UNKNOWN, parseAnnounceMode(pl.getConfig().getString("behead-announcement-mobs", "LOCAL"), AnnounceMode.LOCAL));
+		mobAnnounceModes.put(EntityType.PLAYER, parseAnnounceMode(pl.getConfig().getString("behead-announcement-players", "GLOBAL"), AnnounceMode.GLOBAL));
 		ConfigurationSection announceModes = pl.getConfig().getConfigurationSection("behead-announcement");
 		AnnounceMode tempDefaultAnnounce = mobAnnounceModes.get(EntityType.UNKNOWN);
 		if(announceModes != null) for(String mobName : announceModes.getKeys(false)){
 			try{
 				EntityType eType = EntityType.valueOf(mobName.toUpperCase().replace("DEFAULT", "UNKNOWN"));
-				mobAnnounceModes.put(eType, JunkUtils.parseAnnounceMode(announceModes.getString(mobName), tempDefaultAnnounce));
+				mobAnnounceModes.put(eType, parseAnnounceMode(announceModes.getString(mobName), tempDefaultAnnounce));
 			}
 			catch(IllegalArgumentException ex){pl.getLogger().severe("Unknown entity type in 'behead-announce': "+mobName);}
 		}
@@ -192,9 +204,8 @@ public class DropChanceAPI{
 		mobChances = new HashMap<EntityType, Double>();
 		subtypeMobChances = new HashMap<EntityType, HashMap<String, Double>>();
 		noLootingEffectMobs = new HashSet<EntityType>();
-		//double chanceForUnknown = 0D;
+		mobChances.put(EntityType.UNKNOWN, 0D); // Always define default chance to 0 (unless overriden below)
 		if(PLAYER_HEADS_ONLY){
-			DEFAULT_CHANCE = 0D;
 			String defaultChances = FileIO.loadResource(pl, "head-drop-rates.txt");
 			String chances = FileIO.loadFile("head-drop-rates.txt", defaultChances);
 			for(final String line : chances.split("\n")){
@@ -259,8 +270,7 @@ public class DropChanceAPI{
 						+ "but this value will be ignored because 'vanilla-wither-skeleton-skulls' is set to true.");
 			}
 			// No need storing 0-chance mobs if the default drop chance is 0
-			DEFAULT_CHANCE = mobChances.getOrDefault(EntityType.UNKNOWN, 0D);
-			if(DEFAULT_CHANCE == 0D) mobChances.entrySet().removeIf(entry -> entry.getValue() == 0D);
+			if(getDefaultDropChance() == 0D) mobChances.entrySet().removeIf(entry -> entry.getValue() == 0D);
 		}  // if(!PLAYER_HEADS_ONLY)
 
 		playersToHideDeathMessageFor = new HashSet<UUID>();
@@ -296,7 +306,7 @@ public class DropChanceAPI{
 		final String entityName = keyDataTagIdx == -1 ? textureKey : textureKey.substring(0, keyDataTagIdx);
 		EntityType eType;
 		try{eType = EntityType.valueOf(entityName.toUpperCase());}
-		catch(IllegalArgumentException ex){return DEFAULT_CHANCE;}
+		catch(IllegalArgumentException ex){return getDefaultDropChance();}
 		final HashMap<String, Double> eSubtypeChances = subtypeMobChances.get(eType);
 		if(eSubtypeChances != null){
 			keyDataTagIdx = textureKey.lastIndexOf('|');
@@ -307,7 +317,7 @@ public class DropChanceAPI{
 			}
 			if(subtypeChance != null) return subtypeChance;
 		}
-		return mobChances.getOrDefault(eType, DEFAULT_CHANCE);
+		return mobChances.getOrDefault(eType, getDefaultDropChance());
 	}
 	public double getRawDropChance(Entity e){
 		HashMap<String, Double> eSubtypeChances = subtypeMobChances.get(e.getType());
@@ -321,7 +331,7 @@ public class DropChanceAPI{
 			}
 			if(subtypeChance != null) return subtypeChance;
 		}
-		return mobChances.getOrDefault(e.getType(), DEFAULT_CHANCE);
+		return mobChances.getOrDefault(e.getType(), getDefaultDropChance());
 	}
 	public double getTimeAliveBonus(Entity e){
 		long millisecondsLived = e.getTicksLived()*50L;

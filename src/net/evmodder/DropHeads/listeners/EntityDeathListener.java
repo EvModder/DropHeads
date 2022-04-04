@@ -66,7 +66,7 @@ public class EntityDeathListener implements Listener{
 		}
 		else{
 			final Map<EntityType, Double> mobChances = pl.getDropChanceAPI().mobChances;
-			final double DEFAULT_CHANCE = pl.getDropChanceAPI().DEFAULT_CHANCE;
+			final double DEFAULT_CHANCE = pl.getDropChanceAPI().getDefaultDropChance();
 
 			final boolean entityHeads = DEFAULT_CHANCE > 0D || mobChances.entrySet().stream().anyMatch(  // All non-Player living entities
 					entry -> entry.getKey().isAlive() && entry.getKey() != EntityType.PLAYER && entry.getValue() > 0D);
@@ -212,7 +212,7 @@ public class EntityDeathListener implements Listener{
 	 * @param victim The WitherSkeleton that was killed
 	 * @param killer The entity that did the killing
 	 * @param evt The parent EntityDeathEvent that was triggered
-	 * @return True if no further handling is necessary, False if we should still call onEntityDeath()
+	 * @return True if no further handling is necessary, false if we should still call onEntityDeath()
 	 */
 	boolean handleWitherSkeltonDeathEvent(Entity victim, Entity killer, EntityDeathEvent evt){
 		int newSkullsDropped = 0;

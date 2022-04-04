@@ -18,7 +18,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 import javax.annotation.Nonnull;
-import net.evmodder.DropHeads.DropChanceAPI.AnnounceMode;
 import net.evmodder.EvLib.extras.NBTTagUtils;
 import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTTagString;
 import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTTagCompound;
@@ -44,17 +43,6 @@ public class JunkUtils{
 				? strList.stream().map(
 					msg -> TextUtils.translateAlternateColorCodes('&', msg)).toArray(size -> new String[size])
 				: new String[]{TextUtils.translateAlternateColorCodes('&', config.getString(key, defaultMsg))};
-	}
-	public final static AnnounceMode parseAnnounceMode(@Nonnull String value, AnnounceMode defaultMode){
-		value = value.toUpperCase();
-		if(value.equals("FALSE")) return AnnounceMode.OFF;
-		if(value.equals("TRUE")) return AnnounceMode.GLOBAL;
-		try{return AnnounceMode.valueOf(value);}
-		catch(IllegalArgumentException ex){
-			DropHeads.getPlugin().getLogger().severe("Unknown announcement mode: '"+value+"'");
-			DropHeads.getPlugin().getLogger().warning("Please use one of the available modes: [GLOBAL, LOCAL, OFF]");
-			return defaultMode;
-		}
 	}
 	public final static <E extends Enum<E>> E parseEnumOrDefault(@Nonnull String stringValue, E defaultValue){
 		Class<E> enumClass = defaultValue.getDeclaringClass();
