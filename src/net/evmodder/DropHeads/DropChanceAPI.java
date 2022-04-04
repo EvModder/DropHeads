@@ -481,7 +481,7 @@ public class DropChanceAPI{
 
 	public void triggerHeadDropEvent(Entity entity, Entity killer, Event evt, ItemStack weapon, Component beheadMessage){
 		ItemStack headItem = pl.getAPI().getHead(entity);
-		EntityBeheadEvent beheadEvent = new EntityBeheadEvent(killer, entity, evt, headItem);
+		EntityBeheadEvent beheadEvent = new EntityBeheadEvent(entity, killer, evt, headItem);
 		pl.getServer().getPluginManager().callEvent(beheadEvent);
 		if(beheadEvent.isCancelled()) return;
 

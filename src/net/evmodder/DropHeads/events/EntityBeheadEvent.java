@@ -21,18 +21,24 @@ public class EntityBeheadEvent extends EntityEvent implements Cancellable{
 
 	/**
 	 * Create an EntityBeheadEvent for DropHeads.
-	 * @param killer the Entity doing the beheading (can be <code>null</code>)
 	 * @param victim the Entity being beheaded
+	 * @param killer the Entity doing the beheading (can be <code>null</code>)
 	 * @param sourceEvent the Event which triggered this EntityBeheadEvent
 	 * @param headDrop the ItemStack used to represent the victim's head
 	 */
-	public EntityBeheadEvent(final Entity killer, final Entity victim, final Event sourceEvent, final ItemStack headDrop){
+	public EntityBeheadEvent(final Entity victim, final Entity killer, final Event sourceEvent, final ItemStack headDrop){
 		super(victim);
-		this.killer = killer;
 		this.victim = victim;
+		this.killer = killer;
 		this.sourceEvent = sourceEvent;
 		this.headDrop = headDrop;
 	}
+
+	/**
+	 * Get the entity that was beheaded.
+	 * @return the Entity object representing the victim
+	 */
+	public Entity getVictim(){return victim;}
 
 	/**
 	 * Get the entity that did the beheading.
@@ -42,12 +48,6 @@ public class EntityBeheadEvent extends EntityEvent implements Cancellable{
 	 * @return the Entity object representing the killer, or null if no entity was responsible
 	 */
 	public Entity getKiller(){return killer;}
-
-	/**
-	 * Get the entity that was beheaded.
-	 * @return the Entity object representing the victim
-	 */
-	public Entity getVictim(){return victim;}
 
 	/**
 	 * Get the entity that was beheaded.
