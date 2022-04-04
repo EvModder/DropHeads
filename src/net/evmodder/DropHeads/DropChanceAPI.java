@@ -80,6 +80,7 @@ public class DropChanceAPI{
 	public final Set<Material> mustUseTools; // TODO: remove public
 	private final HashSet<EntityType> noLootingEffectMobs;
 	public final HashMap<EntityType, Double> mobChances; // TODO: remove public
+	private final double DEFAULT_CHANCE;
 	private final HashMap<EntityType, HashMap<String, Double>> subtypeMobChances;
 	private final HashMap<EntityType, AnnounceMode> mobAnnounceModes;
 	public final HashMap<Material, Double> weaponBonuses; // TODO: remove public
@@ -87,7 +88,7 @@ public class DropChanceAPI{
 	private final TreeMap<Long, Double> timeAliveBonuses;
 	private final HashSet<UUID> playersToHideDeathMessageFor;
 
-	public double getDefaultDropChance(){return mobChances.get(EntityType.UNKNOWN);}
+	public double getDefaultDropChance(){return DEFAULT_CHANCE;}
 
 	private AnnounceMode parseAnnounceMode(@Nonnull String value, AnnounceMode defaultMode){
 		value = value.toUpperCase();
@@ -204,8 +205,8 @@ public class DropChanceAPI{
 		mobChances = new HashMap<EntityType, Double>();
 		subtypeMobChances = new HashMap<EntityType, HashMap<String, Double>>();
 		noLootingEffectMobs = new HashSet<EntityType>();
-		mobChances.put(EntityType.UNKNOWN, 0D); // Always define default chance to 0 (unless overriden below)
 		if(PLAYER_HEADS_ONLY){
+			DEFAULT_CHANCE = 0D;
 			String defaultChances = FileIO.loadResource(pl, "head-drop-rates.txt");
 			String chances = FileIO.loadFile("head-drop-rates.txt", defaultChances);
 			for(final String line : chances.split("\n")){
@@ -264,13 +265,15 @@ public class DropChanceAPI{
 					// Only throw an error for mobs that aren't defined in the default config (which may be from future/past versions)
 					if(!defaultConfigMobs.contains(eName)) pl.getLogger().severe("Unknown entity type: "+eName);
 				}
-			}
+			}//for(line : dropRatesFile)
+			DEFAULT_CHANCE = mobChances.getOrDefault(EntityType.UNKNOWN, 0D);
+
 			if(VANILLA_WSKELE_HANDLING && mobChances.getOrDefault(EntityType.WITHER_SKELETON, 0.025D) != 0.025D){
 				pl.getLogger().warning("Wither Skeleton Skull drop chance has been modified in 'head-drop-rates.txt', "
 						+ "but this value will be ignored because 'vanilla-wither-skeleton-skulls' is set to true.");
 			}
 			// No need storing 0-chance mobs if the default drop chance is 0
-			if(getDefaultDropChance() == 0D) mobChances.entrySet().removeIf(entry -> entry.getValue() == 0D);
+			if(DEFAULT_CHANCE == 0D) mobChances.entrySet().removeIf(entry -> entry.getValue() == 0D);
 		}  // if(!PLAYER_HEADS_ONLY)
 
 		playersToHideDeathMessageFor = new HashSet<UUID>();
@@ -306,7 +309,7 @@ public class DropChanceAPI{
 		final String entityName = keyDataTagIdx == -1 ? textureKey : textureKey.substring(0, keyDataTagIdx);
 		EntityType eType;
 		try{eType = EntityType.valueOf(entityName.toUpperCase());}
-		catch(IllegalArgumentException ex){return getDefaultDropChance();}
+		catch(IllegalArgumentException ex){return DEFAULT_CHANCE;}
 		final HashMap<String, Double> eSubtypeChances = subtypeMobChances.get(eType);
 		if(eSubtypeChances != null){
 			keyDataTagIdx = textureKey.lastIndexOf('|');
@@ -317,7 +320,7 @@ public class DropChanceAPI{
 			}
 			if(subtypeChance != null) return subtypeChance;
 		}
-		return mobChances.getOrDefault(eType, getDefaultDropChance());
+		return mobChances.getOrDefault(eType, DEFAULT_CHANCE);
 	}
 	public double getRawDropChance(Entity e){
 		HashMap<String, Double> eSubtypeChances = subtypeMobChances.get(e.getType());
@@ -331,7 +334,7 @@ public class DropChanceAPI{
 			}
 			if(subtypeChance != null) return subtypeChance;
 		}
-		return mobChances.getOrDefault(e.getType(), getDefaultDropChance());
+		return mobChances.getOrDefault(e.getType(), DEFAULT_CHANCE);
 	}
 	public double getTimeAliveBonus(Entity e){
 		long millisecondsLived = e.getTicksLived()*50L;
@@ -495,7 +498,7 @@ public class DropChanceAPI{
 		pl.getServer().getPluginManager().callEvent(beheadEvent);
 		if(beheadEvent.isCancelled()) return;
 
-		if(REPLACE_DEATH_MESSAGE && !playersToHideDeathMessageFor.add(entity.getUniqueId())){
+		if(REPLACE_DEATH_MESSAGE && entity instanceof Player && !playersToHideDeathMessageFor.add(entity.getUniqueId())){
 			pl.getLogger().warning("Player behead triggered twice: "+evt.getEventName());
 			return;
 		}

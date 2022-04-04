@@ -50,10 +50,10 @@ public class CommandDropRate extends EvCommand{
 	final TranslationComponent LOOTING_COMP = new TranslationComponent("enchantment.minecraft.looting");
 	final Component VANILLA_WITHER_SKELETON_BEHAVIOR_ALERT = new RawTextComponent("\n§7Vanilla wither_skeleton looting rate is enabled");
 
-	public CommandDropRate(DropHeads plugin, DropChanceAPI dropChanceAPI) {
+	public CommandDropRate(DropHeads plugin) {
 		super(plugin);
 		pl = plugin;
-		this.dropChanceAPI = dropChanceAPI;
+		dropChanceAPI = pl.getDropChanceAPI();
 		JSON_LIMIT = pl.getConfig().getInt("message-json-limit", 15000);
 
 		if(USING_REQUIRED_WEAPONS = !dropChanceAPI.mustUseTools.isEmpty()){

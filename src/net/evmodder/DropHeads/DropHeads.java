@@ -34,6 +34,7 @@ import net.evmodder.EvLib.Updater;
 // * jeb_ sheep head animated phase through colors (gimmick)
 // * ALL player-visible msgs in plugin translated in translations.yml
 // * full /minecraft:give command support
+// * replace death message for pets with behead message (similar to how it is done for players)
 //TEST:
 // * Trophies/Luck attribute
 // * hide behead msgs for vanished players
@@ -96,7 +97,7 @@ public final class DropHeads extends EvPlugin{
 		}
 
 		new CommandSpawnHead(this);
-		new CommandDropRate(this, dropChanceAPI);
+		new CommandDropRate(this);
 		new Commanddebug_all_heads(this);
 
 		LOGFILE_ENABLED = config.getBoolean("log.enable", false);
