@@ -14,8 +14,9 @@ import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.EvLib.FileIO;
 
 public class EntitySpawnListener implements Listener{
-	final private DropHeads pl;
-	final private Map<SpawnReason, Float> spawnModifiers = new HashMap<SpawnReason, Float>();
+	private final DropHeads pl;
+	private final Map<SpawnReason, Float> spawnModifiers = new HashMap<SpawnReason, Float>();
+	private final boolean WARN_FOR_UNKNOWN_SPAWN_REASON = false;
 	
 	public EntitySpawnListener(){
 		pl = DropHeads.getPlugin();
@@ -33,7 +34,7 @@ public class EntitySpawnListener implements Listener{
 					if(Math.abs(1F - modifier) > 0.0001) spawnModifiers.put(reason, modifier);
 				}
 				catch(IllegalArgumentException ex){
-					pl.getLogger().warning("Unknown SpawnReason: '"+line+"' in config file!");
+					if(WARN_FOR_UNKNOWN_SPAWN_REASON) pl.getLogger().warning("Unknown SpawnReason: '"+line+"' in config file!");
 				}
 			}
 		}

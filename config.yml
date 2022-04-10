@@ -8,6 +8,9 @@ behead-announcement:
 # Replaces death messages if player behead announcement is GLOBAL
 behead-announcement-replaces-player-death-message: true
 
+# Replaces death message that is sent to the owner when a pet is beheaded
+behead-message-replaces-pet-death-message: true
+
 # The messages used to announce beheading
 message-beheaded: '&6${VICTIM}&r was decapitated'
 message-beheaded-by-entity: '&6${VICTIM}&r was decapitated by &6${KILLER}&r'

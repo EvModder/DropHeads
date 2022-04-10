@@ -22,9 +22,11 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Tameable;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.EntityBlockFormEvent;
@@ -58,7 +60,8 @@ public class DropChanceAPI{
 	private enum DropMode {EVENT, SPAWN, PLACE, PLACE_BY_KILLER, PLACE_BY_VICTIM, GIVE};
 	private final ArrayList<DropMode> DROP_MODES; // TODO: final HashMap<EntityType, DropMode> mobDropModes
 
-	private final boolean PLAYER_HEADS_ONLY, REPLACE_DEATH_MESSAGE, VANILLA_WSKELE_HANDLING;
+	private final boolean PLAYER_HEADS_ONLY, REPLACE_DEATH_MESSAGE, REPLACE_PET_DEATH_MESSAGE;
+	private final boolean VANILLA_WSKELE_HANDLING;
 	public final double LOOTING_ADD, LOOTING_MULT; // TODO: remove public
 	private final boolean DEBUG_MODE, LOG_PLAYER_BEHEAD, LOG_MOB_BEHEAD;
 	private final String LOG_MOB_FORMAT, LOG_PLAYER_FORMAT;
@@ -86,7 +89,6 @@ public class DropChanceAPI{
 	public final HashMap<Material, Double> weaponBonuses; // TODO: remove public
 	private final HashMap<String, Double> droprateMultiplierPerms;
 	private final TreeMap<Long, Double> timeAliveBonuses;
-	private final HashSet<UUID> playersToHideDeathMessageFor;
 
 	public double getDefaultDropChance(){return DEFAULT_CHANCE;}
 
@@ -114,6 +116,7 @@ public class DropChanceAPI{
 		PRIORITY = JunkUtils.parseEnumOrDefault(pl.getConfig().getString("death-listener-priority", "LOW"), EventPriority.LOW);
 		REPLACE_DEATH_MESSAGE = pl.getConfig().getBoolean("behead-announcement-replaces-player-death-message",
 				pl.getConfig().getBoolean("behead-announcement-replaces-death-message", true)) && PRIORITY != EventPriority.MONITOR;
+		REPLACE_PET_DEATH_MESSAGE = pl.getConfig().getBoolean("behead-message-replaces-pet-death-message", true);
 		DEBUG_MODE = pl.getConfig().getBoolean("debug-messages", true);
 		final boolean ENABLE_LOG = pl.getConfig().getBoolean("log.enable", false);
 		LOG_MOB_BEHEAD = ENABLE_LOG && pl.getConfig().getBoolean("log.log-mob-behead", false);
@@ -275,18 +278,6 @@ public class DropChanceAPI{
 			// No need storing 0-chance mobs if the default drop chance is 0
 			if(DEFAULT_CHANCE == 0D) mobChances.entrySet().removeIf(entry -> entry.getValue() == 0D);
 		}  // if(!PLAYER_HEADS_ONLY)
-
-		playersToHideDeathMessageFor = new HashSet<UUID>();
-		if(REPLACE_DEATH_MESSAGE){
-			EventPriority replacePriority = (PRIORITY == EventPriority.HIGHEST ? EventPriority.MONITOR : EventPriority.HIGHEST);
-			pl.getServer().getPluginManager().registerEvent(PlayerDeathEvent.class, new Listener(){}, replacePriority, new EventExecutor(){
-				@Override public void execute(Listener listener, Event originalEvent){
-					if(originalEvent instanceof PlayerDeathEvent == false) return;
-					PlayerDeathEvent evt = (PlayerDeathEvent) originalEvent;
-					if(playersToHideDeathMessageFor.remove(evt.getEntity().getUniqueId())) evt.setDeathMessage("");
-				}
-			}, pl);
-		}
 
 		// Dynamically add all the children perms of "dropheads.alywaysbehead.<entity>"
 		Permission alwaysBeheadPerm = pl.getServer().getPluginManager().getPermission("dropheads.alwaysbehead");
@@ -461,20 +452,42 @@ public class DropChanceAPI{
 					&& killer instanceof Player && JunkUtils.isVanished((Player)killer)
 				)
 			)) mode = AnnounceMode.DIRECT;
+
+			final String petOwnerToMsg = REPLACE_PET_DEATH_MESSAGE && entity instanceof Tameable && ((Tameable)entity).getOwner() != null
+					? ((Tameable)entity).getOwner().getName() : null;
+			if(petOwnerToMsg != null) ((Tameable)entity).setOwner(null);  // TODO: Find a more elegant solution, such as listening for this specific packet
+
 			switch(mode){
 				case GLOBAL:
-					if(entity instanceof Player && REPLACE_DEATH_MESSAGE && evt != null && PRIORITY != EventPriority.MONITOR){
-						((PlayerDeathEvent)evt).setDeathMessage(message.toPlainText());  // is cleared later
-					}
 					sendTellraw("@a", message.toString());
+					if(entity instanceof Player && REPLACE_DEATH_MESSAGE && evt != null && PRIORITY != EventPriority.MONITOR){
+						// Set the behead death message so that other plugins will see it
+						((PlayerDeathEvent)evt).setDeathMessage(message.toPlainText());
+						// Afterwards, at a higher priority, clear the behead death message (since we already sent a tellraw)
+						EventPriority replacePriority = (PRIORITY == EventPriority.HIGHEST ? EventPriority.MONITOR : EventPriority.HIGHEST);
+						final UUID uuid = entity.getUniqueId();
+						pl.getServer().getPluginManager().registerEvent(PlayerDeathEvent.class, new Listener(){}, replacePriority, new EventExecutor(){
+							@Override public void execute(Listener listener, Event originalEvent){
+								if(originalEvent instanceof PlayerDeathEvent == false) return;
+								PlayerDeathEvent evt = (PlayerDeathEvent) originalEvent;
+								if(evt.getEntity().getUniqueId().equals(uuid)){
+									evt.setDeathMessage("");
+									HandlerList.unregisterAll(listener);
+								}
+							}
+						}, pl);
+					}
 					break;
 				case LOCAL:
-					for(Player p : EvUtils.getNearbyPlayers(entity.getLocation(), LOCAL_RANGE, CROSS_DIMENSIONAL_BROADCAST)){
-						sendTellraw(p.getName(), message.toString());
+					ArrayList<Player> nearbyPlayers = EvUtils.getNearbyPlayers(entity.getLocation(), LOCAL_RANGE, CROSS_DIMENSIONAL_BROADCAST);
+					for(Player p : nearbyPlayers) sendTellraw(p.getName(), message.toString());
+					if(petOwnerToMsg != null && nearbyPlayers.stream().noneMatch(p -> p.getName().equals(petOwnerToMsg))){
+						sendTellraw(petOwnerToMsg, message.toString());
 					}
 					break;
 				case DIRECT:
 					if(killer instanceof Player) sendTellraw(killer.getName(), message.toString());
+					if(petOwnerToMsg != null && !killer.getName().equals(petOwnerToMsg)) sendTellraw(petOwnerToMsg, message.toString());
 					break;
 				case OFF:
 					break;
@@ -497,11 +510,6 @@ public class DropChanceAPI{
 		EntityBeheadEvent beheadEvent = new EntityBeheadEvent(entity, killer, evt, headItem);
 		pl.getServer().getPluginManager().callEvent(beheadEvent);
 		if(beheadEvent.isCancelled()) return;
-
-		if(REPLACE_DEATH_MESSAGE && entity instanceof Player && !playersToHideDeathMessageFor.add(entity.getUniqueId())){
-			pl.getLogger().warning("Player behead triggered twice: "+evt.getEventName());
-			return;
-		}
 
 		dropHeadItem(headItem, entity, killer, evt);
 		if(weapon.getType() == Material.AIR) weapon = null;
