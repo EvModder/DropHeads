@@ -11,6 +11,13 @@ head-type-names:
   skull: "Skull"
   toe: "Toe"
 
+head-type-in-lore:
+  player: "player:"
+  mob: "mob:"
+  mhf: "mhf:"
+  hdb: "hdb:"
+  code: "code:"
+
 # The display name format used when creating head items
 # You can add other entity types here if you want
 head-name-format:

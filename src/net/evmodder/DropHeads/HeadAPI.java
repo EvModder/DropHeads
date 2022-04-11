@@ -54,7 +54,7 @@ public class HeadAPI {
 	private final DropHeads pl;
 	private HeadDatabaseAPI hdbAPI = null;
 //	private int MAX_HDB_ID = -1;
-	final Configuration translationsFile; // protected scope; only used by head-click-listener //TODO: make private
+	public final Configuration translationsFile;  //TODO: make private
 	private final boolean GRUM_ENABLED, SADDLES_ENABLED, HOLLOW_SKULLS_ENABLED, TRANSPARENT_SLIME_ENABLED, CRACKED_IRON_GOLEMS_ENABLED, USE_PRE_JAPPA;
 	private final boolean UPDATE_PLAYER_HEADS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_VANILLA_HEADS;
 	private final TranslationComponent LOCAL_HEAD, LOCAL_SKULL, LOCAL_TOE;
@@ -65,8 +65,7 @@ public class HeadAPI {
 	private final HashMap<String, TranslationComponent> entitySubtypeNames;
 	private final HashMap<String, String> replaceHeadsFromTo; // key & value are textureKeys
 
-	// TODO: Move these to a localization file
-	private final String MOB_PREFIX = "mob:", PLAYER_PREFIX = "player:", MHF_PREFIX = "player:", HDB_PREFIX = "hdb:", CODE_PREFIX = "code:";
+	private final String PLAYER_PREFIX, MOB_PREFIX, MHF_PREFIX, HDB_PREFIX, CODE_PREFIX;
 
 	HeadAPI(){
 		textures = new TreeMap<String, String>();
@@ -108,7 +107,7 @@ public class HeadAPI {
 				getClass().getResourceAsStream("/translations.yml"), false);
 		translationsFile.setDefaults(embeddedTranslationsFile);
 		FileIO.deleteFile("translations-temp-DELETE.yml");
-		LOCAL_HEAD = new TranslationComponent(translationsFile.getString("head-type-names.head", "Head"));
+		LOCAL_HEAD = new TranslationComponent(translationsFile.getString("head-type-names.head"));
 		LOCAL_SKULL = new TranslationComponent(translationsFile.getString("head-type-names.skull", "Skull"));
 		LOCAL_TOE = new TranslationComponent(translationsFile.getString("head-type-names.toe", "Toe"));
 
@@ -148,6 +147,14 @@ public class HeadAPI {
 			}
 			entitySubtypeNames.put(subtypeName.toUpperCase(), new TranslationComponent((String)localSubtypeName));
 		});
+		if(SAVE_TYPE_IN_LORE){
+			PLAYER_PREFIX = translationsFile.getString("head-type-in-lore.player");
+			MOB_PREFIX = translationsFile.getString("head-type-in-lore.mob");
+			MHF_PREFIX = translationsFile.getString("head-type-in-lore.mhf");
+			HDB_PREFIX = translationsFile.getString("head-type-in-lore.hdb");
+			CODE_PREFIX = translationsFile.getString("head-type-in-lore.code");
+		}
+		else PLAYER_PREFIX = MOB_PREFIX = MHF_PREFIX = HDB_PREFIX = CODE_PREFIX = null;
 		//---------- </Load translations> ---------------------------------------------------------------------
 
 		String hardcodedList = FileIO.loadResource(pl, "head-textures.txt");
