@@ -175,7 +175,7 @@ commands:
       slot-unavailable:
         self: "&cYou do not have ${commands.spawnhead.prefixes.slot}%s available"
         target: "&c%s does not have ${commands.spawnhead.prefixes.slot}%s available"
-        multiple-heads: "&cWhen setting a slot, you can only select a single entity head";
+        multiple-heads: "&cWhen setting a slot, you can only select a single entity head"
       not-enough-inv-space:
         self: "&cYou do not have enough inventory space"
         target: "&c%s does not have enough inventory space"
@@ -184,7 +184,7 @@ commands:
     success:
       has-data-value: "&7Getting entity head with data value: %s"
       item-with-amount-format: "%s&fx%s"
-      spanwed-head: "&aSpawned Head: &e%s"
+      spawned-head: "&aSpawned Head: &e%s"
       spawned-heads: "&aSpawned Heads: [&e%s&a]"
       gave-head: "&aGave &e%s&a to &7%s"
       gave-heads: "&aGave: [&e%s&a] to &7%s"
@@ -199,13 +199,13 @@ commands:
       victim-must-have-perm: "\n&c&l>&7 Victim must have the '&cdropheads.canlosehead&7' perm"
       killer-must-have-perm: "\n&c&l>&7 You must have the '&cdropheads.canbehead&7' perm"
       always-behead-perm: "\n&c&l>&7 You have '&cdropheads.alwaysbehead&7' so droprate is &b100%"
-      required-weapons: "\n&c&l>&7 Weapons that can behead: [&f%s&7]
+      required-weapons: "\n&c&l>&7 Weapons that can behead: [&f%s&7]"
     multipliers:
       header: "&7Multipliers: "
       spawn-reason: "&fSpawnReason"
       time-alive: "&fTimeAlive"
       weapon-type: "&fWeapon"
       perms: "&fPerms"
-      looting: "&8${enchantment.minecraft.looting}"
-    vanilla-wither-skeleton-handling-alert: "&7Vanilla wither_skeleton looting rate is enabled"
+      looting: "${enchantment.minecraft.looting}"
+    vanilla-wither-skeleton-handling-alert: "&7Vanilla wither_skeleton handling is enabled"
     final-drop-rate: "&6Final drop chance: &b%s%%"

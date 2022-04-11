@@ -44,7 +44,7 @@ public class EntityDeathListener implements Listener{
 	private final HashSet<UUID> explodingChargedCreepers;
 	private final EventPriority PRIORITY;
 	private final boolean ALLOW_NON_PLAYER_KILLS, ALLOW_INDIRECT_KILLS, ALLOW_PROJECTILE_KILLS;
-	private final boolean PLAYER_HEADS_ONLY, CHARGED_CREEPER_DROPS, VANILLA_WSKELE_HANDLING, VANILLA_WSKELE_LOOTING;
+	private final boolean PLAYER_HEADS_ONLY, CHARGED_CREEPER_DROPS, VANILLA_WSKELE_HANDLING;
 	private final boolean DEBUG_MODE;
 	private final long INDIRECT_KILL_THRESHOLD_MILLIS = 30*1000;//TODO: move to config
 
@@ -57,7 +57,6 @@ public class EntityDeathListener implements Listener{
 		PLAYER_HEADS_ONLY = pl.getConfig().getBoolean("player-heads-only", false);
 		CHARGED_CREEPER_DROPS = pl.getConfig().getBoolean("charged-creeper-drops", true);
 		VANILLA_WSKELE_HANDLING = pl.getConfig().getBoolean("vanilla-wither-skeleton-skulls", false);
-		VANILLA_WSKELE_LOOTING = pl.getConfig().getBoolean("vanilla-wither-skeleton-looting-behavior", false);
 		PRIORITY = JunkUtils.parseEnumOrDefault(pl.getConfig().getString("death-listener-priority", "LOW"), EventPriority.LOW);
 		DEBUG_MODE = pl.getConfig().getBoolean("debug-messages", true);
 
@@ -171,9 +170,8 @@ public class EntityDeathListener implements Listener{
 
 		final double weaponBonus = murderWeapon == null ? 0D : pl.getDropChanceAPI().weaponBonuses.getOrDefault(murderWeapon.getType(), 0D);
 		final int lootingLevel = murderWeapon == null ? 0 : murderWeapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
-		final boolean VANILLA_LOOTING = victim.getType() == EntityType.WITHER_SKELETON && VANILLA_WSKELE_LOOTING;
-		final double lootingMod = (lootingLevel == 0 || VANILLA_LOOTING) ? 1D : Math.pow(pl.getDropChanceAPI().LOOTING_MULT, lootingLevel);
-		final double lootingAdd = (VANILLA_LOOTING ? 0.01D : pl.getDropChanceAPI().LOOTING_ADD)*lootingLevel;
+		final double lootingMod = lootingLevel == 0 ? 1D : Math.pow(pl.getDropChanceAPI().LOOTING_MULT, lootingLevel);
+		final double lootingAdd = pl.getDropChanceAPI().LOOTING_ADD*lootingLevel;
 		final double weaponMod = 1D + weaponBonus;
 		final double timeAliveMod = 1D + pl.getDropChanceAPI().getTimeAliveBonus(victim);
 		final double spawnCauseMod = JunkUtils.getSpawnCauseModifier(victim);
@@ -244,7 +242,7 @@ public class EntityDeathListener implements Listener{
 			// newSkullsDropped should always be 0 or 1 by this point
 			if((newSkullsDropped == 1 || (killer != null && killer.hasPermission("dropheads.alwaysbehead.wither_skeleton")))
 					&& victim.hasPermission("dropheads.canlosehead") && (killer == null || killer.hasPermission("dropheads.canbehead"))){
-				// Don't drop the skull if another skull drop has already caused by the same charged creeper.
+				// Don't drop the skull if another skull drop has already been caused by the same charged creeper.
 				if(killer != null && killer instanceof Creeper && ((Creeper)killer).isPowered() && CHARGED_CREEPER_DROPS &&
 					!explodingChargedCreepers.add(killer.getUniqueId()))
 				{

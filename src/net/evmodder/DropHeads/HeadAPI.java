@@ -69,6 +69,7 @@ public class HeadAPI {
 
 	// Loads config.getString(key), replacing '${abc-xyz}' with config.getString('abc-xyz')
 	public String loadTranslationStr(String key){
+//		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in translations file: "+key);
 		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key));
 		int i = msg.indexOf('$');
 		if(i == -1) return msg;
@@ -95,9 +96,13 @@ public class HeadAPI {
 	}
 	// Same as above, but all replacements are treated as TranslationComponents
 	public TranslationComponent loadTranslationComp(String key){
-		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key, key));
+//		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in translations file: "+key);
+		final String rawMsg = translationsFile.getString(key);
+		final String msg = TextUtils.translateAlternateColorCodes('&', rawMsg != null ? rawMsg : key);
 		int i = msg.indexOf('$');
-		if(i == -1) return new TranslationComponent(msg);
+		if(i == -1){
+			return new TranslationComponent(msg);
+		}
 		if(i == 0 && msg.charAt(1) == '{' && msg.indexOf('}') == msg.length()-1){
 			return loadTranslationComp(msg.substring(2, msg.length()-1));
 		}
@@ -109,7 +114,9 @@ public class HeadAPI {
 				final int subStart = i + 1;
 				while(msg.charAt(++i) == '-' || msg.charAt(i) == '.' || (msg.charAt(i) >= 'a' && msg.charAt(i) <= 'z'));
 				if(msg.charAt(i) == '}'){
+					//TOOD: getCurrentColorAndFormatProperties(msg, i) -> put onto newly added with-comp
 					withComps.add(loadTranslationComp(msg.substring(subStart, i)));
+					builder.append("%s");
 					++i;
 				}
 				else builder.append(msg.substring(subStart-2, i));
