@@ -77,7 +77,7 @@ public class HeadAPI {
 		while(true){
 			if(msg.charAt(++i) == '{'){
 				final int subStart = i + 1;
-				while(msg.charAt(++i) == '-' || (msg.charAt(i) >= 'a' && msg.charAt(i) <= 'z'));
+				while(msg.charAt(++i) == '-' || msg.charAt(i) == '.' || (msg.charAt(i) >= 'a' && msg.charAt(i) <= 'z'));
 				if(msg.charAt(i) == '}'){
 					builder.append(loadTranslationStr(msg.substring(subStart, i)));
 					++i;
@@ -85,13 +85,43 @@ public class HeadAPI {
 				else builder.append(msg.substring(subStart-2, i));
 			}
 			else builder.append('$');
-			final int nextI = msg.indexOf('$');
+			final int nextI = msg.indexOf('$', i);
 			if(nextI == -1) break;
 			builder.append(msg.substring(i, nextI));
 			i = nextI;
 		}
-		//builder.append(msg.substring(i));
+		builder.append(msg.substring(i));
 		return builder.toString();
+	}
+	// Same as above, but all replacements are treated as TranslationComponents
+	public TranslationComponent loadTranslationComp(String key){
+		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key, key));
+		int i = msg.indexOf('$');
+		if(i == -1) return new TranslationComponent(msg);
+		if(i == 0 && msg.charAt(1) == '{' && msg.indexOf('}') == msg.length()-1){
+			return loadTranslationComp(msg.substring(2, msg.length()-1));
+		}
+		ArrayList<Component> withComps = new ArrayList<>();
+		StringBuilder builder = new StringBuilder();
+		builder.append(msg.substring(0, i));
+		while(true){
+			if(msg.charAt(++i) == '{'){
+				final int subStart = i + 1;
+				while(msg.charAt(++i) == '-' || msg.charAt(i) == '.' || (msg.charAt(i) >= 'a' && msg.charAt(i) <= 'z'));
+				if(msg.charAt(i) == '}'){
+					withComps.add(loadTranslationComp(msg.substring(subStart, i)));
+					++i;
+				}
+				else builder.append(msg.substring(subStart-2, i));
+			}
+			else builder.append('$');
+			final int nextI = msg.indexOf('$', i);
+			if(nextI == -1) break;
+			builder.append(msg.substring(i, nextI));
+			i = nextI;
+		}
+		builder.append(msg.substring(i));
+		return new TranslationComponent(builder.toString(), withComps.toArray(new Component[0]));
 	}
 
 	HeadAPI(){

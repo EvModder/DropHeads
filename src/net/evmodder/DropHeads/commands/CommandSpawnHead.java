@@ -51,7 +51,7 @@ public class CommandSpawnHead extends EvCommand{
 	final int MAX_IDS_SHOWN = 200; //TODO: move to config
 	final int MAX_ENTITIES_SELECTED = 100; //TODO: move to config
 
-	// TODO: Move this to a localization file, and maybe re-add aliases (code:,url:,value:)
+	// TODO: Maybe re-add aliases (code:,url:,value: -> code:)
 	final String MOB_PREFIX, PLAYER_PREFIX, HDB_PREFIX, SELF_PREFIX, CODE_PREFIX, AMT_PREFIX, GIVETO_PREFIX, SLOT_PREFIX;
 
 	final String CMD_MUST_BE_RUN_BY_A_PLAYER;
