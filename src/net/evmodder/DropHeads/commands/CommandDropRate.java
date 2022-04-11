@@ -27,36 +27,54 @@ public class CommandDropRate extends EvCommand{
 	final private DropHeads pl;
 	final private DropChanceAPI dropChanceAPI;
 	final boolean ONLY_SHOW_VALID_ENTITIES = true;
-	final boolean USING_SPAWN_MODIFIERS, USING_REQUIRED_WEAPONS, USING_LOOTING_MODIFIERS, USING_TIME_ALIVE_MODIFIERS, VANILLA_WITHER_SKELETON_LOOTING;
+	final boolean USING_SPAWN_MODIFIERS, NEED_CERTAIN_WEAPONS, USING_LOOTING_MODIFIERS, USING_TIME_ALIVE_MODIFIERS, VANILLA_WSKELE_HANDLING;
 	final HashSet<String> entityNames;
 	final double DEFAULT_DROP_CHANCE;
 	final int JSON_LIMIT;
 	
-	final String RAW_DROP_CHANCE_FOR = "§6Drop chance for §e%s§6: §b%s%%";
-	final String DROP_CHANCE_FOR_NOT_FOUND = "§6Drop chance for \"§c%s§6\" not found! §7(defaults to §b0%%§7)";
-	final String FINAL_DROP_CHANCE = "\n§6Final drop chance: §b%s%%";
+	final String DROP_CHANCE_FOR_NOT_FOUND;
+	final String RAW_DROP_CHANCE_FOR;
+	final String FINAL_DROP_CHANCE;
 
-	final Component OTHER_THINGS_THAT_AFFECT_DROPRATE = new RawTextComponent("§7Other things affecting the droprate:");
-	final Component VICTIM_MUST_HAVE_PERM = new RawTextComponent("\n§c§l>§7 Victim must have the '§cdropheads.canlosehead§7' perm");
-	final Component KILLER_MUST_HAVE_PERM = new RawTextComponent("\n§c§l>§7 You must have the '§cdropheads.canbehead§7' perm");
-	final Component ALWAYS_BEHEAD_PERM = new RawTextComponent("\n§c§l>§7 You have '§cdropheads.alwaysbehead§7' so droprate is §b100%");
-	final String SPECIFIC_WEAPONS_TEXT = "\n§c§l>§7 Weapons that can behead: [§f%s§7]";
-	Component SPECIFIC_WEAPONS;
-	final Component RATE_MULTIPLIERS_HEADER = new RawTextComponent("\n§7Multipliers: ");
-	final Component SPAWN_REASON = new RawTextComponent("§fSpawnReason");
-	final Component TIME_ALIVE = new RawTextComponent("§fTimeAlive");
-	final Component WEAPON_TYPE = new RawTextComponent("§fWeapon");
-	final Component PERMS = new RawTextComponent("§fPerms");
-	final TranslationComponent LOOTING_COMP = new TranslationComponent("enchantment.minecraft.looting");
-	final Component VANILLA_WITHER_SKELETON_BEHAVIOR_ALERT = new RawTextComponent("\n§7Vanilla wither_skeleton looting rate is enabled");
+	final String RESTRICTIONS_HEADER;
+	final String VICTIM_MUST_HAVE_PERM;
+	final String KILLER_MUST_HAVE_PERM;
+	final String ALWAYS_BEHEAD_PERM;
+	final Component REQUIRED_WEAPONS;
+	final String MULTIPLIERS_HEADER;
+	final String SPAWN_REASON;
+	final String TIME_ALIVE;
+	final String WEAPON_TYPE;
+	final String PERMS;
+	final TranslationComponent LOOTING_COMP;
+	final String VANILLA_WSKELE_BEHAVIOR_ALERT;
 
 	public CommandDropRate(DropHeads plugin) {
 		super(plugin);
 		pl = plugin;
+		DROP_CHANCE_FOR_NOT_FOUND = pl.getAPI().loadTranslationStr("commands.droprate.not-found").replaceAll("%%?(?!s)", "%%");
+		RAW_DROP_CHANCE_FOR = pl.getAPI().loadTranslationStr("commands.droprate.raw-drop-rate-for").replaceAll("%%?(?!s)", "%%");
+		FINAL_DROP_CHANCE = pl.getAPI().loadTranslationStr("commands.droprate.final-drop-rate").replaceAll("%%?(?!s)", "%%");
+
+		RESTRICTIONS_HEADER = pl.getAPI().loadTranslationStr("commands.droprate.restrictions.header");
+		VICTIM_MUST_HAVE_PERM = pl.getAPI().loadTranslationStr("commands.droprate.restrictions.victim-must-have-perm");
+		KILLER_MUST_HAVE_PERM = pl.getAPI().loadTranslationStr("commands.droprate.restrictions.killer-must-have-perm");
+		ALWAYS_BEHEAD_PERM = pl.getAPI().loadTranslationStr("commands.droprate.restrictions.always-behead-perm");
+
+		MULTIPLIERS_HEADER = pl.getAPI().loadTranslationStr("commands.droprate.multipliers.header");
+		SPAWN_REASON = pl.getAPI().loadTranslationStr("commands.droprate.multipliers.spawn-reason");
+		TIME_ALIVE = pl.getAPI().loadTranslationStr("commands.droprate.multipliers.time-alive");
+		WEAPON_TYPE = pl.getAPI().loadTranslationStr("commands.droprate.multipliers.weapon-type");
+		PERMS = pl.getAPI().loadTranslationStr("commands.droprate.multipliers.perms");
+		//TODO: Should we do it this way for all the other msgs as well?
+		LOOTING_COMP = pl.getAPI().loadTranslationComp("commands.droprate.multipliers.looting");
+
+		VANILLA_WSKELE_BEHAVIOR_ALERT = pl.getAPI().loadTranslationStr("vanilla-wither-skeleton-handling-alert");
+
 		dropChanceAPI = pl.getDropChanceAPI();
 		JSON_LIMIT = pl.getConfig().getInt("message-json-limit", 15000);
 
-		if(USING_REQUIRED_WEAPONS = !dropChanceAPI.mustUseTools.isEmpty()){
+		if(NEED_CERTAIN_WEAPONS = !dropChanceAPI.mustUseTools.isEmpty()){
 			ListComponent requiredWeapons = new ListComponent();
 			boolean isFirstElement = true;
 			for(Material mat : dropChanceAPI.mustUseTools){
@@ -64,13 +82,17 @@ public class CommandDropRate extends EvCommand{
 				else isFirstElement = false;
 				requiredWeapons.addComponent(new TranslationComponent("item.minecraft."+mat.name().toLowerCase()));
 			}
-			SPECIFIC_WEAPONS = new TranslationComponent(SPECIFIC_WEAPONS_TEXT, requiredWeapons);
+			REQUIRED_WEAPONS = new TranslationComponent(
+				pl.getAPI().loadTranslationStr("commands.droprate.restrictions.required-weapons"),
+				requiredWeapons
+			);
 		}
+		else REQUIRED_WEAPONS = null;
 		USING_SPAWN_MODIFIERS = pl.getConfig().getBoolean("track-mob-spawns", true);
 		USING_LOOTING_MODIFIERS = dropChanceAPI.LOOTING_MULT != 1D || dropChanceAPI.LOOTING_ADD != 0D;
 		USING_TIME_ALIVE_MODIFIERS = pl.getConfig().isConfigurationSection("time-alive-modifiers")
 				&& !pl.getConfig().getConfigurationSection("time-alive-modifiers").getKeys(false).isEmpty();
-		VANILLA_WITHER_SKELETON_LOOTING = pl.getConfig().getBoolean("vanilla-wither-skeleton-looting-behavior", true);
+		VANILLA_WSKELE_HANDLING = pl.getConfig().getBoolean("vanilla-wither-skeleton-skulls", true);
 
 		//String defaultChances = FileIO.loadResource(pl, "head-drop-rates.txt"); // Already done in EntityDeathListener
 		String chances = FileIO.loadFile("head-drop-rates.txt", "");
@@ -158,19 +180,25 @@ public class CommandDropRate extends EvCommand{
 			}
 		}
 
-		ListComponent droprateDetails = new ListComponent(OTHER_THINGS_THAT_AFFECT_DROPRATE);
-		//if(entity == null && target.equals("PLAYER")) builder.append("§7").append(VICTIM_MUST_HAVE_PERM);
-		if(entity != null && !entity.hasPermission("dropheads.canlosehead")){rawChance=-1D;droprateDetails.addComponent(VICTIM_MUST_HAVE_PERM);}
-		if(!sender.hasPermission("dropheads.canbehead")){rawChance=-1D;droprateDetails.addComponent(KILLER_MUST_HAVE_PERM);}
-		if(sender.hasPermission("dropheads.alwaysbehead")){rawChance=-1D;droprateDetails.addComponent(ALWAYS_BEHEAD_PERM);}
-		if(USING_REQUIRED_WEAPONS && (weapon == null || !dropChanceAPI.mustUseTools.contains(weapon.getType()))){
-			rawChance=-1D;droprateDetails.addComponent(SPECIFIC_WEAPONS);
+		ListComponent droprateDetails = new ListComponent();
+		//final boolean victimCantLostHead = entity == null && target.equals("PLAYER");
+		final boolean victimCantLoseHead = entity != null && !entity.hasPermission("dropheads.canlosehead");
+		final boolean senderCantBehead = !sender.hasPermission("dropheads.canbehead");
+		final boolean senderAlwaysBeheads = sender.hasPermission("dropheads.alwaysbehead");
+		final boolean notUsingRequiredWeapon = NEED_CERTAIN_WEAPONS && (weapon == null || !dropChanceAPI.mustUseTools.contains(weapon.getType()));
+		if(victimCantLoseHead || senderCantBehead || senderAlwaysBeheads || notUsingRequiredWeapon){
+			droprateDetails.addComponent(RESTRICTIONS_HEADER);
+			if(victimCantLoseHead){rawChance=-1D;droprateDetails.addComponent(VICTIM_MUST_HAVE_PERM);}
+			if(senderCantBehead){rawChance=-1D;droprateDetails.addComponent(KILLER_MUST_HAVE_PERM);}
+			if(senderAlwaysBeheads){rawChance=-1D;droprateDetails.addComponent(ALWAYS_BEHEAD_PERM);}
+			if(notUsingRequiredWeapon){rawChance=-1D;droprateDetails.addComponent(REQUIRED_WEAPONS);}
+			droprateDetails.addComponent("\n");
 		}
 
 		// Multipliers:
 		final double weaponMod = weapon == null ? 1D : 1D+dropChanceAPI.weaponBonuses.getOrDefault(weapon.getType(), 0D);
 		final int lootingLevel = weapon == null ? 0 : weapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
-		final boolean VANILLA_LOOTING = target.equals("WITHER_SKELETON") && VANILLA_WITHER_SKELETON_LOOTING;
+		final boolean VANILLA_LOOTING = target.equals("WITHER_SKELETON") && VANILLA_WSKELE_HANDLING;
 		final double lootingMod = (lootingLevel == 0 || VANILLA_LOOTING) ? 1D
 				: Math.min(Math.pow(dropChanceAPI.LOOTING_MULT, lootingLevel), dropChanceAPI.LOOTING_MULT*lootingLevel);
 		final double lootingAdd = (VANILLA_LOOTING ? 0.01D : dropChanceAPI.LOOTING_ADD)*lootingLevel;
@@ -202,7 +230,7 @@ public class CommandDropRate extends EvCommand{
 		}
 		if(!dropChanceAPI.weaponBonuses.isEmpty()){
 			droprateMultipliers.addComponent(WEAPON_TYPE);
-			if(Math.abs(1D-weaponMod) > 0.001D){
+			if(weapon != null){
 				droprateMultipliers.addComponent(JunkUtils.getMurderItemComponent(weapon, JSON_LIMIT));
 				droprateMultipliers.addComponent(":§6x"+df.format(weaponMod));
 			}
@@ -212,8 +240,8 @@ public class CommandDropRate extends EvCommand{
 			droprateMultipliers.addComponent(PERMS);
 			droprateMultipliers.addComponent(":§6x"+df.format(permMod)+"§7, ");
 		}
-		if(VANILLA_WITHER_SKELETON_LOOTING && target.equals("WITHER_SKELETON")){
-			droprateMultipliers.addComponent(VANILLA_WITHER_SKELETON_BEHAVIOR_ALERT);
+		if(VANILLA_WSKELE_HANDLING && target.equals("WITHER_SKELETON")){
+			droprateMultipliers.addComponent("\n"+VANILLA_WSKELE_BEHAVIOR_ALERT);
 		}
 		else if(USING_LOOTING_MODIFIERS){
 			droprateMultipliers.addComponent(LOOTING_COMP);
@@ -225,8 +253,9 @@ public class CommandDropRate extends EvCommand{
 			}
 		}
 		if(!droprateMultipliers.isEmpty()){
-			droprateDetails.addComponent(RATE_MULTIPLIERS_HEADER);
+			droprateDetails.addComponent(MULTIPLIERS_HEADER);
 			droprateDetails.addComponent(droprateMultipliers);
+			droprateDetails.addComponent("\n");
 		}
 		if(entity != null && rawChance > 0D && Math.abs(finalDropChance-rawChance) > 0.001D){
 			df = new DecimalFormat("0.0####");

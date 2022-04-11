@@ -149,7 +149,7 @@ commands:
   spawnhead:
     prefixes:
       mob: "mob:"
-      player: "player:"
+      player: "${head-type-in-lore.player}"
       hdb: "hdb:"
       self: "self:"
       code: "code:"
@@ -190,3 +190,22 @@ commands:
       gave-heads: "&aGave: [&e%s&a] to &7%s"
       multi-gave-head: "&aGave &e%s&a to [&7%s&a]"
       multi-gave-heads: "&aGave: [&e%s&a] to [&7%s&a]"
+
+  droprate:
+    not-found: "&6Drop chance for \"&c%s&6\" not found! &7(defaults to &b0%%&7)"
+    raw-drop-rate-for: "&6Drop chance for &e%s&6: &b%s%%"
+    restrictions:
+      header: "§7Drop restrictions:"
+      victim-must-have-perm: "\n&c&l>&7 Victim must have the '&cdropheads.canlosehead&7' perm"
+      killer-must-have-perm: "\n&c&l>&7 You must have the '&cdropheads.canbehead&7' perm"
+      always-behead-perm: "\n&c&l>&7 You have '&cdropheads.alwaysbehead&7' so droprate is &b100%"
+      required-weapons: "\n&c&l>&7 Weapons that can behead: [&f%s&7]
+    multipliers:
+      header: "&7Multipliers: "
+      spawn-reason: "&fSpawnReason"
+      time-alive: "&fTimeAlive"
+      weapon-type: "&fWeapon"
+      perms: "&fPerms"
+      looting: "&8${enchantment.minecraft.looting}"
+    vanilla-wither-skeleton-handling-alert: "&7Vanilla wither_skeleton looting rate is enabled"
+    final-drop-rate: "&6Final drop chance: &b%s%%"
