@@ -135,3 +135,51 @@ texturekey-head-name-format:
   PANDA|NORMAL: "${MOB_TYPE} ${HEAD_TYPE}"
   PANDA|NORMAL|GRUMM: "Grumm ${MOB_TYPE} ${HEAD_TYPE}"
 #  TROPICAL_FISH|TRIGGERFISH: "Triggered Feesh Haed"
+
+
+# Configure the feedback messages for DropHeads commands
+commands:
+  spawnhead:
+    prefixes:
+      mob: "mob:"
+      player: "player:"
+      hdb: "hdb:"
+      self: "self:"
+      code: "code:"
+      amount: "amount:"
+      giveto: "giveto:"
+      slot: "slot:"
+    errors:
+      permissions:
+        run-by-player: "&cOnly ingame players can run this command without a &e${commands.spawnhead.prefixes.giveto}&c argument"
+        mob-heads: "&cYou do not have permission to spawn mob heads"
+        player-heads: "&cYou do not have permission to spawn player heads"
+        hdb-heads: "&cYou do not have permission to spawn HeadDatabase heads"
+        code-heads: "You do not have permission to spawn heads with custom texture codes"
+      missing-textures:
+        mob: "&cUnable to find head texture for &e${commands.spawnhead.prefixes.mob}%s"
+        mob-subtype: "&cUnknown data value for %s: &e%s"
+        url: "&cUnable to find texture for url/code: &e%s"
+        hdb: "&cCould not find head with HDB id: &e%s"
+      hdb-not-installed: "&cHeadDatabase plugin needs to be installed to enable ID lookup"
+      head-not-found: "&cHead \"%s%s\" not found"
+      giveto-not-found: "&cCould not find head recipient: %s"
+      invalid-slot: "&cInvalid inventory slot: %s"
+      slot-unavailable:
+        self: "&cYou do not have ${commands.spawnhead.prefixes.slot}%s available"
+        target: "&c%s does not have ${commands.spawnhead.prefixes.slot}%s available"
+        multiple-heads: "&cWhen setting a slot, you can only select a single entity head";
+      not-enough-inv-space:
+        self: "&cYou do not have enough inventory space"
+        target: "&c%s does not have enough inventory space"
+      no-matching-entities: "&cUnable to find entity from selector: %s"
+      too-many-matching-entities: "&cToo many entities selected (&6%s&c)"
+    success:
+      has-data-value: "&7Getting entity head with data value: %s"
+      item-with-amount-format: "%s&fx%s"
+      spanwed-head: "&aSpawned Head: &e%s"
+      spawned-heads: "&aSpawned Heads: [&e%s&a]"
+      gave-head: "&aGave &e%s&a to &7%s"
+      gave-heads: "&aGave: [&e%s&a] to &7%s"
+      multi-gave-head: "&aGave &e%s&a to [&7%s&a]"
+      multi-gave-heads: "&aGave: [&e%s&a] to [&7%s&a]"

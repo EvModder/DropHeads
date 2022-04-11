@@ -14,10 +14,10 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.apache.commons.lang.ArrayUtils;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.Configuration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -45,52 +45,119 @@ import net.evmodder.EvLib.extras.SelectorUtils.Selector;
 import net.evmodder.EvLib.extras.TellrawUtils;
 
 public class CommandSpawnHead extends EvCommand{
-	final private DropHeads pl;
+	final DropHeads pl;
 	final boolean SHOW_SUBTYPE_IN_TAB_COMPLETE_FOR_BAR = true;
-	final boolean USE_PLAYER_DISPLAYNAMES = false;//TODO: move to config, when possible
 	final boolean ENABLE_LOG;
 	final String LOG_FORMAT;
-	final int MAX_IDS_SHOWN = 200;
-	final int MAX_ENTITIES_SELECTED = 100;
+	final int MAX_IDS_SHOWN = 200; //TODO: move to config
+	final int MAX_ENTITIES_SELECTED = 100; //TODO: move to config
 
 	// TODO: Move this to a localization file, and maybe re-add aliases (code:,url:,value:)
-	final String MOB_PREFIX = "mob:", PLAYER_PREFIX = "player:", HDB_PREFIX = "hdb:", SELF_PREFIX = "self:", CODE_PREFIX = "code:";
-	final String AMT_PREFIX = "amount:", GIVETO_PREFIX = "giveto:", SLOT_PREFIX = "slot:";
+	final String MOB_PREFIX, PLAYER_PREFIX, HDB_PREFIX, SELF_PREFIX, CODE_PREFIX, AMT_PREFIX, GIVETO_PREFIX, SLOT_PREFIX;
 
-	final String CMD_MUST_BE_RUN_BY_A_PLAYER = ChatColor.RED + "This command can only be run by in-game players!";
-	final String NO_PERMISSION_TO_SPAWN_MOB_HEADS = ChatColor.RED + "You do not have permission to spawn mob heads";
-	final String NO_PERMISSION_TO_SPAWN_HDB_HEADS = ChatColor.RED + "You do not have permission to spawn HeadDatabase heads";
-	final String NO_PERMISSION_TO_SPAWN_CODE_HEADS = ChatColor.RED + "You do not have permission to spawn heads with custom texture codes";
-	final String NO_PERMISSION_TO_SPAWN_PLAYER_HEADS = ChatColor.RED + "You do not have permission to spawn player heads";
-	final String ERROR_UNKNOWN_MOB_TEXTURE = ChatColor.RED + "Unable to find head texture for "+MOB_PREFIX+"%s";
-	final String GETTING_HEAD_WITH_DATA_VALUE = ChatColor.GRAY + "Getting entity head with data value: %s";
-	final String ERROR_UNKNOWN_DATA_VALUE = ChatColor.RED + "Unknown data value for %s: " + ChatColor.YELLOW + "%s";
-	final String ERROR_HDB_NOT_INSTALLED = ChatColor.RED + "HeadDatabase plugin needs to be installed to enable ID lookup";
-	final String ERROR_HDB_HEAD_NOT_FOUND = ChatColor.RED + "Could not find head with HDB id: %s";
-	final String ERROR_UNKNOWN_RAW_TEXTURE = ChatColor.RED + "Unable to find texture for url/code: %s";
-	final String ERROR_HEAD_NOT_FOUND = ChatColor.RED + "Head \"%s%s\" not found";
-	final String ERROR_GIVETO_NOT_FOUND = ChatColor.RED + "Could not find head recipient: %s";
-	final String ERROR_INVALID_SLOT = ChatColor.RED + "Invalid inventory slot: %s";
-	final String ERROR_NOT_ENOUGH_INV_SPACE_FOR_SELF = ChatColor.RED + "You do not have enough inventory space";
-	final String ERROR_NOT_ENOUGH_INV_SPACE_FOR_TARGET = ChatColor.RED + "%s does not have enough inventory space";
-	final String ERROR_SLOT_OCCUPIED_FOR_SELF = ChatColor.RED + "You do not have slot:%s available";
-	final String ERROR_SLOT_OCCUPIED_FOR_TARGET = ChatColor.RED + "%s does not have slot:%s available";
-	final String ERROR_TOO_MANY_ENTITIES = ChatColor.RED + "Too many entities selected (" + ChatColor.GOLD + "%s" + ChatColor.RED + ")";
-	final String ERROR_NO_MATCHING_ENTITIES = ChatColor.RED + "Unable to find entity from selector: %s";
-	final String ERROR_MULTIPLE_HEADS_SINGLE_SLOT = ChatColor.RED + "When setting a slot, you can only select a single entity head";
-	final String ITEM_WITH_AMOUNT_FORMAT = "%s" + ChatColor.WHITE + "x%s";
-	final String SUCCESSFULLY_SPAWNED_HEAD = ChatColor.GREEN + "Spawned Head: " + ChatColor.YELLOW + "%s";
-	final String SUCCESSFULLY_SPAWNED_HEADS = ChatColor.GREEN + "Spawned Heads: [" + ChatColor.YELLOW + "%s" + ChatColor.GREEN + "]";
-	final String SUCCESSFULLY_GAVE_HEAD = ChatColor.GREEN + "Gave " + ChatColor.YELLOW + "%s" + ChatColor.GREEN + " to " + ChatColor.GRAY + "%s";
-	final String SUCCESSFULLY_GAVE_HEADS = ChatColor.GREEN + "Gave: [" + ChatColor.YELLOW + "%s" + ChatColor.GREEN + "] to " + ChatColor.GRAY + "%s";
-	final String SUCCESSFULLY_MULTI_GAVE_HEAD =
-			ChatColor.GREEN + "Gave " + ChatColor.YELLOW + "%s" + ChatColor.GREEN + " to [" + ChatColor.GRAY + "%s" + ChatColor.GREEN + "]";
-	final String SUCCESSFULLY_MULTI_GAVE_HEADS =
-			ChatColor.GREEN + "Gave: [" + ChatColor.YELLOW + "%s" + ChatColor.GREEN + "] to [" + ChatColor.GRAY + "%s" + ChatColor.GREEN + "]";
+	final String CMD_MUST_BE_RUN_BY_A_PLAYER;
+	final String NO_PERMISSION_TO_SPAWN_MOB_HEADS;
+	final String NO_PERMISSION_TO_SPAWN_HDB_HEADS;
+	final String NO_PERMISSION_TO_SPAWN_CODE_HEADS;
+	final String NO_PERMISSION_TO_SPAWN_PLAYER_HEADS;
+	final String MISSING_TEXTURE_MOB;
+	final String MISSING_TEXTURE_MOB_SUBTYPE;
+	final String MISSING_TEXTURE_URL;
+	final String MISSING_TEXTURE_HDB;
+	
+	final String ERROR_HDB_NOT_INSTALLED;
+	final String ERROR_HEAD_NOT_FOUND;
+	final String ERROR_GIVETO_NOT_FOUND;
+	final String ERROR_INVALID_SLOT;
+	final String ERROR_SLOT_OCCUPIED_FOR_SELF;
+	final String ERROR_SLOT_OCCUPIED_FOR_TARGET;
+	final String ERROR_MULTIPLE_HEADS_SINGLE_SLOT;
+	final String ERROR_NOT_ENOUGH_INV_SPACE_FOR_SELF;
+	final String ERROR_NOT_ENOUGH_INV_SPACE_FOR_TARGET;
+	final String ERROR_NO_MATCHING_ENTITIES;
+	final String ERROR_TOO_MANY_ENTITIES;
+
+	final String GETTING_HEAD_WITH_DATA_VALUE;
+	final String ITEM_WITH_AMOUNT_FORMAT;
+	final String SUCCESSFULLY_SPAWNED_HEAD;
+	final String SUCCESSFULLY_SPAWNED_HEADS;
+	final String SUCCESSFULLY_GAVE_HEAD;
+	final String SUCCESSFULLY_GAVE_HEADS;
+	final String SUCCESSFULLY_MULTI_GAVE_HEAD;
+	final String SUCCESSFULLY_MULTI_GAVE_HEADS;
+
+	// Loads config.getString(key), replacing '${abc-xyz}' with config.getString('abc-xyz')
+	private static String loadMsgStr(Configuration config, String key){
+		String msg = TextUtils.translateAlternateColorCodes('&', config.getString(key));
+		int i = msg.indexOf('$');
+		if(i == -1) return msg;
+		StringBuilder builder = new StringBuilder();
+		builder.append(msg.substring(0, i));
+		while(true){
+			if(msg.charAt(++i) == '{'){
+				final int subStart = i + 1;
+				while(msg.charAt(++i) == '-' || (msg.charAt(i) >= 'a' && msg.charAt(i) <= 'z'));
+				if(msg.charAt(i) == '}'){
+					builder.append(loadMsgStr(config, msg.substring(subStart, i)));
+					++i;
+				}
+				else builder.append(msg.substring(subStart-2, i));
+			}
+			else builder.append('$');
+			final int nextI = msg.indexOf('$');
+			if(nextI == -1) break;
+			builder.append(msg.substring(i, nextI));
+			i = nextI;
+		}
+		//builder.append(msg.substring(i));
+		return builder.toString();
+	}
 
 	public CommandSpawnHead(DropHeads plugin){
 		super(plugin);
 		pl = plugin;
+		final Configuration translationsFile = pl.getAPI().translationsFile;
+		// MOB_PREFIX, PLAYER_PREFIX, HDB_PREFIX, SELF_PREFIX, CODE_PREFIX, AMT_PREFIX, GIVETO_PREFIX, SLOT_PREFIX
+		MOB_PREFIX = loadMsgStr(translationsFile, "commands.spawnhead.prefixes.mob");
+		PLAYER_PREFIX = loadMsgStr(translationsFile, "commands.spawnhead.prefixes.player");
+		HDB_PREFIX = loadMsgStr(translationsFile, "commands.spawnhead.prefixes.hdb");
+		SELF_PREFIX = loadMsgStr(translationsFile, "commands.spawnhead.prefixes.self");
+		CODE_PREFIX = loadMsgStr(translationsFile, "commands.spawnhead.prefixes.code");
+		AMT_PREFIX = loadMsgStr(translationsFile, "commands.spawnhead.prefixes.amount");
+		GIVETO_PREFIX = loadMsgStr(translationsFile, "commands.spawnhead.prefixes.giveto");
+		SLOT_PREFIX = loadMsgStr(translationsFile, "commands.spawnhead.prefixes.slot");
+
+		CMD_MUST_BE_RUN_BY_A_PLAYER = loadMsgStr(translationsFile, "commands.spawnhead.errors.permissions.run-by-player");
+		NO_PERMISSION_TO_SPAWN_MOB_HEADS = loadMsgStr(translationsFile, "commands.spawnhead.errors.permissions.mob-heads");
+		NO_PERMISSION_TO_SPAWN_PLAYER_HEADS = loadMsgStr(translationsFile, "commands.spawnhead.errors.permissions.player-heads");
+		NO_PERMISSION_TO_SPAWN_HDB_HEADS = loadMsgStr(translationsFile, "commands.spawnhead.errors.permissions.hdb-heads");
+		NO_PERMISSION_TO_SPAWN_CODE_HEADS = loadMsgStr(translationsFile, "commands.spawnhead.errors.permissions.code-heads");
+		MISSING_TEXTURE_MOB = loadMsgStr(translationsFile, "commands.spawnhead.errors.missing-textures.mob");
+		MISSING_TEXTURE_MOB_SUBTYPE = loadMsgStr(translationsFile, "commands.spawnhead.errors.missing-textures.mob-subtype");
+		MISSING_TEXTURE_URL = loadMsgStr(translationsFile, "commands.spawnhead.errors.missing-textures.url");
+		MISSING_TEXTURE_HDB = loadMsgStr(translationsFile, "commands.spawnhead.errors.missing-textures.hdb");
+
+		ERROR_HDB_NOT_INSTALLED = loadMsgStr(translationsFile, "commands.spawnhead.errors.hdb-not-installed");
+		ERROR_HEAD_NOT_FOUND = loadMsgStr(translationsFile, "commands.spawnhead.errors.head-not-found");
+		ERROR_GIVETO_NOT_FOUND = loadMsgStr(translationsFile, "commands.spawnhead.errors.giveto-not-found");
+		ERROR_INVALID_SLOT = loadMsgStr(translationsFile, "commands.spawnhead.errors.invalid-slot");
+		ERROR_SLOT_OCCUPIED_FOR_SELF = loadMsgStr(translationsFile, "commands.spawnhead.errors.slot-unavailable.self");
+		ERROR_SLOT_OCCUPIED_FOR_TARGET = loadMsgStr(translationsFile, "commands.spawnhead.errors.slot-unavailable.target");
+		ERROR_MULTIPLE_HEADS_SINGLE_SLOT = loadMsgStr(translationsFile, "commands.spawnhead.errors.slot-unavailable.multiple-heads");
+		ERROR_NOT_ENOUGH_INV_SPACE_FOR_SELF = loadMsgStr(translationsFile, "commands.spawnhead.errors.not-enough-inv-space.self");
+		ERROR_NOT_ENOUGH_INV_SPACE_FOR_TARGET = loadMsgStr(translationsFile, "commands.spawnhead.errors.not-enough-inv-space.target");
+		ERROR_NO_MATCHING_ENTITIES = loadMsgStr(translationsFile, "commands.spawnhead.errors.no-matching-entities");
+		ERROR_TOO_MANY_ENTITIES = loadMsgStr(translationsFile, "commands.spawnhead.errors.too-many-matching-entities");
+
+		GETTING_HEAD_WITH_DATA_VALUE = loadMsgStr(translationsFile, "commands.spawnhead.success.has-data-value");
+		ITEM_WITH_AMOUNT_FORMAT = loadMsgStr(translationsFile, "commands.spawnhead.success.item-with-amount-format");
+		SUCCESSFULLY_SPAWNED_HEAD = loadMsgStr(translationsFile, "commands.spawnhead.success.spawned-head");
+		SUCCESSFULLY_SPAWNED_HEADS = loadMsgStr(translationsFile, "commands.spawnhead.success.spawned-heads");
+		SUCCESSFULLY_GAVE_HEAD = loadMsgStr(translationsFile, "commands.spawnhead.success.gave-head");
+		SUCCESSFULLY_GAVE_HEADS = loadMsgStr(translationsFile, "commands.spawnhead.success.gave-heads");
+		SUCCESSFULLY_MULTI_GAVE_HEAD = loadMsgStr(translationsFile, "commands.spawnhead.success.multi-gave-head");
+		SUCCESSFULLY_MULTI_GAVE_HEADS = loadMsgStr(translationsFile, "commands.spawnhead.success.multi-gave-heads");
+
 		ENABLE_LOG = pl.getConfig().getBoolean("log.enable", false) && pl.getConfig().getBoolean("log.log-head-command", false);
 		LOG_FORMAT = ENABLE_LOG ? pl.getConfig().getString("log.log-head-command-format", "${TIMESTAMP},gethead command,${SENDER},${HEAD}") : null;
 	}
@@ -254,7 +321,7 @@ public class CommandSpawnHead extends EvCommand{
 				return new HeadFromString(null, true, null);
 			}
 			if(!pl.getAPI().textureExists(target) && !pl.getAPI().textureExists(textureKey)){
-				sender.sendMessage(String.format(ERROR_UNKNOWN_MOB_TEXTURE, target));
+				sender.sendMessage(String.format(MISSING_TEXTURE_MOB, target));
 				return new HeadFromString(null, false, null);
 			}
 			EntityType eType = EntityUtils.getEntityByName(target);
@@ -263,7 +330,7 @@ public class CommandSpawnHead extends EvCommand{
 			}
 			if(extraData != null){
 				if(pl.getAPI().textureExists(textureKey)) sender.sendMessage(String.format(GETTING_HEAD_WITH_DATA_VALUE, extraData));
-				else sender.sendMessage(String.format(ERROR_UNKNOWN_DATA_VALUE, eType, extraData));
+				else sender.sendMessage(String.format(MISSING_TEXTURE_MOB_SUBTYPE, eType, extraData));
 			}
 			head = pl.getAPI().getHead(eType, textureKey);
 		}
@@ -277,7 +344,7 @@ public class CommandSpawnHead extends EvCommand{
 				return new HeadFromString(null, true, null);
 			}
 			if(!pl.getAPI().getHeadDatabaseAPI().isHead(target)){
-				sender.sendMessage(String.format(ERROR_HDB_HEAD_NOT_FOUND, target));
+				sender.sendMessage(String.format(MISSING_TEXTURE_HDB, target));
 				return new HeadFromString(null, true, null);
 			}
 			ItemStack unwrappedHDBhead = pl.getAPI().getHeadDatabaseAPI().getItemHead(target);
@@ -291,7 +358,7 @@ public class CommandSpawnHead extends EvCommand{
 			}
 			String url = WebUtils.getTextureURL(target, /*verify=*/true);
 			if(url == null){
-				sender.sendMessage(String.format(ERROR_UNKNOWN_RAW_TEXTURE, target));
+				sender.sendMessage(String.format(MISSING_TEXTURE_URL, target));
 				return new HeadFromString(null, false, null);
 			}
 			target = Base64.getEncoder().encodeToString(
@@ -494,7 +561,7 @@ public class CommandSpawnHead extends EvCommand{
 					if(notEnoughInvSpaceWarned.size() == giveTargets.size()) return true;
 				}
 				else if(firstHeadSoAddRecipients && (!isSelf || giveTargets.size() > 1)){
-					recipientComps.add(new SelectorComponent(giveTarget.getUniqueId(), USE_PLAYER_DISPLAYNAMES));
+					recipientComps.add(new SelectorComponent(giveTarget.getUniqueId()));
 				}
 			}
 			firstHeadSoAddRecipients = false;
