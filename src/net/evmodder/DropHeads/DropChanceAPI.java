@@ -140,13 +140,13 @@ public class DropChanceAPI{
 
 		JSON_LIMIT = pl.getConfig().getInt("message-json-limit", 15000);
 		MSG_BEHEAD = parseStringOrStringList("message-beheaded", "&6${VICTIM}&r was decapitated",
-				pl.getAPI().translationsFile, pl.getConfig());
-		MSH_BEHEAD_BY = parseStringOrStringList("message-beheaded-by-entity", "&6${VICTIM}&r was decapitated by &6${KILLER}&r",
-				pl.getAPI().translationsFile, pl.getConfig());
-		MSH_BEHEAD_BY_WITH = parseStringOrStringList("message-beheaded-by-entity-with-item", "&6${VICTIM}&r was decapitated by &6${KILLER}&r",
-				pl.getAPI().translationsFile, pl.getConfig());
-		MSH_BEHEAD_BY_WITH_NAMED = parseStringOrStringList("message-beheaded-by-entity-with-item-named", "&6${KILLER}&r decapitated &6${VICTIM}&r using &7${ITEM}&r",
-				pl.getAPI().translationsFile, pl.getConfig());
+				pl.getConfig(), pl.getAPI().translationsFile);
+		MSH_BEHEAD_BY = parseStringOrStringList("message-beheaded-by-entity", "${VICTIM} was beheaded by ${KILLER}",
+				pl.getConfig(), pl.getAPI().translationsFile);
+		MSH_BEHEAD_BY_WITH = parseStringOrStringList("message-beheaded-by-entity-with-item", "${VICTIM} was beheaded by ${KILLER}",
+				pl.getConfig(), pl.getAPI().translationsFile);
+		MSH_BEHEAD_BY_WITH_NAMED = parseStringOrStringList("message-beheaded-by-entity-with-item-named", "${KILLER} beheaded ${VICTIM} using ${ITEM}",
+				pl.getConfig(), pl.getAPI().translationsFile);
 
 		DROP_MODES = new ArrayList<>();
 		if(pl.getConfig().contains("head-item-drop-mode"))
