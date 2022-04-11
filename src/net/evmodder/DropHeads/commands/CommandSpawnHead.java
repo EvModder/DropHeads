@@ -17,7 +17,6 @@ import org.apache.commons.lang.ArrayUtils;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.Configuration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -86,77 +85,49 @@ public class CommandSpawnHead extends EvCommand{
 	final String SUCCESSFULLY_MULTI_GAVE_HEAD;
 	final String SUCCESSFULLY_MULTI_GAVE_HEADS;
 
-	// Loads config.getString(key), replacing '${abc-xyz}' with config.getString('abc-xyz')
-	private static String loadMsgStr(Configuration config, String key){
-		String msg = TextUtils.translateAlternateColorCodes('&', config.getString(key));
-		int i = msg.indexOf('$');
-		if(i == -1) return msg;
-		StringBuilder builder = new StringBuilder();
-		builder.append(msg.substring(0, i));
-		while(true){
-			if(msg.charAt(++i) == '{'){
-				final int subStart = i + 1;
-				while(msg.charAt(++i) == '-' || (msg.charAt(i) >= 'a' && msg.charAt(i) <= 'z'));
-				if(msg.charAt(i) == '}'){
-					builder.append(loadMsgStr(config, msg.substring(subStart, i)));
-					++i;
-				}
-				else builder.append(msg.substring(subStart-2, i));
-			}
-			else builder.append('$');
-			final int nextI = msg.indexOf('$');
-			if(nextI == -1) break;
-			builder.append(msg.substring(i, nextI));
-			i = nextI;
-		}
-		//builder.append(msg.substring(i));
-		return builder.toString();
-	}
-
 	public CommandSpawnHead(DropHeads plugin){
 		super(plugin);
 		pl = plugin;
-		final Configuration translationsFile = pl.getAPI().translationsFile;
 		// MOB_PREFIX, PLAYER_PREFIX, HDB_PREFIX, SELF_PREFIX, CODE_PREFIX, AMT_PREFIX, GIVETO_PREFIX, SLOT_PREFIX
-		MOB_PREFIX = loadMsgStr(translationsFile, "commands.spawnhead.prefixes.mob");
-		PLAYER_PREFIX = loadMsgStr(translationsFile, "commands.spawnhead.prefixes.player");
-		HDB_PREFIX = loadMsgStr(translationsFile, "commands.spawnhead.prefixes.hdb");
-		SELF_PREFIX = loadMsgStr(translationsFile, "commands.spawnhead.prefixes.self");
-		CODE_PREFIX = loadMsgStr(translationsFile, "commands.spawnhead.prefixes.code");
-		AMT_PREFIX = loadMsgStr(translationsFile, "commands.spawnhead.prefixes.amount");
-		GIVETO_PREFIX = loadMsgStr(translationsFile, "commands.spawnhead.prefixes.giveto");
-		SLOT_PREFIX = loadMsgStr(translationsFile, "commands.spawnhead.prefixes.slot");
+		MOB_PREFIX = pl.getAPI().loadTranslationStr("commands.spawnhead.prefixes.mob");
+		PLAYER_PREFIX = pl.getAPI().loadTranslationStr("commands.spawnhead.prefixes.player");
+		HDB_PREFIX = pl.getAPI().loadTranslationStr("commands.spawnhead.prefixes.hdb");
+		SELF_PREFIX = pl.getAPI().loadTranslationStr("commands.spawnhead.prefixes.self");
+		CODE_PREFIX = pl.getAPI().loadTranslationStr("commands.spawnhead.prefixes.code");
+		AMT_PREFIX = pl.getAPI().loadTranslationStr("commands.spawnhead.prefixes.amount");
+		GIVETO_PREFIX = pl.getAPI().loadTranslationStr("commands.spawnhead.prefixes.giveto");
+		SLOT_PREFIX = pl.getAPI().loadTranslationStr("commands.spawnhead.prefixes.slot");
 
-		CMD_MUST_BE_RUN_BY_A_PLAYER = loadMsgStr(translationsFile, "commands.spawnhead.errors.permissions.run-by-player");
-		NO_PERMISSION_TO_SPAWN_MOB_HEADS = loadMsgStr(translationsFile, "commands.spawnhead.errors.permissions.mob-heads");
-		NO_PERMISSION_TO_SPAWN_PLAYER_HEADS = loadMsgStr(translationsFile, "commands.spawnhead.errors.permissions.player-heads");
-		NO_PERMISSION_TO_SPAWN_HDB_HEADS = loadMsgStr(translationsFile, "commands.spawnhead.errors.permissions.hdb-heads");
-		NO_PERMISSION_TO_SPAWN_CODE_HEADS = loadMsgStr(translationsFile, "commands.spawnhead.errors.permissions.code-heads");
-		MISSING_TEXTURE_MOB = loadMsgStr(translationsFile, "commands.spawnhead.errors.missing-textures.mob");
-		MISSING_TEXTURE_MOB_SUBTYPE = loadMsgStr(translationsFile, "commands.spawnhead.errors.missing-textures.mob-subtype");
-		MISSING_TEXTURE_URL = loadMsgStr(translationsFile, "commands.spawnhead.errors.missing-textures.url");
-		MISSING_TEXTURE_HDB = loadMsgStr(translationsFile, "commands.spawnhead.errors.missing-textures.hdb");
+		CMD_MUST_BE_RUN_BY_A_PLAYER = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.permissions.run-by-player");
+		NO_PERMISSION_TO_SPAWN_MOB_HEADS = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.permissions.mob-heads");
+		NO_PERMISSION_TO_SPAWN_PLAYER_HEADS = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.permissions.player-heads");
+		NO_PERMISSION_TO_SPAWN_HDB_HEADS = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.permissions.hdb-heads");
+		NO_PERMISSION_TO_SPAWN_CODE_HEADS = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.permissions.code-heads");
+		MISSING_TEXTURE_MOB = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.missing-textures.mob");
+		MISSING_TEXTURE_MOB_SUBTYPE = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.missing-textures.mob-subtype");
+		MISSING_TEXTURE_URL = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.missing-textures.url");
+		MISSING_TEXTURE_HDB = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.missing-textures.hdb");
 
-		ERROR_HDB_NOT_INSTALLED = loadMsgStr(translationsFile, "commands.spawnhead.errors.hdb-not-installed");
-		ERROR_HEAD_NOT_FOUND = loadMsgStr(translationsFile, "commands.spawnhead.errors.head-not-found");
-		ERROR_GIVETO_NOT_FOUND = loadMsgStr(translationsFile, "commands.spawnhead.errors.giveto-not-found");
-		ERROR_INVALID_SLOT = loadMsgStr(translationsFile, "commands.spawnhead.errors.invalid-slot");
-		ERROR_SLOT_OCCUPIED_FOR_SELF = loadMsgStr(translationsFile, "commands.spawnhead.errors.slot-unavailable.self");
-		ERROR_SLOT_OCCUPIED_FOR_TARGET = loadMsgStr(translationsFile, "commands.spawnhead.errors.slot-unavailable.target");
-		ERROR_MULTIPLE_HEADS_SINGLE_SLOT = loadMsgStr(translationsFile, "commands.spawnhead.errors.slot-unavailable.multiple-heads");
-		ERROR_NOT_ENOUGH_INV_SPACE_FOR_SELF = loadMsgStr(translationsFile, "commands.spawnhead.errors.not-enough-inv-space.self");
-		ERROR_NOT_ENOUGH_INV_SPACE_FOR_TARGET = loadMsgStr(translationsFile, "commands.spawnhead.errors.not-enough-inv-space.target");
-		ERROR_NO_MATCHING_ENTITIES = loadMsgStr(translationsFile, "commands.spawnhead.errors.no-matching-entities");
-		ERROR_TOO_MANY_ENTITIES = loadMsgStr(translationsFile, "commands.spawnhead.errors.too-many-matching-entities");
+		ERROR_HDB_NOT_INSTALLED = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.hdb-not-installed");
+		ERROR_HEAD_NOT_FOUND = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.head-not-found");
+		ERROR_GIVETO_NOT_FOUND = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.giveto-not-found");
+		ERROR_INVALID_SLOT = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.invalid-slot");
+		ERROR_SLOT_OCCUPIED_FOR_SELF = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.slot-unavailable.self");
+		ERROR_SLOT_OCCUPIED_FOR_TARGET = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.slot-unavailable.target");
+		ERROR_MULTIPLE_HEADS_SINGLE_SLOT = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.slot-unavailable.multiple-heads");
+		ERROR_NOT_ENOUGH_INV_SPACE_FOR_SELF = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.not-enough-inv-space.self");
+		ERROR_NOT_ENOUGH_INV_SPACE_FOR_TARGET = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.not-enough-inv-space.target");
+		ERROR_NO_MATCHING_ENTITIES = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.no-matching-entities");
+		ERROR_TOO_MANY_ENTITIES = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.too-many-matching-entities");
 
-		GETTING_HEAD_WITH_DATA_VALUE = loadMsgStr(translationsFile, "commands.spawnhead.success.has-data-value");
-		ITEM_WITH_AMOUNT_FORMAT = loadMsgStr(translationsFile, "commands.spawnhead.success.item-with-amount-format");
-		SUCCESSFULLY_SPAWNED_HEAD = loadMsgStr(translationsFile, "commands.spawnhead.success.spawned-head");
-		SUCCESSFULLY_SPAWNED_HEADS = loadMsgStr(translationsFile, "commands.spawnhead.success.spawned-heads");
-		SUCCESSFULLY_GAVE_HEAD = loadMsgStr(translationsFile, "commands.spawnhead.success.gave-head");
-		SUCCESSFULLY_GAVE_HEADS = loadMsgStr(translationsFile, "commands.spawnhead.success.gave-heads");
-		SUCCESSFULLY_MULTI_GAVE_HEAD = loadMsgStr(translationsFile, "commands.spawnhead.success.multi-gave-head");
-		SUCCESSFULLY_MULTI_GAVE_HEADS = loadMsgStr(translationsFile, "commands.spawnhead.success.multi-gave-heads");
+		GETTING_HEAD_WITH_DATA_VALUE = pl.getAPI().loadTranslationStr("commands.spawnhead.success.has-data-value");
+		ITEM_WITH_AMOUNT_FORMAT = pl.getAPI().loadTranslationStr("commands.spawnhead.success.item-with-amount-format");
+		SUCCESSFULLY_SPAWNED_HEAD = pl.getAPI().loadTranslationStr("commands.spawnhead.success.spawned-head");
+		SUCCESSFULLY_SPAWNED_HEADS = pl.getAPI().loadTranslationStr("commands.spawnhead.success.spawned-heads");
+		SUCCESSFULLY_GAVE_HEAD = pl.getAPI().loadTranslationStr("commands.spawnhead.success.gave-head");
+		SUCCESSFULLY_GAVE_HEADS = pl.getAPI().loadTranslationStr("commands.spawnhead.success.gave-heads");
+		SUCCESSFULLY_MULTI_GAVE_HEAD = pl.getAPI().loadTranslationStr("commands.spawnhead.success.multi-gave-head");
+		SUCCESSFULLY_MULTI_GAVE_HEADS = pl.getAPI().loadTranslationStr("commands.spawnhead.success.multi-gave-heads");
 
 		ENABLE_LOG = pl.getConfig().getBoolean("log.enable", false) && pl.getConfig().getBoolean("log.log-head-command", false);
 		LOG_FORMAT = ENABLE_LOG ? pl.getConfig().getString("log.log-head-command-format", "${TIMESTAMP},gethead command,${SENDER},${HEAD}") : null;

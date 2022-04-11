@@ -54,7 +54,7 @@ public class HeadAPI {
 	private final DropHeads pl;
 	private HeadDatabaseAPI hdbAPI = null;
 //	private int MAX_HDB_ID = -1;
-	public final Configuration translationsFile;  //TODO: make private
+	final Configuration translationsFile;  //TODO: make private
 	private final boolean GRUM_ENABLED, SADDLES_ENABLED, HOLLOW_SKULLS_ENABLED, TRANSPARENT_SLIME_ENABLED, CRACKED_IRON_GOLEMS_ENABLED, USE_PRE_JAPPA;
 	private final boolean UPDATE_PLAYER_HEADS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_VANILLA_HEADS;
 	private final TranslationComponent LOCAL_HEAD, LOCAL_SKULL, LOCAL_TOE;
@@ -66,6 +66,33 @@ public class HeadAPI {
 	private final HashMap<String, String> replaceHeadsFromTo; // key & value are textureKeys
 
 	private final String PLAYER_PREFIX, MOB_PREFIX, MHF_PREFIX, HDB_PREFIX, CODE_PREFIX;
+
+	// Loads config.getString(key), replacing '${abc-xyz}' with config.getString('abc-xyz')
+	public String loadTranslationStr(String key){
+		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key));
+		int i = msg.indexOf('$');
+		if(i == -1) return msg;
+		StringBuilder builder = new StringBuilder();
+		builder.append(msg.substring(0, i));
+		while(true){
+			if(msg.charAt(++i) == '{'){
+				final int subStart = i + 1;
+				while(msg.charAt(++i) == '-' || (msg.charAt(i) >= 'a' && msg.charAt(i) <= 'z'));
+				if(msg.charAt(i) == '}'){
+					builder.append(loadTranslationStr(msg.substring(subStart, i)));
+					++i;
+				}
+				else builder.append(msg.substring(subStart-2, i));
+			}
+			else builder.append('$');
+			final int nextI = msg.indexOf('$');
+			if(nextI == -1) break;
+			builder.append(msg.substring(i, nextI));
+			i = nextI;
+		}
+		//builder.append(msg.substring(i));
+		return builder.toString();
+	}
 
 	HeadAPI(){
 		textures = new TreeMap<String, String>();
