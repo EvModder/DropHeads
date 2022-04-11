@@ -22,6 +22,7 @@ import net.evmodder.EvLib.extras.TellrawUtils.Component;
 import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
+import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
 
 public class CommandDropRate extends EvCommand{
 	final private DropHeads pl;
@@ -69,7 +70,7 @@ public class CommandDropRate extends EvCommand{
 		//TODO: Should we do it this way for all the other msgs as well?
 		LOOTING_COMP = pl.getAPI().loadTranslationComp("commands.droprate.multipliers.looting");
 
-		VANILLA_WSKELE_BEHAVIOR_ALERT = pl.getAPI().loadTranslationStr("vanilla-wither-skeleton-handling-alert");
+		VANILLA_WSKELE_BEHAVIOR_ALERT = pl.getAPI().loadTranslationStr("commands.droprate.vanilla-wither-skeleton-handling-alert");
 
 		dropChanceAPI = pl.getDropChanceAPI();
 		JSON_LIMIT = pl.getConfig().getInt("message-json-limit", 15000);
@@ -144,10 +145,15 @@ public class CommandDropRate extends EvCommand{
 		return closestEntity;
 	}
 
+	private void sendTellraw(String target, String message){
+		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+target+" "+message);
+	}
+
 	@SuppressWarnings("deprecation") @Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args){
 		DecimalFormat df = new DecimalFormat("0.0####");
 		ItemStack weapon = sender instanceof Player ? ((Player)sender).getInventory().getItemInMainHand() : null;
+		if(weapon.getType() == Material.AIR) weapon = null;
 		Entity entity = null;
 		Double rawChance = 0D;
 		if(args.length == 0){
@@ -161,12 +167,13 @@ public class CommandDropRate extends EvCommand{
 		if(entity == null) entity = pl.getServer().getPlayer(target);
 		if(entity != null){
 			if(!entity.hasPermission("dropheads.canlosehead")){
-				sender.sendMessage(String.format(RAW_DROP_CHANCE_FOR, entity instanceof Player ? entity.getName() : target, 0)
-						+" §7(dropheads.canlosehead=§cfalse§7)");
+				sendTellraw(sender.getName(), new TranslationComponent(
+						RAW_DROP_CHANCE_FOR, new SelectorComponent(entity.getUniqueId()), new RawTextComponent("0")).toString());
 			}
 			else{
 				rawChance = dropChanceAPI.getRawDropChance(entity);
-				sender.sendMessage(String.format(RAW_DROP_CHANCE_FOR, entity instanceof Player ? entity.getName() : target, df.format(rawChance*100D)));
+				sendTellraw(sender.getName(), new TranslationComponent(
+						RAW_DROP_CHANCE_FOR, new SelectorComponent(entity.getUniqueId()), new RawTextComponent(df.format(rawChance*100D))).toString());
 			}
 		}
 		else{
@@ -174,7 +181,7 @@ public class CommandDropRate extends EvCommand{
 			if(rawChance != DEFAULT_DROP_CHANCE){
 				sender.sendMessage(String.format(RAW_DROP_CHANCE_FOR, target, df.format(rawChance*100D), df.format(rawChance*100D)));
 			}
-			else{
+			else{//TODO: configured drop chance of 0 (e.g., armor_stand) gives not found error
 				sender.sendMessage(String.format(DROP_CHANCE_FOR_NOT_FOUND, target));
 				return false;
 			}
@@ -192,76 +199,87 @@ public class CommandDropRate extends EvCommand{
 			if(senderCantBehead){rawChance=-1D;droprateDetails.addComponent(KILLER_MUST_HAVE_PERM);}
 			if(senderAlwaysBeheads){rawChance=-1D;droprateDetails.addComponent(ALWAYS_BEHEAD_PERM);}
 			if(notUsingRequiredWeapon){rawChance=-1D;droprateDetails.addComponent(REQUIRED_WEAPONS);}
-			droprateDetails.addComponent("\n");
 		}
 
 		// Multipliers:
 		final double weaponMod = weapon == null ? 1D : 1D+dropChanceAPI.weaponBonuses.getOrDefault(weapon.getType(), 0D);
 		final int lootingLevel = weapon == null ? 0 : weapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
-		final boolean VANILLA_LOOTING = target.equals("WITHER_SKELETON") && VANILLA_WSKELE_HANDLING;
-		final double lootingMod = (lootingLevel == 0 || VANILLA_LOOTING) ? 1D
+		final double lootingMod = lootingLevel == 0 ? 1D
 				: Math.min(Math.pow(dropChanceAPI.LOOTING_MULT, lootingLevel), dropChanceAPI.LOOTING_MULT*lootingLevel);
-		final double lootingAdd = (VANILLA_LOOTING ? 0.01D : dropChanceAPI.LOOTING_ADD)*lootingLevel;
+		final double lootingAdd = dropChanceAPI.LOOTING_ADD*lootingLevel;
 		final double timeAliveMod = entity == null ? 1D : 1D + dropChanceAPI.getTimeAliveBonus(entity);
 		final double spawnCauseMod = entity == null ? 1D : JunkUtils.getSpawnCauseModifier(entity);
 		final double permMod = dropChanceAPI.getPermsBasedDropRateModifier(sender);
 		final double finalDropChance = rawChance*spawnCauseMod*timeAliveMod*weaponMod*lootingMod*permMod + lootingAdd;
 		df = new DecimalFormat("0.##");
-		ListComponent droprateMultipliers = new ListComponent();
-		if(USING_SPAWN_MODIFIERS){
-			if(entity == null){
-				droprateMultipliers.addComponent(SPAWN_REASON);
-				droprateMultipliers.addComponent("§7, ");
-			}
-			else if(Math.abs(1D-spawnCauseMod) > 0.001D){
-				droprateMultipliers.addComponent(SPAWN_REASON);
-				droprateMultipliers.addComponent(":§6x"+df.format(spawnCauseMod)+"§7, ");
-			}
-		}
-		if(USING_TIME_ALIVE_MODIFIERS){
-			if(entity == null){
-				droprateMultipliers.addComponent(TIME_ALIVE);
-				droprateMultipliers.addComponent("§7, ");
-			}
-			else if(Math.abs(1D-timeAliveMod) > 0.001D){
-				droprateMultipliers.addComponent(TIME_ALIVE);
-				droprateMultipliers.addComponent(":§6x"+df.format(timeAliveMod)+"§7, ");
-			}
-		}
-		if(!dropChanceAPI.weaponBonuses.isEmpty()){
-			droprateMultipliers.addComponent(WEAPON_TYPE);
-			if(weapon != null){
-				droprateMultipliers.addComponent(JunkUtils.getMurderItemComponent(weapon, JSON_LIMIT));
-				droprateMultipliers.addComponent(":§6x"+df.format(weaponMod));
-			}
-			droprateMultipliers.addComponent("§7, ");
-		}
-		if(Math.abs(1D-permMod) > 0.001D){
-			droprateMultipliers.addComponent(PERMS);
-			droprateMultipliers.addComponent(":§6x"+df.format(permMod)+"§7, ");
-		}
+		
 		if(VANILLA_WSKELE_HANDLING && target.equals("WITHER_SKELETON")){
-			droprateMultipliers.addComponent("\n"+VANILLA_WSKELE_BEHAVIOR_ALERT);
+			if(!droprateDetails.isEmpty()) droprateDetails.addComponent("\n");
+			droprateDetails.addComponent(VANILLA_WSKELE_BEHAVIOR_ALERT);
 		}
-		else if(USING_LOOTING_MODIFIERS){
-			droprateMultipliers.addComponent(LOOTING_COMP);
-			if(lootingLevel > 0){
-				String lootingMsg = lootingLevel+":";
-				if(Math.abs(1D-lootingMod) > 0.001D) lootingMsg += "§6x"+df.format(lootingMod);
-				if(Math.abs(lootingAdd) > 0.001D) lootingMsg += "§e"+(lootingAdd > 0 ? '+' : '-')+df.format(lootingAdd*100)+"%";
-				droprateMultipliers.addComponent(lootingMsg);
+		else{
+			ListComponent droprateMultipliers = new ListComponent();
+			if(USING_SPAWN_MODIFIERS){
+				if(entity == null){
+					droprateMultipliers.addComponent(SPAWN_REASON);
+					droprateMultipliers.addComponent("§7, ");
+				}
+				else if(Math.abs(1D-spawnCauseMod) > 0.001D){
+					droprateMultipliers.addComponent(SPAWN_REASON);
+					droprateMultipliers.addComponent(":§6x"+df.format(spawnCauseMod)+"§7, ");
+				}
 			}
-		}
-		if(!droprateMultipliers.isEmpty()){
-			droprateDetails.addComponent(MULTIPLIERS_HEADER);
-			droprateDetails.addComponent(droprateMultipliers);
-			droprateDetails.addComponent("\n");
-		}
-		if(entity != null && rawChance > 0D && Math.abs(finalDropChance-rawChance) > 0.001D){
-			df = new DecimalFormat("0.0####");
-			droprateDetails.addComponent(String.format(FINAL_DROP_CHANCE, df.format(finalDropChance*100D)));
-		}
-		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+sender.getName()+" "+droprateDetails.toString());
+			if(USING_TIME_ALIVE_MODIFIERS){
+				if(entity == null){
+					droprateMultipliers.addComponent(TIME_ALIVE);
+					droprateMultipliers.addComponent("§7, ");
+				}
+				else if(Math.abs(1D-timeAliveMod) > 0.001D){
+					droprateMultipliers.addComponent(TIME_ALIVE);
+					droprateMultipliers.addComponent(":§6x"+df.format(timeAliveMod)+"§7, ");
+				}
+			}
+			if(!dropChanceAPI.weaponBonuses.isEmpty()){
+				if(entity == null){
+					droprateMultipliers.addComponent(WEAPON_TYPE);
+					droprateMultipliers.addComponent("§7, ");
+				}
+				else if(weapon != null && Math.abs(1D-weaponMod) > 0.001D){
+					droprateMultipliers.addComponent(WEAPON_TYPE);
+					droprateMultipliers.addComponent(JunkUtils.getMurderItemComponent(weapon, JSON_LIMIT));
+					droprateMultipliers.addComponent(":§6x"+df.format(weaponMod));
+					droprateMultipliers.addComponent("§7, ");
+				}
+			}
+			if(Math.abs(1D-permMod) > 0.001D){
+				droprateMultipliers.addComponent(PERMS);
+				droprateMultipliers.addComponent(":§6x"+df.format(permMod)+"§7, ");
+			}
+			if(USING_LOOTING_MODIFIERS){
+				if(entity == null){
+					droprateMultipliers.addComponent(LOOTING_COMP);
+				}
+				else if(Math.abs(1D-lootingMod) > 0.001D || Math.abs(lootingAdd) > 0.001D){
+					droprateMultipliers.addComponent(LOOTING_COMP);
+					String lootingMsg = lootingLevel+":";
+					if(Math.abs(1D-lootingMod) > 0.001D) lootingMsg += "§6x"+df.format(lootingMod);
+					if(Math.abs(lootingAdd) > 0.001D) lootingMsg += "§e"+(lootingAdd > 0 ? '+' : '-')+df.format(lootingAdd*100)+"%";
+					droprateMultipliers.addComponent(lootingMsg);
+				}
+				//else TODO: potential trailing "&7, " at end of list (when looting is not included in modifiers list)
+			}
+			if(!droprateMultipliers.isEmpty()){
+				if(!droprateDetails.isEmpty()) droprateDetails.addComponent("\n");
+				droprateDetails.addComponent(MULTIPLIERS_HEADER);
+				droprateDetails.addComponent(droprateMultipliers);
+			}
+			if(entity != null && rawChance > 0D && Math.abs(finalDropChance-rawChance) > 0.001D){
+				df = new DecimalFormat("0.0####");
+				if(!droprateDetails.isEmpty()) droprateDetails.addComponent("\n");
+				droprateDetails.addComponent(String.format(FINAL_DROP_CHANCE, df.format(finalDropChance*100D)));
+			}
+		} // end else (not a wither_skeleton)
+		if(!droprateDetails.isEmpty()) sendTellraw(sender.getName(), droprateDetails.toString());
 		return true;
 	}
 }
