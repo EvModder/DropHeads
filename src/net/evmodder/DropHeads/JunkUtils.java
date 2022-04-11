@@ -4,10 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.stream.Collectors;
 import org.bukkit.block.BlockFace;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -37,13 +35,6 @@ import net.evmodder.EvLib.extras.TellrawUtils.TextHoverAction;
 
 // A trashy place to dump stuff that I should probably move to EvLib after ensure cross-version safety
 public class JunkUtils{
-	public final static String[] parseStringOrStringList(FileConfiguration config, String key, String defaultMsg){
-		List<String> strList = null;
-		return config.isList(key) && (strList=config.getStringList(key)) != null && !strList.isEmpty()
-				? strList.stream().map(
-					msg -> TextUtils.translateAlternateColorCodes('&', msg)).toArray(size -> new String[size])
-				: new String[]{TextUtils.translateAlternateColorCodes('&', config.getString(key, defaultMsg))};
-	}
 	public final static <E extends Enum<E>> E parseEnumOrDefault(@Nonnull String stringValue, E defaultValue){
 		Class<E> enumClass = defaultValue.getDeclaringClass();
 		stringValue = stringValue.toUpperCase();

@@ -1,5 +1,10 @@
 # Use this file to translate heads and messages to your preferred language
-# Values can be either Minecraft translation keys or plain text
+
+# The messages used to announce beheading
+message-beheaded: '&6${VICTIM}&r was decapitated'
+message-beheaded-by-entity: '&6${VICTIM}&r was decapitated by &6${KILLER}&r'
+message-beheaded-by-entity-with-item: '&6${VICTIM}&r was decapitated by &6${KILLER}&r'
+message-beheaded-by-entity-with-item-named: '&6${KILLER}&r decapitated &6${VICTIM}&r using &7${ITEM}&r'
 
 head-type-names:
   head: "Head"
@@ -23,6 +28,7 @@ head-click-format-unknown: "&7[&6DropHeads&7]&f Custom Head Texture: ${URL} "
 mob-subtype-separator: " "
 
 # Translations for entity subtype adjectives in head names
+# Minecraft translation keys are also supported
 entity-subtype-names:
   angry: "Angry"                                            #Bee/Wolf
   pollinated: "Pollinated"                                  #Bee

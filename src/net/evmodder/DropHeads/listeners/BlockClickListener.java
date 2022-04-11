@@ -40,13 +40,14 @@ public class BlockClickListener implements Listener{
 	final private DropHeads pl;
 	final boolean SHOW_CLICK_INFO, REPAIR_IRON_GOLEM_HEADS, UPDATE_PLAYER_HEADS;
 	final String HEAD_DISPLAY_PLAYERS, HEAD_DISPLAY_MOBS, HEAD_DISPLAY_HDB, HEAD_DISPLAY_UNKNOWN, MOB_SUBTYPES_SEPARATOR;
-	final long clickMessageDelayTicks = 10; // So they dont spam themselves TODO: move to config
+	final int CLICK_MSG_DELAY_TICKS; // So they dont spam themselves
 	final HashSet<UUID> recentClickers;
 
 	public BlockClickListener(Configuration translations){
 		pl = DropHeads.getPlugin();
 		REPAIR_IRON_GOLEM_HEADS = pl.getConfig().getBoolean("cracked-iron-golem-heads", false);
 		if(SHOW_CLICK_INFO = pl.getConfig().getBoolean("head-click-listener", true)){
+			CLICK_MSG_DELAY_TICKS = pl.getConfig().getInt("head-click-max-rate-in-ticks", 10);
 			// That's <a> <Swamp Amorsmith Zombie Villager> <Head>
 			// That's <EvDoc>'s Head
 			HEAD_DISPLAY_PLAYERS = TextUtils.translateAlternateColorCodes('&',
@@ -65,6 +66,7 @@ public class BlockClickListener implements Listener{
 			UPDATE_PLAYER_HEADS = pl.getConfig().getBoolean("update-on-skin-change", true);
 		}
 		else{
+			CLICK_MSG_DELAY_TICKS = 10;
 			HEAD_DISPLAY_PLAYERS = HEAD_DISPLAY_MOBS = HEAD_DISPLAY_HDB = HEAD_DISPLAY_UNKNOWN = MOB_SUBTYPES_SEPARATOR = null;
 			UPDATE_PLAYER_HEADS = false;
 		}
@@ -186,7 +188,7 @@ public class BlockClickListener implements Listener{
 			|| evt.getPlayer().isSneaking() || !HeadUtils.isHead(evt.getClickedBlock().getType())
 			|| !recentClickers.add(evt.getPlayer().getUniqueId())) return;
 		final UUID uuid = evt.getPlayer().getUniqueId();
-		new BukkitRunnable(){@Override public void run(){recentClickers.remove(uuid);}}.runTaskLater(pl, clickMessageDelayTicks);
+		new BukkitRunnable(){@Override public void run(){recentClickers.remove(uuid);}}.runTaskLater(pl, CLICK_MSG_DELAY_TICKS);
 
 		final boolean isPlayerHead = HeadUtils.isPlayerHead(evt.getClickedBlock().getType());
 

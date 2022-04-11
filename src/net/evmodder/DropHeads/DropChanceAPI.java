@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
@@ -16,6 +17,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Skull;
 import org.bukkit.block.data.Rotatable;
+import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -66,9 +68,8 @@ public class DropChanceAPI{
 	private final boolean DEBUG_MODE, LOG_PLAYER_BEHEAD, LOG_MOB_BEHEAD;
 	private final String LOG_MOB_FORMAT, LOG_PLAYER_FORMAT;
 	private final String[] MSG_BEHEAD, MSH_BEHEAD_BY, MSH_BEHEAD_BY_WITH, MSH_BEHEAD_BY_WITH_NAMED;
-	private final boolean USE_PLAYER_DISPLAYNAMES = false;//TODO: move to config, when possible
-	private final boolean CROSS_DIMENSIONAL_BROADCAST = true;//TODO: move to config
-	private final int LOCAL_RANGE = 200;//TODO: move to config
+	private final boolean CROSS_DIMENSIONAL_BROADCAST;
+	private final int LOCAL_RANGE;
 	private final int JSON_LIMIT;
 	private final BlockFace[] possibleHeadRotations = new BlockFace[]{
 			BlockFace.NORTH, BlockFace.NORTH_EAST, BlockFace.NORTH_WEST,
@@ -92,7 +93,7 @@ public class DropChanceAPI{
 
 	public double getDefaultDropChance(){return DEFAULT_CHANCE;}
 
-	private AnnounceMode parseAnnounceMode(@Nonnull String value, AnnounceMode defaultMode){
+	private static AnnounceMode parseAnnounceMode(@Nonnull String value, AnnounceMode defaultMode){
 		value = value.toUpperCase();
 		if(value.equals("FALSE")) return AnnounceMode.OFF;
 		if(value.equals("TRUE")) return AnnounceMode.GLOBAL;
@@ -102,6 +103,17 @@ public class DropChanceAPI{
 			DropHeads.getPlugin().getLogger().warning("Please use one of the available modes: [GLOBAL, LOCAL, OFF]");
 			return defaultMode;
 		}
+	}
+
+	private static String[] parseStringOrStringList(String key, String defaultMsg, Configuration... configs){
+		for(Configuration config : configs){
+			List<String> strList = null;
+			if(config.isList(key) && (strList=config.getStringList(key)) != null && !strList.isEmpty())
+				return strList.stream().map(msg -> TextUtils.translateAlternateColorCodes('&', msg)).toArray(size -> new String[size]);
+			if(config.isString(key) && !defaultMsg.equals(config.getString(key)))
+				return new String[]{TextUtils.translateAlternateColorCodes('&', config.getString(key))};
+		}
+		return new String[]{TextUtils.translateAlternateColorCodes('&', defaultMsg)};
 	}
 
 	public DropChanceAPI(){
@@ -127,14 +139,14 @@ public class DropChanceAPI{
 				"${TIMESTAMP},player decapitated,${VICTIM},${KILLER},${ITEM}") : null;
 
 		JSON_LIMIT = pl.getConfig().getInt("message-json-limit", 15000);
-		MSG_BEHEAD = JunkUtils.parseStringOrStringList(pl.getConfig(), "message-beheaded", "${VICTIM} was beheaded");
-		MSH_BEHEAD_BY = JunkUtils.parseStringOrStringList(pl.getConfig(), "message-beheaded-by-entity", "${VICTIM}&r was beheaded by ${KILLER}&r");
-		MSH_BEHEAD_BY_WITH = JunkUtils.parseStringOrStringList(pl.getConfig(), "message-beheaded-by-entity-with-item",
-				"${VICTIM}&r was beheaded by ${KILLER}&r using ${ITEM}&r");
-		MSH_BEHEAD_BY_WITH_NAMED = JunkUtils.parseStringOrStringList(pl.getConfig(), "message-beheaded-by-entity-with-item-named",
-				"${VICTIM}&r was beheaded by ${KILLER}&r using ${ITEM}&r");
-
-//		USE_PLAYER_DISPLAYNAMES = pl.getConfig().getBoolean("message-beheaded-use-player-displaynames", true);//TODO
+		MSG_BEHEAD = parseStringOrStringList("message-beheaded", "&6${VICTIM}&r was decapitated",
+				pl.getAPI().translationsFile, pl.getConfig());
+		MSH_BEHEAD_BY = parseStringOrStringList("message-beheaded-by-entity", "&6${VICTIM}&r was decapitated by &6${KILLER}&r",
+				pl.getAPI().translationsFile, pl.getConfig());
+		MSH_BEHEAD_BY_WITH = parseStringOrStringList("message-beheaded-by-entity-with-item", "&6${VICTIM}&r was decapitated by &6${KILLER}&r",
+				pl.getAPI().translationsFile, pl.getConfig());
+		MSH_BEHEAD_BY_WITH_NAMED = parseStringOrStringList("message-beheaded-by-entity-with-item-named", "&6${KILLER}&r decapitated &6${VICTIM}&r using &7${ITEM}&r",
+				pl.getAPI().translationsFile, pl.getConfig());
 
 		DROP_MODES = new ArrayList<>();
 		if(pl.getConfig().contains("head-item-drop-mode"))
@@ -165,6 +177,8 @@ public class DropChanceAPI{
 			catch(IllegalArgumentException ex){pl.getLogger().severe("Unknown entity type in 'behead-announce': "+mobName);}
 		}
 		DEFAULT_ANNOUNCE = mobAnnounceModes.get(EntityType.UNKNOWN);
+		LOCAL_RANGE = pl.getConfig().getInt("local-broadcast-distance", 200);
+		CROSS_DIMENSIONAL_BROADCAST = pl.getConfig().getBoolean("local-broadcast-cross-dimension", true);
 
 		if(pl.getConfig().getBoolean("must-use-axe")){
 			mustUseTools = Arrays.stream(Material.values()).filter(mat -> mat.name().endsWith("_AXE")).collect(Collectors.toSet());
@@ -394,24 +408,24 @@ public class DropChanceAPI{
 	}
 
 	private Component getVictimComponent(Entity entity){
-		return new SelectorComponent(entity.getUniqueId(), USE_PLAYER_DISPLAYNAMES);
+		return new SelectorComponent(entity.getUniqueId());
 	}
 	private Component getKillerComponent(Entity killer){
 		if(killer == null) return null;
 		if(killer instanceof Projectile){
 			ProjectileSource shooter = ((Projectile)killer).getShooter();
-			if(shooter instanceof Entity) return new SelectorComponent(((Entity)shooter).getUniqueId(), USE_PLAYER_DISPLAYNAMES);
+			if(shooter instanceof Entity) return new SelectorComponent(((Entity)shooter).getUniqueId());
 			else if(shooter instanceof BlockProjectileSource){
 				return TellrawUtils.getLocalizedDisplayName(((BlockProjectileSource)shooter).getBlock().getState());
 			}
 			// In theory should never happen:
 			else pl.getLogger().warning("Unrecognized projectile source: "+shooter.getClass().getName());
 		}
-		return new SelectorComponent(killer.getUniqueId(), USE_PLAYER_DISPLAYNAMES);
+		return new SelectorComponent(killer.getUniqueId());
 	}
 	private Component getWeaponComponent(Entity killer, ItemStack weapon){
-		if(weapon != null) return JunkUtils.getMurderItemComponent(weapon, JSON_LIMIT);
-		if(killer != null && killer instanceof Projectile) return new SelectorComponent(killer.getUniqueId(), USE_PLAYER_DISPLAYNAMES);
+		if(weapon != null && weapon.getType() != Material.AIR) return JunkUtils.getMurderItemComponent(weapon, JSON_LIMIT);
+		if(killer != null && killer instanceof Projectile) return new SelectorComponent(killer.getUniqueId());
 		return null;
 	}
 	public ListComponent getBeheadMessage(Entity entity, Entity killer, ItemStack weapon){
@@ -420,7 +434,7 @@ public class DropChanceAPI{
 		Component itemComp = getWeaponComponent(killer, weapon);
 		if(killerComp != null){
 			if(itemComp != null){
-				boolean hasCustomName = weapon.hasItemMeta() && weapon.getItemMeta().hasDisplayName();
+				final boolean hasCustomName = weapon != null && weapon.hasItemMeta() && weapon.getItemMeta().hasDisplayName();
 				message.addComponent(hasCustomName
 						? MSH_BEHEAD_BY_WITH_NAMED[rand.nextInt(MSH_BEHEAD_BY_WITH_NAMED.length)]
 						: MSH_BEHEAD_BY_WITH[rand.nextInt(MSH_BEHEAD_BY_WITH.length)]);

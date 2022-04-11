@@ -51,22 +51,22 @@ import net.evmodder.EvLib.extras.WebUtils;
 import net.evmodder.EvLib.extras.EntityUtils.CCP;
 
 public class HeadAPI {
-	final private DropHeads pl;
+	private final DropHeads pl;
 	private HeadDatabaseAPI hdbAPI = null;
 //	private int MAX_HDB_ID = -1;
-	final Configuration translationsFile; // protected scope; only used by head-click-listener
-	final boolean GRUM_ENABLED, SADDLES_ENABLED, HOLLOW_SKULLS_ENABLED, TRANSPARENT_SLIME_ENABLED, CRACKED_IRON_GOLEMS_ENABLED, USE_PRE_JAPPA;
-	final boolean UPDATE_PLAYER_HEADS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_VANILLA_HEADS;
-	final TranslationComponent LOCAL_HEAD, LOCAL_SKULL, LOCAL_TOE;
-	final HashMap<EntityType, /*headNameFormat=*/String> headNameFormats;
-	final HashMap</*textureKey=*/String, /*headNameFormat=*/String> exactTextureKeyHeadNameFormats;
-	final String DEFAULT_HEAD_NAME_FORMAT, MOB_SUBTYPES_SEPARATOR;
-	final TreeMap<String, String> textures; // Key="ENTITY_NAME|DATA", Value="eyJ0ZXh0dXJl..."
-	final HashMap<String, TranslationComponent> entitySubtypeNames;
-	final HashMap<String, String> replaceHeadsFromTo; // key & value are textureKeys
+	final Configuration translationsFile; // protected scope; only used by head-click-listener //TODO: make private
+	private final boolean GRUM_ENABLED, SADDLES_ENABLED, HOLLOW_SKULLS_ENABLED, TRANSPARENT_SLIME_ENABLED, CRACKED_IRON_GOLEMS_ENABLED, USE_PRE_JAPPA;
+	private final boolean UPDATE_PLAYER_HEADS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_VANILLA_HEADS;
+	private final TranslationComponent LOCAL_HEAD, LOCAL_SKULL, LOCAL_TOE;
+	private final HashMap<EntityType, /*headNameFormat=*/String> headNameFormats;
+	private final HashMap</*textureKey=*/String, /*headNameFormat=*/String> exactTextureKeyHeadNameFormats;
+	private final String DEFAULT_HEAD_NAME_FORMAT, MOB_SUBTYPES_SEPARATOR;
+	private final TreeMap<String, String> textures; // Key="ENTITY_NAME|DATA", Value="eyJ0ZXh0dXJl..."
+	private final HashMap<String, TranslationComponent> entitySubtypeNames;
+	private final HashMap<String, String> replaceHeadsFromTo; // key & value are textureKeys
 
 	// TODO: Move these to a localization file
-	final String MOB_PREFIX = "mob:", PLAYER_PREFIX = "player:", MHF_PREFIX = "player:", HDB_PREFIX = "hdb:", CODE_PREFIX = "code:";
+	private final String MOB_PREFIX = "mob:", PLAYER_PREFIX = "player:", MHF_PREFIX = "player:", HDB_PREFIX = "hdb:", CODE_PREFIX = "code:";
 
 	HeadAPI(){
 		textures = new TreeMap<String, String>();

@@ -70,6 +70,6 @@ public class LoreStoreBlockBreakListener implements Listener{
 			}
 		}
 	}*/
-	// TODO: Does not check for blocked broken by an extending piston.
+	// TODO: Does not check for blocks broken by an extending piston.
 	// Listening to that event would be expensive.
 }

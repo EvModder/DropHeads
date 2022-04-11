@@ -5,17 +5,17 @@ behead-announcement:
   player: 'GLOBAL'
 #  wither_skeleton: 'OFF'
 
+# How far 'LOCAL' broadcasts can be heard
+local-broadcast-distance: 200
+
+# Whether 'LOCAL' broadcasts can be heard through a nether portal
+local-broadcast-cross-dimension: true
+
 # Replaces death messages if player behead announcement is GLOBAL
 behead-announcement-replaces-player-death-message: true
 
 # Replaces death message that is sent to the owner when a pet is beheaded
 behead-message-replaces-pet-death-message: true
-
-# The messages used to announce beheading
-message-beheaded: '&6${VICTIM}&r was decapitated'
-message-beheaded-by-entity: '&6${VICTIM}&r was decapitated by &6${KILLER}&r'
-message-beheaded-by-entity-with-item: '&6${VICTIM}&r was decapitated by &6${KILLER}&r'
-message-beheaded-by-entity-with-item-named: '&6${KILLER}&r decapitated &6${VICTIM}&r using &7${ITEM}&r'
 
 # Limit packet size for broadcast messages; changing this is not recommended
 message-json-limit: 15000
@@ -101,6 +101,7 @@ prevent-head-placement-message: '&7[&6DropHeads&7]&c No permission to place head
 # Shows information about a head when right-clicked by a player
 # Note: The output head-click-info can be configured in translate.yml
 head-click-listener: true
+head-click-max-rate-in-ticks: 10
 
 # Saves lore of heads in GameProfile when placed (used by some other plugins)
 # Only works for player-type heads, eg: won't work for minecraft:creeper_head
