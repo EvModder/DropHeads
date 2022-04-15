@@ -40,6 +40,7 @@ import net.evmodder.EvLib.extras.HeadUtils;
 
 public class EntityDeathListener implements Listener{
 	private final DropHeads pl;
+	private final DeathMessagePacketIntercepter deathMessageBlocker;
 	private final Random rand;
 	private final HashSet<UUID> explodingChargedCreepers;
 	private final EventPriority PRIORITY;
@@ -48,8 +49,9 @@ public class EntityDeathListener implements Listener{
 	private final boolean DEBUG_MODE;
 	private final long INDIRECT_KILL_THRESHOLD_MILLIS = 30*1000;//TODO: move to config
 
-	public EntityDeathListener(){
+	public EntityDeathListener(DeathMessagePacketIntercepter deathMessageBlocker){
 		pl = DropHeads.getPlugin();
+		this.deathMessageBlocker = deathMessageBlocker;
 		rand = new Random();
 		ALLOW_NON_PLAYER_KILLS = pl.getConfig().getBoolean("drop-for-nonplayer-kills", !pl.getConfig().getBoolean("player-kills-only", true));
 		ALLOW_INDIRECT_KILLS = pl.getConfig().getBoolean("drop-for-indirect-kills", false);
@@ -114,26 +116,27 @@ public class EntityDeathListener implements Listener{
 				: null;
 	}
 
-	void onEntityDeath(@Nonnull final Entity victim, final Entity killer, final Event evt){
+	// Returns true if behead occurred
+	boolean onEntityDeath(@Nonnull final Entity victim, final Entity killer, final Event evt){
 		if(killer != null){
 			if(!killer.hasPermission("dropheads.canbehead")){
 				if(DEBUG_MODE) pl.getLogger().info("dropheads.canbehead=false: "+killer.getName());
-				return;
+				return false;
 			}
 			if(killer instanceof Creeper && ((Creeper)killer).isPowered()){
 				if(CHARGED_CREEPER_DROPS){
 					if(!victim.hasPermission("dropheads.canlosehead")){
 						if(DEBUG_MODE) pl.getLogger().info("dropheads.canlosehead=false: "+victim.getName());
-						return;
+						return false;
 					}
 					// Limit to 1 head per charged creeper explosion (mimics vanilla)
 					final UUID creeperUUID = killer.getUniqueId();
 					if(explodingChargedCreepers.add(creeperUUID)){
 						if(DEBUG_MODE) pl.getLogger().info("Killed by charged creeper: "+victim.getType());
-						pl.getDropChanceAPI().triggerHeadDropEvent(victim, killer, evt, /*weapon=*/null);
 						// Free up memory after a tick (optional)
 						new BukkitRunnable(){@Override public void run(){explodingChargedCreepers.remove(creeperUUID);}}.runTaskLater(pl, 1);
-						return;
+						// Do the head drop
+						return pl.getDropChanceAPI().triggerHeadDropEvent(victim, killer, evt, /*weapon=*/null);
 					}
 				}
 			}
@@ -141,11 +144,10 @@ public class EntityDeathListener implements Listener{
 				if(DEBUG_MODE) pl.getLogger().info("dropheads.alwaysbehead=true: "+killer.getName());
 				if(!victim.hasPermission("dropheads.canlosehead")){
 					if(DEBUG_MODE) pl.getLogger().info("dropheads.canlosehead=false: "+victim.getName());
-					return;
+					return false;
 				}
-				pl.getDropChanceAPI().triggerHeadDropEvent(victim, killer, evt,
+				return pl.getDropChanceAPI().triggerHeadDropEvent(victim, killer, evt,
 						killer instanceof LivingEntity ? ((LivingEntity)killer).getEquipment().getItemInMainHand() : null);
-				return;
 			}
 		}
 		// Check if killer qualifies to trigger a behead.
@@ -161,12 +163,12 @@ public class EntityDeathListener implements Listener{
 					((Projectile)killer).getShooter() instanceof Player == false
 				)
 			) : JunkUtils.timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS))
-		) return;
+		) return false;
 
 		final ItemStack murderWeapon = getWeaponFromKiller(killer);
 
 		if(!pl.getDropChanceAPI().mustUseTools.isEmpty() &&
-				(murderWeapon == null || !pl.getDropChanceAPI().mustUseTools.contains(murderWeapon.getType()))) return;
+				(murderWeapon == null || !pl.getDropChanceAPI().mustUseTools.contains(murderWeapon.getType()))) return false;
 
 		final double weaponBonus = murderWeapon == null ? 0D : pl.getDropChanceAPI().weaponBonuses.getOrDefault(murderWeapon.getType(), 0D);
 		final int lootingLevel = murderWeapon == null ? 0 : murderWeapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
@@ -185,23 +187,26 @@ public class EntityDeathListener implements Listener{
 		if(rollEvent.getDropSuccess()){
 			if(!victim.hasPermission("dropheads.canlosehead")){
 				if(DEBUG_MODE) pl.getLogger().info("dropheads.canlosehead=false: "+victim.getName());
-				return;
+				return false;
 			}
-			pl.getDropChanceAPI().triggerHeadDropEvent(victim, killer, evt, murderWeapon);
-			if(DEBUG_MODE){
-				DecimalFormat df = new DecimalFormat("0.0###");
-				pl.getLogger().info("Dropping Head: "+TextureKeyLookup.getTextureKey(victim)
-					+"\nKiller: "+(killer != null ? killer.getType() : "none")
-					+", Weapon: "+(murderWeapon != null ? murderWeapon.getType() : "none")
-					+"\nRaw chance: "+df.format(rawDropChance*100D)+"%\nMultipliers >> "+
-					(spawnCauseMod != 1 ? "SpawnReason: "+df.format((spawnCauseMod-1D)*100D)+"%, " : "") +
-					(timeAliveMod != 1 ? "TimeAlive: "+df.format((timeAliveMod-1D)*100D)+"%, " : "") +
-					(weaponMod != 1 ? "Weapon: "+df.format((weaponMod-1D)*100D)+"%, " : "") +
-					(lootingMod != 1 ? "Looting: "+df.format((lootingMod-1D)*100D)+"%, " : "") +
-					(lootingAdd != 0 ? "Looting (Addition): "+df.format(lootingAdd*100D)+"%, " : "") +
-					"\nFinal drop chance: "+df.format(dropChance*100D)+"%");
+			if(pl.getDropChanceAPI().triggerHeadDropEvent(victim, killer, evt, murderWeapon)){
+				if(DEBUG_MODE){
+					DecimalFormat df = new DecimalFormat("0.0###");
+					pl.getLogger().info("Dropping Head: "+TextureKeyLookup.getTextureKey(victim)
+						+"\nKiller: "+(killer != null ? killer.getType() : "none")
+						+", Weapon: "+(murderWeapon != null ? murderWeapon.getType() : "none")
+						+"\nRaw chance: "+df.format(rawDropChance*100D)+"%\nMultipliers >> "+
+						(spawnCauseMod != 1 ? "SpawnReason: "+df.format((spawnCauseMod-1D)*100D)+"%, " : "") +
+						(timeAliveMod != 1 ? "TimeAlive: "+df.format((timeAliveMod-1D)*100D)+"%, " : "") +
+						(weaponMod != 1 ? "Weapon: "+df.format((weaponMod-1D)*100D)+"%, " : "") +
+						(lootingMod != 1 ? "Looting: "+df.format((lootingMod-1D)*100D)+"%, " : "") +
+						(lootingAdd != 0 ? "Looting (Addition): "+df.format(lootingAdd*100D)+"%, " : "") +
+						"\nFinal drop chance: "+df.format(dropChance*100D)+"%");
+				}
+				return true;
 			}
 		}
+		return false;
 	}
 
 	/**
@@ -277,7 +282,8 @@ public class EntityDeathListener implements Listener{
 						catch(IllegalArgumentException ex){}
 					}
 				}
-				onEntityDeath(victim, killer, evt);
+				// Unblock death messages when behead does not occur
+				if(!onEntityDeath(victim, killer, evt)) deathMessageBlocker.unblockDeathMessage(victim);
 			}
 			else if(originalEvent instanceof VehicleDestroyEvent){
 				final VehicleDestroyEvent evt = (VehicleDestroyEvent) originalEvent;

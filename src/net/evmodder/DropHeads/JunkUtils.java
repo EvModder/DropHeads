@@ -15,6 +15,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
+import io.netty.channel.Channel;
 import javax.annotation.Nonnull;
 import net.evmodder.EvLib.extras.NBTTagUtils;
 import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTTagString;
@@ -25,6 +26,7 @@ import net.evmodder.EvLib.extras.TellrawUtils;
 import net.evmodder.EvLib.extras.TextUtils;
 import net.evmodder.EvLib.extras.TypeUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
+import net.evmodder.EvLib.extras.ReflectionUtils.RefField;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
 import net.evmodder.EvLib.extras.TellrawUtils.Format;
@@ -244,6 +246,29 @@ public class JunkUtils{
 			default:
 				return false;
 		}
+	}
+
+	final static RefClass craftPlayerClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftPlayer");
+	final static RefMethod playerGetHandleMethod = craftPlayerClazz.getMethod("getHandle");
+	final static RefClass entityPlayerClazz = ReflectionUtils.getRefClass("{nms}.EntityPlayer", "{nm}.server.level.EntityPlayer");
+	final static RefClass playerConnectionClazz = ReflectionUtils.getRefClass("{nms}.PlayerConnection", "{nm}.server.network.PlayerConnection");
+	final static RefField playerConnectionField = entityPlayerClazz.findField(playerConnectionClazz);
+	final static RefClass networkManagerClazz = ReflectionUtils.getRefClass("{nms}.NetworkManager", "{nm}.network.NetworkManager");
+	final static RefField networkManagerField = playerConnectionClazz.findField(networkManagerClazz);
+	final static RefField channelField = networkManagerClazz.findField(Channel.class);
+	public static Channel getPlayerChannel(Player player){
+		final Object playerEntity = playerGetHandleMethod.of(player).call();
+		final Object playerConnection = playerConnectionField.of(playerEntity).get();
+		final Object networkManager = networkManagerField.of(playerConnection).get();
+		return (Channel)channelField.of(networkManager).get();
+	}
+	final static RefClass classPacket = ReflectionUtils.getRefClass("{nms}.Packet", "{nm}.network.protocol.Packet");
+	final static RefMethod sendPacketMethod = playerConnectionClazz.findMethod(/*isStatic=*/false, Void.TYPE, classPacket);
+	public static void sendPacket(Player player, Object packet){
+		Object entityPlayer = playerGetHandleMethod.of(player).call();
+		Object playerConnection = playerConnectionField.of(entityPlayer).get();
+		Object castPacket = classPacket.getRealClass().cast(packet);
+		sendPacketMethod.of(playerConnection).call(castPacket);
 	}
 
 	static RefMethod essMethodGetUser, essMethodIsVanished;

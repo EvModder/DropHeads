@@ -11,8 +11,6 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -29,16 +27,12 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Tameable;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.EntityBlockFormEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -49,22 +43,13 @@ import org.bukkit.plugin.EventExecutor;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.BlockProjectileSource;
 import org.bukkit.projectiles.ProjectileSource;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelDuplexHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPromise;
 import net.evmodder.DropHeads.events.EntityBeheadEvent;
 import net.evmodder.EvLib.EvUtils;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.extras.HeadUtils;
-import net.evmodder.EvLib.extras.ReflectionUtils;
 import net.evmodder.EvLib.extras.TellrawUtils;
 import net.evmodder.EvLib.extras.TextUtils;
-import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
-import net.evmodder.EvLib.extras.ReflectionUtils.RefField;
-import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
 import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
@@ -76,7 +61,7 @@ public class DropChanceAPI{
 	private enum DropMode {EVENT, SPAWN, PLACE, PLACE_BY_KILLER, PLACE_BY_VICTIM, GIVE};
 	private final ArrayList<DropMode> DROP_MODES; // TODO: final HashMap<EntityType, DropMode> mobDropModes
 
-	private final boolean PLAYER_HEADS_ONLY, REPLACE_DEATH_MESSAGE, REPLACE_PET_DEATH_MESSAGE;
+	private final boolean PLAYER_HEADS_ONLY, CLEAR_PLAYER_DEATH_EVT_MESSAGE, REPLACE_PET_DEATH_MESSAGE;
 	private final boolean VANILLA_WSKELE_HANDLING;
 	public final double LOOTING_ADD, LOOTING_MULT; // TODO: remove public
 	private final boolean DEBUG_MODE, LOG_PLAYER_BEHEAD, LOG_MOB_BEHEAD;
@@ -94,6 +79,7 @@ public class DropChanceAPI{
 
 	private final DropHeads pl;
 	private final Random rand;
+	private final HashSet<UUID> clearDeathEvtMessageForPlayers;
 	private final HashSet<Material> headOverwriteBlocks;
 	public final Set<Material> mustUseTools; // TODO: remove public
 	private final HashSet<EntityType> noLootingEffectMobs;
@@ -130,7 +116,7 @@ public class DropChanceAPI{
 		return new String[]{TextUtils.translateAlternateColorCodes('&', defaultMsg)};
 	}
 
-	public DropChanceAPI(){
+	public DropChanceAPI(final boolean replacePlayerDeathMsg, final boolean replacePetDeathMsg){
 		pl = DropHeads.getPlugin();
 		rand = new Random();
 		PLAYER_HEADS_ONLY = pl.getConfig().getBoolean("player-heads-only", false);
@@ -140,8 +126,8 @@ public class DropChanceAPI{
 		if(LOOTING_ADD >= 1) pl.getLogger().warning("looting-addition is set to 1.0 or greater, this means heads will ALWAYS drop when looting is used!");
 		if(LOOTING_MULT < 1) pl.getLogger().warning("looting-multiplier is set below 1.0, this means looting will DECREASE the chance of head drops!");
 		PRIORITY = JunkUtils.parseEnumOrDefault(pl.getConfig().getString("death-listener-priority", "LOW"), EventPriority.LOW);
-		REPLACE_DEATH_MESSAGE = pl.getConfig().getBoolean("behead-announcement-replaces-player-death-message",
-				pl.getConfig().getBoolean("behead-announcement-replaces-death-message", true)) && PRIORITY != EventPriority.MONITOR;
+		CLEAR_PLAYER_DEATH_EVT_MESSAGE = replacePlayerDeathMsg && PRIORITY != EventPriority.MONITOR;
+		REPLACE_PET_DEATH_MESSAGE = replacePetDeathMsg;
 		DEBUG_MODE = pl.getConfig().getBoolean("debug-messages", true);
 		final boolean ENABLE_LOG = pl.getConfig().getBoolean("log.enable", false);
 		LOG_MOB_BEHEAD = ENABLE_LOG && pl.getConfig().getBoolean("log.log-mob-behead", false);
@@ -226,7 +212,7 @@ public class DropChanceAPI{
 		droprateMultiplierPerms = new HashMap<String, Double>();
 		ConfigurationSection customDropratePerms = pl.getConfig().getConfigurationSection("custom-droprate-multiplier-permissions");
 		if(customDropratePerms != null) for(String perm : customDropratePerms.getKeys(/*recursive=*/true)){
-			//TODO: This will generate ["dropheads", "dropheads.group", "dropheads.group.2x", ...] because of how Bukkit/YML works
+			// TODO: This will generate ["dropheads", "dropheads.group", "dropheads.group.2x", ...] because of how Bukkit/YML works
 			try{droprateMultiplierPerms.put(perm, customDropratePerms.getDouble(perm, 1D));}
 			catch(NumberFormatException ex){pl.getLogger().severe("Error parsing droprate multiplier for perm: \""+perm+'"');}
 		}
@@ -306,6 +292,19 @@ public class DropChanceAPI{
 			if(DEFAULT_CHANCE == 0D) mobChances.entrySet().removeIf(entry -> entry.getValue() == 0D);
 		}  // if(!PLAYER_HEADS_ONLY)
 
+		if(CLEAR_PLAYER_DEATH_EVT_MESSAGE){
+			EventPriority replacePriority = (PRIORITY == EventPriority.HIGHEST ? EventPriority.MONITOR : EventPriority.HIGHEST);
+			pl.getServer().getPluginManager().registerEvent(PlayerDeathEvent.class, new Listener(){}, replacePriority, new EventExecutor(){
+				@Override public void execute(Listener listener, Event originalEvent){
+					if(originalEvent instanceof PlayerDeathEvent == false) return;
+					PlayerDeathEvent evt = (PlayerDeathEvent) originalEvent;
+					if(clearDeathEvtMessageForPlayers.remove(evt.getEntity().getUniqueId())) evt.setDeathMessage("");
+				}
+			}, pl);
+			clearDeathEvtMessageForPlayers = new HashSet<>();
+		}
+		else clearDeathEvtMessageForPlayers = null;
+
 		// Dynamically add all the children perms of "dropheads.alywaysbehead.<entity>"
 		Permission alwaysBeheadPerm = pl.getServer().getPluginManager().getPermission("dropheads.alwaysbehead");
 		if(alwaysBeheadPerm != null) try{
@@ -320,53 +319,6 @@ public class DropChanceAPI{
 			alwaysBeheadPerm.recalculatePermissibles();
 		}
 		catch(IllegalArgumentException ex){/*The permissions are already defined; perhaps this is just a plugin or server reload*/}
-
-		if(REPLACE_PET_DEATH_MESSAGE = pl.getConfig().getBoolean("behead-message-replaces-pet-death-message", true)){
-			pl.getServer().getPluginManager().registerEvents(new Listener(){
-				@EventHandler public void onJoin(PlayerJoinEvent evt){
-					JunkUtils.getPlayerChannel(evt.getPlayer()).pipeline()
-					.addBefore("packet_handler", evt.getPlayer().getName(), new ChannelDuplexHandler(){
-						RefClass packetPlayOutChatClazz = ReflectionUtils.getRefClass("{nms}.PacketPlayOutChat", "{nm}.network.protocol.game.PacketPlayOutChat");
-						RefClass chatBaseCompClazz = ReflectionUtils.getRefClass("{nms}.IChatBaseComponent", "{nm}.network.chat.IChatBaseComponent");
-						RefClass chatSerializerClazz = ReflectionUtils.getRefClass(
-								"{nms}.IChatBaseComponent$ChatSerializer", "{nm}.network.chat.IChatBaseComponent$ChatSerializer");
-						RefMethod toJsonMethod = chatSerializerClazz.findMethod(/*isStatic=*/true, String.class, chatBaseCompClazz);
-						
-						RefField chatBaseCompField = packetPlayOutChatClazz.findField(chatBaseCompClazz);
-						RefMethod chatBaseCompGetStringMethod = chatBaseCompClazz.getMethod("getString");
-//						RefMethod chatBaseCompGetTextMethod = chatBaseCompClazz.getMethod("getText");
-
-						@Override public void write(ChannelHandlerContext context, Object packet, ChannelPromise promise) throws Exception {
-							if(packetPlayOutChatClazz.isInstance(packet)){
-								System.out.println("sending chat packet");
-								Object chatBaseComp = chatBaseCompField.of(packet).get();
-								if(chatBaseComp != null){
-									System.out.println("a");
-									String getString = chatBaseCompGetStringMethod.of(chatBaseComp).call().toString();
-									System.out.println("b");
-									String toString = chatBaseComp.toString();
-									System.out.println("c");
-									if(getString.contains("slain")){
-										Bukkit.getServer().getConsoleSender().sendMessage(ChatColor.AQUA+"PACKET SENT: "+ChatColor.WHITE+packet.toString());
-										System.out.println("getString(): " + getString);
-										System.out.println("toString():" + toString);
-										System.out.println("toJson(): " + toJsonMethod.call(chatBaseComp).toString());
-									}
-								}
-							}
-							super.write(context, packet, promise);
-						}
-					});
-				}
-				@EventHandler public void onQuit(PlayerQuitEvent evt){
-					Channel channel = JunkUtils.getPlayerChannel(evt.getPlayer());
-					channel.eventLoop().submit(()->{
-						channel.pipeline().remove(evt.getPlayer().getName());
-						return null;
-					});
-				}
-			}, pl);
-		}
 	}
 
 	public double getRawDropChance(String textureKey){
@@ -529,32 +481,15 @@ public class DropChanceAPI{
 
 			final String petOwnerToMsg = REPLACE_PET_DEATH_MESSAGE && entity instanceof Tameable && ((Tameable)entity).getOwner() != null
 					? ((Tameable)entity).getOwner().getName() : null;
-			pl.getLogger().info("pet owner: "+petOwnerToMsg);
-			if(petOwnerToMsg != null){
-				killer.sendMessage("test1");
-				((Tameable)entity).setOwner(null);  // TODO: Find a more elegant solution, such as listening for this specific packet
-				new BukkitRunnable(){@Override public void run(){killer.sendMessage("test2");}}.runTaskLater(pl, 1);
-			}
 
 			switch(mode){
 				case GLOBAL:
 					sendTellraw("@a", message.toString());
-					if(entity instanceof Player && REPLACE_DEATH_MESSAGE && evt != null && PRIORITY != EventPriority.MONITOR){
+					if(entity instanceof Player && CLEAR_PLAYER_DEATH_EVT_MESSAGE && evt != null){
 						// Set the behead death message so that other plugins will see it
 						((PlayerDeathEvent)evt).setDeathMessage(message.toPlainText());
-						// Afterwards, at a higher priority, clear the behead death message (since we already sent a tellraw)
-						EventPriority replacePriority = (PRIORITY == EventPriority.HIGHEST ? EventPriority.MONITOR : EventPriority.HIGHEST);
-						final UUID uuid = entity.getUniqueId();
-						pl.getServer().getPluginManager().registerEvent(PlayerDeathEvent.class, new Listener(){}, replacePriority, new EventExecutor(){
-							@Override public void execute(Listener listener, Event originalEvent){
-								if(originalEvent instanceof PlayerDeathEvent == false) return;
-								PlayerDeathEvent evt = (PlayerDeathEvent) originalEvent;
-								if(evt.getEntity().getUniqueId().equals(uuid)){
-									evt.setDeathMessage("");
-									HandlerList.unregisterAll(listener);
-								}
-							}
-						}, pl);
+						// Afterwards, at a higher priority, we will clear the behead death message (since we already sent a tellraw)
+						clearDeathEvtMessageForPlayers.add(entity.getUniqueId());
 					}
 					break;
 				case LOCAL:
@@ -584,18 +519,28 @@ public class DropChanceAPI{
 		);
 	}
 
-	public void triggerHeadDropEvent(Entity entity, Entity killer, Event evt, ItemStack weapon, Component beheadMessage){
+	// NOTE: "public" -- used by PeacefulPetHeads
+	/**
+	 * Attempts to drop a head item for an Entity
+	 * @param entity The entity for which to to create a head
+	 * @param killer The entity which did the killing, or null
+	 * @param weapon The weapon used to kill, or null
+	 * @param beheadMessage The behead message that will get broadcasted
+	 * @return True if the head drop was completed successfully
+	 */
+	public boolean triggerHeadDropEvent(Entity entity, Entity killer, Event evt, ItemStack weapon, Component beheadMessage){
 		ItemStack headItem = pl.getAPI().getHead(entity);
 		EntityBeheadEvent beheadEvent = new EntityBeheadEvent(entity, killer, evt, headItem);
 		pl.getServer().getPluginManager().callEvent(beheadEvent);
-		if(beheadEvent.isCancelled()) return;
+		if(beheadEvent.isCancelled()) return false;
 
 		dropHeadItem(headItem, entity, killer, evt);
 		if(weapon.getType() == Material.AIR) weapon = null;
 		announceHeadDrop(beheadMessage, entity, killer, evt);
 		if(entity instanceof Player ? LOG_PLAYER_BEHEAD : LOG_MOB_BEHEAD) logHeadDrop(entity, killer, weapon);
+		return true;
 	}
-	public void triggerHeadDropEvent(Entity entity, Entity killer, Event evt, ItemStack weapon){
-		triggerHeadDropEvent(entity, killer, evt, weapon, /*TODO: lazy eval of getBeheadMessage?*/getBeheadMessage(entity, killer, weapon));
+	public boolean triggerHeadDropEvent(Entity entity, Entity killer, Event evt, ItemStack weapon){
+		return triggerHeadDropEvent(entity, killer, evt, weapon, /*TODO: lazy eval of getBeheadMessage?*/getBeheadMessage(entity, killer, weapon));
 	}
 }

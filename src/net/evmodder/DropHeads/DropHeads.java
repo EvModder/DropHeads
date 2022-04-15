@@ -34,8 +34,8 @@ import net.evmodder.EvLib.Updater;
 // * jeb_ sheep head animated phase through colors (gimmick)
 // * ALL player-visible msgs in plugin translated in translations.yml
 // * full /minecraft:give command support
-// * replace death message for pets with behead message (similar to how it is done for players)
 //TEST:
+// * replace death message for pets and players with behead message
 // * Trophies/Luck attribute
 // * hide behead msgs for vanished players
 // * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
@@ -51,6 +51,7 @@ public final class DropHeads extends EvPlugin{
 	private static DropHeads instance; public static DropHeads getPlugin(){return instance;}
 	private HeadAPI api; public HeadAPI getAPI(){return api;}
 	private DropChanceAPI dropChanceAPI; public DropChanceAPI getDropChanceAPI(){return dropChanceAPI;}
+	private DeathMessagePacketIntercepter deathMessageBlocker;
 	private boolean LOGFILE_ENABLED;
 	private String LOGFILE_NAME;
 
@@ -61,8 +62,14 @@ public final class DropHeads extends EvPlugin{
 		}
 		instance = this;
 		api = new HeadAPI();
-		dropChanceAPI = new DropChanceAPI();
-		new EntityDeathListener();
+		final boolean REPLACE_PLAYER_DEATH_MSG = config.getBoolean("behead-announcement-replaces-player-death-message",
+				config.getBoolean("behead-announcement-replaces-death-message", true))/*TODO: && player behead announce mode == GLOBAL*/;
+		final boolean REPLACE_PET_DEATH_MSG = config.getBoolean("behead-message-replaces-pet-death-message", true);
+		if(REPLACE_PLAYER_DEATH_MSG || REPLACE_PET_DEATH_MSG){
+			deathMessageBlocker = new DeathMessagePacketIntercepter(REPLACE_PLAYER_DEATH_MSG, REPLACE_PET_DEATH_MSG);
+		}
+		dropChanceAPI = new DropChanceAPI(REPLACE_PLAYER_DEATH_MSG, REPLACE_PET_DEATH_MSG);
+		new EntityDeathListener(deathMessageBlocker);
 
 		if(config.getBoolean("track-mob-spawns", true)){
 			getServer().getPluginManager().registerEvents(new EntitySpawnListener(), this);
@@ -103,6 +110,8 @@ public final class DropHeads extends EvPlugin{
 		LOGFILE_ENABLED = config.getBoolean("log.enable", false);
 		if(LOGFILE_ENABLED) LOGFILE_NAME = config.getString("log.filename", "log.txt");
 	}
+
+	@Override public void onEvDisable(){if(deathMessageBlocker != null) deathMessageBlocker.unregisterAll();}
 
 	public boolean writeToLogFile(String line){
 		if(!LOGFILE_ENABLED) return false;
