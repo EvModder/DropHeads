@@ -11,6 +11,8 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -27,6 +29,7 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Tameable;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
@@ -34,6 +37,8 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.EntityBlockFormEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -44,13 +49,22 @@ import org.bukkit.plugin.EventExecutor;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.BlockProjectileSource;
 import org.bukkit.projectiles.ProjectileSource;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
 import net.evmodder.DropHeads.events.EntityBeheadEvent;
 import net.evmodder.EvLib.EvUtils;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.extras.HeadUtils;
+import net.evmodder.EvLib.extras.ReflectionUtils;
 import net.evmodder.EvLib.extras.TellrawUtils;
 import net.evmodder.EvLib.extras.TextUtils;
+import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
+import net.evmodder.EvLib.extras.ReflectionUtils.RefField;
+import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
 import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
@@ -128,7 +142,6 @@ public class DropChanceAPI{
 		PRIORITY = JunkUtils.parseEnumOrDefault(pl.getConfig().getString("death-listener-priority", "LOW"), EventPriority.LOW);
 		REPLACE_DEATH_MESSAGE = pl.getConfig().getBoolean("behead-announcement-replaces-player-death-message",
 				pl.getConfig().getBoolean("behead-announcement-replaces-death-message", true)) && PRIORITY != EventPriority.MONITOR;
-		REPLACE_PET_DEATH_MESSAGE = pl.getConfig().getBoolean("behead-message-replaces-pet-death-message", true);
 		DEBUG_MODE = pl.getConfig().getBoolean("debug-messages", true);
 		final boolean ENABLE_LOG = pl.getConfig().getBoolean("log.enable", false);
 		LOG_MOB_BEHEAD = ENABLE_LOG && pl.getConfig().getBoolean("log.log-mob-behead", false);
@@ -307,6 +320,53 @@ public class DropChanceAPI{
 			alwaysBeheadPerm.recalculatePermissibles();
 		}
 		catch(IllegalArgumentException ex){/*The permissions are already defined; perhaps this is just a plugin or server reload*/}
+
+		if(REPLACE_PET_DEATH_MESSAGE = pl.getConfig().getBoolean("behead-message-replaces-pet-death-message", true)){
+			pl.getServer().getPluginManager().registerEvents(new Listener(){
+				@EventHandler public void onJoin(PlayerJoinEvent evt){
+					JunkUtils.getPlayerChannel(evt.getPlayer()).pipeline()
+					.addBefore("packet_handler", evt.getPlayer().getName(), new ChannelDuplexHandler(){
+						RefClass packetPlayOutChatClazz = ReflectionUtils.getRefClass("{nms}.PacketPlayOutChat", "{nm}.network.protocol.game.PacketPlayOutChat");
+						RefClass chatBaseCompClazz = ReflectionUtils.getRefClass("{nms}.IChatBaseComponent", "{nm}.network.chat.IChatBaseComponent");
+						RefClass chatSerializerClazz = ReflectionUtils.getRefClass(
+								"{nms}.IChatBaseComponent$ChatSerializer", "{nm}.network.chat.IChatBaseComponent$ChatSerializer");
+						RefMethod toJsonMethod = chatSerializerClazz.findMethod(/*isStatic=*/true, String.class, chatBaseCompClazz);
+						
+						RefField chatBaseCompField = packetPlayOutChatClazz.findField(chatBaseCompClazz);
+						RefMethod chatBaseCompGetStringMethod = chatBaseCompClazz.getMethod("getString");
+//						RefMethod chatBaseCompGetTextMethod = chatBaseCompClazz.getMethod("getText");
+
+						@Override public void write(ChannelHandlerContext context, Object packet, ChannelPromise promise) throws Exception {
+							if(packetPlayOutChatClazz.isInstance(packet)){
+								System.out.println("sending chat packet");
+								Object chatBaseComp = chatBaseCompField.of(packet).get();
+								if(chatBaseComp != null){
+									System.out.println("a");
+									String getString = chatBaseCompGetStringMethod.of(chatBaseComp).call().toString();
+									System.out.println("b");
+									String toString = chatBaseComp.toString();
+									System.out.println("c");
+									if(getString.contains("slain")){
+										Bukkit.getServer().getConsoleSender().sendMessage(ChatColor.AQUA+"PACKET SENT: "+ChatColor.WHITE+packet.toString());
+										System.out.println("getString(): " + getString);
+										System.out.println("toString():" + toString);
+										System.out.println("toJson(): " + toJsonMethod.call(chatBaseComp).toString());
+									}
+								}
+							}
+							super.write(context, packet, promise);
+						}
+					});
+				}
+				@EventHandler public void onQuit(PlayerQuitEvent evt){
+					Channel channel = JunkUtils.getPlayerChannel(evt.getPlayer());
+					channel.eventLoop().submit(()->{
+						channel.pipeline().remove(evt.getPlayer().getName());
+						return null;
+					});
+				}
+			}, pl);
+		}
 	}
 
 	public double getRawDropChance(String textureKey){
@@ -469,7 +529,12 @@ public class DropChanceAPI{
 
 			final String petOwnerToMsg = REPLACE_PET_DEATH_MESSAGE && entity instanceof Tameable && ((Tameable)entity).getOwner() != null
 					? ((Tameable)entity).getOwner().getName() : null;
-			if(petOwnerToMsg != null) ((Tameable)entity).setOwner(null);  // TODO: Find a more elegant solution, such as listening for this specific packet
+			pl.getLogger().info("pet owner: "+petOwnerToMsg);
+			if(petOwnerToMsg != null){
+				killer.sendMessage("test1");
+				((Tameable)entity).setOwner(null);  // TODO: Find a more elegant solution, such as listening for this specific packet
+				new BukkitRunnable(){@Override public void run(){killer.sendMessage("test2");}}.runTaskLater(pl, 1);
+			}
 
 			switch(mode){
 				case GLOBAL:
