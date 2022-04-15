@@ -62,8 +62,14 @@ public final class DropHeads extends EvPlugin{
 		}
 		instance = this;
 		api = new HeadAPI();
-		final boolean REPLACE_PLAYER_DEATH_MSG = config.getBoolean("behead-announcement-replaces-player-death-message",
-				config.getBoolean("behead-announcement-replaces-death-message", true))/*TODO: && player behead announce mode == GLOBAL*/;
+		final boolean GLOBAL_PLAYER_BEHEAD_MSG = config.getString("behead-announcement.player",
+				config.getString("behead-announcement.default", "GLOBAL")).toUpperCase().equals("GLOBAL");
+		final boolean WANT_TO_REPLACE_PLAYER_DEATH_MSG = config.getBoolean("behead-announcement-replaces-player-death-message",
+				config.getBoolean("behead-announcement-replaces-death-message", true));
+		if(WANT_TO_REPLACE_PLAYER_DEATH_MSG && !GLOBAL_PLAYER_BEHEAD_MSG){
+			getLogger().warning("behead-announcement-replaces-player-death-message is true, but behead-announcement.player is not GLOBAL");
+		}
+		final boolean REPLACE_PLAYER_DEATH_MSG = WANT_TO_REPLACE_PLAYER_DEATH_MSG && GLOBAL_PLAYER_BEHEAD_MSG;
 		final boolean REPLACE_PET_DEATH_MSG = config.getBoolean("behead-message-replaces-pet-death-message", true);
 		if(REPLACE_PLAYER_DEATH_MSG || REPLACE_PET_DEATH_MSG){
 			deathMessageBlocker = new DeathMessagePacketIntercepter(REPLACE_PLAYER_DEATH_MSG, REPLACE_PET_DEATH_MSG);
