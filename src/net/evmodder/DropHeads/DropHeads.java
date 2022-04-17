@@ -34,6 +34,7 @@ import net.evmodder.EvLib.Updater;
 // * jeb_ sheep head animated phase through colors (gimmick)
 // * ALL player-visible msgs in plugin translated in translations.yml
 // * full /minecraft:give command support
+// * namespaced custom heads in /give
 //TEST:
 // * replace death message for pets and players with behead message
 // * Trophies/Luck attribute
@@ -102,9 +103,10 @@ public final class DropHeads extends EvPlugin{
 		if(config.getBoolean("prevent-head-placement", false)){
 			getServer().getPluginManager().registerEvents(new PreventBlockPlaceListener(), this);
 		}
-		if(config.getBoolean("substitute-dropheads-in-give-command", false)){
-			getServer().getPluginManager().registerEvents(new GiveCommandPreprocessListener(), this);
-		}
+		//TODO: Wait for Minecraft to support custom-namespaced items in /give
+//		if(config.getBoolean("substitute-dropheads-in-give-command", false)){
+//			getServer().getPluginManager().registerEvents(new GiveCommandPreprocessListener(), this);
+//		}
 		if(!config.getStringList("endermen-camouflage-heads").isEmpty()){
 			getServer().getPluginManager().registerEvents(new EndermanProvokeListener(), this);
 		}

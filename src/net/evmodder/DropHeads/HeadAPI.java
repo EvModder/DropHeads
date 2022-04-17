@@ -66,6 +66,7 @@ public class HeadAPI {
 	private final HashMap<String, String> replaceHeadsFromTo; // key & value are textureKeys
 
 	private final String PLAYER_PREFIX, MOB_PREFIX, MHF_PREFIX, HDB_PREFIX, CODE_PREFIX;
+	public final String dropheadsNamespaceKey = "dropheads:"; // TODO: decide how to expose/implement this
 
 	// Loads config.getString(key), replacing '${abc-xyz}' with config.getString('abc-xyz')
 	public String loadTranslationStr(String key){
@@ -505,7 +506,7 @@ public class HeadAPI {
 		head = JunkUtils.setDisplayName(head, getHeadNameFromKey(textureKey, /*customName=*/""));
 
 		UUID uuid = UUID.nameUUIDFromBytes(textureKey.getBytes());// Stable UUID for this textureKey
-		GameProfile profile = new GameProfile(uuid, /*name=*/"dropheads:"+textureKey);// Initialized with UUID and name
+		GameProfile profile = new GameProfile(uuid, /*name=*/dropheadsNamespaceKey+textureKey);// Initialized with UUID and name
 		if(code != null) profile.getProperties().put("textures", new Property("textures", code));
 		if(MAKE_UNSTACKABLE) profile.getProperties().put("random_uuid", new Property("random_uuid", UUID.randomUUID().toString()));
 		if(SAVE_TYPE_IN_LORE){
@@ -669,7 +670,7 @@ public class HeadAPI {
 		String profileName = profile.getName();
 		if(profileName != null){ //-------------------- Handle Entities with textureKey
 			/*if(SAVE_CUSTOM_LORE){*/int idx = profileName.indexOf('>'); if(idx != -1) profileName = profileName.substring(0, idx);/*}*/
-			final boolean isDropHeadsHead = profileName.startsWith("dropheads:");
+			final boolean isDropHeadsHead = profileName.startsWith(dropheadsNamespaceKey);
 			if(isDropHeadsHead) profileName = profileName.substring(10);
 			if(isDropHeadsHead || textures.containsKey(profileName)){
 				profileName = replaceHeadsFromTo.getOrDefault(profileName, profileName);

@@ -73,11 +73,11 @@ public class BlockClickListener implements Listener{
 		recentClickers = new HashSet<UUID>();
 	}
 
-	static GameProfile stripCustomLoreAndNamespace(GameProfile profile){
+	GameProfile stripCustomLoreAndNamespace(GameProfile profile){
 		if(profile != null && profile.getName() != null){
 			String name = profile.getName();
 			int idx = name.indexOf('>'); if(idx != -1) name = name.substring(0, idx);
-			if(name.startsWith("dropheads:")) name = name.substring(10);
+			if(name.startsWith(pl.getAPI().dropheadsNamespaceKey)) name = name.substring(10);
 
 			if(!name.equals(profile.getName())) return new GameProfile(profile.getId(), name);
 		}
