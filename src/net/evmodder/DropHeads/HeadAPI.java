@@ -71,11 +71,12 @@ public class HeadAPI {
 	private final HashMap<String, String> replaceHeadsFromTo; // key & value are textureKeys
 
 	private final String PLAYER_PREFIX, MOB_PREFIX, MHF_PREFIX, HDB_PREFIX, CODE_PREFIX;
-	/** DO NOT USE: This field map disappear in a future release */
-	public final String dropheadsNamespaceKey = "dropheads:"; // TODO: decide how to expose/implement this
+
+	/** DO NOT USE: This function is intended for internal use only */
+	public final String getDropHeadsNamespacedKey(){return "dropheads:";} // TODO: decide how to expose/implement this
 
 	// Loads config.getString(key), replacing '${abc-xyz}' with config.getString('abc-xyz')
-	/** DO NOT USE: This function will disappear in a future release */
+	/** DO NOT USE: This function may disappear in a future release */
 	public String loadTranslationStr(String key){
 //		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in translations file: "+key);
 		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key));
@@ -103,7 +104,7 @@ public class HeadAPI {
 		return builder.toString();
 	}
 	// Same as above, but all replacements are treated as TranslationComponents
-	/** DO NOT USE: This function will disappear in a future release */
+	/** DO NOT USE: This function may disappear in a future release */
 	public TranslationComponent loadTranslationComp(String key){
 //		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in translations file: "+key);
 		final String rawMsg = translationsFile.getString(key);
@@ -528,7 +529,7 @@ public class HeadAPI {
 		head = JunkUtils.setDisplayName(head, getHeadNameFromKey(textureKey, /*customName=*/""));
 
 		UUID uuid = UUID.nameUUIDFromBytes(textureKey.getBytes());// Stable UUID for this textureKey
-		GameProfile profile = new GameProfile(uuid, /*name=*/dropheadsNamespaceKey+textureKey);// Initialized with UUID and name
+		GameProfile profile = new GameProfile(uuid, /*name=*/getDropHeadsNamespacedKey()+textureKey);// Initialized with UUID and name
 		if(code != null) profile.getProperties().put("textures", new Property("textures", code));
 		if(MAKE_UNSTACKABLE) profile.getProperties().put("random_uuid", new Property("random_uuid", UUID.randomUUID().toString()));
 		if(SAVE_TYPE_IN_LORE){
@@ -692,7 +693,7 @@ public class HeadAPI {
 		String profileName = profile.getName();
 		if(profileName != null){ //-------------------- Handle Entities with textureKey
 			/*if(SAVE_CUSTOM_LORE){*/int idx = profileName.indexOf('>'); if(idx != -1) profileName = profileName.substring(0, idx);/*}*/
-			final boolean isDropHeadsHead = profileName.startsWith(dropheadsNamespaceKey);
+			final boolean isDropHeadsHead = profileName.startsWith(getDropHeadsNamespacedKey());
 			if(isDropHeadsHead) profileName = profileName.substring(10);
 			if(isDropHeadsHead || textures.containsKey(profileName)){
 				profileName = replaceHeadsFromTo.getOrDefault(profileName, profileName);

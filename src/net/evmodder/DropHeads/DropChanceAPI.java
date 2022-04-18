@@ -540,11 +540,11 @@ public class DropChanceAPI{
 		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+target+" "+message);
 	}
 	/**
-	 * Send a head drop announcement message for an @param entity with recipients are based on:
-	 * * The <code>AnnounceMode</code> setting for the entity's type
-	 * * The permissions of the @param killer
-	 * * The pet-owner of the @param entity, if exists
-	 * * Specific broadcast settings from the DropHeads config
+	 * Send a head drop announcement message for an entity with recipients are based on:<br>
+	 * * The <code>AnnounceMode</code> setting for the entity's type<br>
+	 * * The permissions of the killer<br>
+	 * * The pet-owner of the entity, if exists<br>
+	 * * Specific broadcast settings from the DropHeads config<br>
 	 * @param message The behead announcement message
 	 * @param entity The entity to announce as beheaded
 	 * @param killer The entity to announce as the killer

@@ -29,7 +29,7 @@ public class GiveCommandPreprocessListener implements Listener{
 		String cmd = evt.getMessage().toLowerCase();
 		if(cmd.startsWith("/give ") || cmd.startsWith("/minecraft:give ")){
 			UUID uuid = UUID.nameUUIDFromBytes("VEX".getBytes());// Stable UUID for this textureKey
-			String newCmd = evt.getMessage().replaceAll("(?i) "+pl.getAPI().dropheadsNamespaceKey+"vex_head ", " minecraft:player_head{"
+			String newCmd = evt.getMessage().replaceAll("(?i) "+pl.getAPI().getDropHeadsNamespacedKey()+"vex_head ", " minecraft:player_head{"
 					//TODO: proper display name (translated bits) and lore (&8mob:<type>)
 					+ "display:{Name:\"{\\\\\"text\\\\\":\\\\\"Vex Head\\\\\",\\\\\"italic\\\\\":false}\"},"
 					+ "SkullOwner:{Id:"+WebUtils.convertUUIDToIntArray(uuid)+","

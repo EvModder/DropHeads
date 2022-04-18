@@ -77,7 +77,7 @@ public class BlockClickListener implements Listener{
 		if(profile != null && profile.getName() != null){
 			String name = profile.getName();
 			int idx = name.indexOf('>'); if(idx != -1) name = name.substring(0, idx);
-			if(name.startsWith(pl.getAPI().dropheadsNamespaceKey)) name = name.substring(10);
+			if(name.startsWith(pl.getAPI().getDropHeadsNamespacedKey())) name = name.substring(10);
 
 			if(!name.equals(profile.getName())) return new GameProfile(profile.getId(), name);
 		}
