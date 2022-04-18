@@ -54,7 +54,9 @@ import net.evmodder.EvLib.Updater;
  * Public API for plugins using DropHeads is mainly located in the HeadAPI class and the net.evmodder.dropheads.events package
  */
 public final class DropHeads extends EvPlugin{
-	private static DropHeads instance; public static DropHeads getPlugin(){return instance;}
+	private static DropHeads instance;
+	/** DO NOT USE: This function is intended for internal use only */
+	public static DropHeads getPlugin(){return instance;}
 	private HeadAPI api;
 	/**
 	 * Get the public API for general DropHeads utility features

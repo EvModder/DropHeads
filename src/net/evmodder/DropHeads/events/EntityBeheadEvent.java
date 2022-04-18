@@ -12,6 +12,8 @@ import org.bukkit.inventory.ItemStack;
  */
 public class EntityBeheadEvent extends EntityEvent implements Cancellable{
 	private static final HandlerList HANDLERS = new HandlerList();
+	/** Static version of getHandlers().
+	 * @return the list of handlers for this event */
 	public static HandlerList getHandlerList(){return HANDLERS;} // This is actually required for some dumb reason.
 
 	private final Entity killer;

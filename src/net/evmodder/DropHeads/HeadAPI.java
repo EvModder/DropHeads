@@ -71,11 +71,11 @@ public class HeadAPI {
 	private final HashMap<String, String> replaceHeadsFromTo; // key & value are textureKeys
 
 	private final String PLAYER_PREFIX, MOB_PREFIX, MHF_PREFIX, HDB_PREFIX, CODE_PREFIX;
-	/** DO NOT USE: This field will disappear in a future release */
+	/** DO NOT USE: This field map disappear in a future release */
 	public final String dropheadsNamespaceKey = "dropheads:"; // TODO: decide how to expose/implement this
 
 	// Loads config.getString(key), replacing '${abc-xyz}' with config.getString('abc-xyz')
-	//TODO: remove public
+	/** DO NOT USE: This function will disappear in a future release */
 	public String loadTranslationStr(String key){
 //		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in translations file: "+key);
 		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key));
@@ -103,6 +103,7 @@ public class HeadAPI {
 		return builder.toString();
 	}
 	// Same as above, but all replacements are treated as TranslationComponents
+	/** DO NOT USE: This function will disappear in a future release */
 	public TranslationComponent loadTranslationComp(String key){
 //		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in translations file: "+key);
 		final String rawMsg = translationsFile.getString(key);
@@ -338,7 +339,9 @@ public class HeadAPI {
 	 * @return An immutable map (textureKey => Base64 encoded texture URL)
 	 */
 	public Map<String, String> getTextures(){return Collections.unmodifiableMap(textures);}
-	public HeadDatabaseAPI getHeadDatabaseAPI(){return hdbAPI;}//TODO: prefer avoiding public
+	/** DO NOT USE: This function is intended for internal use only */
+	public HeadDatabaseAPI getHeadDatabaseAPI(){return hdbAPI;}
+	/** DO NOT USE: This function is intended for internal use only */
 	public boolean isHeadDatabaseHead(ItemStack head){
 		if(hdbAPI == null) return false;
 		String id = hdbAPI.getItemID(head);
@@ -346,6 +349,7 @@ public class HeadAPI {
 	}
 
 	//TODO: prefer avoiding public for these head-name-component getters?
+	/** DO NOT USE: This function may change/disappear in a future release */
 	public TranslationComponent getHeadTypeName(HeadType headType){
 		if(headType == null) return LOCAL_HEAD;
 		switch(headType){
@@ -354,7 +358,7 @@ public class HeadAPI {
 			case HEAD: default: return LOCAL_HEAD;
 		}
 	}
-	//TODO: remove public
+	/** DO NOT USE: This function may change/disappear in a future release */
 	public Component[] getEntityTypeAndSubtypeNamesFromKey(/*EntityType entity, */String textureKey){
 		if(textureKey.equals("PLAYER|GRUMM")) return new Component[]{new RawTextComponent("Grumm")};
 		String[] dataFlags = textureKey.split("\\|");
@@ -459,6 +463,7 @@ public class HeadAPI {
 		}
 		return components.toArray(new Component[0]);
 	}
+	/** DO NOT USE: This function may disappear in a future release */
 	public Component getHeadNameFromKey(@Nonnull String textureKey, @Nonnull String customName){
 		// Attempt to parse out an EntityType
 		EntityType eType;

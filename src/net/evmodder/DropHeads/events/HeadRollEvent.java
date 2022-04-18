@@ -11,6 +11,8 @@ import org.bukkit.event.entity.EntityEvent;
  */
 public class HeadRollEvent extends EntityEvent{
 	private static final HandlerList HANDLERS = new HandlerList();
+	/** Static version of getHandlers().
+	 * @return the list of handlers for this event */
 	public static HandlerList getHandlerList(){return HANDLERS;} // This is actually required for some dumb reason.
 
 	private final Entity killer;
