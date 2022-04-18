@@ -32,10 +32,10 @@ import net.evmodder.EvLib.Updater;
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
 // * un-dye heads (sheep,shulker) with cauldron (gimmick)
 // * jeb_ sheep head animated phase through colors (gimmick)
-// * ALL player-visible msgs in plugin translated in translations.yml
 // * full /minecraft:give command support
 // * namespaced custom heads in /give
 //TEST:
+// * ALL player-visible msgs in plugin translated in translations.yml
 // * replace death message for pets and players with behead message
 // * Trophies/Luck attribute
 // * hide behead msgs for vanished players
@@ -59,7 +59,7 @@ public final class DropHeads extends EvPlugin{
 	@Override public void onEvEnable(){
 		if(config.getBoolean("update-plugin", false)){
 			new Updater(/*plugin=*/this, /*id=*/274151, getFile(), Updater.UpdateType.DEFAULT, /*announce=*/true);
-			//todo: if 'update-textures', trigger overwrite in HeadAPI
+			//TODO: if 'update-textures', trigger overwrite in HeadAPI on next restart?
 		}
 		instance = this;
 		api = new HeadAPI();

@@ -546,7 +546,7 @@ public class CommandSpawnHead extends EvCommand{
 
 		// TODO: This assumes the message has a default color & formats when it actually might not.
 		final Component msgColorAndFormatsPlusComma = new ListComponent(
-				TellrawUtils.getCurrentColorAndFormatProperties(messageFormatStr), new RawTextComponent(", "));
+				TellrawUtils.getCurrentColorAndFormatProperties(messageFormatStr), new RawTextComponent(", "/*TODO: translations.yml*/));
 
 		ListComponent recipientListComp = new ListComponent();
 		ListComponent headItemListComp = new ListComponent();

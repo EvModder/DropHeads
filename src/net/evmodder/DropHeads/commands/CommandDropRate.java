@@ -79,7 +79,7 @@ public class CommandDropRate extends EvCommand{
 			ListComponent requiredWeapons = new ListComponent();
 			boolean isFirstElement = true;
 			for(Material mat : dropChanceAPI.mustUseTools){
-				if(!isFirstElement) requiredWeapons.addComponent(new RawTextComponent("§7, §f"));
+				if(!isFirstElement) requiredWeapons.addComponent(new RawTextComponent("§7, §f"/*TODO: translations.yml*/));
 				else isFirstElement = false;
 				requiredWeapons.addComponent(new TranslationComponent("item.minecraft."+mat.name().toLowerCase()));
 			}
@@ -168,7 +168,7 @@ public class CommandDropRate extends EvCommand{
 		if(entity != null){
 			if(!entity.hasPermission("dropheads.canlosehead")){
 				sendTellraw(sender.getName(), new TranslationComponent(
-						RAW_DROP_CHANCE_FOR, new SelectorComponent(entity.getUniqueId()), new RawTextComponent("0")).toString());
+						RAW_DROP_CHANCE_FOR, new SelectorComponent(entity.getUniqueId()), new RawTextComponent("0"/*0 in translations.yml?*/)).toString());
 			}
 			else{
 				rawChance = dropChanceAPI.getRawDropChance(entity);
@@ -222,38 +222,38 @@ public class CommandDropRate extends EvCommand{
 			if(USING_SPAWN_MODIFIERS){
 				if(entity == null){
 					droprateMultipliers.addComponent(SPAWN_REASON);
-					droprateMultipliers.addComponent("§7, ");
+					droprateMultipliers.addComponent("§7, "/*TODO: translations.yml*/);
 				}
 				else if(Math.abs(1D-spawnCauseMod) > 0.001D){
 					droprateMultipliers.addComponent(SPAWN_REASON);
-					droprateMultipliers.addComponent(":§6x"+df.format(spawnCauseMod)+"§7, ");
+					droprateMultipliers.addComponent(":§6x"+df.format(spawnCauseMod)+"§7, "/*TODO: translations.yml*/);
 				}
 			}
 			if(USING_TIME_ALIVE_MODIFIERS){
 				if(entity == null){
 					droprateMultipliers.addComponent(TIME_ALIVE);
-					droprateMultipliers.addComponent("§7, ");
+					droprateMultipliers.addComponent("§7, "/*TODO: translations.yml*/);
 				}
 				else if(Math.abs(1D-timeAliveMod) > 0.001D){
 					droprateMultipliers.addComponent(TIME_ALIVE);
-					droprateMultipliers.addComponent(":§6x"+df.format(timeAliveMod)+"§7, ");
+					droprateMultipliers.addComponent(":§6x"+df.format(timeAliveMod)+"§7, "/*TODO: translations.yml*/);
 				}
 			}
 			if(!dropChanceAPI.weaponBonuses.isEmpty()){
 				if(entity == null){
 					droprateMultipliers.addComponent(WEAPON_TYPE);
-					droprateMultipliers.addComponent("§7, ");
+					droprateMultipliers.addComponent("§7, "/*TODO: translations.yml*/);
 				}
 				else if(weapon != null && Math.abs(1D-weaponMod) > 0.001D){
 					droprateMultipliers.addComponent(WEAPON_TYPE);
 					droprateMultipliers.addComponent(JunkUtils.getMurderItemComponent(weapon, JSON_LIMIT));
 					droprateMultipliers.addComponent(":§6x"+df.format(weaponMod));
-					droprateMultipliers.addComponent("§7, ");
+					droprateMultipliers.addComponent("§7, "/*TODO: translations.yml*/);
 				}
 			}
 			if(Math.abs(1D-permMod) > 0.001D){
 				droprateMultipliers.addComponent(PERMS);
-				droprateMultipliers.addComponent(":§6x"+df.format(permMod)+"§7, ");
+				droprateMultipliers.addComponent(":§6x"+df.format(permMod)+"§7, "/*TODO: translations.yml*/);
 			}
 			if(USING_LOOTING_MODIFIERS){
 				if(entity == null){
