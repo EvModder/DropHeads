@@ -4,6 +4,11 @@ import org.bukkit.entity.Entity;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.entity.EntityEvent;
 
+/**
+ * Event created by DropHeads (v3.7+) to indicate that a head drop roll has occurred and the success/failure has been determined.
+ * This event allows you to analyze and modify the drop chance success.
+ * If the success of this event is set to false, no head will be dropped; if it is set to true, a head will be dropped.
+ */
 public class HeadRollEvent extends EntityEvent{
 	private static final HandlerList HANDLERS = new HandlerList();
 	public static HandlerList getHandlerList(){return HANDLERS;} // This is actually required for some dumb reason.
@@ -69,7 +74,7 @@ public class HeadRollEvent extends EntityEvent{
 
 	/**
 	 * Set whether the drop roll should be considered a success.
-	 * @param value whether the head drop should succeed or fail
+	 * @param success whether the head drop should succeed or fail
 	 */
 	public void setDropSuccess(final boolean success){dropSuccess = success;}
 

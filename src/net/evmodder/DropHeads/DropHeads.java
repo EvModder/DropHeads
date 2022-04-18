@@ -48,10 +48,25 @@ import net.evmodder.EvLib.Updater;
 // * prevent placing heads
 // * update-textures=true (head-textures.txt file overwritten when plugin is updated)
 
+/**
+ * Main class of the DropHeads plugin.
+ * 
+ * Public API for plugins using DropHeads is mainly located in the HeadAPI class and the net.evmodder.dropheads.events package
+ */
 public final class DropHeads extends EvPlugin{
 	private static DropHeads instance; public static DropHeads getPlugin(){return instance;}
-	private HeadAPI api; public HeadAPI getAPI(){return api;}
-	private DropChanceAPI dropChanceAPI; public DropChanceAPI getDropChanceAPI(){return dropChanceAPI;}
+	private HeadAPI api;
+	/**
+	 * Get the public API for general DropHeads utility features
+	 * @return The HeadAPI object
+	 */
+	public HeadAPI getAPI(){return api;}
+	private DropChanceAPI dropChanceAPI;
+	/**
+	 * Get the public API for DropHeads drop-chance and config data
+	 * @return The DropChanceAPI object
+	 */
+	public DropChanceAPI getDropChanceAPI(){return dropChanceAPI;}
 	private DeathMessagePacketIntercepter deathMessageBlocker;
 	private boolean LOGFILE_ENABLED;
 	private String LOGFILE_NAME;

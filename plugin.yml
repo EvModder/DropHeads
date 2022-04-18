@@ -8,7 +8,7 @@ website: https://dev.bukkit.org/projects/dropheads
 #major code refactor (split death listener), fixed bug with API events (missing static HandlerList function), update spawn-cause-modifers,
 # warden & tadpole heads (frog and allay still pending better textures), extension:PeacefulPetHeads, behead-message-replaces-pet-death-message,
 # config cross-dimension and local-range, config head-click-rate-ticks, moved behead-msgs to translation file, spawnhead/droprate cmds fully config msgs,
-# added tenative frog & allay head textures and horse/llama pre-jappa head textures
+# added tenative frog & allay head textures and horse/llama pre-jappa head textures, very nice new javadocs!<insert link>
 version: 3.7.0
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]

@@ -50,6 +50,11 @@ import net.evmodder.EvLib.extras.TextUtils;
 import net.evmodder.EvLib.extras.WebUtils;
 import net.evmodder.EvLib.extras.EntityUtils.CCP;
 
+/**
+ * Public API hook for general DropHeads features
+ * 
+ * Warning: This class is still in BETA and some functions may change (or disappear!) in future releases
+ */
 public class HeadAPI {
 	private final DropHeads pl;
 	private HeadDatabaseAPI hdbAPI = null;
@@ -66,9 +71,11 @@ public class HeadAPI {
 	private final HashMap<String, String> replaceHeadsFromTo; // key & value are textureKeys
 
 	private final String PLAYER_PREFIX, MOB_PREFIX, MHF_PREFIX, HDB_PREFIX, CODE_PREFIX;
+	/** DO NOT USE: This field will disappear in a future release */
 	public final String dropheadsNamespaceKey = "dropheads:"; // TODO: decide how to expose/implement this
 
 	// Loads config.getString(key), replacing '${abc-xyz}' with config.getString('abc-xyz')
+	//TODO: remove public
 	public String loadTranslationStr(String key){
 //		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in translations file: "+key);
 		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key));
@@ -320,7 +327,16 @@ public class HeadAPI {
 		}
 	}
 
+	/**
+	 * Check if a texture exists for the given key.
+	 * @param textureKey The texture key to check for
+	 * @return Whether the texture exists
+	 */
 	public boolean textureExists(String textureKey){return textures.containsKey(textureKey);}
+	/**
+	 * Get a map of all existing textures.
+	 * @return An immutable map (textureKey => Base64 encoded texture URL)
+	 */
 	public Map<String, String> getTextures(){return Collections.unmodifiableMap(textures);}
 	public HeadDatabaseAPI getHeadDatabaseAPI(){return hdbAPI;}//TODO: prefer avoiding public
 	public boolean isHeadDatabaseHead(ItemStack head){
@@ -338,6 +354,7 @@ public class HeadAPI {
 			case HEAD: default: return LOCAL_HEAD;
 		}
 	}
+	//TODO: remove public
 	public Component[] getEntityTypeAndSubtypeNamesFromKey(/*EntityType entity, */String textureKey){
 		if(textureKey.equals("PLAYER|GRUMM")) return new Component[]{new RawTextComponent("Grumm")};
 		String[] dataFlags = textureKey.split("\\|");
@@ -567,7 +584,7 @@ public class HeadAPI {
 	 * @param textureKey The texture key for the head
 	 * @return The result head ItemStack
 	 */
-	public ItemStack getHead(EntityType eType, String textureKey/*, boolean saveTypeInLore, boolean unstackable*/){
+	public ItemStack getHead(EntityType type, String textureKey/*, boolean saveTypeInLore, boolean unstackable*/){
 		// If there is extra "texture metadata" (aka '|') we should return the custom skull
 		if(textureKey != null){
 			// Try successively smaller texture keys until we find one that exists
@@ -578,14 +595,14 @@ public class HeadAPI {
 			}
 			// If this is a custom data head (still contains a '|') or eType is null AND the key exists, use it
 			boolean hasCustomData = textureKey.replace("|HOLLOW", "").indexOf('|') != -1;
-			if((hasCustomData || eType == null || eType == EntityType.UNKNOWN || !PREFER_VANILLA_HEADS) && textures.containsKey(textureKey)){
+			if((hasCustomData || type == null || type == EntityType.UNKNOWN || !PREFER_VANILLA_HEADS) && textures.containsKey(textureKey)){
 				return makeHeadFromTexture(textureKey/*, saveTypeInLore*/);
 			}
 		}
-		if(eType == null) return null;
+		if(type == null) return null;
 		// Otherwise, favor vanilla skulls
-		if(!PREFER_VANILLA_HEADS && eType != EntityType.PLAYER) return null;
-		switch(eType){
+		if(!PREFER_VANILLA_HEADS && type != EntityType.PLAYER) return null;
+		switch(type){
 			case PLAYER:
 				return new ItemStack(Material.PLAYER_HEAD);
 			case WITHER_SKELETON:
@@ -599,8 +616,8 @@ public class HeadAPI {
 			case ENDER_DRAGON:
 				return new ItemStack(Material.DRAGON_HEAD);
 			default:
-				if(textures.containsKey(eType.name())) return makeHeadFromTexture(eType.name());
-				return headUtils_makeSkull_wrapper(eType);
+				if(textures.containsKey(type.name())) return makeHeadFromTexture(type.name());
+				return headUtils_makeSkull_wrapper(type);
 			}
 	}
 

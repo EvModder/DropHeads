@@ -7,6 +7,9 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.entity.EntityEvent;
 import org.bukkit.inventory.ItemStack;
 
+/**
+ * Cancellable event created by the DropHeads plugin when an entity is beheaded.
+ */
 public class EntityBeheadEvent extends EntityEvent implements Cancellable{
 	private static final HandlerList HANDLERS = new HandlerList();
 	public static HandlerList getHandlerList(){return HANDLERS;} // This is actually required for some dumb reason.

@@ -54,6 +54,11 @@ import net.evmodder.EvLib.extras.TellrawUtils.Component;
 import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
 
+/**
+ * Public API hook for getting head drop chance data loaded from DropHeads configs
+ * 
+ * Warning: This class is still in BETA and some functions may change (or disappear!) in future releases
+ */
 public class DropChanceAPI{
 	private enum AnnounceMode {GLOBAL, LOCAL, DIRECT, OFF};
 	private final AnnounceMode DEFAULT_ANNOUNCE;
@@ -63,6 +68,7 @@ public class DropChanceAPI{
 
 	private final boolean PLAYER_HEADS_ONLY, CLEAR_PLAYER_DEATH_EVT_MESSAGE, REPLACE_PET_DEATH_MESSAGE;
 	private final boolean VANILLA_WSKELE_HANDLING;
+	/** DO NOT USE: These will be replaced with getter/setter functions in a future release */
 	public final double LOOTING_ADD, LOOTING_MULT; // TODO: remove public
 	private final boolean DEBUG_MODE, LOG_PLAYER_BEHEAD, LOG_MOB_BEHEAD;
 	private final String LOG_MOB_FORMAT, LOG_PLAYER_FORMAT;
@@ -81,16 +87,23 @@ public class DropChanceAPI{
 	private final Random rand;
 	private final HashSet<UUID> clearDeathEvtMessageForPlayers;
 	private final HashSet<Material> headOverwriteBlocks;
+	/** DO NOT USE: This will be replaced with getter/setter functions in a future release */
 	public final Set<Material> mustUseTools; // TODO: remove public
 	private final HashSet<EntityType> noLootingEffectMobs;
+	/** DO NOT USE: This will be replaced with getter/setter functions in a future release */
 	public final HashMap<EntityType, Double> mobChances; // TODO: remove public
 	private final double DEFAULT_CHANCE;
 	private final HashMap<EntityType, HashMap<String, Double>> subtypeMobChances;
 	private final HashMap<EntityType, AnnounceMode> mobAnnounceModes;
+	/** DO NOT USE: This will be replaced with getter/setter functions in a future release */
 	public final HashMap<Material, Double> weaponBonuses; // TODO: remove public
 	private final HashMap<String, Double> droprateMultiplierPerms;
 	private final TreeMap<Long, Double> timeAliveBonuses;
 
+	/**
+	 * Get the default head drop chance for an entity when a drop chance chance is specified in the config
+	 * @return The default drop chance [0, 1]
+	 */
 	public double getDefaultDropChance(){return DEFAULT_CHANCE;}
 
 	private static AnnounceMode parseAnnounceMode(@Nonnull String value, AnnounceMode defaultMode){
@@ -116,7 +129,7 @@ public class DropChanceAPI{
 		return new String[]{TextUtils.translateAlternateColorCodes('&', defaultMsg)};
 	}
 
-	public DropChanceAPI(final boolean replacePlayerDeathMsg, final boolean replacePetDeathMsg){
+	DropChanceAPI(final boolean replacePlayerDeathMsg, final boolean replacePetDeathMsg){
 		pl = DropHeads.getPlugin();
 		rand = new Random();
 		PLAYER_HEADS_ONLY = pl.getConfig().getBoolean("player-heads-only", false);
@@ -321,6 +334,11 @@ public class DropChanceAPI{
 		catch(IllegalArgumentException ex){/*The permissions are already defined; perhaps this is just a plugin or server reload*/}
 	}
 
+	/**
+	 * Get the raw drop chance (ignore all modifiers) of a head for a specific texture key.
+	 * @param textureKey The target texture key
+	 * @return The drop chance [0, 1]
+	 */
 	public double getRawDropChance(String textureKey){
 		int keyDataTagIdx = textureKey.indexOf('|');
 		final String entityName = keyDataTagIdx == -1 ? textureKey : textureKey.substring(0, keyDataTagIdx);
@@ -339,10 +357,15 @@ public class DropChanceAPI{
 		}
 		return mobChances.getOrDefault(eType, DEFAULT_CHANCE);
 	}
-	public double getRawDropChance(Entity e){
-		HashMap<String, Double> eSubtypeChances = subtypeMobChances.get(e.getType());
+	/**
+	 * Get the raw drop chance (ignore all modifiers) of a head for a specific entity.
+	 * @param entity The target entity
+	 * @return The drop chance [0, 1]
+	 */
+	public double getRawDropChance(Entity entity){
+		HashMap<String, Double> eSubtypeChances = subtypeMobChances.get(entity.getType());
 		if(eSubtypeChances != null){
-			String textureKey = TextureKeyLookup.getTextureKey(e);
+			String textureKey = TextureKeyLookup.getTextureKey(entity);
 			int keyDataTagIdx = textureKey.lastIndexOf('|');
 			Double subtypeChance = null;
 			while(keyDataTagIdx != -1 && (subtypeChance=eSubtypeChances.get(textureKey)) == null){
@@ -351,12 +374,22 @@ public class DropChanceAPI{
 			}
 			if(subtypeChance != null) return subtypeChance;
 		}
-		return mobChances.getOrDefault(e.getType(), DEFAULT_CHANCE);
+		return mobChances.getOrDefault(entity.getType(), DEFAULT_CHANCE);
 	}
-	public double getTimeAliveBonus(Entity e){
-		long millisecondsLived = e.getTicksLived()*50L;
+	/**
+	 * Get the drop chance multiplier applied based on how many ticks an entity has been alive
+	 * @param entity The entity to check the lifetime of
+	 * @return The time-alive modifier
+	 */
+	public double getTimeAliveBonus(Entity entity){
+		long millisecondsLived = entity.getTicksLived()*50L;
 		return timeAliveBonuses.floorEntry(millisecondsLived).getValue();
 	}
+	/**
+	 * Get the drop chance multipliers applied based on permissions of the killer
+	 * @param killer The entity to check for drop chance modifier permissions
+	 * @return The aggregate multiplier from any relevent permission nodes
+	 */
 	public double getPermsBasedDropRateModifier(Permissible killer){
 		if(killer == null) return 1D;
 		return droprateMultiplierPerms.entrySet().stream().parallel()
@@ -364,7 +397,14 @@ public class DropChanceAPI{
 				.map(e -> e.getValue())
 				.reduce(1D, (a, b) -> a * b);
 	}
-	
+
+	/**
+	 * Drop a head item for an entity using the appropriate <code>DropMode</code> setting
+	 * @param headItem The head item which will be dropped
+	 * @param entity The entity from which the head item came
+	 * @param killer The entity responsible for causing the head item to drop
+	 * @param evt The <code>Entity*Event</code> from which this function is being called
+	 */
 	public void dropHeadItem(ItemStack headItem, Entity entity, Entity killer, Event evt){
 		for(DropMode mode : DROP_MODES){
 			if(headItem == null) break;
@@ -440,6 +480,14 @@ public class DropChanceAPI{
 		if(killer != null && killer instanceof Projectile) return new SelectorComponent(killer.getUniqueId());
 		return null;
 	}
+
+	/**
+	 * Generate a behead message component
+	 * @param entity The entity that was beheaded
+	 * @param killer The entity that did the beheading
+	 * @param weapon The weapon item used to do the beheading
+	 * @return The behead message component
+	 */
 	public ListComponent getBeheadMessage(Entity entity, Entity killer, ItemStack weapon){
 		ListComponent message = new ListComponent();
 		Component killerComp = getKillerComponent(killer);
@@ -464,6 +512,17 @@ public class DropChanceAPI{
 	private void sendTellraw(String target, String message){
 		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+target+" "+message);
 	}
+	/**
+	 * Send a head drop announcement message for an @param entity with recipients are based on:
+	 * * The <code>AnnounceMode</code> setting for the entity's type
+	 * * The permissions of the @param killer
+	 * * The pet-owner of the @param entity, if exists
+	 * * Specific broadcast settings from the DropHeads config
+	 * @param message The behead announcement message
+	 * @param entity The entity to announce as beheaded
+	 * @param killer The entity to announce as the killer
+	 * @param evt The <code>Entity*Event</code> from which this function is being called
+	 */
 	public void announceHeadDrop(Component message, Entity entity, Entity killer, Event evt){
 		if(!message.toPlainText().replaceAll(" ", "").isEmpty()){
 			if(DEBUG_MODE) pl.getLogger().info(/*"Tellraw message: "+*/message.toPlainText());
@@ -509,6 +568,13 @@ public class DropChanceAPI{
 		}
 	}
 
+
+	/**
+	 * Logs a behead event to the DropHeads log file
+	 * @param entity The entity that was beheaded
+	 * @param killer The entity that did the beheading
+	 * @param weapon The weapon item used to do the beheading
+	 */
 	public void logHeadDrop(Entity entity, Entity killer, ItemStack weapon){
 		pl.writeToLogFile(
 				(entity instanceof Player ? LOG_PLAYER_FORMAT : LOG_MOB_FORMAT)
@@ -521,12 +587,13 @@ public class DropChanceAPI{
 
 	// NOTE: "public" -- used by PeacefulPetHeads
 	/**
-	 * Attempts to drop a head item for an Entity
+	 * Attempt to drop a head item for an Entity with a custom behead message
 	 * @param entity The entity for which to to create a head
 	 * @param killer The entity which did the killing, or null
+	 * @param evt The <code>Entity*Event</code> from which this function is being called
 	 * @param weapon The weapon used to kill, or null
-	 * @param beheadMessage The behead message that will get broadcasted
-	 * @return True if the head drop was completed successfully
+	 * @param beheadMessage A custom behead message that will get broadcasted
+	 * @return Whether the head drop was completed successfully
 	 */
 	public boolean triggerHeadDropEvent(Entity entity, Entity killer, Event evt, ItemStack weapon, Component beheadMessage){
 		ItemStack headItem = pl.getAPI().getHead(entity);
@@ -540,6 +607,14 @@ public class DropChanceAPI{
 		if(entity instanceof Player ? LOG_PLAYER_BEHEAD : LOG_MOB_BEHEAD) logHeadDrop(entity, killer, weapon);
 		return true;
 	}
+	/**
+	 * Attempt to drop a head item for an Entity with the regular behead message
+	 * @param entity The entity for which to to create a head
+	 * @param killer The entity which did the killing, or null
+	 * @param evt The <code>Entity*Event</code> from which this function is being called
+	 * @param weapon The weapon used to kill, or null
+	 * @return Whether the head drop was completed successfully
+	 */
 	public boolean triggerHeadDropEvent(Entity entity, Entity killer, Event evt, ItemStack weapon){
 		return triggerHeadDropEvent(entity, killer, evt, weapon, /*TODO: lazy eval of getBeheadMessage?*/getBeheadMessage(entity, killer, weapon));
 	}

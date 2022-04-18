@@ -24,6 +24,11 @@ import org.bukkit.entity.Wolf;
 import org.bukkit.entity.Zombie;
 import org.bukkit.entity.ZombieVillager;
 
+/**
+ * Utility class for getting the specific texture-key for an entity based on its attributes, sub-type, state, etc.
+ * 
+ * Warning: This class may change (or become unavailable) in future releases
+ */
 public class TextureKeyLookup{
 	@SuppressWarnings("deprecation")
 	static String getTropicalFishKey(CCP ccp){
@@ -120,6 +125,11 @@ public class TextureKeyLookup{
 	static java.lang.reflect.Field ghastIsAttackingField;
 	static RefMethod mGhastIsCharging;
 
+	/**
+	 * Find the most specific available head texture for a given entity.
+	 * @param entity The entity for which we want a texture key
+	 * @return The String key used to identify the target texture
+	 */
 	@SuppressWarnings("rawtypes")
 	public static String getTextureKey(Entity entity){
 		switch(entity.getType().name()){
