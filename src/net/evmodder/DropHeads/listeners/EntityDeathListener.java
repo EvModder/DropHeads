@@ -66,7 +66,7 @@ public class EntityDeathListener implements Listener{
 			pl.getServer().getPluginManager().registerEvent(PlayerDeathEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
 		}
 		else{
-			final Map<EntityType, Double> mobChances = pl.getDropChanceAPI().mobChances;
+			final Map<EntityType, Double> mobChances = pl.getDropChanceAPI().getRawDropChances();
 			final double DEFAULT_CHANCE = pl.getDropChanceAPI().getDefaultDropChance();
 
 			final boolean entityHeads = DEFAULT_CHANCE > 0D || mobChances.entrySet().stream().anyMatch(  // All non-Player living entities
@@ -167,15 +167,15 @@ public class EntityDeathListener implements Listener{
 
 		final ItemStack murderWeapon = getWeaponFromKiller(killer);
 
-		if(!pl.getDropChanceAPI().mustUseTools.isEmpty() &&
-				(murderWeapon == null || !pl.getDropChanceAPI().mustUseTools.contains(murderWeapon.getType()))) return false;
+		if(!pl.getDropChanceAPI().getRequiredWeapons().isEmpty() &&
+				(murderWeapon == null || !pl.getDropChanceAPI().getRequiredWeapons().contains(murderWeapon.getType()))) return false;
 
-		final double weaponBonus = murderWeapon == null ? 0D : pl.getDropChanceAPI().weaponBonuses.getOrDefault(murderWeapon.getType(), 0D);
+		final double weaponBonus = murderWeapon == null ? 0D : pl.getDropChanceAPI().getWeaponModifier(murderWeapon.getType());
 		final int lootingLevel = murderWeapon == null ? 0 : murderWeapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
-		final double lootingMod = lootingLevel == 0 ? 1D : Math.pow(pl.getDropChanceAPI().LOOTING_MULT, lootingLevel);
-		final double lootingAdd = pl.getDropChanceAPI().LOOTING_ADD*lootingLevel;
+		final double lootingMod = lootingLevel == 0 ? 1D : Math.pow(pl.getDropChanceAPI().getLootingMult(), lootingLevel);
+		final double lootingAdd = pl.getDropChanceAPI().getLootingAdd()*lootingLevel;
 		final double weaponMod = 1D + weaponBonus;
-		final double timeAliveMod = 1D + pl.getDropChanceAPI().getTimeAliveBonus(victim);
+		final double timeAliveMod = 1D + pl.getDropChanceAPI().getTimeAliveModifier(victim);
 		final double spawnCauseMod = JunkUtils.getSpawnCauseModifier(victim);
 		final double rawDropChance = pl.getDropChanceAPI().getRawDropChance(victim);
 		final double permMod = pl.getDropChanceAPI().getPermsBasedDropRateModifier(killer);
@@ -243,7 +243,7 @@ public class EntityDeathListener implements Listener{
 			}
 		}
 		if(newSkullsDropped > 1 && DEBUG_MODE) pl.getLogger().warning("Multiple non-DropHeads wither skull drops detected!");
-		if(VANILLA_WSKELE_HANDLING || pl.getDropChanceAPI().mobChances.getOrDefault(EntityType.WITHER_SKELETON, 0.025D) == 0.025D){
+		if(VANILLA_WSKELE_HANDLING || pl.getDropChanceAPI().getRawDropChance(victim) == 0.025D){
 			// newSkullsDropped should always be 0 or 1 by this point
 			if((newSkullsDropped == 1 || (killer != null && killer.hasPermission("dropheads.alwaysbehead.wither_skeleton")))
 					&& victim.hasPermission("dropheads.canlosehead") && (killer == null || killer.hasPermission("dropheads.canbehead"))){

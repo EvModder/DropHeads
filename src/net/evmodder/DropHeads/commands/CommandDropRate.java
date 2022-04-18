@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -28,7 +29,8 @@ public class CommandDropRate extends EvCommand{
 	final private DropHeads pl;
 	final private DropChanceAPI dropChanceAPI;
 	final boolean ONLY_SHOW_VALID_ENTITIES = true;
-	final boolean USING_SPAWN_MODIFIERS, NEED_CERTAIN_WEAPONS, USING_LOOTING_MODIFIERS, USING_TIME_ALIVE_MODIFIERS, VANILLA_WSKELE_HANDLING;
+	final boolean USING_SPAWN_MODIFIERS, NEED_CERTAIN_WEAPONS, USING_LOOTING_MODIFIERS, USING_TIME_ALIVE_MODIFIERS, USING_WEAPON_MODIFIERS;
+	final boolean VANILLA_WSKELE_HANDLING;
 	final HashSet<String> entityNames;
 	final double DEFAULT_DROP_CHANCE;
 	final int JSON_LIMIT;
@@ -75,10 +77,10 @@ public class CommandDropRate extends EvCommand{
 		dropChanceAPI = pl.getDropChanceAPI();
 		JSON_LIMIT = pl.getConfig().getInt("message-json-limit", 15000);
 
-		if(NEED_CERTAIN_WEAPONS = !dropChanceAPI.mustUseTools.isEmpty()){
+		if(NEED_CERTAIN_WEAPONS = !dropChanceAPI.getRequiredWeapons().isEmpty()){
 			ListComponent requiredWeapons = new ListComponent();
 			boolean isFirstElement = true;
-			for(Material mat : dropChanceAPI.mustUseTools){
+			for(Material mat : dropChanceAPI.getRequiredWeapons()){
 				if(!isFirstElement) requiredWeapons.addComponent(new RawTextComponent("§7, §f"/*TODO: translations.yml*/));
 				else isFirstElement = false;
 				requiredWeapons.addComponent(new TranslationComponent("item.minecraft."+mat.name().toLowerCase()));
@@ -89,8 +91,11 @@ public class CommandDropRate extends EvCommand{
 			);
 		}
 		else REQUIRED_WEAPONS = null;
+		ConfigurationSection specificToolModifiers = pl.getConfig().getConfigurationSection("specific-tool-modifiers");
+		USING_WEAPON_MODIFIERS = specificToolModifiers != null && specificToolModifiers.getKeys(false)
+				.stream().anyMatch(toolName -> Material.getMaterial(toolName.toUpperCase()) != null);
 		USING_SPAWN_MODIFIERS = pl.getConfig().getBoolean("track-mob-spawns", true);
-		USING_LOOTING_MODIFIERS = dropChanceAPI.LOOTING_MULT != 1D || dropChanceAPI.LOOTING_ADD != 0D;
+		USING_LOOTING_MODIFIERS = dropChanceAPI.getLootingMult() != 1D || dropChanceAPI.getLootingAdd() != 0D;
 		USING_TIME_ALIVE_MODIFIERS = pl.getConfig().isConfigurationSection("time-alive-modifiers")
 				&& !pl.getConfig().getConfigurationSection("time-alive-modifiers").getKeys(false).isEmpty();
 		VANILLA_WSKELE_HANDLING = pl.getConfig().getBoolean("vanilla-wither-skeleton-skulls", true);
@@ -192,7 +197,7 @@ public class CommandDropRate extends EvCommand{
 		final boolean victimCantLoseHead = entity != null && !entity.hasPermission("dropheads.canlosehead");
 		final boolean senderCantBehead = !sender.hasPermission("dropheads.canbehead");
 		final boolean senderAlwaysBeheads = sender.hasPermission("dropheads.alwaysbehead");
-		final boolean notUsingRequiredWeapon = NEED_CERTAIN_WEAPONS && (weapon == null || !dropChanceAPI.mustUseTools.contains(weapon.getType()));
+		final boolean notUsingRequiredWeapon = NEED_CERTAIN_WEAPONS && (weapon == null || !dropChanceAPI.getRequiredWeapons().contains(weapon.getType()));
 		if(victimCantLoseHead || senderCantBehead || senderAlwaysBeheads || notUsingRequiredWeapon){
 			droprateDetails.addComponent(RESTRICTIONS_HEADER);
 			if(victimCantLoseHead){rawChance=-1D;droprateDetails.addComponent(VICTIM_MUST_HAVE_PERM);}
@@ -202,12 +207,12 @@ public class CommandDropRate extends EvCommand{
 		}
 
 		// Multipliers:
-		final double weaponMod = weapon == null ? 1D : 1D+dropChanceAPI.weaponBonuses.getOrDefault(weapon.getType(), 0D);
+		final double weaponMod = weapon == null ? 1D : 1D+dropChanceAPI.getWeaponModifier(weapon.getType());
 		final int lootingLevel = weapon == null ? 0 : weapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
 		final double lootingMod = lootingLevel == 0 ? 1D
-				: Math.min(Math.pow(dropChanceAPI.LOOTING_MULT, lootingLevel), dropChanceAPI.LOOTING_MULT*lootingLevel);
-		final double lootingAdd = dropChanceAPI.LOOTING_ADD*lootingLevel;
-		final double timeAliveMod = entity == null ? 1D : 1D + dropChanceAPI.getTimeAliveBonus(entity);
+				: Math.min(Math.pow(dropChanceAPI.getLootingMult(), lootingLevel), dropChanceAPI.getLootingMult()*lootingLevel);
+		final double lootingAdd = dropChanceAPI.getLootingAdd()*lootingLevel;
+		final double timeAliveMod = entity == null ? 1D : 1D + dropChanceAPI.getTimeAliveModifier(entity);
 		final double spawnCauseMod = entity == null ? 1D : JunkUtils.getSpawnCauseModifier(entity);
 		final double permMod = dropChanceAPI.getPermsBasedDropRateModifier(sender);
 		final double finalDropChance = rawChance*spawnCauseMod*timeAliveMod*weaponMod*lootingMod*permMod + lootingAdd;
@@ -239,7 +244,7 @@ public class CommandDropRate extends EvCommand{
 					droprateMultipliers.addComponent(":§6x"+df.format(timeAliveMod)+"§7, "/*TODO: translations.yml*/);
 				}
 			}
-			if(!dropChanceAPI.weaponBonuses.isEmpty()){
+			if(USING_WEAPON_MODIFIERS){
 				if(entity == null){
 					droprateMultipliers.addComponent(WEAPON_TYPE);
 					droprateMultipliers.addComponent("§7, "/*TODO: translations.yml*/);

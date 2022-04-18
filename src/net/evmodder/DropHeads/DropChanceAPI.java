@@ -2,9 +2,11 @@ package net.evmodder.DropHeads;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
@@ -68,8 +70,7 @@ public class DropChanceAPI{
 
 	private final boolean PLAYER_HEADS_ONLY, CLEAR_PLAYER_DEATH_EVT_MESSAGE, REPLACE_PET_DEATH_MESSAGE;
 	private final boolean VANILLA_WSKELE_HANDLING;
-	/** DO NOT USE: These will be replaced with getter/setter functions in a future release */
-	public final double LOOTING_ADD, LOOTING_MULT; // TODO: remove public
+	private final double LOOTING_ADD, LOOTING_MULT;
 	private final boolean DEBUG_MODE, LOG_PLAYER_BEHEAD, LOG_MOB_BEHEAD;
 	private final String LOG_MOB_FORMAT, LOG_PLAYER_FORMAT;
 	private final String[] MSG_BEHEAD, MSH_BEHEAD_BY, MSH_BEHEAD_BY_WITH, MSH_BEHEAD_BY_WITH_NAMED;
@@ -87,16 +88,13 @@ public class DropChanceAPI{
 	private final Random rand;
 	private final HashSet<UUID> clearDeathEvtMessageForPlayers;
 	private final HashSet<Material> headOverwriteBlocks;
-	/** DO NOT USE: This will be replaced with getter/setter functions in a future release */
-	public final Set<Material> mustUseTools; // TODO: remove public
-	private final HashSet<EntityType> noLootingEffectMobs;
-	/** DO NOT USE: This will be replaced with getter/setter functions in a future release */
-	public final HashMap<EntityType, Double> mobChances; // TODO: remove public
+	private final Set<Material> mustUseTools;
+//	private final HashSet<EntityType> noLootingEffectMobs;
+	private final Map<EntityType, Double> mobChances;
 	private final double DEFAULT_CHANCE;
 	private final HashMap<EntityType, HashMap<String, Double>> subtypeMobChances;
 	private final HashMap<EntityType, AnnounceMode> mobAnnounceModes;
-	/** DO NOT USE: This will be replaced with getter/setter functions in a future release */
-	public final HashMap<Material, Double> weaponBonuses; // TODO: remove public
+	private final HashMap<Material, Double> weaponBonuses;
 	private final HashMap<String, Double> droprateMultiplierPerms;
 	private final TreeMap<Long, Double> timeAliveBonuses;
 
@@ -192,6 +190,7 @@ public class DropChanceAPI{
 		LOCAL_RANGE = pl.getConfig().getInt("local-broadcast-distance", 200);
 		CROSS_DIMENSIONAL_BROADCAST = pl.getConfig().getBoolean("local-broadcast-cross-dimension", true);
 
+		Set<Material> mustUseTools;
 		if(pl.getConfig().getBoolean("must-use-axe")){
 			mustUseTools = Arrays.stream(Material.values()).filter(mat -> mat.name().endsWith("_AXE")).collect(Collectors.toSet());
 		}
@@ -203,6 +202,7 @@ public class DropChanceAPI{
 				return mat;
 			}).collect(Collectors.toSet())).remove(null);
 		}
+		this.mustUseTools = Collections.unmodifiableSet(mustUseTools);
 
 		weaponBonuses = new HashMap<Material, Double>();
 		ConfigurationSection specificToolModifiers = pl.getConfig().getConfigurationSection("specific-tool-modifiers");
@@ -231,9 +231,9 @@ public class DropChanceAPI{
 		}
 
 		//Load individual mobs' drop chances
-		mobChances = new HashMap<EntityType, Double>();
+		HashMap<EntityType, Double> mobChances = new HashMap<>();
 		subtypeMobChances = new HashMap<EntityType, HashMap<String, Double>>();
-		noLootingEffectMobs = new HashSet<EntityType>();
+//		noLootingEffectMobs = new HashSet<EntityType>();
 		if(PLAYER_HEADS_ONLY){
 			DEFAULT_CHANCE = 0D;
 			String defaultChances = FileIO.loadResource(pl, "head-drop-rates.txt");
@@ -278,7 +278,7 @@ public class DropChanceAPI{
 						else continue;
 					}
 					EntityType eType = EntityType.valueOf(eName.replace("DEFAULT", "UNKNOWN"));
-					if(parts.length > 2 && parts[2].equals("NOLOOTING")) noLootingEffectMobs.add(eType);
+//					if(parts.length > 2 && parts[2].equals("NOLOOTING")) noLootingEffectMobs.add(eType);
 					if(dataTagSep == -1) mobChances.put(eType, dropChance);
 					else if(pl.getAPI().textureExists(parts[0])){
 						HashMap<String, Double> eTypeChances = subtypeMobChances.getOrDefault(eType, new HashMap<String, Double>());
@@ -304,6 +304,7 @@ public class DropChanceAPI{
 			// No need storing 0-chance mobs if the default drop chance is 0
 			if(DEFAULT_CHANCE == 0D) mobChances.entrySet().removeIf(entry -> entry.getValue() == 0D);
 		}  // if(!PLAYER_HEADS_ONLY)
+		this.mobChances = Collections.unmodifiableMap(mobChances);
 
 		if(CLEAR_PLAYER_DEATH_EVT_MESSAGE){
 			EventPriority replacePriority = (PRIORITY == EventPriority.HIGHEST ? EventPriority.MONITOR : EventPriority.HIGHEST);
@@ -334,6 +335,11 @@ public class DropChanceAPI{
 		catch(IllegalArgumentException ex){/*The permissions are already defined; perhaps this is just a plugin or server reload*/}
 	}
 
+	/**
+	 * Get the set of weapons that are allowed to cause a head drop; will be <code>null</code> if no specific weapon(s) are required
+	 * @return An immutable set of Material types, or <code>null</code>
+	 */
+	public Set<Material> getRequiredWeapons(){return mustUseTools;}
 	/**
 	 * Get the raw drop chance (ignore all modifiers) of a head for a specific texture key.
 	 * @param textureKey The target texture key
@@ -377,11 +383,32 @@ public class DropChanceAPI{
 		return mobChances.getOrDefault(entity.getType(), DEFAULT_CHANCE);
 	}
 	/**
+	 * Get a map of all configured drop chances.
+	 * @return An immutable map (EntityType => drop chance)
+	 */
+	public Map<EntityType, Double> getRawDropChances(){return mobChances;}
+	/**
+	 * Get the percent chance added to the drop chance (per looting level)
+	 * @return The drop chance increase amount
+	 */
+	public double getLootingAdd(){return LOOTING_ADD;}
+	/**
+	 * Get the drop chance multiplier applied (per looting level)
+	 * @return The drop chance modifier
+	 */
+	public double getLootingMult(){return LOOTING_ADD;}
+	/**
+	 * Get the drop chance multiplier applied based on Material of the weapon used
+	 * @param weapon The type of weapon used
+	 * @return The weapon-type modifier
+	 */
+	public double getWeaponModifier(Material weapon){return weaponBonuses.getOrDefault(weapon, 0D);}
+	/**
 	 * Get the drop chance multiplier applied based on how many ticks an entity has been alive
 	 * @param entity The entity to check the lifetime of
 	 * @return The time-alive modifier
 	 */
-	public double getTimeAliveBonus(Entity entity){
+	public double getTimeAliveModifier(Entity entity){
 		long millisecondsLived = entity.getTicksLived()*50L;
 		return timeAliveBonuses.floorEntry(millisecondsLived).getValue();
 	}
