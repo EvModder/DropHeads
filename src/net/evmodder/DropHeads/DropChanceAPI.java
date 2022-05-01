@@ -555,7 +555,7 @@ public class DropChanceAPI{
 			if(DEBUG_MODE) pl.getLogger().info(/*"Tellraw message: "+*/message.toPlainText());
 
 			AnnounceMode mode = mobAnnounceModes.getOrDefault(entity.getType(), DEFAULT_ANNOUNCE);
-			if(mode != AnnounceMode.OFF && mode != AnnounceMode.DIRECT && (
+			if(mode != AnnounceMode.OFF && mode != AnnounceMode.DIRECT && killer != null && (
 				killer.hasPermission("dropheads.silentbehead") ||
 				(killer.hasPermission("dropheads.silentbehead.invisible")
 					&& killer instanceof LivingEntity && ((LivingEntity)killer).hasPotionEffect(PotionEffectType.INVISIBILITY)
