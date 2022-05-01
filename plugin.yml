@@ -6,8 +6,8 @@ website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
 #7=PPH, 1.19 mobs, pet death msg, split death listener, event API fix, javadocs, cmd-feedback translation, Llama/Horse pre-jappas(tentative),
 #... fix a-vs-an, fix droprate-subperms, fix shulker rotation, fix give-directly-to-killer, updated spawn-cause-modifiers, moved msgs to translate file
-#1=
-version: 3.7.0
+#1=fix a null ptr error
+version: 3.7.1
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 
