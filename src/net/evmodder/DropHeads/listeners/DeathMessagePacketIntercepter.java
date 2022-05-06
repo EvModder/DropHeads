@@ -51,10 +51,9 @@ public class DeathMessagePacketIntercepter{
 							Matcher matcher = uuidPattern.matcher(jsonMsg);
 							if(!matcher.find()) pl.getLogger().severe("Unable to parse death message: "+jsonMsg);
 							final UUID uuid = UUID.fromString(matcher.group());
-							if(!unblockedDeathMsgs.remove(uuid)){
-								// server.getEntity(uuid) needs to be called synchronously
-								new BukkitRunnable(){@Override public void run(){
-									if(unblockedDeathMsgs.contains(uuid)) JunkUtils.sendPacket(player, packet);
+							if(!unblockedDeathMsgs.remove(uuid)){ // If this death msg is blocked
+								new BukkitRunnable(){@Override public void run(){ // server.getEntity(uuid) needs to be called synchronously
+									if(unblockedDeathMsgs.contains(uuid)) JunkUtils.sendPacket(player, packet); // If this death msg has been unblocked
 									else{
 										final Entity entity = pl.getServer().getEntity(uuid);
 										if(entity instanceof Player ? REPLACE_PLAYER_DEATH_MSG : REPLACE_PET_DEATH_MSG){
@@ -100,6 +99,12 @@ public class DeathMessagePacketIntercepter{
 				&& pl.getServer().getEntity(((Tameable)entity).getOwner().getUniqueId()) != null)){
 //			pl.getLogger().info("unblocked death msg");
 			unblockedDeathMsgs.add(entity.getUniqueId());
+
+			// If death messages are disabled (e.g., by some other plugin), we should clean up this set periodically
+			if(unblockedDeathMsgs.size() > 100){
+				//TODO: a more correct solution
+				new BukkitRunnable(){@Override public void run(){unblockedDeathMsgs.clear();}}.runTaskLater(pl, 2);
+			}
 		}
 	}
 
