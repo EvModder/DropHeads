@@ -267,6 +267,7 @@ public class CommandDropRate extends EvCommand{
 				else if(Math.abs(1D-lootingMod) > 0.001D || Math.abs(lootingAdd) > 0.001D){
 					droprateMultipliers.addComponent(LOOTING_COMP);
 					String lootingMsg = lootingLevel+":";
+					pl.getLogger().info("looting mod: "+lootingMod);
 					if(Math.abs(1D-lootingMod) > 0.001D) lootingMsg += "§6x"+df.format(lootingMod);
 					if(Math.abs(lootingAdd) > 0.001D) lootingMsg += "§e"+(lootingAdd > 0 ? '+' : '-')+df.format(lootingAdd*100)+"%";
 					droprateMultipliers.addComponent(lootingMsg);

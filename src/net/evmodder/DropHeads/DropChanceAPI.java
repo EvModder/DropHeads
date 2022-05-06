@@ -396,7 +396,7 @@ public class DropChanceAPI{
 	 * Get the drop chance multiplier applied (per looting level)
 	 * @return The drop chance modifier
 	 */
-	public double getLootingMult(){return LOOTING_ADD;}
+	public double getLootingMult(){return LOOTING_MULT;}
 	/**
 	 * Get the drop chance multiplier applied based on Material of the weapon used
 	 * @param weapon The type of weapon used
