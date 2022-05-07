@@ -565,8 +565,9 @@ public class DropChanceAPI{
 				)
 			)) mode = AnnounceMode.DIRECT;
 
-			final String petOwnerToMsg = REPLACE_PET_DEATH_MESSAGE && entity instanceof Tameable && ((Tameable)entity).getOwner() != null
-					? ((Tameable)entity).getOwner().getName() : null;
+			final Entity petOwnerToMsg = REPLACE_PET_DEATH_MESSAGE && entity instanceof Tameable && ((Tameable)entity).getOwner() != null
+					? pl.getServer().getEntity(((Tameable)entity).getOwner().getUniqueId()) : null;
+			final String petOwnerToMsgName = petOwnerToMsg == null ? null : petOwnerToMsg.getName();
 
 			switch(mode){
 				case GLOBAL:
@@ -581,13 +582,13 @@ public class DropChanceAPI{
 				case LOCAL:
 					ArrayList<Player> nearbyPlayers = EvUtils.getNearbyPlayers(entity.getLocation(), LOCAL_RANGE, CROSS_DIMENSIONAL_BROADCAST);
 					for(Player p : nearbyPlayers) sendTellraw(p.getName(), message.toString());
-					if(petOwnerToMsg != null && nearbyPlayers.stream().noneMatch(p -> p.getName().equals(petOwnerToMsg))){
-						sendTellraw(petOwnerToMsg, message.toString());
+					if(petOwnerToMsgName != null && nearbyPlayers.stream().noneMatch(p -> p.getName().equals(petOwnerToMsgName))){
+						sendTellraw(petOwnerToMsgName, message.toString());
 					}
 					break;
 				case DIRECT:
 					if(killer instanceof Player) sendTellraw(killer.getName(), message.toString());
-					if(petOwnerToMsg != null && !killer.getName().equals(petOwnerToMsg)) sendTellraw(petOwnerToMsg, message.toString());
+					if(petOwnerToMsgName != null && !killer.getName().equals(petOwnerToMsgName)) sendTellraw(petOwnerToMsgName, message.toString());
 					break;
 				case OFF:
 					break;
