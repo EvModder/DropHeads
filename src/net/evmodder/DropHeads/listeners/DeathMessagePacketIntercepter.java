@@ -113,9 +113,9 @@ public class DeathMessagePacketIntercepter{
 
 	public void unblockDeathMessage(Entity entity){
 		if(hasDeathMessage(entity)){
-//			pl.getLogger().info("unblocked death msg");
+//			pl.getLogger().info("unblocked death msg called");
 			unblockedDeathBroadcasts.add(entity.getUniqueId());
-			new BukkitRunnable(){@Override public void run(){unblockedDeathBroadcasts.remove(entity.getUniqueId());}}.runTaskLater(pl, 1);
+			new BukkitRunnable(){@Override public void run(){unblockedDeathBroadcasts.remove(entity.getUniqueId());}}.runTaskLater(pl, 5);
 		}
 	}
 

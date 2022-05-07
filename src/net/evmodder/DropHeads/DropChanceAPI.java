@@ -624,6 +624,7 @@ public class DropChanceAPI{
 	 * @return Whether the head drop was completed successfully
 	 */
 	public boolean triggerHeadDropEvent(Entity entity, Entity killer, Event evt, ItemStack weapon, Component beheadMessage){
+//		pl.getLogger().info("trigger head drop called");
 		ItemStack headItem = pl.getAPI().getHead(entity);
 		EntityBeheadEvent beheadEvent = new EntityBeheadEvent(entity, killer, evt, headItem);
 		pl.getServer().getPluginManager().callEvent(beheadEvent);
@@ -633,6 +634,7 @@ public class DropChanceAPI{
 		if(weapon.getType() == Material.AIR) weapon = null;
 		announceHeadDrop(beheadMessage, entity, killer, evt);
 		if(entity instanceof Player ? LOG_PLAYER_BEHEAD : LOG_MOB_BEHEAD) logHeadDrop(entity, killer, weapon);
+//		pl.getLogger().info("trigger head drop success");
 		return true;
 	}
 	/**
