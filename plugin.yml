@@ -4,12 +4,10 @@ author: EvModder/EvDoc
 description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
-#7=PPH, 1.19 mobs, pet death msg, split death listener, event API fix, javadocs, cmd-feedback translation, Llama/Horse pre-jappas(tentative),
-#... fix a-vs-an, fix droprate-subperms, fix shulker rotation, fix give-directly-to-killer, updated spawn-cause-modifiers, moved msgs to translate file
+#7=pet death msgs, API fix, 1.19 mobs, full-cmd-translation, more pre-jappas(tentative), fix shulker rotation, updated spawn-cause-modifiers
 #2=fix missing death msgs, fix nullptr head-click-msg, fix looting not working
-#1=fix crash on 1.14.4 servers, fix nullptr head-click-msg
-
-version: 3.7.2
+#2=fix null pointer exception for null weapon when logging head drops
+version: 3.7.2.2
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 

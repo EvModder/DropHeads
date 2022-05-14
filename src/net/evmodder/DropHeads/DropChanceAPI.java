@@ -631,7 +631,7 @@ public class DropChanceAPI{
 		if(beheadEvent.isCancelled()) return false;
 
 		dropHeadItem(headItem, entity, killer, evt);
-		if(weapon.getType() == Material.AIR) weapon = null;
+		if(weapon != null && weapon.getType() == Material.AIR) weapon = null;
 		announceHeadDrop(beheadMessage, entity, killer, evt);
 		if(entity instanceof Player ? LOG_PLAYER_BEHEAD : LOG_MOB_BEHEAD) logHeadDrop(entity, killer, weapon);
 //		pl.getLogger().info("trigger head drop success");
