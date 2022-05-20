@@ -283,7 +283,7 @@ public class EntityDeathListener implements Listener{
 					}
 				}
 				// Unblock death messages when behead does not occur
-				if(!onEntityDeath(victim, killer, evt)) deathMessageBlocker.unblockDeathMessage(victim);
+				if(!onEntityDeath(victim, killer, evt) && deathMessageBlocker != null) deathMessageBlocker.unblockDeathMessage(victim);
 			}
 			else if(originalEvent instanceof VehicleDestroyEvent){
 				final VehicleDestroyEvent evt = (VehicleDestroyEvent) originalEvent;
