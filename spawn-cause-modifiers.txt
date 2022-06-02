@@ -9,7 +9,7 @@ BUILD_IRONGOLEM: 1	# When an iron golem is spawned by being built
 BUILD_SNOWMAN: 1	# When a snowman is spawned by being built
 BUILD_WITHER: 1		# When a wither boss is spawned by being built
 CHUNK_GEN: 1.5		# When a creature spawns due to chunk generation
-COMMAND: 0			# When a creature is spawned by the "/summon" command
+COMMAND: 1.0		# When a creature is spawned by the "/summon" command
 CURED: 4			# When a villager is cured from infection
 CUSTOM: 0			# When a creature is spawned by plugins
 DEFAULT: 1			# When an entity is missing a SpawnReason
@@ -35,7 +35,7 @@ SHOULDER_ENTITY: 1	# When a parrot disconnects from the shoulder of another enti
 SILVERFISH_BLOCK: 1	# When a silverfish spawns from a block
 SLIME_SPLIT: 0.5	# When a slime splits
 SPAWNER: 0.05		# When a creature spawns from a spawner
-SPAWNER_EGG: 0.05	# When a creature spawns from a spawn egg
+SPAWNER_EGG: 1.0	# When a creature spawns from a spawn egg
 SPELL:				# When an entity is created by a cast spell.
 TRAP: 2				# When an entity spawns as a trap for players approaching
 VILLAGE_DEFENSE: 1	# When an iron golem is spawned to defend a village
