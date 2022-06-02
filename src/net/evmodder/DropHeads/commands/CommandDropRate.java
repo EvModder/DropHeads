@@ -195,8 +195,8 @@ public class CommandDropRate extends EvCommand{
 		ListComponent droprateDetails = new ListComponent();
 		//final boolean victimCantLostHead = entity == null && target.equals("PLAYER");
 		final boolean victimCantLoseHead = entity != null && !entity.hasPermission("dropheads.canlosehead");
-		final boolean senderCantBehead = !sender.hasPermission("dropheads.canbehead");
-		final boolean senderAlwaysBeheads = sender.hasPermission("dropheads.alwaysbehead");
+		final boolean senderCantBehead = !sender.hasPermission("dropheads.canbehead."+target.toLowerCase());
+		final boolean senderAlwaysBeheads = sender.hasPermission("dropheads.alwaysbehead."+target.toLowerCase());
 		final boolean notUsingRequiredWeapon = NEED_CERTAIN_WEAPONS && (weapon == null || !dropChanceAPI.getRequiredWeapons().contains(weapon.getType()));
 		if(victimCantLoseHead || senderCantBehead || senderAlwaysBeheads || notUsingRequiredWeapon){
 			droprateDetails.addComponent(RESTRICTIONS_HEADER);

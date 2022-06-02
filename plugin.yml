@@ -5,9 +5,8 @@ description: Provides a wide assortment of mob heads
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
 #7=pet death msgs, API fix, 1.19 mobs, full-cmd-translation, more pre-jappas(tentative), fix shulker rotation, updated spawn-cause-modifiers
-#2=fix missing death msgs, fix nullptr head-click-msg, fix looting not working
-#2=fix null pointer exception for null weapon when logging head drops
-version: 3.7.2.2
+#3=fix alwaysbehead not showing in /droprate, change spawn_eggs and /summon to have no affect on droprate, add sub-perm per entity to canbehead, fix discordsrv integration
+version: 3.7.3
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 

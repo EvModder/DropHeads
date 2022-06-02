@@ -92,8 +92,9 @@ public class EntityDeathListener implements Listener{
 		}  // if(!PLAYER_HEADS_ONLY)
 		explodingChargedCreepers = new HashSet<UUID>();
 
-		// Dynamically add all the children perms of "dropheads.alywaysbehead.<entity>"
+		// Dynamically add all the children perms of "dropheads.alwaysbehead.<entity>" and "dropheads.canbehead.<entity>"
 		Permission alwaysBeheadPerm = pl.getServer().getPluginManager().getPermission("dropheads.alwaysbehead");
+		Permission canBeheadPerm = pl.getServer().getPluginManager().getPermission("dropheads.canbehead");
 		if(alwaysBeheadPerm != null) try{
 			for(EntityType entity : EntityType.values()){
 				Permission alwaysBeheadPermForEntity = new Permission(
@@ -102,8 +103,16 @@ public class EntityDeathListener implements Listener{
 						PermissionDefault.FALSE);
 				alwaysBeheadPermForEntity.addParent(alwaysBeheadPerm, true);
 				pl.getServer().getPluginManager().addPermission(alwaysBeheadPermForEntity);
+
+				Permission canBeheadPermForEntity = new Permission(
+						canBeheadPerm.getName()+"."+entity.name().toLowerCase(),
+						"This entity will be able to get heads when killing a "+entity.name().toLowerCase(),
+						PermissionDefault.FALSE);
+				canBeheadPermForEntity.addParent(canBeheadPerm, true);
+				pl.getServer().getPluginManager().addPermission(canBeheadPermForEntity);
 			}
 			alwaysBeheadPerm.recalculatePermissibles();
+			canBeheadPerm.recalculatePermissibles();
 		}
 		catch(IllegalArgumentException ex){/*The permissions are already defined; perhaps this is just a plugin or server reload*/}
 	}
@@ -119,8 +128,8 @@ public class EntityDeathListener implements Listener{
 	// Returns true if behead occurred
 	boolean onEntityDeath(@Nonnull final Entity victim, final Entity killer, final Event evt){
 		if(killer != null){
-			if(!killer.hasPermission("dropheads.canbehead")){
-				if(DEBUG_MODE) pl.getLogger().info("dropheads.canbehead=false: "+killer.getName());
+			if(!killer.hasPermission("dropheads.canbehead."+victim.getType().name().toLowerCase())){
+				if(DEBUG_MODE) pl.getLogger().info("dropheads.canbehead.<type>=false: "+killer.getName());
 				return false;
 			}
 			if(killer instanceof Creeper && ((Creeper)killer).isPowered()){
@@ -184,6 +193,7 @@ public class EntityDeathListener implements Listener{
 		final double dropRoll = rand.nextDouble();
 		HeadRollEvent rollEvent = new HeadRollEvent(killer, victim, dropChance, dropRoll, dropRoll < dropChance);
 		pl.getServer().getPluginManager().callEvent(rollEvent);
+		if(DEBUG_MODE && dropRoll < dropChance && !rollEvent.getDropSuccess()) pl.getLogger().info("HeadRollEvent success was changed to false");
 		if(rollEvent.getDropSuccess()){
 			if(!victim.hasPermission("dropheads.canlosehead")){
 				if(DEBUG_MODE) pl.getLogger().info("dropheads.canlosehead=false: "+victim.getName());
@@ -246,7 +256,7 @@ public class EntityDeathListener implements Listener{
 		if(VANILLA_WSKELE_HANDLING || pl.getDropChanceAPI().getRawDropChance(victim) == 0.025D){
 			// newSkullsDropped should always be 0 or 1 by this point
 			if((newSkullsDropped == 1 || (killer != null && killer.hasPermission("dropheads.alwaysbehead.wither_skeleton")))
-					&& victim.hasPermission("dropheads.canlosehead") && (killer == null || killer.hasPermission("dropheads.canbehead"))){
+					&& victim.hasPermission("dropheads.canlosehead") && (killer == null || killer.hasPermission("dropheads.canbehead.wither_skeleton"))){
 				// Don't drop the skull if another skull drop has already been caused by the same charged creeper.
 				if(killer != null && killer instanceof Creeper && ((Creeper)killer).isPowered() && CHARGED_CREEPER_DROPS &&
 					!explodingChargedCreepers.add(killer.getUniqueId()))
