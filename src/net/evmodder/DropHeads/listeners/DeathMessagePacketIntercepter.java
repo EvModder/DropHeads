@@ -57,7 +57,7 @@ public class DeathMessagePacketIntercepter{
 						final String jsonMsg = (String)toJsonMethod.call(chatBaseComp);
 						// TODO: Possibly make death-message-translate-detection less hacky?
 						if(jsonMsg.startsWith("{\"translate\":\"death.") && !unblockedSpecificDeathMsgs.remove(jsonMsg)){
-//							pl.getLogger().info(jsonMsg);
+//							pl.getLogger().info("detected death msg:\n"+jsonMsg);
 							Matcher matcher = uuidPattern.matcher(jsonMsg);
 							if(!matcher.find()) pl.getLogger().severe("Unable to parse death message: "+jsonMsg);
 							final UUID uuid = UUID.fromString(matcher.group());//uuid of entity which died
@@ -72,7 +72,7 @@ public class DeathMessagePacketIntercepter{
 											new BukkitRunnable(){@Override public void run(){
 												// check again if unblocked 1 tick later
 												if(unblockedDeathBroadcasts.contains(uuid)) JunkUtils.sendPacket(player, packet);
-												//else pl.getLogger().info("blocked entity death msgs for: "+entity.getType());
+//												else pl.getLogger().info("blocked entity death msgs for: "+entity.getName());
 											}}.runTaskLater(pl, 1);
 										}
 										else{

@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.bukkit.Material;
@@ -29,8 +28,6 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Tameable;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.EntityBlockFormEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -41,7 +38,6 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.permissions.Permissible;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
-import org.bukkit.plugin.EventExecutor;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.BlockProjectileSource;
 import org.bukkit.projectiles.ProjectileSource;
@@ -64,11 +60,10 @@ import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
 public class DropChanceAPI{
 	private enum AnnounceMode {GLOBAL, LOCAL, DIRECT, OFF};
 	private final AnnounceMode DEFAULT_ANNOUNCE;
-	private final EventPriority PRIORITY;
 	private enum DropMode {EVENT, SPAWN, PLACE, PLACE_BY_KILLER, PLACE_BY_VICTIM, GIVE};
 	private final ArrayList<DropMode> DROP_MODES; // TODO: final HashMap<EntityType, DropMode> mobDropModes
 
-	private final boolean PLAYER_HEADS_ONLY, CLEAR_PLAYER_DEATH_EVT_MESSAGE, REPLACE_PET_DEATH_MESSAGE;
+	private final boolean PLAYER_HEADS_ONLY, REPLACE_PLAYER_DEATH_EVT_MESSAGE, REPLACE_PET_DEATH_MESSAGE;
 	private final boolean VANILLA_WSKELE_HANDLING;
 	private final double LOOTING_ADD, LOOTING_MULT;
 	private final boolean DEBUG_MODE, LOG_PLAYER_BEHEAD, LOG_MOB_BEHEAD;
@@ -86,7 +81,6 @@ public class DropChanceAPI{
 
 	private final DropHeads pl;
 	private final Random rand;
-	private final HashSet<UUID> clearDeathEvtMessageForPlayers;
 	private final HashSet<Material> headOverwriteBlocks;
 	private final Set<Material> mustUseTools;
 //	private final HashSet<EntityType> noLootingEffectMobs;
@@ -136,8 +130,7 @@ public class DropChanceAPI{
 		LOOTING_MULT = pl.getConfig().getDouble("looting-multiplier", pl.getConfig().getDouble("looting-mutliplier", 1.01D));
 		if(LOOTING_ADD >= 1) pl.getLogger().warning("looting-addition is set to 1.0 or greater, this means heads will ALWAYS drop when looting is used!");
 		if(LOOTING_MULT < 1) pl.getLogger().warning("looting-multiplier is set below 1.0, this means looting will DECREASE the chance of head drops!");
-		PRIORITY = JunkUtils.parseEnumOrDefault(pl.getConfig().getString("death-listener-priority", "LOW"), EventPriority.LOW);
-		CLEAR_PLAYER_DEATH_EVT_MESSAGE = replacePlayerDeathMsg && PRIORITY != EventPriority.MONITOR;
+		REPLACE_PLAYER_DEATH_EVT_MESSAGE = replacePlayerDeathMsg;
 		REPLACE_PET_DEATH_MESSAGE = replacePetDeathMsg;
 		DEBUG_MODE = pl.getConfig().getBoolean("debug-messages", true);
 		final boolean ENABLE_LOG = pl.getConfig().getBoolean("log.enable", false);
@@ -305,19 +298,6 @@ public class DropChanceAPI{
 			if(DEFAULT_CHANCE == 0D) mobChances.entrySet().removeIf(entry -> entry.getValue() == 0D);
 		}  // if(!PLAYER_HEADS_ONLY)
 		this.mobChances = Collections.unmodifiableMap(mobChances);
-
-		if(CLEAR_PLAYER_DEATH_EVT_MESSAGE){
-			EventPriority replacePriority = (PRIORITY == EventPriority.HIGHEST ? EventPriority.MONITOR : EventPriority.HIGHEST);
-			pl.getServer().getPluginManager().registerEvent(PlayerDeathEvent.class, new Listener(){}, replacePriority, new EventExecutor(){
-				@Override public void execute(Listener listener, Event originalEvent){
-					if(originalEvent instanceof PlayerDeathEvent == false) return;
-					PlayerDeathEvent evt = (PlayerDeathEvent) originalEvent;
-					if(clearDeathEvtMessageForPlayers.remove(evt.getEntity().getUniqueId())) evt.setDeathMessage("");
-				}
-			}, pl);
-			clearDeathEvtMessageForPlayers = new HashSet<>();
-		}
-		else clearDeathEvtMessageForPlayers = null;
 
 		// Dynamically add all the children perms of "dropheads.alywaysbehead.<entity>"
 		Permission alwaysBeheadPerm = pl.getServer().getPluginManager().getPermission("dropheads.alwaysbehead");
@@ -572,11 +552,10 @@ public class DropChanceAPI{
 			switch(mode){
 				case GLOBAL:
 					sendTellraw("@a", message.toString());
-					if(entity instanceof Player && CLEAR_PLAYER_DEATH_EVT_MESSAGE && evt != null){
-						// Set the behead death message so that other plugins will see it
-						((PlayerDeathEvent)evt).setDeathMessage(message.toPlainText());
-						// Afterwards, at a higher priority, we will clear the behead death message (since we already sent a tellraw)
-						clearDeathEvtMessageForPlayers.add(entity.getUniqueId());
+					if(entity instanceof Player && REPLACE_PLAYER_DEATH_EVT_MESSAGE && evt != null){
+						// Set the behead death message so that other plugins will see it (it will still get cleared by the intercepter)
+						//TODO: in order to do this, we will need to cancel this extra plaintext message in DeathMessagePacketIntercepter
+						//((PlayerDeathEvent)evt).setDeathMessage(message.toPlainText());
 					}
 					break;
 				case LOCAL:
@@ -628,7 +607,10 @@ public class DropChanceAPI{
 		ItemStack headItem = pl.getAPI().getHead(entity);
 		EntityBeheadEvent beheadEvent = new EntityBeheadEvent(entity, killer, evt, headItem);
 		pl.getServer().getPluginManager().callEvent(beheadEvent);
-		if(beheadEvent.isCancelled()) return false;
+		if(beheadEvent.isCancelled()){
+			if(DEBUG_MODE) pl.getLogger().info("EntityBeheadEvent was cancelled");
+			return false;
+		}
 
 		dropHeadItem(headItem, entity, killer, evt);
 		if(weapon != null && weapon.getType() == Material.AIR) weapon = null;
