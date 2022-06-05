@@ -299,18 +299,28 @@ public class DropChanceAPI{
 		}  // if(!PLAYER_HEADS_ONLY)
 		this.mobChances = Collections.unmodifiableMap(mobChances);
 
-		// Dynamically add all the children perms of "dropheads.alywaysbehead.<entity>"
+		// Dynamically add all the children perms of "dropheads.alwaysbehead.<entity>" and "dropheads.canbehead.<entity>"
 		Permission alwaysBeheadPerm = pl.getServer().getPluginManager().getPermission("dropheads.alwaysbehead");
+		Permission canBeheadPerm = pl.getServer().getPluginManager().getPermission("dropheads.canbehead");
 		if(alwaysBeheadPerm != null) try{
 			for(EntityType entity : EntityType.values()){
+				final String entityName = entity.name().toLowerCase();
 				Permission alwaysBeheadPermForEntity = new Permission(
-						alwaysBeheadPerm.getName()+"."+entity.name().toLowerCase(),
-						"This entity will get a head 100% of the time when killing a "+entity.name().toLowerCase(),
+						alwaysBeheadPerm.getName()+"."+entityName,
+						"This entity will get a head 100% of the time when killing a "+entityName,
 						PermissionDefault.FALSE);
 				alwaysBeheadPermForEntity.addParent(alwaysBeheadPerm, true);
 				pl.getServer().getPluginManager().addPermission(alwaysBeheadPermForEntity);
+
+				Permission canBeheadPermForEntity = new Permission(
+						canBeheadPerm.getName()+"."+entityName,
+						"This entity will be able to get heads when killing a "+entityName,
+						PermissionDefault.FALSE);
+				canBeheadPermForEntity.addParent(canBeheadPerm, true);
+				pl.getServer().getPluginManager().addPermission(canBeheadPermForEntity);
 			}
-			alwaysBeheadPerm.recalculatePermissibles();
+			//alwaysBeheadPerm.recalculatePermissibles();
+			//canBeheadPerm.recalculatePermissibles();
 		}
 		catch(IllegalArgumentException ex){/*The permissions are already defined; perhaps this is just a plugin or server reload*/}
 	}

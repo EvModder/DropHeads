@@ -39,6 +39,8 @@ permissions:
   dropheads.canbehead:
     description: This entity will be able to get heads
     default: true
+    children:
+      dropheads.canbehead.player: true
 
   dropheads.canplacehead:
     description: Permission to place down a head block, if disabled by default in the config

@@ -27,8 +27,6 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.permissions.Permission;
-import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.EventExecutor;
 import org.bukkit.scheduler.BukkitRunnable;
 import net.evmodder.DropHeads.DropHeads;
@@ -91,30 +89,6 @@ public class EntityDeathListener implements Listener{
 			}
 		}  // if(!PLAYER_HEADS_ONLY)
 		explodingChargedCreepers = new HashSet<UUID>();
-
-		// Dynamically add all the children perms of "dropheads.alwaysbehead.<entity>" and "dropheads.canbehead.<entity>"
-		Permission alwaysBeheadPerm = pl.getServer().getPluginManager().getPermission("dropheads.alwaysbehead");
-		Permission canBeheadPerm = pl.getServer().getPluginManager().getPermission("dropheads.canbehead");
-		if(alwaysBeheadPerm != null) try{
-			for(EntityType entity : EntityType.values()){
-				Permission alwaysBeheadPermForEntity = new Permission(
-						alwaysBeheadPerm.getName()+"."+entity.name().toLowerCase(),
-						"This entity will get a head 100% of the time when killing a "+entity.name().toLowerCase(),
-						PermissionDefault.FALSE);
-				alwaysBeheadPermForEntity.addParent(alwaysBeheadPerm, true);
-				pl.getServer().getPluginManager().addPermission(alwaysBeheadPermForEntity);
-
-				Permission canBeheadPermForEntity = new Permission(
-						canBeheadPerm.getName()+"."+entity.name().toLowerCase(),
-						"This entity will be able to get heads when killing a "+entity.name().toLowerCase(),
-						PermissionDefault.FALSE);
-				canBeheadPermForEntity.addParent(canBeheadPerm, true);
-				pl.getServer().getPluginManager().addPermission(canBeheadPermForEntity);
-			}
-			alwaysBeheadPerm.recalculatePermissibles();
-			canBeheadPerm.recalculatePermissibles();
-		}
-		catch(IllegalArgumentException ex){/*The permissions are already defined; perhaps this is just a plugin or server reload*/}
 	}
 
 	ItemStack getWeaponFromKiller(Entity killer){
