@@ -14,6 +14,9 @@ local-broadcast-cross-dimension: true
 # Replaces death messages if player behead announcement is GLOBAL
 behead-announcement-replaces-player-death-message: true
 
+# Also replace Bukkit event message; can help with DiscordSRV compatibility
+behead-announcement-replaces-player-death-event-message: false
+
 # Replaces death message that is sent to the owner when a pet is beheaded
 behead-message-replaces-pet-death-message: true
 

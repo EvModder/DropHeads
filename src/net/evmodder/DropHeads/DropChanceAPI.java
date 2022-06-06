@@ -43,6 +43,7 @@ import org.bukkit.projectiles.BlockProjectileSource;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 import net.evmodder.DropHeads.events.EntityBeheadEvent;
+import net.evmodder.DropHeads.listeners.DeathMessagePacketIntercepter;
 import net.evmodder.EvLib.EvUtils;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.extras.HeadUtils;
@@ -63,7 +64,7 @@ public class DropChanceAPI{
 	private enum DropMode {EVENT, SPAWN, PLACE, PLACE_BY_KILLER, PLACE_BY_VICTIM, GIVE};
 	private final ArrayList<DropMode> DROP_MODES; // TODO: final HashMap<EntityType, DropMode> mobDropModes
 
-	private final boolean PLAYER_HEADS_ONLY, REPLACE_PLAYER_DEATH_EVT_MESSAGE, REPLACE_PET_DEATH_MESSAGE;
+	private final boolean PLAYER_HEADS_ONLY, REPLACE_PLAYER_DEATH_EVT_MESSAGE, REPLACE_PET_DEATH_MESSAGE, REPLACE_PLAYER_DEATH_MESSAGE;
 	private final boolean VANILLA_WSKELE_HANDLING;
 	private final double LOOTING_ADD, LOOTING_MULT;
 	private final boolean DEBUG_MODE, LOG_PLAYER_BEHEAD, LOG_MOB_BEHEAD;
@@ -80,6 +81,7 @@ public class DropChanceAPI{
 	};
 
 	private final DropHeads pl;
+	private final DeathMessagePacketIntercepter deathMessageBlocker;
 	private final Random rand;
 	private final HashSet<Material> headOverwriteBlocks;
 	private final Set<Material> mustUseTools;
@@ -121,8 +123,9 @@ public class DropChanceAPI{
 		return new String[]{TextUtils.translateAlternateColorCodes('&', defaultMsg)};
 	}
 
-	DropChanceAPI(final boolean replacePlayerDeathMsg, final boolean replacePetDeathMsg){
+	DropChanceAPI(final boolean replacePlayerDeathMsg, final boolean replacePetDeathMsg, DeathMessagePacketIntercepter deathMessageBlocker){
 		pl = DropHeads.getPlugin();
+		this.deathMessageBlocker = deathMessageBlocker;
 		rand = new Random();
 		PLAYER_HEADS_ONLY = pl.getConfig().getBoolean("player-heads-only", false);
 		VANILLA_WSKELE_HANDLING = pl.getConfig().getBoolean("vanilla-wither-skeleton-skulls", false);
@@ -130,7 +133,8 @@ public class DropChanceAPI{
 		LOOTING_MULT = pl.getConfig().getDouble("looting-multiplier", pl.getConfig().getDouble("looting-mutliplier", 1.01D));
 		if(LOOTING_ADD >= 1) pl.getLogger().warning("looting-addition is set to 1.0 or greater, this means heads will ALWAYS drop when looting is used!");
 		if(LOOTING_MULT < 1) pl.getLogger().warning("looting-multiplier is set below 1.0, this means looting will DECREASE the chance of head drops!");
-		REPLACE_PLAYER_DEATH_EVT_MESSAGE = replacePlayerDeathMsg;
+		REPLACE_PLAYER_DEATH_MESSAGE = replacePlayerDeathMsg;
+		REPLACE_PLAYER_DEATH_EVT_MESSAGE = pl.getConfig().getBoolean("behead-announcement-replaces-player-death-event-message", false);
 		REPLACE_PET_DEATH_MESSAGE = replacePetDeathMsg;
 		DEBUG_MODE = pl.getConfig().getBoolean("debug-messages", true);
 		final boolean ENABLE_LOG = pl.getConfig().getBoolean("log.enable", false);
@@ -562,10 +566,14 @@ public class DropChanceAPI{
 			switch(mode){
 				case GLOBAL:
 					sendTellraw("@a", message.toString());
-					if(entity instanceof Player && REPLACE_PLAYER_DEATH_EVT_MESSAGE && evt != null){
+					if(entity instanceof Player && REPLACE_PLAYER_DEATH_MESSAGE && evt != null){
 						// Set the behead death message so that other plugins will see it (it will still get cleared by the intercepter)
 						//TODO: in order to do this, we will need to cancel this extra plaintext message in DeathMessagePacketIntercepter
-						//((PlayerDeathEvent)evt).setDeathMessage(message.toPlainText());
+						if(REPLACE_PLAYER_DEATH_EVT_MESSAGE){
+							final String plainDeathMsg = message.toPlainText();
+							((PlayerDeathEvent)evt).setDeathMessage(plainDeathMsg);
+							deathMessageBlocker.blockSpeficicMessage(plainDeathMsg, /*ticksBlockedFor=*/5);
+						}
 					}
 					break;
 				case LOCAL:

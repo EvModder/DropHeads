@@ -29,6 +29,7 @@ public class DeathMessagePacketIntercepter{
 	final boolean REPLACE_PLAYER_DEATH_MSG, REPLACE_PET_DEATH_MSG;
 	final HashSet<UUID> unblockedDeathBroadcasts;
 	final HashSet<String> unblockedSpecificDeathMsgs;
+	final HashSet<String> blockedSpecificMsgs;
 
 	final RefClass packetPlayOutChatClazz = ReflectionUtils.getRefClass(
 			"{nms}.PacketPlayOutChat", "{nm}.network.protocol.game.PacketPlayOutChat");
@@ -55,6 +56,9 @@ public class DeathMessagePacketIntercepter{
 					final Object chatBaseComp = chatBaseCompField.of(packet).get();
 					if(chatBaseComp != null){
 						final String jsonMsg = (String)toJsonMethod.call(chatBaseComp);
+						if(blockedSpecificMsgs.contains(jsonMsg)){
+							return;
+						}
 						// TODO: Possibly make death-message-translate-detection less hacky?
 						if(jsonMsg.startsWith("{\"translate\":\"death.") && !unblockedSpecificDeathMsgs.remove(jsonMsg)){
 //							pl.getLogger().info("detected death msg:\n"+jsonMsg);
@@ -104,6 +108,7 @@ public class DeathMessagePacketIntercepter{
 		REPLACE_PET_DEATH_MSG = replacePetDeathMsg;
 		unblockedDeathBroadcasts = new HashSet<>();
 		unblockedSpecificDeathMsgs = new HashSet<>();
+		blockedSpecificMsgs = new HashSet<>();
 
 		pl.getServer().getPluginManager().registerEvents(new Listener(){
 			@EventHandler public void onJoin(PlayerJoinEvent evt){injectPlayer(evt.getPlayer());}
@@ -117,6 +122,11 @@ public class DeathMessagePacketIntercepter{
 			unblockedDeathBroadcasts.add(entity.getUniqueId());
 			new BukkitRunnable(){@Override public void run(){unblockedDeathBroadcasts.remove(entity.getUniqueId());}}.runTaskLater(pl, 5);
 		}
+	}
+
+	public void blockSpeficicMessage(String message, long ticksBlockedFor){
+		blockedSpecificMsgs.add(message);
+		new BukkitRunnable(){@Override public void run(){blockedSpecificMsgs.remove(message);}}.runTaskLater(pl, ticksBlockedFor);
 	}
 
 	public void unregisterAll(){

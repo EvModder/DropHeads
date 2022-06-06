@@ -76,7 +76,7 @@ public final class DropHeads extends EvPlugin{
 		if(REPLACE_PLAYER_DEATH_MSG || REPLACE_PET_DEATH_MSG){
 			deathMessageBlocker = new DeathMessagePacketIntercepter(REPLACE_PLAYER_DEATH_MSG, REPLACE_PET_DEATH_MSG);
 		}
-		dropChanceAPI = new DropChanceAPI(REPLACE_PLAYER_DEATH_MSG, REPLACE_PET_DEATH_MSG);
+		dropChanceAPI = new DropChanceAPI(REPLACE_PLAYER_DEATH_MSG, REPLACE_PET_DEATH_MSG, deathMessageBlocker);
 		new EntityDeathListener(deathMessageBlocker);
 
 		if(config.getBoolean("track-mob-spawns", true)){
