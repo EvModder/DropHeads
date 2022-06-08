@@ -116,7 +116,7 @@ public class TextureKeyLookup{
 	static RefMethod mMushroomCowGetVariant;
 	static RefMethod mPandaGetMainGene, mPandaGetHiddenGene;
 	static RefMethod mTraderLlamaGetColor;
-	static RefMethod mAxolotlGetVariant;
+	static RefMethod mAxolotlGetVariant, mFrogGetVariant;
 	static RefMethod mVexIsCharging;
 	static RefMethod mGoatIsScreaming;
 	static RefMethod mStriderIsShivering, mStriderHasSaddle;
@@ -227,6 +227,10 @@ public class TextureKeyLookup{
 				String foxType = ((Enum)mFoxGetType.of(entity).call()).name();
 				if(mFoxIsSleeping.of(entity).call().equals(true)) return "FOX|"+foxType+"|SLEEPING";
 				else return "FOX|"+foxType;
+			case "FROG":
+				if(mFrogGetVariant == null) mFrogGetVariant =
+				ReflectionUtils.getRefClass("org.bukkit.entity.Frog").getMethod("getVariant");
+				return "FROG|"+((Enum)mFrogGetVariant.of(entity).call()).name();
 			case "PANDA":
 				if(mPandaGetMainGene == null){
 					RefClass classPanda = ReflectionUtils.getRefClass("org.bukkit.entity.Panda");
