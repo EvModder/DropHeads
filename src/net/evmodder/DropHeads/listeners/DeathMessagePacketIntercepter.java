@@ -31,15 +31,39 @@ public class DeathMessagePacketIntercepter{
 	final HashSet<String> unblockedSpecificDeathMsgs;
 	final HashSet<String> blockedSpecificMsgs;
 
-	final RefClass packetPlayOutChatClazz = ReflectionUtils.getRefClass(
-			"{nms}.PacketPlayOutChat", "{nm}.network.protocol.game.PacketPlayOutChat");
+	final RefClass outboundPacketClazz = ReflectionUtils.getRefClass(
+			"{nms}.PacketPlayOutChat", "{nm}.network.protocol.game.PacketPlayOutChat", "{nm}.network.protocol.game.ClientboundSystemChatPacket");
 	final RefClass chatBaseCompClazz = ReflectionUtils.getRefClass(
 			"{nms}.IChatBaseComponent", "{nm}.network.chat.IChatBaseComponent");
 	final RefClass chatSerializerClazz = ReflectionUtils.getRefClass(
 			"{nms}.IChatBaseComponent$ChatSerializer", "{nm}.network.chat.IChatBaseComponent$ChatSerializer");
-	final RefField chatBaseCompField = packetPlayOutChatClazz.findField(chatBaseCompClazz);
+	final RefField chatBaseCompField;
+	final RefMethod getChatBaseComp;
 	final RefMethod toJsonMethod = chatSerializerClazz.findMethod(/*isStatic=*/true, String.class, chatBaseCompClazz);
 	final Pattern uuidPattern = Pattern.compile("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}");
+
+	public DeathMessagePacketIntercepter(boolean replacePlayerDeathMsg, boolean replacePetDeathMsg){
+		pl = DropHeads.getPlugin();
+		REPLACE_PLAYER_DEATH_MSG = replacePlayerDeathMsg;
+		REPLACE_PET_DEATH_MSG = replacePetDeathMsg;
+		unblockedDeathBroadcasts = new HashSet<>();
+		unblockedSpecificDeathMsgs = new HashSet<>();
+		blockedSpecificMsgs = new HashSet<>();
+		
+		RefField field = null;
+		RefMethod method = null;
+		try{field = outboundPacketClazz.findField(chatBaseCompClazz);}
+		catch(RuntimeException ex){method = outboundPacketClazz.getMethod("content");}
+		finally{
+			chatBaseCompField = field;
+			getChatBaseComp = method;
+		}
+
+		pl.getServer().getPluginManager().registerEvents(new Listener(){
+			@EventHandler public void onJoin(PlayerJoinEvent evt){injectPlayer(evt.getPlayer());}
+			@EventHandler public void onQuit(PlayerQuitEvent evt){removePlayer(evt.getPlayer());}
+		}, pl);
+	}
 
 	public boolean hasDeathMessage(Entity e){
 		return e instanceof Player || (
@@ -52,14 +76,15 @@ public class DeathMessagePacketIntercepter{
 	private void injectPlayer(Player player){
 		JunkUtils.getPlayerChannel(player).pipeline().addBefore("packet_handler", player.getName(), new ChannelDuplexHandler(){
 			@Override public void write(ChannelHandlerContext context, Object packet, ChannelPromise promise) throws Exception {
-				if(packetPlayOutChatClazz.isInstance(packet)){
-					final Object chatBaseComp = chatBaseCompField.of(packet).get();
+				if(outboundPacketClazz.isInstance(packet)){
+					final Object chatBaseComp = chatBaseCompField == null ? packet : chatBaseCompField.of(packet).get();
 					if(chatBaseComp != null){
-						final String jsonMsg = (String)toJsonMethod.call(chatBaseComp);
+						final String jsonMsg = (String)(chatBaseCompField == null ? getChatBaseComp.of(packet).call() : toJsonMethod.call(chatBaseComp));
 						if(blockedSpecificMsgs.contains(jsonMsg)){
 							return;
 						}
 						// TODO: Possibly make death-message-translate-detection less hacky?
+						if(jsonMsg.startsWith(jsonMsg))
 						if(jsonMsg.startsWith("{\"translate\":\"death.") && !unblockedSpecificDeathMsgs.remove(jsonMsg)){
 //							pl.getLogger().info("detected death msg:\n"+jsonMsg);
 							Matcher matcher = uuidPattern.matcher(jsonMsg);
@@ -100,20 +125,6 @@ public class DeathMessagePacketIntercepter{
 			channel.pipeline().remove(player.getName());
 			return null;
 		});
-	}
-
-	public DeathMessagePacketIntercepter(boolean replacePlayerDeathMsg, boolean replacePetDeathMsg){
-		pl = DropHeads.getPlugin();
-		REPLACE_PLAYER_DEATH_MSG = replacePlayerDeathMsg;
-		REPLACE_PET_DEATH_MSG = replacePetDeathMsg;
-		unblockedDeathBroadcasts = new HashSet<>();
-		unblockedSpecificDeathMsgs = new HashSet<>();
-		blockedSpecificMsgs = new HashSet<>();
-
-		pl.getServer().getPluginManager().registerEvents(new Listener(){
-			@EventHandler public void onJoin(PlayerJoinEvent evt){injectPlayer(evt.getPlayer());}
-			@EventHandler public void onQuit(PlayerQuitEvent evt){removePlayer(evt.getPlayer());}
-		}, pl);
 	}
 
 	public void unblockDeathMessage(Entity entity){
