@@ -1,5 +1,6 @@
 PLAYER:             0.250
 UNKNOWN:            0.000 // the default chance
+ALLAY:              0.050
 AXOLOTL:            0.007
 BAT:                0.010
 BEE:                0.006
@@ -19,6 +20,7 @@ ENDER_DRAGON:       0.050
 ENDERMITE:          0.011
 EVOKER:             0.005
 FOX:                0.005
+FROG:               0.006
 GHAST:              0.007
 GIANT:              0.050
 GLOW_SQUID:         0.004
@@ -59,6 +61,7 @@ SPIDER:             0.004
 SQUID:              0.005
 STRAY:              0.004
 STRIDER:            0.003
+TADPOLE:            0.004
 TRADER_LLAMA:       0.007
 TROPICAL_FISH:      0.004
 TURTLE:             0.003
@@ -66,6 +69,7 @@ VEX:                0.006
 VILLAGER:           0.029
 VINDICATOR:         0.003
 WANDERING_TRADER:   0.009
+WARDEN:             0.009
 WITCH:              0.004
 WITHER:             0.030
 WITHER_SKELETON:    0.025
