@@ -481,20 +481,20 @@ public class DropChanceAPI{
 	}
 
 	private Component getVictimComponent(Entity entity){
-		return new SelectorComponent(entity.getUniqueId());
+		return JunkUtils.getDisplayNameSelectorComponent(entity);
 	}
 	private Component getKillerComponent(Entity killer){
 		if(killer == null) return null;
 		if(killer instanceof Projectile){
 			ProjectileSource shooter = ((Projectile)killer).getShooter();
-			if(shooter instanceof Entity) return new SelectorComponent(((Entity)shooter).getUniqueId());
+			if(shooter instanceof Entity) return JunkUtils.getDisplayNameSelectorComponent((Entity)shooter);
 			else if(shooter instanceof BlockProjectileSource){
 				return TellrawUtils.getLocalizedDisplayName(((BlockProjectileSource)shooter).getBlock().getState());
 			}
 			// In theory should never happen:
 			else pl.getLogger().warning("Unrecognized projectile source: "+shooter.getClass().getName());
 		}
-		return new SelectorComponent(killer.getUniqueId());
+		return JunkUtils.getDisplayNameSelectorComponent(killer);
 	}
 	private Component getWeaponComponent(Entity killer, ItemStack weapon){
 		if(weapon != null && weapon.getType() != Material.AIR) return JunkUtils.getMurderItemComponent(weapon, JSON_LIMIT);

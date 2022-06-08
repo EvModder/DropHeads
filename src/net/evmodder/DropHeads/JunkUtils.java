@@ -28,11 +28,14 @@ import net.evmodder.EvLib.extras.TypeUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefField;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
+import net.evmodder.EvLib.extras.TellrawUtils.ClickEvent;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
 import net.evmodder.EvLib.extras.TellrawUtils.Format;
 import net.evmodder.EvLib.extras.TellrawUtils.HoverEvent;
 import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
+import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
+import net.evmodder.EvLib.extras.TellrawUtils.TextClickAction;
 import net.evmodder.EvLib.extras.TellrawUtils.TextHoverAction;
 
 // A trashy place to dump stuff that I should probably move to EvLib after ensure cross-version safety
@@ -175,6 +178,25 @@ public class JunkUtils{
 					new RawTextComponent(/*text=*/"[", /*insert=*/null, /*click=*/null, hoverAction, /*color=*/rarityColor, /*formats=*/null),
 					TellrawUtils.getLocalizedDisplayName(item),
 					new RawTextComponent(/*text=*/"]"));
+		}
+	}
+
+	public final static Component getDisplayNameSelectorComponent(Entity entity){
+		if(entity instanceof Player && !((Player)entity).getDisplayName().equals(entity.getName())){
+			final String selectorHoverText = entity.getName()+"\nType: Player\n"+entity.getUniqueId();
+			final String selectorClickSuggestText = "/tell "+entity.getName()+" ";
+			return new ListComponent(
+					new RawTextComponent(
+						/*text=*/"", /*insert=*/null,
+						new TextClickAction(ClickEvent.SUGGEST_COMMAND, selectorClickSuggestText),
+						new TextHoverAction(HoverEvent.SHOW_TEXT, selectorHoverText),
+						/*color=*/null, /*formats=*/null
+					),
+					TellrawUtils.convertHexColorsToComponentsWithReset(((Player)entity).getDisplayName())
+			);
+		}
+		else{
+			return new SelectorComponent(entity.getUniqueId());
 		}
 	}
 
