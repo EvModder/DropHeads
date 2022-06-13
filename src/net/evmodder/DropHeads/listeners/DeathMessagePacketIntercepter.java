@@ -80,11 +80,15 @@ public class DeathMessagePacketIntercepter{
 					final Object chatBaseComp = chatBaseCompField == null ? packet : chatBaseCompField.of(packet).get();
 					if(chatBaseComp != null){
 						final String jsonMsg = (String)(chatBaseCompField == null ? getChatBaseComp.of(packet).call() : toJsonMethod.call(chatBaseComp));
+						if(jsonMsg == null){
+							pl.getLogger().warning("Unable to parse json chat packet (in death message intercepter)");
+							super.write(context, packet, promise);
+							return;
+						}
 						if(blockedSpecificMsgs.contains(jsonMsg)){
 							return;
 						}
 						// TODO: Possibly make death-message-translate-detection less hacky?
-						if(jsonMsg.startsWith(jsonMsg))
 						if(jsonMsg.startsWith("{\"translate\":\"death.") && !unblockedSpecificDeathMsgs.remove(jsonMsg)){
 //							pl.getLogger().info("detected death msg:\n"+jsonMsg);
 							Matcher matcher = uuidPattern.matcher(jsonMsg);

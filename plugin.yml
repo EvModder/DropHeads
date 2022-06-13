@@ -1,12 +1,12 @@
 name: DropHeads
 main: net.evmodder.DropHeads.DropHeads
-author: EvModder/EvDoc
-description: Provides a wide assortment of mob heads
-website: https://dev.bukkit.org/projects/dropheads
+author: EvModder
+description: Heads for every mob and player.
+website: https://github.com/EvModder/DropHeads
 #3=major rewrite
 #7=pet death msgs, API fix, 1.19 mobs, full-cmd-translation, more pre-jappas(tentative), fix shulker rotation, updated spawn-cause-modifiers
-#4=1.19 compatibility
-version: 3.7.4
+#5=fix EssX/paper bug, add goat heads with missing horns
+version: 3.7.5
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 
