@@ -118,7 +118,7 @@ public class TextureKeyLookup{
 	static RefMethod mTraderLlamaGetColor;
 	static RefMethod mAxolotlGetVariant, mFrogGetVariant;
 	static RefMethod mVexIsCharging;
-	static RefMethod mGoatIsScreaming;
+	static RefMethod mGoatIsScreaming, mGoatHasLeftHorn, mGoatHasRightHorn;
 	static RefMethod mStriderIsShivering, mStriderHasSaddle;
 	static RefMethod mShulkerGetPeek, mShulkerGetAttachedFace;
 	static RefMethod mGetHandle, mGetDataWatcher, mGet_FromDataWatcher;
@@ -276,9 +276,15 @@ public class TextureKeyLookup{
 				else return "GHAST";
 			case "GOAT":
 				if(ReflectionUtils.getServerVersionString().compareTo("v1_17_??") < 0) return "GOAT";
-				if(mGoatIsScreaming == null) mGoatIsScreaming = ReflectionUtils.getRefClass("org.bukkit.entity.Goat").getMethod("isScreaming");
-				if(mGoatIsScreaming.of(entity).call().equals(true)) return "GOAT|SCREAMING";
-				else return "GOAT";
+				if(mGoatHasLeftHorn == null){
+					mGoatHasLeftHorn = ReflectionUtils.getRefClass("org.bukkit.entity.Goat").getMethod("hasLeftHorn");
+					mGoatHasRightHorn = ReflectionUtils.getRefClass("org.bukkit.entity.Goat").getMethod("hasRightHorn");
+					mGoatIsScreaming = ReflectionUtils.getRefClass("org.bukkit.entity.Goat").getMethod("isScreaming");
+				}
+				return "GOAT"
+						+ (!mGoatHasLeftHorn.of(entity).call().equals(true) ? "|NO_LEFT_HORN" : "")
+						+ (!mGoatHasRightHorn.of(entity).call().equals(true) ? "|NO_RIGHT_HORN" : "")
+						+ (mGoatIsScreaming.of(entity).call().equals(true) ? "|SCREAMING" : "");
 			case "STRIDER":
 				if(mStriderIsShivering == null){
 					RefClass classStrider = ReflectionUtils.getRefClass("org.bukkit.entity.Strider");
