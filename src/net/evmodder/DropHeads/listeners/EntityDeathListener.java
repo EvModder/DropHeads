@@ -75,13 +75,13 @@ public class EntityDeathListener implements Listener{
 			else if(mobChances.getOrDefault(EntityType.PLAYER, 0D) > 0D){
 				pl.getServer().getPluginManager().registerEvent(PlayerDeathEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
 			}
-			boolean nonLivingVehicleHeads = DEFAULT_CHANCE > 0D || mobChances.entrySet().stream().anyMatch(  // Boat, Minecart
+			final boolean nonLivingVehicleHeads = DEFAULT_CHANCE > 0D || mobChances.entrySet().stream().anyMatch(  // Boat, Minecart
 					entry -> !entry.getKey().isAlive() && entry.getValue() > 0D &&
 					entry.getKey().getEntityClass() != null && Vehicle.class.isAssignableFrom(entry.getKey().getEntityClass()));
 			if(nonLivingVehicleHeads){
 				pl.getServer().getPluginManager().registerEvent(VehicleDestroyEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
 			}
-			boolean nonLivingHangingHeads = DEFAULT_CHANCE > 0D || mobChances.entrySet().stream().anyMatch(  // Painting, LeashHitch, ItemFrame
+			final boolean nonLivingHangingHeads = DEFAULT_CHANCE > 0D || mobChances.entrySet().stream().anyMatch(  // Painting, LeashHitch, ItemFrame
 					entry -> !entry.getKey().isAlive() && entry.getValue() > 0D &&
 					entry.getKey().getEntityClass() != null && Hanging.class.isAssignableFrom(entry.getKey().getEntityClass()));
 			if(nonLivingHangingHeads){
@@ -153,19 +153,18 @@ public class EntityDeathListener implements Listener{
 		if(!pl.getDropChanceAPI().getRequiredWeapons().isEmpty() &&
 				(murderWeapon == null || !pl.getDropChanceAPI().getRequiredWeapons().contains(murderWeapon.getType()))) return false;
 
-		final double weaponBonus = murderWeapon == null ? 0D : pl.getDropChanceAPI().getWeaponModifier(murderWeapon.getType());
 		final int lootingLevel = murderWeapon == null ? 0 : murderWeapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
 		final double lootingMod = lootingLevel == 0 ? 1D : Math.pow(pl.getDropChanceAPI().getLootingMult(), lootingLevel);
 		final double lootingAdd = pl.getDropChanceAPI().getLootingAdd()*lootingLevel;
-		final double weaponMod = 1D + weaponBonus;
-		final double timeAliveMod = 1D + pl.getDropChanceAPI().getTimeAliveModifier(victim);
-		final double spawnCauseMod = JunkUtils.getSpawnCauseModifier(victim);
+		final double weaponMod = pl.getDropChanceAPI().getWeaponMult(murderWeapon == null ? Material.AIR : murderWeapon.getType());
+		final double timeAliveMod = pl.getDropChanceAPI().getTimeAliveMult(victim);
 		final double rawDropChance = pl.getDropChanceAPI().getRawDropChance(victim);
-		final double permMod = pl.getDropChanceAPI().getPermsBasedDropRateModifier(killer);
-		final double dropChance = rawDropChance*spawnCauseMod*timeAliveMod*weaponMod*lootingMod*permMod + lootingAdd;
+		final double permsMod = pl.getDropChanceAPI().getPermsBasedMult(killer);
+		final double spawnCauseMod = JunkUtils.getSpawnCauseMult(victim);
+		final double dropChance = rawDropChance*lootingMod*weaponMod*timeAliveMod*permsMod*spawnCauseMod + lootingAdd;
 
 		final double dropRoll = rand.nextDouble();
-		HeadRollEvent rollEvent = new HeadRollEvent(killer, victim, dropChance, dropRoll, dropRoll < dropChance);
+		final HeadRollEvent rollEvent = new HeadRollEvent(killer, victim, dropChance, dropRoll, dropRoll < dropChance);
 		pl.getServer().getPluginManager().callEvent(rollEvent);
 		if(DEBUG_MODE && dropRoll < dropChance && !rollEvent.getDropSuccess()) pl.getLogger().info("HeadRollEvent success was changed to false");
 		if(rollEvent.getDropSuccess()){
@@ -211,7 +210,6 @@ public class EntityDeathListener implements Listener{
 			if(next.getType() == Material.WITHER_SKELETON_SKULL){
 				it.remove();
 				++newSkullsDropped;
-				//TODO: remove this hacky fix once Bukkit/Spigot gets their shit sorted
 				if(!next.equals(new ItemStack(Material.WITHER_SKELETON_SKULL))) removedSkulls.add(next);
 			}
 		}

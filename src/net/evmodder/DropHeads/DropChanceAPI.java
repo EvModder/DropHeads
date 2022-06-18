@@ -91,9 +91,10 @@ public class DropChanceAPI{
 	private final double DEFAULT_CHANCE;
 	private final HashMap<EntityType, HashMap<String, Double>> subtypeMobChances;
 	private final HashMap<EntityType, AnnounceMode> mobAnnounceModes;
-	private final HashMap<Material, Double> weaponBonuses;
-	private final HashMap<String, Double> droprateMultiplierPerms;
-	private final TreeMap<Long, Double> timeAliveBonuses;
+	private final HashMap<String, Double> permissionBasedMults;
+	private final HashMap<Material, Double> weaponMults;
+	private final TreeMap<Integer, Double> DEFAULT_TIME_ALIVE_MULTS;
+	private final HashMap<EntityType, TreeMap<Integer, Double>> timeAliveMults;// Note: Bukkit's e.getTicksLived() returns an int.
 
 	/**
 	 * Get the default head drop chance for an entity when a drop chance chance is specified in the config
@@ -202,29 +203,64 @@ public class DropChanceAPI{
 		}
 		this.mustUseTools = Collections.unmodifiableSet(mustUseTools);
 
-		weaponBonuses = new HashMap<Material, Double>();
-		ConfigurationSection specificToolModifiers = pl.getConfig().getConfigurationSection("specific-tool-modifiers");
-		if(specificToolModifiers != null) for(String toolName : specificToolModifiers.getKeys(false)){
+		weaponMults = new HashMap<Material, Double>();
+		timeAliveMults = new HashMap<EntityType, TreeMap<Integer, Double>>();
+		// Ensure there is always a lower entry, and it defaults to 1
+		final TreeMap<Integer, Double> defaultTimeAliveMults = new TreeMap<>(); defaultTimeAliveMults.put(Integer.MIN_VALUE, 1D);
+
+		//========== <DEPRECATED> ==============================
+		ConfigurationSection specificToolBonuses = pl.getConfig().getConfigurationSection("specific-tool-modifiers");
+		if(specificToolBonuses != null) for(String toolName : specificToolBonuses.getKeys(false)){
 			Material mat = Material.getMaterial(toolName.toUpperCase());
-			if(mat != null) weaponBonuses.put(mat, specificToolModifiers.getDouble(toolName));
+			if(mat != null) weaponMults.put(mat, specificToolBonuses.getDouble(toolName) + 1D);
 		}
-
-		timeAliveBonuses = new TreeMap<>();
-		timeAliveBonuses.put(-1L, 0D); // Ensure there is always a lower entry, and it defaults to 0
-		ConfigurationSection specificTimeAliveModifiers = pl.getConfig().getConfigurationSection("time-alive-modifiers");
-		if(specificTimeAliveModifiers != null) for(String formattedTime : specificTimeAliveModifiers.getKeys(false)){
+		ConfigurationSection specificTimeAliveBonuses = pl.getConfig().getConfigurationSection("time-alive-modifiers");
+		if(specificTimeAliveBonuses != null) for(String formattedTime : specificTimeAliveBonuses.getKeys(false)){
 			try{
-				long time = TextUtils.parseTime(formattedTime);
-				timeAliveBonuses.put(time, specificTimeAliveModifiers.getDouble(formattedTime));
+				final int timeInTicks = (int)(TextUtils.parseTimeInMillis(formattedTime, /*default unit=millis-per-tick=*/50)/50L);
+				defaultTimeAliveMults.put(timeInTicks, specificTimeAliveBonuses.getDouble(formattedTime) + 1D);
 			}
-			catch(NumberFormatException ex){pl.getLogger().severe("Error parsing time string: \""+formattedTime+'"');}
+			catch(NumberFormatException ex){
+				pl.getLogger().severe("Error parsing time string for time-alive-modifiers: \""+formattedTime+'"');
+			}
+		}
+		//========== <DEPRECATED/> =============================
+
+		ConfigurationSection specificToolMults = pl.getConfig().getConfigurationSection("specific-tool-multipliers");
+		if(specificToolMults != null) for(String toolName : specificToolMults.getKeys(false)){
+			final Material mat = Material.getMaterial(toolName.toUpperCase());
+			if(mat != null) weaponMults.put(mat, specificToolMults.getDouble(toolName));
 		}
 
-		droprateMultiplierPerms = new HashMap<String, Double>();
+		ConfigurationSection specificTimeAliveMults = pl.getConfig().getConfigurationSection("time-alive-multipliers");
+		if(specificTimeAliveMults != null){
+			for(String entityName : specificTimeAliveMults.getKeys(false)){
+				try{
+					final EntityType eType = EntityType.valueOf(entityName.toUpperCase().replace("DEFAULT", "UNKNOWN"));
+					final ConfigurationSection entityTimeAliveMults = specificTimeAliveMults.getConfigurationSection(entityName);
+					@SuppressWarnings("unchecked")
+					final TreeMap<Integer, Double> timeAliveMultsForEntity = (TreeMap<Integer, Double>)defaultTimeAliveMults.clone();
+					for(String formattedTime : entityTimeAliveMults.getKeys(false)){
+						try{
+							final int timeInTicks = (int)(TextUtils.parseTimeInMillis(formattedTime, /*default unit=millis-per-tick=*/50)/50L);
+							timeAliveMultsForEntity.put(timeInTicks, entityTimeAliveMults.getDouble(formattedTime));
+						}
+						catch(NumberFormatException ex){
+							pl.getLogger().severe("Error parsing time string for time-alive-multipliers of "+entityName+": \""+formattedTime+'"');
+						}
+					}
+					timeAliveMults.put(eType, timeAliveMultsForEntity);
+				}
+				catch(IllegalArgumentException ex){pl.getLogger().severe("Unknown EntityType in 'time-alive-multipliers': "+entityName);}
+			}
+		}
+		DEFAULT_TIME_ALIVE_MULTS = timeAliveMults.getOrDefault(EntityType.UNKNOWN, defaultTimeAliveMults);
+
+		permissionBasedMults = new HashMap<String, Double>();
 		ConfigurationSection customDropratePerms = pl.getConfig().getConfigurationSection("custom-droprate-multiplier-permissions");
 		if(customDropratePerms != null) for(String perm : customDropratePerms.getKeys(/*recursive=*/true)){
 			// TODO: This will generate ["dropheads", "dropheads.group", "dropheads.group.2x", ...] because of how Bukkit/YML works
-			try{droprateMultiplierPerms.put(perm, customDropratePerms.getDouble(perm, 1D));}
+			try{permissionBasedMults.put(perm, customDropratePerms.getDouble(perm, 1D));}
 			catch(NumberFormatException ex){pl.getLogger().severe("Error parsing droprate multiplier for perm: \""+perm+'"');}
 		}
 
@@ -395,26 +431,25 @@ public class DropChanceAPI{
 	/**
 	 * Get the drop chance multiplier applied based on Material of the weapon used
 	 * @param weapon The type of weapon used
-	 * @return The weapon-type modifier
+	 * @return The weapon-type multiplier
 	 */
-	public double getWeaponModifier(Material weapon){return weaponBonuses.getOrDefault(weapon, 0D);}
+	public double getWeaponMult(Material weapon){return weaponMults.getOrDefault(weapon, 1D);}
 	/**
 	 * Get the drop chance multiplier applied based on how many ticks an entity has been alive
 	 * @param entity The entity to check the lifetime of
-	 * @return The time-alive modifier
+	 * @return The time-alive multiplier
 	 */
-	public double getTimeAliveModifier(Entity entity){
-		long millisecondsLived = entity.getTicksLived()*50L;
-		return timeAliveBonuses.floorEntry(millisecondsLived).getValue();
+	public double getTimeAliveMult(Entity entity){
+		return timeAliveMults.getOrDefault(entity.getType(), DEFAULT_TIME_ALIVE_MULTS).floorEntry(entity.getTicksLived()).getValue();
 	}
 	/**
 	 * Get the drop chance multipliers applied based on permissions of the killer
-	 * @param killer The entity to check for drop chance modifier permissions
+	 * @param killer The entity to check for drop chance multiplier permissions
 	 * @return The aggregate multiplier from any relevent permission nodes
 	 */
-	public double getPermsBasedDropRateModifier(Permissible killer){
+	public double getPermsBasedMult(Permissible killer){
 		if(killer == null) return 1D;
-		return droprateMultiplierPerms.entrySet().stream().parallel()
+		return permissionBasedMults.entrySet().stream().parallel()
 				.filter(e -> killer.hasPermission(e.getKey()))
 				.map(e -> e.getValue())
 				.reduce(1D, (a, b) -> a * b);

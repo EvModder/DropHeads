@@ -166,49 +166,53 @@ head-item-drop-mode: 'EVENT'
 
 head-place-overwrite-blocks: ['AIR', 'WATER', 'GRASS']
 
-# (Optional) Select weapons required to be used in order to get heads to drop
+# (Optional) Require using listed hand-held items in order to get head drops
 # If this list is empty, any weapon can be used to get heads
 must-use:
 #  - IRON_SWORD
 #  - DIAMOND_AXE
 #  - WOODEN_HOE
 
-# (Optional) Let certain tools have a higher chance of beheading
-# The number is the percent increase in drop chance when using that tool
-# Eg: 0.8 = 80% more likely, -0.1 = 10% less likely, 2.0 = +200%, etc.
-specific-tool-modifiers:
-  GOLDEN_AXE: 3
-  NETHERITE_AXE: 1
-  DIAMOND_AXE: 0.8
-  IRON_AXE: 0.6
-  STONE_AXE: 0.4
-  WOODEN_AXE: 0.2
+# (Optional) Give listed hand-held items a different chance of beheading
+# The number is multiplier in drop chance when using the given tool
+# Eg: 2.0 = twice as likely, 1.5 = 50% more likely, 0.1 = 10% as likely, etc.
+specific-tool-multipliers:
+  AIR: 2
   SHEARS: 2
-  DIAMOND_SWORD: 0.2
-  IRON_SWORD: 0.1
+  GOLDEN_AXE: 2
+  NETHERITE_AXE: 1.6
+  DIAMOND_AXE: 1.5
+  IRON_AXE: 1.4
+  STONE_AXE: 1.3
+  WOODEN_AXE: 1.2
+  DIAMOND_SWORD: 1.2
+  IRON_SWORD: 1.1
 
-# (Optional) Modify head drop chance based on how long a mob has been alive
+# (Optional) Modify behead chance based on how long a mob type has been alive
 # Format is "X: V", where if the mob has been alive for X or more time, then
-# the drop rate is increased by V percent (similar to above; can be negative)
-# Eg: -1.0 = will never drop (-100%), 1.0 = 2x as likely (+100%), etc.
-time-alive-modifiers:
-#  0s: -0.9
-#  1m30s: -0.5
-#  5m: 0
-  2h: 0.1
-  1d: 2.0
-  1w: 3.0
-  30w6d11h55m33s: 10.0
-
-# Changes the death "Event Priority" that DropHeads registers at
-# Low values => DropHeads runs BEFORE other plugins; high values => runs AFTER
-# Possible values: [LOWEST, LOW, NORMAL, HIGH, HIGHEST, MONITOR]
-death-listener-priority: LOW
+# the drop rate is multiplied by V similar to specific-tool-multipliers)
+# Default unit is ticks; other units: s[ec], m[in], h[r], d[ay], w[eek], y[r]
+time-alive-multipliers:
+  # This example will prevent player beheads if they have been alive < 1min
+  player:
+    0s: 0.0
+    1m: 1.0
+  # For all other mob types, this will make heads more common for older mobs
+  default:
+    3h: 1.1
+    2d: 2.0
+    1w: 3.0
+    30w6d11h55m33s: 10.0
 
 # Set drop chance multipliers for custom permission groups
 custom-droprate-multiplier-permissions:
 #  dropheads.group.droprate2x: 2.0
 #  dropheads.group.droprate150percent: 1.5
+
+# Changes the death "Event Priority" that DropHeads registers at
+# Low values => DropHeads runs BEFORE other plugins; high values => runs AFTER
+# Possible values: [LOWEST, LOW, NORMAL, HIGH, HIGHEST, MONITOR]
+death-listener-priority: LOW
 
 # Attempt to replace headA with headB whenever possible (server-wide)
 # The head on the left is replaced with the one on the right when updated

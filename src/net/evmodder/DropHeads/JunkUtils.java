@@ -55,7 +55,7 @@ public class JunkUtils{
 		long lastDamage = entity.hasMetadata("PlayerDamage") ? entity.getMetadata("PlayerDamage").get(0).asLong() : 0;
 		return System.currentTimeMillis() - lastDamage;
 	}
-	public final static double getSpawnCauseModifier(Entity e){
+	public final static double getSpawnCauseMult(Entity e){
 		//return e.hasMetadata("SpawnReason") ? e.getMetadata("SpawnReason").get(0).asDouble() : 1D;
 //		if(e == null) return 1D;
 		if(e.hasMetadata("SpawnReason")) return e.getMetadata("SpawnReason").get(0).asDouble();
@@ -212,32 +212,6 @@ public class JunkUtils{
 		Object entityAsJsonObject = saveNmsEntityMethod.of(nmsEntityObj).call(nmsNbtTagCompoundObj);
 		return entityAsJsonObject.toString();
 	}
-
-//	final static RefClass craftLivingEntityClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftLivingEntity");
-//	final static RefMethod livingEntityGetHandleMethod = craftLivingEntityClazz.getMethod("getHandle");
-//	final static RefClass nmsEntityLivingClazz = ReflectionUtils.getRefClass("{nms}.EntityLiving");
-//	final static RefClass nmsEnumItemSlotClazz = ReflectionUtils.getRefClass("{nms}.EnumItemSlot");
-//	final static Object nmsEnumItemSlotHead = nmsEnumItemSlotClazz.getMethod("valueOf", String.class).call("HEAD");
-//	final static RefMethod entityLivingGetEquipmentMethod = nmsEntityLivingClazz.getMethod("getEquipment", nmsEnumItemSlotClazz);
-//	final static RefConstructor craftItemStackCnstr = craftItemStackClazz.getConstructor(nmsItemStackClazz);
-//	public static Collection<ItemStack> getEquipmentGuaranteedToDrop(LivingEntity entity){//TODO: move to EntityUtils
-//		ArrayList<ItemStack> itemsThatWillDrop = new ArrayList<>();
-//		EntityEquipment equipment = entity.getEquipment();
-//		if(equipment.getItemInMainHandDropChance() >= 1f) itemsThatWillDrop.add(equipment.getItemInMainHand());
-//		if(equipment.getItemInOffHandDropChance() >= 1f) itemsThatWillDrop.add(equipment.getItemInOffHand());
-//		if(equipment.getChestplateDropChance() >= 1f) itemsThatWillDrop.add(equipment.getChestplate());
-//		if(equipment.getLeggingsDropChance() >= 1f) itemsThatWillDrop.add(equipment.getLeggings());
-//		Bukkit.getLogger().info("helmet drop chance: "+equipment.getHelmetDropChance());
-//		if(equipment.getHelmetDropChance() >= 1f) itemsThatWillDrop.add(
-//				(ItemStack)craftItemStackCnstr
-//				.create(entityLivingGetEquipmentMethod.of(
-//						livingEntityGetHandleMethod
-//						.of(entity).call())
-//						.call(nmsEnumItemSlotHead))
-//		);
-//		if(equipment.getBootsDropChance() >= 1f) itemsThatWillDrop.add(equipment.getBoots());
-//		return itemsThatWillDrop;
-//	}
 
 	public final static boolean setIfEmpty(@Nonnull EntityEquipment equipment, @Nonnull ItemStack item, @Nonnull EquipmentSlot slot){
 		switch(slot){

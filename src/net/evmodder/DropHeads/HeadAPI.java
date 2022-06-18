@@ -19,6 +19,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
@@ -504,12 +505,12 @@ public class HeadAPI {
 						break;
 					case "MOB_SUBTYPES_ASC":
 						translatedHeadNameFormat = translatedHeadNameFormat.replace("${MOB_SUBTYPES_ASC}",
-								JunkUtils.repeat("%s"+MOB_SUBTYPES_SEPARATOR, entityTypeNames.length-1));
+								StringUtils.repeat("%s"+MOB_SUBTYPES_SEPARATOR, entityTypeNames.length-1));
 						for(int j=1; j<entityTypeNames.length; ++j) withComps.add(entityTypeNames[j]);
 						break;
 					case "MOB_SUBTYPES_DESC":
 						translatedHeadNameFormat = translatedHeadNameFormat.replace("${MOB_SUBTYPES_DESC}",
-								JunkUtils.repeat("%s"+MOB_SUBTYPES_SEPARATOR, entityTypeNames.length-1));
+								StringUtils.repeat("%s"+MOB_SUBTYPES_SEPARATOR, entityTypeNames.length-1));
 						for(int j=entityTypeNames.length-1; j>0; --j) withComps.add(entityTypeNames[j]);
 						break;
 				}//switch (matcher.group)

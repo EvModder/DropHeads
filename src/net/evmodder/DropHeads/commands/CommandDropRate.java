@@ -207,14 +207,14 @@ public class CommandDropRate extends EvCommand{
 		}
 
 		// Multipliers:
-		final double weaponMod = weapon == null ? 1D : 1D+dropChanceAPI.getWeaponModifier(weapon.getType());
+		final double weaponMod = weapon == null ? 1D : dropChanceAPI.getWeaponMult(weapon.getType());
 		final int lootingLevel = weapon == null ? 0 : weapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
 		final double lootingMod = lootingLevel == 0 ? 1D
 				: Math.min(Math.pow(dropChanceAPI.getLootingMult(), lootingLevel), dropChanceAPI.getLootingMult()*lootingLevel);
 		final double lootingAdd = dropChanceAPI.getLootingAdd()*lootingLevel;
-		final double timeAliveMod = entity == null ? 1D : 1D + dropChanceAPI.getTimeAliveModifier(entity);
-		final double spawnCauseMod = entity == null ? 1D : JunkUtils.getSpawnCauseModifier(entity);
-		final double permMod = dropChanceAPI.getPermsBasedDropRateModifier(sender);
+		final double timeAliveMod = entity == null ? 1D : dropChanceAPI.getTimeAliveMult(entity);
+		final double spawnCauseMod = entity == null ? 1D : JunkUtils.getSpawnCauseMult(entity);
+		final double permMod = dropChanceAPI.getPermsBasedMult(sender);
 		final double finalDropChance = rawChance*spawnCauseMod*timeAliveMod*weaponMod*lootingMod*permMod + lootingAdd;
 		df = new DecimalFormat("0.##");
 		
