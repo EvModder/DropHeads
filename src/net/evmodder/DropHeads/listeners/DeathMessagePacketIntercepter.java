@@ -25,22 +25,22 @@ import net.evmodder.EvLib.extras.ReflectionUtils.RefField;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
 
 public class DeathMessagePacketIntercepter{
-	final Plugin pl;
-	final boolean REPLACE_PLAYER_DEATH_MSG, REPLACE_PET_DEATH_MSG;
-	final HashSet<UUID> unblockedDeathBroadcasts;
-	final HashSet<String> unblockedSpecificDeathMsgs;
-	final HashSet<String> blockedSpecificMsgs;
+	private final Plugin pl;
+	private final boolean REPLACE_PLAYER_DEATH_MSG, REPLACE_PET_DEATH_MSG;
+	private final HashSet<UUID> unblockedDeathBroadcasts;
+	private final HashSet<String> unblockedSpecificDeathMsgs;
+	private final HashSet<String> blockedSpecificMsgs;
 
-	final RefClass outboundPacketClazz = ReflectionUtils.getRefClass(
+	private final RefClass outboundPacketClazz = ReflectionUtils.getRefClass(
 			"{nms}.PacketPlayOutChat", "{nm}.network.protocol.game.PacketPlayOutChat", "{nm}.network.protocol.game.ClientboundSystemChatPacket");
-	final RefClass chatBaseCompClazz = ReflectionUtils.getRefClass(
+	private final RefClass chatBaseCompClazz = ReflectionUtils.getRefClass(
 			"{nms}.IChatBaseComponent", "{nm}.network.chat.IChatBaseComponent");
-	final RefClass chatSerializerClazz = ReflectionUtils.getRefClass(
+	private final RefClass chatSerializerClazz = ReflectionUtils.getRefClass(
 			"{nms}.IChatBaseComponent$ChatSerializer", "{nm}.network.chat.IChatBaseComponent$ChatSerializer");
-	final RefField chatBaseCompField;
-	final RefMethod getChatBaseComp;
-	final RefMethod toJsonMethod = chatSerializerClazz.findMethod(/*isStatic=*/true, String.class, chatBaseCompClazz);
-	final Pattern uuidPattern = Pattern.compile("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}");
+	private final RefField chatBaseCompField;
+	private final RefMethod getChatBaseComp;
+	private final RefMethod toJsonMethod = chatSerializerClazz.findMethod(/*isStatic=*/true, String.class, chatBaseCompClazz);
+	private final Pattern uuidPattern = Pattern.compile("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}");
 
 	public DeathMessagePacketIntercepter(boolean replacePlayerDeathMsg, boolean replacePetDeathMsg){
 		pl = DropHeads.getPlugin();
@@ -63,6 +63,7 @@ public class DeathMessagePacketIntercepter{
 			@EventHandler public void onJoin(PlayerJoinEvent evt){injectPlayer(evt.getPlayer());}
 			@EventHandler public void onQuit(PlayerQuitEvent evt){removePlayer(evt.getPlayer());}
 		}, pl);
+		for(Player p : pl.getServer().getOnlinePlayers()) injectPlayer(p);
 	}
 
 	public boolean hasDeathMessage(Entity e){
@@ -131,7 +132,7 @@ public class DeathMessagePacketIntercepter{
 		});
 	}
 	private void removePlayer(Player player){
-		Channel channel = JunkUtils.getPlayerChannel(player);
+		final Channel channel = JunkUtils.getPlayerChannel(player);
 		channel.eventLoop().submit(()->{
 			channel.pipeline().remove(player.getName());
 			return null;

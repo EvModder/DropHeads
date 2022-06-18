@@ -111,13 +111,13 @@ public class JunkUtils{
 	}
 
 	// ItemStack methods to get a net.minecraft.server.ItemStack object for serialization
-	final static RefClass craftItemStackClazz = ReflectionUtils.getRefClass("{cb}.inventory.CraftItemStack");
-	final static RefMethod asNMSCopyMethod = craftItemStackClazz.getMethod("asNMSCopy", ItemStack.class);
+	private final static RefClass craftItemStackClazz = ReflectionUtils.getRefClass("{cb}.inventory.CraftItemStack");
+	private final static RefMethod asNMSCopyMethod = craftItemStackClazz.getMethod("asNMSCopy", ItemStack.class);
 
 	// NMS Method to serialize a net.minecraft.server.vX_X.ItemStack to a valid JSON string
-	final static RefClass nmsItemStackClazz = ReflectionUtils.getRefClass("{nms}.ItemStack", "{nm}.world.item.ItemStack");
-	final static RefClass nbtTagCompoundClazz = ReflectionUtils.getRefClass("{nms}.NBTTagCompound", "{nm}.nbt.NBTTagCompound");
-	final static RefMethod saveNmsItemStackMethod = nmsItemStackClazz.findMethod(/*isStatic=*/false, nbtTagCompoundClazz, nbtTagCompoundClazz);
+	private final static RefClass nmsItemStackClazz = ReflectionUtils.getRefClass("{nms}.ItemStack", "{nm}.world.item.ItemStack");
+	private final static RefClass nbtTagCompoundClazz = ReflectionUtils.getRefClass("{nms}.NBTTagCompound", "{nm}.nbt.NBTTagCompound");
+	private final static RefMethod saveNmsItemStackMethod = nmsItemStackClazz.findMethod(/*isStatic=*/false, nbtTagCompoundClazz, nbtTagCompoundClazz);
 
 	// https://www.spigotmc.org/threads/tut-item-tooltips-with-the-chatcomponent-api.65964/
 	/**
@@ -200,18 +200,18 @@ public class JunkUtils{
 		}
 	}
 
-	// Similar as above, but for Entity instead of ItemStack
-	final static RefClass craftEntityClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftEntity");
-	final static RefMethod entityGetHandleMethod = craftEntityClazz.getMethod("getHandle");
-	final static RefClass nmsEntityClazz = ReflectionUtils.getRefClass("{nms}.Entity", "{nm}.world.entity.Entity");
-	final static RefMethod saveNmsEntityMethod = nmsEntityClazz.findMethod(/*isStatic=*/false, nbtTagCompoundClazz, nbtTagCompoundClazz);
-	public final static String convertEntityToJson(Entity entity){//TODO: not currently used
-		
-		Object nmsNbtTagCompoundObj = nbtTagCompoundClazz.getConstructor().create();
-		Object nmsEntityObj = entityGetHandleMethod.of(entity).call();
-		Object entityAsJsonObject = saveNmsEntityMethod.of(nmsEntityObj).call(nmsNbtTagCompoundObj);
-		return entityAsJsonObject.toString();
-	}
+//	//TODO: not currently used
+//	// Similar as above, but for Entity instead of ItemStack
+//	final static RefClass craftEntityClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftEntity");
+//	final static RefMethod entityGetHandleMethod = craftEntityClazz.getMethod("getHandle");
+//	final static RefClass nmsEntityClazz = ReflectionUtils.getRefClass("{nms}.Entity", "{nm}.world.entity.Entity");
+//	final static RefMethod saveNmsEntityMethod = nmsEntityClazz.findMethod(/*isStatic=*/false, nbtTagCompoundClazz, nbtTagCompoundClazz);
+//	public final static String convertEntityToJson(Entity entity){
+//		Object nmsNbtTagCompoundObj = nbtTagCompoundClazz.getConstructor().create();
+//		Object nmsEntityObj = entityGetHandleMethod.of(entity).call();
+//		Object entityAsJsonObject = saveNmsEntityMethod.of(nmsEntityObj).call(nmsNbtTagCompoundObj);
+//		return entityAsJsonObject.toString();
+//	}
 
 	public final static boolean setIfEmpty(@Nonnull EntityEquipment equipment, @Nonnull ItemStack item, @Nonnull EquipmentSlot slot){
 		switch(slot){
@@ -244,22 +244,22 @@ public class JunkUtils{
 		}
 	}
 
-	final static RefClass craftPlayerClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftPlayer");
-	final static RefMethod playerGetHandleMethod = craftPlayerClazz.getMethod("getHandle");
-	final static RefClass entityPlayerClazz = ReflectionUtils.getRefClass("{nms}.EntityPlayer", "{nm}.server.level.EntityPlayer");
-	final static RefClass playerConnectionClazz = ReflectionUtils.getRefClass("{nms}.PlayerConnection", "{nm}.server.network.PlayerConnection");
-	final static RefField playerConnectionField = entityPlayerClazz.findField(playerConnectionClazz);
-	final static RefClass networkManagerClazz = ReflectionUtils.getRefClass("{nms}.NetworkManager", "{nm}.network.NetworkManager");
-	final static RefField networkManagerField = playerConnectionClazz.findField(networkManagerClazz);
-	final static RefField channelField = networkManagerClazz.findField(Channel.class);
+	private final static RefClass craftPlayerClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftPlayer");
+	private final static RefMethod playerGetHandleMethod = craftPlayerClazz.getMethod("getHandle");
+	private final static RefClass entityPlayerClazz = ReflectionUtils.getRefClass("{nms}.EntityPlayer", "{nm}.server.level.EntityPlayer");
+	private final static RefClass playerConnectionClazz = ReflectionUtils.getRefClass("{nms}.PlayerConnection", "{nm}.server.network.PlayerConnection");
+	private final static RefField playerConnectionField = entityPlayerClazz.findField(playerConnectionClazz);
+	private final static RefClass networkManagerClazz = ReflectionUtils.getRefClass("{nms}.NetworkManager", "{nm}.network.NetworkManager");
+	private final static RefField networkManagerField = playerConnectionClazz.findField(networkManagerClazz);
+	private final static RefField channelField = networkManagerClazz.findField(Channel.class);
 	public static Channel getPlayerChannel(Player player){
 		final Object playerEntity = playerGetHandleMethod.of(player).call();
 		final Object playerConnection = playerConnectionField.of(playerEntity).get();
 		final Object networkManager = networkManagerField.of(playerConnection).get();
 		return (Channel)channelField.of(networkManager).get();
 	}
-	final static RefClass classPacket = ReflectionUtils.getRefClass("{nms}.Packet", "{nm}.network.protocol.Packet");
-	final static RefMethod sendPacketMethod = playerConnectionClazz.findMethod(/*isStatic=*/false, Void.TYPE, classPacket);
+	private final static RefClass classPacket = ReflectionUtils.getRefClass("{nms}.Packet", "{nm}.network.protocol.Packet");
+	private final static RefMethod sendPacketMethod = playerConnectionClazz.findMethod(/*isStatic=*/false, Void.TYPE, classPacket);
 	public static void sendPacket(Player player, Object packet){
 		Object entityPlayer = playerGetHandleMethod.of(player).call();
 		Object playerConnection = playerConnectionField.of(entityPlayer).get();
@@ -315,24 +315,21 @@ public class JunkUtils{
 		return nearestFace;
 	}
 
-	public final static String repeat(String str, int n){
-		StringBuilder b = new StringBuilder();
-		for(int i=0; i<n; ++i) b.append(str);
-		return b.toString();
-	}
+//	//TODO: not currently used
+//	public interface TestFunc{boolean test(int num);}
+//	public final static int binarySearch(TestFunc f, int a, int b){
+//		while(a < b-1){
+//			int x = (b + a)/2;
+//			if(f.test(x)) a = x;
+//			else b = x;
+//		}
+//		return a;
+//	}
 
-	public interface TestFunc{boolean test(int num);}
-	public final static int binarySearch(TestFunc f, int a, int b){
-		while(a < b-1){
-			int x = (b + a)/2;
-			if(f.test(x)) a = x;
-			else b = x;
-		}
-		return a;
-	}
-	public final static int exponentialSearch(TestFunc f, int a){
-		a = f.test(a) ? 2*a : 1;
-		while(f.test(a)) a *= 2;
-		return binarySearch(f, a/2, a);
-	}
+//	//TODO: not currently used
+//	public final static int exponentialSearch(TestFunc f, int a){
+//		a = f.test(a) ? 2*a : 1;
+//		while(f.test(a)) a *= 2;
+//		return binarySearch(f, a/2, a);
+//	}
 }

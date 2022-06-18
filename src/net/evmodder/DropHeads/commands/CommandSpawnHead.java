@@ -285,7 +285,7 @@ public class CommandSpawnHead extends EvCommand{
 		}
 		ItemStack head = null;
 
-		if(prefix.equals(MOB_PREFIX) || prefix.equals("key:") || (prefix.isEmpty() && pl.getAPI().textureExists(target.toUpperCase()))){
+		if(prefix.equals(MOB_PREFIX) || prefix.equals("key:") || (prefix.isEmpty() && target.contains("|"))){
 			target = target.toUpperCase();
 			if(!sender.hasPermission("dropheads.spawn.mobs")){
 				sender.sendMessage(NO_PERMISSION_TO_SPAWN_MOB_HEADS);

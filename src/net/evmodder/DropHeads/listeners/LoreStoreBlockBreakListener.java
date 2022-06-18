@@ -26,21 +26,20 @@ public class LoreStoreBlockBreakListener implements Listener{
 	static ItemStack getItemWithLore(Block block){
 		if(!HeadUtils.isPlayerHead(block.getType())) return null;
 
-		Skull skull = (Skull) block.getState();
-		GameProfile profile = HeadUtils.getGameProfile(skull);
+		final Skull skull = (Skull)block.getState();
+		final GameProfile profile = HeadUtils.getGameProfile(skull);
 		if(profile == null || profile.getName() == null) return null;
 
-		int loreStart = profile.getName().indexOf('>');
+		final int loreStart = profile.getName().indexOf('>');
 		if(loreStart == -1) return null;
 
-		List<String> lore = Arrays.asList(profile.getName().substring(loreStart + 1).split("\\n", -1));
-		String preLoreProfileName = profile.getName().substring(0, loreStart);
+		final List<String> lore = Arrays.asList(profile.getName().substring(loreStart + 1).split("\\n", -1));
+		final String preLoreProfileName = profile.getName().substring(0, loreStart);
 
-		GameProfile profileWithoutLore = new GameProfile(profile.getId(), preLoreProfileName);
+		final GameProfile profileWithoutLore = new GameProfile(profile.getId(), preLoreProfileName);
 		ItemStack headItem = DropHeads.getPlugin().getAPI().getHead(profileWithoutLore);
 		if(lore.size() > 1 || (lore.size() == 1 && !lore.get(0).isEmpty())){
-			
-			Component[] loreComps = new Component[lore.size()];
+			final Component[] loreComps = new Component[lore.size()];
 			for(int i=0; i<lore.size(); ++i) loreComps[i] = TellrawUtils.parseComponentFromString(lore.get(i));
 			headItem = JunkUtils.setLore(headItem, loreComps);
 		}
@@ -51,7 +50,7 @@ public class LoreStoreBlockBreakListener implements Listener{
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onBlockBreakByPlayerEvent(BlockBreakEvent evt){
 		if(evt.getPlayer().getGameMode() == GameMode.CREATIVE) return;
-		ItemStack itemWithAddedLore = getItemWithLore(evt.getBlock());
+		final ItemStack itemWithAddedLore = getItemWithLore(evt.getBlock());
 		if(itemWithAddedLore != null){
 			evt.setCancelled(true);
 			evt.getBlock().setType(Material.AIR);

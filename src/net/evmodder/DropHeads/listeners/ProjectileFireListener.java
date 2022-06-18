@@ -13,8 +13,8 @@ import org.bukkit.metadata.FixedMetadataValue;
 import net.evmodder.DropHeads.DropHeads;
 
 public class ProjectileFireListener implements Listener{
-	final private DropHeads pl;
-	final boolean ALLOW_NON_PLAYER_KILLS;
+	private final DropHeads pl;
+	private final boolean ALLOW_NON_PLAYER_KILLS;
 	
 	public ProjectileFireListener(){
 		pl = DropHeads.getPlugin();
@@ -45,9 +45,9 @@ public class ProjectileFireListener implements Listener{
 		if(evt.getEntity().hasMetadata("ShotUsing") || evt.getEntity().getShooter() instanceof LivingEntity == false
 				|| (!ALLOW_NON_PLAYER_KILLS && evt.getEntity() instanceof Player == false)) return;
 
-		LivingEntity shooter = (LivingEntity) evt.getEntity().getShooter();
-		ItemStack mainHandItem = shooter.getEquipment().getItemInMainHand();
-		ItemStack offHandItem  = shooter.getEquipment().getItemInOffHand();
+		final LivingEntity shooter = (LivingEntity)evt.getEntity().getShooter();
+		final ItemStack mainHandItem = shooter.getEquipment().getItemInMainHand();
+		final ItemStack offHandItem  = shooter.getEquipment().getItemInOffHand();
 		if((mainHandItem == null || !canShootProjectiles(mainHandItem.getType())) && offHandItem != null && canShootProjectiles(offHandItem.getType())){
 			evt.getEntity().setMetadata("ShotUsing", new FixedMetadataValue(pl, offHandItem));
 		}

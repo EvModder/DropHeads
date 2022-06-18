@@ -22,11 +22,11 @@ public class EntitySpawnListener implements Listener{
 		pl = DropHeads.getPlugin();
 
 		//load spawn cause modifiers
-		InputStream defaultModifiers = pl.getClass().getResourceAsStream("/spawn-cause-modifiers.txt");
-		String modifiers = FileIO.loadFile("spawn-cause-modifiers.txt", defaultModifiers);
+		final InputStream defaultModifiers = pl.getClass().getResourceAsStream("/spawn-cause-modifiers.txt");
+		final String modifiers = FileIO.loadFile("spawn-cause-modifiers.txt", defaultModifiers);
 		for(String line : modifiers.split("\n")){
 			line = line.replace(" ", "").replace("\t", "").toUpperCase();
-			int i = line.indexOf(":");
+			final int i = line.indexOf(":");
 			if(i != -1){
 				try{
 					SpawnReason reason = SpawnReason.valueOf(line.substring(0, i));
@@ -46,7 +46,7 @@ public class EntitySpawnListener implements Listener{
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void entitySpawnEvent(CreatureSpawnEvent evt){
 		if(evt.getSpawnReason() != null){
-			Float modifier = spawnModifiers.get(evt.getSpawnReason());
+			final Float modifier = spawnModifiers.get(evt.getSpawnReason());
 			if(modifier != null){
 				evt.getEntity().setMetadata("SpawnReason", new FixedMetadataValue(pl, modifier));
 				evt.getEntity().addScoreboardTag("SpawnReasonModifier:"+modifier);

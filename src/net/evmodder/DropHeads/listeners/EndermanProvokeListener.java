@@ -14,9 +14,9 @@ import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.EvLib.extras.HeadUtils;
 
 public class EndermanProvokeListener implements Listener{
-	final private DropHeads pl;
-	final private HashSet<EntityType> camouflageHeads;
-	final boolean ALL_HEADS_ARE_CAMOFLAGE;
+	private final DropHeads pl;
+	private final HashSet<EntityType> camouflageHeads;
+	private final boolean ALL_HEADS_ARE_CAMOFLAGE;
 	
 	public EndermanProvokeListener(){
 		pl = DropHeads.getPlugin();
@@ -31,7 +31,7 @@ public class EndermanProvokeListener implements Listener{
 		ALL_HEADS_ARE_CAMOFLAGE = camouflageHeads.contains(EntityType.UNKNOWN);
 	}
 
-	EntityType getEntityTypeFromHead(ItemStack head){
+	private EntityType getEntityTypeFromHead(ItemStack head){
 		if(head == null || !HeadUtils.isHead(head.getType())) return null;
 		if(!HeadUtils.isPlayerHead(head.getType())) return HeadUtils.getEntityFromHead(head.getType());
 		GameProfile profile = HeadUtils.getGameProfile((SkullMeta)head.getItemMeta());
@@ -46,8 +46,7 @@ public class EndermanProvokeListener implements Listener{
 		return null;
 	}
 
-	@EventHandler
-	public void entityTargetEntityEvent(EntityTargetLivingEntityEvent evt){
+	@EventHandler public void entityTargetEntityEvent(EntityTargetLivingEntityEvent evt){
 		if(evt.getEntityType() == EntityType.ENDERMAN && evt.getTarget() != null && evt.getTarget().getType() == EntityType.PLAYER
 			&& evt.getReason() == TargetReason.CLOSEST_PLAYER
 			&& (evt.getEntity().getLastDamageCause() == null

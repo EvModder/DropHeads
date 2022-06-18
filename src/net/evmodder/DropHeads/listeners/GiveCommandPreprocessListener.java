@@ -10,7 +10,7 @@ import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.EvLib.extras.WebUtils;
 
 public class GiveCommandPreprocessListener implements Listener{
-	final private DropHeads pl;
+	private final DropHeads pl;
 
 	class CustomHeadItemStack extends ItemStack{
 		CustomHeadItemStack(ItemStack item){
@@ -26,7 +26,7 @@ public class GiveCommandPreprocessListener implements Listener{
 
 	@EventHandler
 	public void onGiveCommandPreprocess(PlayerCommandPreprocessEvent evt){
-		String cmd = evt.getMessage().toLowerCase();
+		final String cmd = evt.getMessage().toLowerCase();
 		if(cmd.startsWith("/give ") || cmd.startsWith("/minecraft:give ")){
 			UUID uuid = UUID.nameUUIDFromBytes("VEX".getBytes());// Stable UUID for this textureKey
 			String newCmd = evt.getMessage().replaceAll("(?i) "+pl.getAPI().getDropHeadsNamespacedKey()+"vex_head ", " minecraft:player_head{"

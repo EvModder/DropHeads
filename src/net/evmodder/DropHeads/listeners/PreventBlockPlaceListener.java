@@ -12,7 +12,7 @@ import net.evmodder.EvLib.extras.HeadUtils;
 import net.evmodder.EvLib.extras.TextUtils;
 
 public class PreventBlockPlaceListener implements Listener{
-	final String PREVENT_PLACE_MSG;
+	private final String PREVENT_PLACE_MSG;
 
 	public PreventBlockPlaceListener(){
 		PREVENT_PLACE_MSG = TextUtils.translateAlternateColorCodes('&', DropHeads.getPlugin().getConfig()
@@ -27,8 +27,8 @@ public class PreventBlockPlaceListener implements Listener{
 				? evt.getPlayer().getInventory().getItemInMainHand()
 				: evt.getPlayer().getInventory().getItemInOffHand();
 		if(!headItem.hasItemMeta()) return;
-		SkullMeta meta = (SkullMeta) headItem.getItemMeta();
-		GameProfile profile = HeadUtils.getGameProfile(meta);
+		final SkullMeta meta = (SkullMeta) headItem.getItemMeta();
+		final GameProfile profile = HeadUtils.getGameProfile(meta);
 		if(profile == null) return;
 
 		if(evt.getPlayer().hasPermission("dropheads.canplacehead")) return;

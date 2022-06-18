@@ -20,25 +20,25 @@ public class LoreStoreBlockPlaceListener implements Listener{
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onBlockPlaceEvent(BlockPlaceEvent evt){
 		if(!HeadUtils.isPlayerHead(evt.getBlockPlaced().getType())) return;
-		ItemStack headItem = evt.getHand() == EquipmentSlot.HAND
+		final ItemStack headItem = evt.getHand() == EquipmentSlot.HAND
 				? evt.getPlayer().getInventory().getItemInMainHand()
 				: evt.getPlayer().getInventory().getItemInOffHand();
 
 		if(!headItem.hasItemMeta() || !headItem.getItemMeta().hasLore()) return; // Nothing to save!
-		SkullMeta meta = (SkullMeta) headItem.getItemMeta();
-		GameProfile profile = HeadUtils.getGameProfile(meta);
+		final SkullMeta meta = (SkullMeta) headItem.getItemMeta();
+		final GameProfile profile = HeadUtils.getGameProfile(meta);
 		if(profile == null || profile.getName() == null) return; // We can't append lore to an invalid GameProfile...
 
-		List<String> customLore = JunkUtils.getLore(headItem);
-		List<String> defaultLore = JunkUtils.getLore(DropHeads.getPlugin().getAPI().getHead(profile));
+		final List<String> customLore = JunkUtils.getLore(headItem);
+		final List<String> defaultLore = JunkUtils.getLore(DropHeads.getPlugin().getAPI().getHead(profile));
 		if(defaultLore.equals(customLore)) return; // Nothing to save!
 
 		final String texturekey = profile.getName();
 		final String combinedLore = String.join("\n", customLore);
-		GameProfile profileWithLore = new GameProfile(profile.getId(), texturekey+">"+combinedLore);
+		final GameProfile profileWithLore = new GameProfile(profile.getId(), texturekey+">"+combinedLore);
 		profileWithLore.getProperties().putAll("textures", profile.getProperties().get("textures"));
 
-		Skull skull = (Skull)evt.getBlockPlaced().getState();
+		final Skull skull = (Skull)evt.getBlockPlaced().getState();
 		HeadUtils.setGameProfile(skull, profileWithLore);
 		skull.update(true);
 	}

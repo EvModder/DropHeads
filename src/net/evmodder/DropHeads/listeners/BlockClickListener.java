@@ -37,11 +37,11 @@ import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
 
 public class BlockClickListener implements Listener{
-	final private DropHeads pl;
-	final boolean SHOW_CLICK_INFO, REPAIR_IRON_GOLEM_HEADS, UPDATE_PLAYER_HEADS;
-	final String HEAD_DISPLAY_PLAYERS, HEAD_DISPLAY_MOBS, HEAD_DISPLAY_HDB, HEAD_DISPLAY_UNKNOWN, MOB_SUBTYPES_SEPARATOR;
-	final int CLICK_MSG_DELAY_TICKS; // So they dont spam themselves
-	final HashSet<UUID> recentClickers;
+	private final DropHeads pl;
+	private final boolean SHOW_CLICK_INFO, REPAIR_IRON_GOLEM_HEADS, UPDATE_PLAYER_HEADS;
+	private final String HEAD_DISPLAY_PLAYERS, HEAD_DISPLAY_MOBS, HEAD_DISPLAY_HDB, HEAD_DISPLAY_UNKNOWN, MOB_SUBTYPES_SEPARATOR;
+	private final int CLICK_MSG_DELAY_TICKS; // So they dont spam themselves
+	private final HashSet<UUID> recentClickers;
 
 	public BlockClickListener(Configuration translations){
 		pl = DropHeads.getPlugin();
@@ -70,7 +70,7 @@ public class BlockClickListener implements Listener{
 			HEAD_DISPLAY_PLAYERS = HEAD_DISPLAY_MOBS = HEAD_DISPLAY_HDB = HEAD_DISPLAY_UNKNOWN = MOB_SUBTYPES_SEPARATOR = null;
 			UPDATE_PLAYER_HEADS = false;
 		}
-		recentClickers = new HashSet<UUID>();
+		recentClickers = CLICK_MSG_DELAY_TICKS > 0 ? new HashSet<UUID>() : null;
 	}
 
 	GameProfile stripCustomLoreAndNamespace(GameProfile profile){
@@ -186,9 +186,10 @@ public class BlockClickListener implements Listener{
 	public void onBlockClickEvent(PlayerInteractEvent evt){
 		if(evt.useInteractedBlock() == Result.DENY || evt.getAction() != Action.RIGHT_CLICK_BLOCK
 			|| evt.getPlayer().isSneaking() || !HeadUtils.isHead(evt.getClickedBlock().getType())
-			|| !recentClickers.add(evt.getPlayer().getUniqueId())) return;
+			|| (recentClickers != null && !recentClickers.add(evt.getPlayer().getUniqueId()))) return;
 		final UUID uuid = evt.getPlayer().getUniqueId();
-		new BukkitRunnable(){@Override public void run(){recentClickers.remove(uuid);}}.runTaskLater(pl, CLICK_MSG_DELAY_TICKS);
+		if(recentClickers != null) new BukkitRunnable(){
+			@Override public void run(){recentClickers.remove(uuid);}}.runTaskLater(pl, CLICK_MSG_DELAY_TICKS);
 
 		final boolean isPlayerHead = HeadUtils.isPlayerHead(evt.getClickedBlock().getType());
 
@@ -240,7 +241,7 @@ public class BlockClickListener implements Listener{
 		final String aOrAn = isVowel(englishName.charAt(0)) ? "an" : "a"; // Yes, an imperfect solution, I know. :/
 
 		evt.setCancelled(true);
-		ListComponent blob = TellrawUtils.convertHexColorsToComponentsWithReset(HEAD_DISPLAY);
+		final ListComponent blob = TellrawUtils.convertHexColorsToComponentsWithReset(HEAD_DISPLAY);
 		blob.replaceRawDisplayTextWithComponent("${TYPE}", headTypeName);//these 3 are aliases of eachother
 		blob.replaceRawDisplayTextWithComponent("${HEAD_TYPE}", headTypeName);
 		blob.replaceRawDisplayTextWithComponent("${SKULL_TYPE}", headTypeName);

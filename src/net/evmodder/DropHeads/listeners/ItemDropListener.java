@@ -16,9 +16,9 @@ import net.evmodder.EvLib.extras.TellrawUtils;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
 
 public class ItemDropListener implements Listener{
-	final private DropHeads pl;
-	final boolean FORCE_NAME_UPDATE, FORCE_LORE_UPDATE;
-	final boolean SAVE_TYPE_IN_LORE;
+	private final DropHeads pl;
+	private final boolean FORCE_NAME_UPDATE, FORCE_LORE_UPDATE;
+	private final boolean SAVE_TYPE_IN_LORE;
 
 	public ItemDropListener(){
 		pl = DropHeads.getPlugin();
@@ -40,12 +40,12 @@ public class ItemDropListener implements Listener{
 				|| pl.getAPI().isHeadDatabaseHead(evt.getEntity().getItemStack())) return;
 
 		ItemStack originalItem = evt.getEntity().getItemStack();
-		SkullMeta originalMeta = (SkullMeta) originalItem.getItemMeta();
-		GameProfile originalProfile = HeadUtils.getGameProfile(originalMeta);
+		final SkullMeta originalMeta = (SkullMeta) originalItem.getItemMeta();
+		final GameProfile originalProfile = HeadUtils.getGameProfile(originalMeta);
 		if(originalProfile == null) return;
-		ItemStack refreshedItem = pl.getAPI().getHead(originalProfile); // Gets a refreshed texture by textureKey (profile name)
+		final ItemStack refreshedItem = pl.getAPI().getHead(originalProfile); // Gets a refreshed texture by textureKey (profile name)
 		if(refreshedItem == null) return;
-		GameProfile refreshedProfile = HeadUtils.getGameProfile((SkullMeta)refreshedItem.getItemMeta());
+		final GameProfile refreshedProfile = HeadUtils.getGameProfile((SkullMeta)refreshedItem.getItemMeta());
 		HeadUtils.setGameProfile(originalMeta, refreshedProfile); // This refreshes the texture
 
 //		if(!originalMeta.hasDisplayName() || FORCE_NAME_UPDATE) originalMeta.setDisplayName(refreshedItem.getItemMeta().getDisplayName());

@@ -10,8 +10,8 @@ import org.bukkit.metadata.FixedMetadataValue;
 import net.evmodder.DropHeads.DropHeads;
 
 public class EntityDamageListener implements Listener{
-	final private DropHeads pl;
-	final boolean ALLOW_PROJECTILE_KILLS;
+	private final DropHeads pl;
+	private final boolean ALLOW_PROJECTILE_KILLS;
 
 	// Only enabled if drop-for-indirect-kills:TRUE && drop-for-nonplayer-kills:FALSE
 	public EntityDamageListener(){
