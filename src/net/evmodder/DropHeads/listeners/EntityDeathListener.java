@@ -42,7 +42,7 @@ public class EntityDeathListener implements Listener{
 	private final Random rand;
 	private final HashSet<UUID> explodingChargedCreepers;
 	private final EventPriority PRIORITY;
-	private final boolean ALLOW_NON_PLAYER_KILLS, ALLOW_INDIRECT_KILLS, ALLOW_PROJECTILE_KILLS;
+	private final boolean ALLOW_NON_PLAYER_KILLS, ALLOW_INDIRECT_KILLS, ALLOW_PROJECTILE_KILLS;//TODO: pkillonly config per-mob?
 	private final boolean PLAYER_HEADS_ONLY, CHARGED_CREEPER_DROPS, VANILLA_WSKELE_HANDLING;
 	private final boolean DEBUG_MODE;
 	private final long INDIRECT_KILL_THRESHOLD_MILLIS = 30*1000;//TODO: move to config
@@ -91,7 +91,7 @@ public class EntityDeathListener implements Listener{
 		explodingChargedCreepers = new HashSet<UUID>();
 	}
 
-	ItemStack getWeaponFromKiller(Entity killer){
+	private ItemStack getWeaponFromKiller(Entity killer){
 		return killer != null ?
 					killer instanceof LivingEntity ? ((LivingEntity)killer).getEquipment().getItemInMainHand() :
 					killer instanceof Projectile && killer.hasMetadata("ShotUsing") ? (ItemStack)killer.getMetadata("ShotUsing").get(0).value() :

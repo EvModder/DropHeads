@@ -63,7 +63,7 @@ public class DropChanceAPI{
 	private enum AnnounceMode {GLOBAL, LOCAL, DIRECT, OFF};
 	private final AnnounceMode DEFAULT_ANNOUNCE;
 	private enum DropMode {EVENT, SPAWN, PLACE, PLACE_BY_KILLER, PLACE_BY_VICTIM, GIVE};
-	private final ArrayList<DropMode> DROP_MODES; // TODO: final HashMap<EntityType, DropMode> mobDropModes
+	private final ArrayList<DropMode> DROP_MODES; // TODO: per-mob drop mode?
 
 	private final boolean PLAYER_HEADS_ONLY, REPLACE_PLAYER_DEATH_EVT_MESSAGE, REPLACE_PET_DEATH_MESSAGE, REPLACE_PLAYER_DEATH_MESSAGE;
 	private final boolean VANILLA_WSKELE_HANDLING;
@@ -85,14 +85,13 @@ public class DropChanceAPI{
 	private final DeathMessagePacketIntercepter deathMessageBlocker;
 	private final Random rand;
 	private final HashSet<Material> headOverwriteBlocks;
-	private final Set<Material> mustUseTools;
-//	private final HashSet<EntityType> noLootingEffectMobs;
+	private final Set<Material> mustUseTools; // TODO: per-mob must-use-tools?
 	private final Map<EntityType, Double> mobChances;
 	private final double DEFAULT_CHANCE;
 	private final HashMap<EntityType, HashMap<String, Double>> subtypeMobChances;
 	private final HashMap<EntityType, AnnounceMode> mobAnnounceModes;
-	private final HashMap<String, Double> permissionBasedMults;
-	private final HashMap<Material, Double> weaponMults;
+	private final HashMap<String, Double> permissionBasedMults; // TODO: per-mob perm mults?
+	private final HashMap<Material, Double> weaponMults; // TODO: per-mob weapon mults?
 	private final TreeMap<Integer, Double> DEFAULT_TIME_ALIVE_MULTS;
 	private final HashMap<EntityType, TreeMap<Integer, Double>> timeAliveMults;// Note: Bukkit's e.getTicksLived() returns an int.
 
@@ -259,7 +258,7 @@ public class DropChanceAPI{
 		permissionBasedMults = new HashMap<String, Double>();
 		ConfigurationSection customDropratePerms = pl.getConfig().getConfigurationSection("custom-droprate-multiplier-permissions");
 		if(customDropratePerms != null) for(String perm : customDropratePerms.getKeys(/*recursive=*/true)){
-			// TODO: This will generate ["dropheads", "dropheads.group", "dropheads.group.2x", ...] because of how Bukkit/YML works
+			if(customDropratePerms.isConfigurationSection(perm)) continue; //ignore ['dropheads', 'dropheads.group'] for 'dropheads.group.2x'
 			try{permissionBasedMults.put(perm, customDropratePerms.getDouble(perm, 1D));}
 			catch(NumberFormatException ex){pl.getLogger().severe("Error parsing droprate multiplier for perm: \""+perm+'"');}
 		}
@@ -341,8 +340,8 @@ public class DropChanceAPI{
 		this.mobChances = Collections.unmodifiableMap(mobChances);
 
 		// Dynamically add all the children perms of "dropheads.alwaysbehead.<entity>" and "dropheads.canbehead.<entity>"
-		Permission alwaysBeheadPerm = pl.getServer().getPluginManager().getPermission("dropheads.alwaysbehead");
-		Permission canBeheadPerm = pl.getServer().getPluginManager().getPermission("dropheads.canbehead");
+		final Permission alwaysBeheadPerm = pl.getServer().getPluginManager().getPermission("dropheads.alwaysbehead");
+		final Permission canBeheadPerm = pl.getServer().getPluginManager().getPermission("dropheads.canbehead");
 		if(alwaysBeheadPerm != null) try{
 			for(EntityType entity : EntityType.values()){
 				final String entityName = entity.name().toLowerCase();
@@ -546,9 +545,9 @@ public class DropChanceAPI{
 	 * @return The behead message component
 	 */
 	public ListComponent getBeheadMessage(Entity entity, Entity killer, ItemStack weapon){
-		ListComponent message = new ListComponent();
-		Component killerComp = getKillerComponent(killer);
-		Component itemComp = getWeaponComponent(killer, weapon);
+		final ListComponent message = new ListComponent();
+		final Component killerComp = getKillerComponent(killer);
+		final Component itemComp = getWeaponComponent(killer, weapon);
 		if(killerComp != null){
 			if(itemComp != null){
 				final boolean hasCustomName = weapon != null && weapon.hasItemMeta() && weapon.getItemMeta().hasDisplayName();
@@ -580,52 +579,51 @@ public class DropChanceAPI{
 	 * @param killer The entity to announce as the killer
 	 * @param evt The <code>Entity*Event</code> from which this function is being called
 	 */
-	public void announceHeadDrop(Component message, Entity entity, Entity killer, Event evt){
-		if(!message.toPlainText().replaceAll(" ", "").isEmpty()){
-			if(DEBUG_MODE) pl.getLogger().info(/*"Tellraw message: "+*/message.toPlainText());
+	public void announceHeadDrop(@Nonnull Component message, Entity entity, Entity killer, Event evt){
+		if(message.toPlainText().replaceAll(" ", "").isEmpty()) return;
+		if(DEBUG_MODE) pl.getLogger().info(/*"Tellraw message: "+*/message.toPlainText());
 
-			AnnounceMode mode = mobAnnounceModes.getOrDefault(entity.getType(), DEFAULT_ANNOUNCE);
-			if(mode != AnnounceMode.OFF && mode != AnnounceMode.DIRECT && killer != null && (
-				killer.hasPermission("dropheads.silentbehead") ||
-				(killer.hasPermission("dropheads.silentbehead.invisible")
-					&& killer instanceof LivingEntity && ((LivingEntity)killer).hasPotionEffect(PotionEffectType.INVISIBILITY)
-				) ||
-				(killer.hasPermission("dropheads.silentbehead.vanished")
-					&& killer instanceof Player && JunkUtils.isVanished((Player)killer)
-				)
-			)) mode = AnnounceMode.DIRECT;
+		AnnounceMode mode = mobAnnounceModes.getOrDefault(entity.getType(), DEFAULT_ANNOUNCE);
+		if(mode != AnnounceMode.OFF && mode != AnnounceMode.DIRECT && killer != null && (
+			killer.hasPermission("dropheads.silentbehead") ||
+			(killer.hasPermission("dropheads.silentbehead.invisible")
+				&& killer instanceof LivingEntity && ((LivingEntity)killer).hasPotionEffect(PotionEffectType.INVISIBILITY)
+			) ||
+			(killer.hasPermission("dropheads.silentbehead.vanished")
+				&& killer instanceof Player && JunkUtils.isVanished((Player)killer)
+			)
+		)) mode = AnnounceMode.DIRECT;
 
-			final Entity petOwnerToMsg = REPLACE_PET_DEATH_MESSAGE && entity instanceof Tameable && ((Tameable)entity).getOwner() != null
-					? pl.getServer().getEntity(((Tameable)entity).getOwner().getUniqueId()) : null;
-			final String petOwnerToMsgName = petOwnerToMsg == null ? null : petOwnerToMsg.getName();
+		final Entity petOwnerToMsg = REPLACE_PET_DEATH_MESSAGE && entity instanceof Tameable && ((Tameable)entity).getOwner() != null
+				? pl.getServer().getEntity(((Tameable)entity).getOwner().getUniqueId()) : null;
+		final String petOwnerToMsgName = petOwnerToMsg == null ? null : petOwnerToMsg.getName();
 
-			switch(mode){
-				case GLOBAL:
-					sendTellraw("@a", message.toString());
-					if(entity instanceof Player && REPLACE_PLAYER_DEATH_MESSAGE && evt != null){
-						// Set the behead death message so that other plugins will see it (it will still get cleared by the intercepter)
-						//TODO: in order to do this, we will need to cancel this extra plaintext message in DeathMessagePacketIntercepter
-						if(REPLACE_PLAYER_DEATH_EVT_MESSAGE){
-							final String plainDeathMsg = message.toPlainText();
-							((PlayerDeathEvent)evt).setDeathMessage(plainDeathMsg);
-							deathMessageBlocker.blockSpeficicMessage(plainDeathMsg, /*ticksBlockedFor=*/5);
-						}
+		switch(mode){
+			case GLOBAL:
+				sendTellraw("@a", message.toString());
+				if(entity instanceof Player && REPLACE_PLAYER_DEATH_MESSAGE && evt != null){
+					// Set the behead death message so that other plugins will see it (it will still get cleared by the intercepter)
+					//TODO: in order to do this, we will need to cancel this extra plaintext message in DeathMessagePacketIntercepter
+					if(REPLACE_PLAYER_DEATH_EVT_MESSAGE){
+						final String plainDeathMsg = message.toPlainText();
+						((PlayerDeathEvent)evt).setDeathMessage(plainDeathMsg);
+						deathMessageBlocker.blockSpeficicMessage(plainDeathMsg, /*ticksBlockedFor=*/5);
 					}
-					break;
-				case LOCAL:
-					ArrayList<Player> nearbyPlayers = EvUtils.getNearbyPlayers(entity.getLocation(), LOCAL_RANGE, CROSS_DIMENSIONAL_BROADCAST);
-					for(Player p : nearbyPlayers) sendTellraw(p.getName(), message.toString());
-					if(petOwnerToMsgName != null && nearbyPlayers.stream().noneMatch(p -> p.getName().equals(petOwnerToMsgName))){
-						sendTellraw(petOwnerToMsgName, message.toString());
-					}
-					break;
-				case DIRECT:
-					if(killer instanceof Player) sendTellraw(killer.getName(), message.toString());
-					if(petOwnerToMsgName != null && !killer.getName().equals(petOwnerToMsgName)) sendTellraw(petOwnerToMsgName, message.toString());
-					break;
-				case OFF:
-					break;
-			}
+				}
+				break;
+			case LOCAL:
+				ArrayList<Player> nearbyPlayers = EvUtils.getNearbyPlayers(entity.getLocation(), LOCAL_RANGE, CROSS_DIMENSIONAL_BROADCAST);
+				for(Player p : nearbyPlayers) sendTellraw(p.getName(), message.toString());
+				if(petOwnerToMsgName != null && nearbyPlayers.stream().noneMatch(p -> p.getName().equals(petOwnerToMsgName))){
+					sendTellraw(petOwnerToMsgName, message.toString());
+				}
+				break;
+			case DIRECT:
+				if(killer instanceof Player) sendTellraw(killer.getName(), message.toString());
+				if(petOwnerToMsgName != null && !killer.getName().equals(petOwnerToMsgName)) sendTellraw(petOwnerToMsgName, message.toString());
+				break;
+			case OFF:
+				break;
 		}
 	}
 

@@ -34,7 +34,7 @@ public class EndermanProvokeListener implements Listener{
 	private EntityType getEntityTypeFromHead(ItemStack head){
 		if(head == null || !HeadUtils.isHead(head.getType())) return null;
 		if(!HeadUtils.isPlayerHead(head.getType())) return HeadUtils.getEntityFromHead(head.getType());
-		GameProfile profile = HeadUtils.getGameProfile((SkullMeta)head.getItemMeta());
+		final GameProfile profile = HeadUtils.getGameProfile((SkullMeta)head.getItemMeta());
 		if(profile != null && profile.getName() != null){
 			String profileName = profile.getName().startsWith(pl.getAPI().getDropHeadsNamespacedKey()) ? profile.getName().substring(10) : profile.getName();
 			if(pl.getAPI().textureExists(profileName)){
