@@ -22,6 +22,7 @@ FROZEN: 1			# When an entity is spawned by another entity freezing in powder sno
 INFECTION: 1		# When a zombie infects a villager
 JOCKEY: 1			# When an entity spawns as a jockey of another entity (spider jockeys)
 LIGHTNING: 1		# When a creature spawns because of a lightning strike
+METAMORPHOSIS: 1	# When a tadpole converts to a frog
 MOUNT: 1			# When an entity spawns as a mount of another entity (chicken jockeys)
 NATURAL: 1			# When something spawns from natural means
 NETHER_PORTAL: 0.05	# When a creature is spawned by nether portal
@@ -36,7 +37,7 @@ SILVERFISH_BLOCK: 1	# When a silverfish spawns from a block
 SLIME_SPLIT: 0.5	# When a slime splits
 SPAWNER: 0.05		# When a creature spawns from a spawner
 SPAWNER_EGG: 1.0	# When a creature spawns from a spawn egg
-SPELL:				# When an entity is created by a cast spell.
+SPELL: 1			# When an entity is created by a cast spell.
 TRAP: 2				# When an entity spawns as a trap for players approaching
 VILLAGE_DEFENSE: 1	# When an iron golem is spawned to defend a village
 VILLAGE_INVASION: 1	# When a zombie is spawned to invade a village

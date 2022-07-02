@@ -56,10 +56,10 @@ public class JunkUtils{
 		return System.currentTimeMillis() - lastDamage;
 	}
 	public final static double getSpawnCauseMult(Entity e){
-		//return e.hasMetadata("SpawnReason") ? e.getMetadata("SpawnReason").get(0).asDouble() : 1D;
+		//return e.hasMetadata("SRM") ? e.getMetadata("SRM").get(0).asDouble() : 1D;
 //		if(e == null) return 1D;
-		if(e.hasMetadata("SpawnReason")) return e.getMetadata("SpawnReason").get(0).asDouble();
-		for(String tag : e.getScoreboardTags()) if(tag.startsWith("SpawnReasonModifier:")) return Float.parseFloat(tag.substring(20));
+		if(e.hasMetadata(/*SpawnReasonMultiplier=*/"SRM")) return e.getMetadata("SRM").get(0).asDouble();
+		for(String tag : e.getScoreboardTags()) if(tag.startsWith("SRM:")) return Float.parseFloat(tag.substring(20));
 		return 1D;
 	}
 

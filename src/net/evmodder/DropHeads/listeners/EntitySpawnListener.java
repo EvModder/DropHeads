@@ -48,8 +48,8 @@ public class EntitySpawnListener implements Listener{
 		if(evt.getSpawnReason() != null){
 			final Float modifier = spawnModifiers.get(evt.getSpawnReason());
 			if(modifier != null){
-				evt.getEntity().setMetadata("SpawnReason", new FixedMetadataValue(pl, modifier));
-				evt.getEntity().addScoreboardTag("SpawnReasonModifier:"+modifier);
+				evt.getEntity().setMetadata(/*SpawnReasonMultiplier=*/"SRM", new FixedMetadataValue(pl, modifier));
+				evt.getEntity().addScoreboardTag("SRM:"+modifier);
 			}
 		}
 	}
