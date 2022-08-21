@@ -35,6 +35,7 @@ import net.evmodder.DropHeads.TextureKeyLookup;
 import net.evmodder.DropHeads.events.HeadRollEvent;
 import net.evmodder.EvLib.EvUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
+import net.evmodder.EvLib.extras.TextUtils;
 
 public class EntityDeathListener implements Listener{
 	private final DropHeads pl;
@@ -44,8 +45,8 @@ public class EntityDeathListener implements Listener{
 	private final EventPriority PRIORITY;
 	private final boolean ALLOW_NON_PLAYER_KILLS, ALLOW_INDIRECT_KILLS, ALLOW_PROJECTILE_KILLS;//TODO: pkillonly config per-mob?
 	private final boolean PLAYER_HEADS_ONLY, CHARGED_CREEPER_DROPS, VANILLA_WSKELE_HANDLING;
+	private final long INDIRECT_KILL_THRESHOLD_MILLIS;
 	private final boolean DEBUG_MODE;
-	private final long INDIRECT_KILL_THRESHOLD_MILLIS = 30*1000;//TODO: move to config
 
 	public EntityDeathListener(DeathMessagePacketIntercepter deathMessageBlocker){
 		pl = DropHeads.getPlugin();
@@ -58,6 +59,7 @@ public class EntityDeathListener implements Listener{
 		CHARGED_CREEPER_DROPS = pl.getConfig().getBoolean("charged-creeper-drops", true);
 		VANILLA_WSKELE_HANDLING = pl.getConfig().getBoolean("vanilla-wither-skeleton-skulls", false);
 		PRIORITY = JunkUtils.parseEnumOrDefault(pl.getConfig().getString("death-listener-priority", "LOW"), EventPriority.LOW);
+		INDIRECT_KILL_THRESHOLD_MILLIS = TextUtils.parseTimeInMillis(pl.getConfig().getString("indirect-kill-threshold", "30s"));
 		DEBUG_MODE = pl.getConfig().getBoolean("debug-messages", true);
 
 		if(PLAYER_HEADS_ONLY){
