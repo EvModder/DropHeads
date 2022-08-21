@@ -62,7 +62,7 @@ public class HeadAPI {
 //	private int MAX_HDB_ID = -1;
 	final Configuration translationsFile;  //TODO: make private
 	private final boolean GRUM_ENABLED, SADDLES_ENABLED, HOLLOW_SKULLS_ENABLED, TRANSPARENT_SLIME_ENABLED, CRACKED_IRON_GOLEMS_ENABLED, USE_PRE_JAPPA;
-	private final boolean UPDATE_PLAYER_HEADS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_VANILLA_HEADS;
+	private final boolean LOCK_PLAYER_SKINS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_VANILLA_HEADS;
 	private final TranslationComponent LOCAL_HEAD, LOCAL_SKULL, LOCAL_TOE;
 	private final HashMap<EntityType, /*headNameFormat=*/String> headNameFormats;
 	private final HashMap</*textureKey=*/String, /*headNameFormat=*/String> exactTextureKeyHeadNameFormats;
@@ -151,7 +151,7 @@ public class HeadAPI {
 		TRANSPARENT_SLIME_ENABLED = pl.getConfig().getBoolean("transparent-slime-heads", false);
 		CRACKED_IRON_GOLEMS_ENABLED = pl.getConfig().getBoolean("cracked-iron-golem-heads", false);
 		USE_PRE_JAPPA = pl.getConfig().getBoolean("use-legacy-head-textures", false);
-		UPDATE_PLAYER_HEADS = pl.getConfig().getBoolean("update-on-skin-change", true);
+		LOCK_PLAYER_SKINS = !pl.getConfig().getBoolean("update-on-skin-change", true);
 		boolean zombifiedPiglensExist = false;
 		try{EntityType.valueOf("ZOMBIFIED_PIGLIN"); zombifiedPiglensExist = true;} catch(IllegalArgumentException ex){}
 		final boolean UPDATE_ZOMBIE_PIGMEN_HEADS = zombifiedPiglensExist &&
@@ -568,7 +568,7 @@ public class HeadAPI {
 	ItemStack hdb_getItemHead_wrapper(String hdbId){// Calling hdbAPI.getItemHead(id) directly is bad.
 		ItemStack hdbHead = hdbAPI.getItemHead(hdbId);
 		GameProfile profile = HeadUtils.getGameProfile((SkullMeta)hdbHead.getItemMeta());
-		ItemStack head = HeadUtils.getPlayerHead(profile);
+		ItemStack head = HeadUtils.makeCustomHead(profile);
 		if(SAVE_TYPE_IN_LORE){
 			head = JunkUtils.setLore(head, new RawTextComponent(
 					HDB_PREFIX + hdbId,
@@ -637,6 +637,7 @@ public class HeadAPI {
 		if(entity.getType() == EntityType.PLAYER){
 			OfflinePlayer player = (OfflinePlayer)entity;
 			ItemStack head = getHead(new GameProfile(player.getUniqueId(), player.getName()));
+			//TODO: if update-textures=false, mapUUID and do profile.getProperties().put("texture", <skin code>);
 			SkullMeta meta = (SkullMeta)head.getItemMeta();
 			meta.setOwningPlayer(player);
 			head.setItemMeta(meta);
@@ -684,6 +685,10 @@ public class HeadAPI {
 		return head;
 	}
 
+//	private UUID getMappedUUID(UUID uuid){
+//		long b1 = uuid.getLeastSignificantBits(), b2 = uuid.getMostSignificantBits();
+//		return new UUID(-b1, -b2);
+//	}
 	/**
 	 * Get a custom head from a GameProfile
 	 * @param profile The profile information to create a head
@@ -702,19 +707,24 @@ public class HeadAPI {
 				return makeHeadFromTexture(profileName);
 			}
 		}
-		ItemStack head = HeadUtils.getPlayerHead(profile);
+		ItemStack head = HeadUtils.makeCustomHead(profile);
 		if(hdbAPI != null){  //-------------------- Handle HeadDatabase
 			String id = hdbAPI.getItemID(head);
 			if(id != null && hdbAPI.isHead(id)) return hdb_getItemHead_wrapper(id);
 		}
 		OfflinePlayer p = null;  //-------------------- Handle players
 		GameProfile pProfile = null;
-		if(profile.getId() != null && (p=pl.getServer().getOfflinePlayer(profile.getId())) != null
-				&& (p.hasPlayedBefore() || (pProfile=WebUtils.getGameProfile(profile.getId().toString())) != null)){
-			if(UPDATE_PLAYER_HEADS/* || !profile.isComplete() || profile.isLegacy() || profile.getName() == null*/){
+		if(profile.getId() != null && (
+				((p=pl.getServer().getOfflinePlayer(profile.getId())) != null
+				&& (p.hasPlayedBefore() || (pProfile=WebUtils.getGameProfile(profile.getId().toString())) != null))
+//				||
+//				((p=pl.getServer().getOfflinePlayer(getMappedUUID(profile.getId()))) != null
+//				&& (p.hasPlayedBefore() || (pProfile=WebUtils.getGameProfile(getMappedUUID(profile.getId()).toString())) != null))
+		)){
+			if(!LOCK_PLAYER_SKINS/* || !profile.isComplete() || profile.isLegacy() || profile.getName() == null*/){
 				profile = pProfile != null ? pProfile : new GameProfile(p.getUniqueId(), p.getName());
 				profileName = profile.getName();
-				head = HeadUtils.getPlayerHead(profile);
+				head = HeadUtils.makeCustomHead(profile);
 			}
 			boolean isMHF = profileName != null && profileName.startsWith("MHF_");
 			if(profileName != null){

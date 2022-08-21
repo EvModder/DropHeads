@@ -85,6 +85,10 @@ public class BlockClickListener implements Listener{
 		return profile;
 	}
 
+//	private UUID getMappedUUID(UUID uuid){
+//		long b1 = uuid.getLeastSignificantBits(), b2 = uuid.getMostSignificantBits();
+//		return new UUID(-b1, -b2);
+//	}
 	class HeadNameData{
 		// Only 1 of these 3 is ever defined.
 		public String hdbId, textureKey;
@@ -107,7 +111,7 @@ public class BlockClickListener implements Listener{
 		profile = stripCustomLoreAndNamespace(profile);
 		//hdb
 		final HeadDatabaseAPI hdbAPI = pl.getAPI().getHeadDatabaseAPI();
-		if(hdbAPI != null && (data.hdbId = hdbAPI.getItemID(HeadUtils.getPlayerHead(profile))) != null && hdbAPI.isHead(data.hdbId)){
+		if(hdbAPI != null && (data.hdbId = hdbAPI.getItemID(HeadUtils.makeCustomHead(profile))) != null && hdbAPI.isHead(data.hdbId)){
 			data.headType = HeadUtils.getDroppedHeadType(EntityType.UNKNOWN);  // "Head"
 			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(EntityType.UNKNOWN.name());  // "Unknown"
 			String hdbHeadName = hdbAPI.getItemHead(data.hdbId).getItemMeta().getDisplayName();
@@ -125,9 +129,12 @@ public class BlockClickListener implements Listener{
 			data.profileName = new RawTextComponent(profile.getName());
 		}
 		//player
-		else if(profile.getId() != null && (data.player = pl.getServer().getOfflinePlayer(profile.getId())) != null
-				&& (data.player.hasPlayedBefore() ||
-					(ENABLE_PROFILE_MOJANG_LOOKUP && (tempProfile=WebUtils.getGameProfile(profile.getId().toString())) != null))){
+		else if(profile.getId() != null
+				&& (((data.player=pl.getServer().getOfflinePlayer(profile.getId())) != null && (data.player.hasPlayedBefore()
+					|| (ENABLE_PROFILE_MOJANG_LOOKUP && (tempProfile=WebUtils.getGameProfile(profile.getId().toString())) != null)))
+//				|| ((data.player=pl.getServer().getOfflinePlayer(getMappedUUID(profile.getId()))) != null && (data.player.hasPlayedBefore()
+//					|| (ENABLE_PROFILE_MOJANG_LOOKUP && (tempProfile=WebUtils.getGameProfile(getMappedUUID(profile.getId()).toString())) != null)))
+		)){
 			data.headType = HeadUtils.getDroppedHeadType(EntityType.PLAYER);  // "Head"
 			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(EntityType.PLAYER.name());  // "Player"
 			data.profileName = new RawTextComponent(UPDATE_PLAYER_HEADS || profile.getName() == null 
