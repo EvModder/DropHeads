@@ -123,6 +123,7 @@ public class TextureKeyLookup{
 	private static RefMethod mShulkerGetPeek, mShulkerGetAttachedFace;
 	private static RefMethod mGetHandle, mGetDataWatcher, mGet_FromDataWatcher;
 	private static java.lang.reflect.Field ghastIsAttackingField;
+	private static RefMethod mGhastIsCharging;
 
 	/**
 	 * Find the most specific available head texture for a given entity.
@@ -257,7 +258,10 @@ public class TextureKeyLookup{
 			case "GHAST":
 				//https://wiki.vg/Entity_metadata#Ghast => isAttacking=15="" (1.13 - 1.15)
 				boolean isScreaming = false;
-				if(ghastIsAttackingField == null){
+				if(mGhastIsCharging == null && ghastIsAttackingField == null){
+					try{mGhastIsCharging = ReflectionUtils.getRefClass("org.bukkit.entity.Ghast").getMethod("isCharging");}
+					catch(RuntimeException ex){}
+					
 					mGetHandle = ReflectionUtils.getRefClass("{cb}.entity.CraftEntity").getMethod("getHandle");
 					final RefClass classEntityGhast = ReflectionUtils.getRefClass("{nms}.EntityGhast", "{nm}.world.entity.monster.EntityGhast");
 					final RefClass classDataWatcher = ReflectionUtils.getRefClass("{nms}.DataWatcher", "{nm}.network.syncher.DataWatcher");
@@ -271,7 +275,11 @@ public class TextureKeyLookup{
 							/*returnType=*/Object.class,/*classDataWatcherObject.getRealClass().getTypeParameters()[0]*/
 							/*argType(s)=*/classDataWatcherObject);//.getMethod("get", classDataWatcherObject);
 				}
-				try{
+				if(mGhastIsCharging != null){
+					// TODO: Since v?.?? Does this even work? Consider deleting old DataWatcher code approach?
+					isScreaming = mGhastIsCharging.of(entity).call().equals(true);
+				}
+				else try{
 					final Object datawatcherobject = ghastIsAttackingField.get(null);
 					final Object entityGhast = mGetHandle.of(entity).call();
 					final Object dataWatcher = mGetDataWatcher.of(entityGhast).call();
@@ -279,7 +287,7 @@ public class TextureKeyLookup{
 //					org.bukkit.Bukkit.getLogger().info("Ghast isCharging: "+mGet_FromDataWatcher.of(dataWatcher).call(datawatcherobject).toString());
 				}
 				catch(IllegalArgumentException | IllegalAccessException e){}
-				if(isScreaming) return "GHAST|SCREAMING";//TODO: Add this to the Bukkit API
+				if(isScreaming) return "GHAST|SCREAMING";
 				else return "GHAST";
 			case "GOAT":
 				if(ReflectionUtils.getServerVersionString().compareTo("v1_17_??") < 0) return "GOAT";
