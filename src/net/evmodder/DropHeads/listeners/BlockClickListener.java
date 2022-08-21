@@ -38,7 +38,7 @@ import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
 
 public class BlockClickListener implements Listener{
 	private final DropHeads pl;
-	private final boolean SHOW_CLICK_INFO, REPAIR_IRON_GOLEM_HEADS, UPDATE_PLAYER_HEADS;
+	private final boolean SHOW_CLICK_INFO, REPAIR_IRON_GOLEM_HEADS, UPDATE_PLAYER_HEADS, ENABLE_PROFILE_MOJANG_LOOKUP;
 	private final String HEAD_DISPLAY_PLAYERS, HEAD_DISPLAY_MOBS, HEAD_DISPLAY_HDB, HEAD_DISPLAY_UNKNOWN, MOB_SUBTYPES_SEPARATOR;
 	private final int CLICK_MSG_DELAY_TICKS; // So they dont spam themselves
 	private final HashSet<UUID> recentClickers;
@@ -64,11 +64,12 @@ public class BlockClickListener implements Listener{
 							pl.getConfig().getString("head-click-format-unknown", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head")));
 			MOB_SUBTYPES_SEPARATOR = translations.getString("mob-subtype-separator", " ");
 			UPDATE_PLAYER_HEADS = pl.getConfig().getBoolean("update-on-skin-change", true);
+			ENABLE_PROFILE_MOJANG_LOOKUP = pl.getConfig().getBoolean("head-click-enable-profile-requests", true);
 		}
 		else{
 			CLICK_MSG_DELAY_TICKS = 10;
 			HEAD_DISPLAY_PLAYERS = HEAD_DISPLAY_MOBS = HEAD_DISPLAY_HDB = HEAD_DISPLAY_UNKNOWN = MOB_SUBTYPES_SEPARATOR = null;
-			UPDATE_PLAYER_HEADS = false;
+			ENABLE_PROFILE_MOJANG_LOOKUP = UPDATE_PLAYER_HEADS = false;
 		}
 		recentClickers = CLICK_MSG_DELAY_TICKS > 0 ? new HashSet<UUID>() : null;
 	}
@@ -93,7 +94,7 @@ public class BlockClickListener implements Listener{
 		public Component profileName;
 		public HeadType headType;
 	}
-	HeadNameData getHeadNameData(GameProfile profile){
+	private HeadNameData getHeadNameData(GameProfile profile){
 		HeadNameData data = new HeadNameData();
 		GameProfile tempProfile = null;
 		if(profile == null){
@@ -125,7 +126,8 @@ public class BlockClickListener implements Listener{
 		}
 		//player
 		else if(profile.getId() != null && (data.player = pl.getServer().getOfflinePlayer(profile.getId())) != null
-				&& (data.player.hasPlayedBefore() || (tempProfile=WebUtils.getGameProfile(profile.getId().toString())) != null)){
+				&& (data.player.hasPlayedBefore() ||
+					(ENABLE_PROFILE_MOJANG_LOOKUP && (tempProfile=WebUtils.getGameProfile(profile.getId().toString())) != null))){
 			data.headType = HeadUtils.getDroppedHeadType(EntityType.PLAYER);  // "Head"
 			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(EntityType.PLAYER.name());  // "Player"
 			data.profileName = new RawTextComponent(UPDATE_PLAYER_HEADS || profile.getName() == null 
@@ -143,12 +145,12 @@ public class BlockClickListener implements Listener{
 		return data;
 	}
 	@SuppressWarnings("deprecation")
-	HeadNameData getHeadNameData(BlockState skull){
+	private HeadNameData getHeadNameData(BlockState skull){
 		if(HeadUtils.isPlayerHead(skull.getType())){
 			HeadNameData headData = getHeadNameData(HeadUtils.getGameProfile((Skull)skull));
 			if(((Skull)skull).hasOwner() && headData.player == null){
 				OfflinePlayer player = ((Skull)skull).getOwningPlayer();
-				GameProfile profile = WebUtils.getGameProfile(player.getUniqueId().toString());
+				GameProfile profile = ENABLE_PROFILE_MOJANG_LOOKUP ? WebUtils.getGameProfile(player.getUniqueId().toString()) : null;
 				if(player.hasPlayedBefore() || profile != null){
 					headData.player = player;
 					if(player.getName() != null) headData.profileName = new RawTextComponent(player.getName());
