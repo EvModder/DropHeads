@@ -94,6 +94,8 @@ public class DropChanceAPI{
 	private final HashMap<Material, Double> weaponMults; // TODO: per-mob weapon mults?
 	private final TreeMap<Integer, Double> DEFAULT_TIME_ALIVE_MULTS;
 	private final HashMap<EntityType, TreeMap<Integer, Double>> timeAliveMults;// Note: Bukkit's e.getTicksLived() returns an int.
+	private final LRUCache<ItemStack, Component> weaponCompCache;
+	private final int WEAPON_COMP_CACHE_SIZE;
 
 	/**
 	 * Get the default head drop chance for an entity when a drop chance chance is specified in the config
@@ -145,6 +147,8 @@ public class DropChanceAPI{
 				"${TIMESTAMP},mob decapitated,${VICTIM},${KILLER},${ITEM}") : null;
 		LOG_PLAYER_FORMAT = LOG_PLAYER_BEHEAD ? pl.getConfig().getString("log.log-player-behead-format",
 				"${TIMESTAMP},player decapitated,${VICTIM},${KILLER},${ITEM}") : null;
+		WEAPON_COMP_CACHE_SIZE = pl.getConfig().getInt("weapon-tellraw-component-cache-size", 0);
+		weaponCompCache = WEAPON_COMP_CACHE_SIZE > 0 ? new LRUCache<>(WEAPON_COMP_CACHE_SIZE) : null;
 
 		JSON_LIMIT = pl.getConfig().getInt("message-json-limit", 15000);
 		MSG_BEHEAD = parseStringOrStringList("message-beheaded", "&6${VICTIM}&r was decapitated",
@@ -532,7 +536,14 @@ public class DropChanceAPI{
 		return JunkUtils.getDisplayNameSelectorComponent(killer);
 	}
 	private Component getWeaponComponent(Entity killer, ItemStack weapon){
-		if(weapon != null && weapon.getType() != Material.AIR) return JunkUtils.getMurderItemComponent(weapon, JSON_LIMIT);
+		if(weapon != null && weapon.getType() != Material.AIR){
+			Component weaponComp = weaponCompCache.get(weapon);
+			if(weaponComp == null){
+				weaponComp = JunkUtils.getMurderItemComponent(weapon, JSON_LIMIT);
+				weaponCompCache.put(weapon, weaponComp);
+			}
+			return weaponComp;
+		}
 		if(killer != null && killer instanceof Projectile) return new SelectorComponent(killer.getUniqueId());
 		return null;
 	}
