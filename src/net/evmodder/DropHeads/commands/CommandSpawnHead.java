@@ -48,8 +48,8 @@ public class CommandSpawnHead extends EvCommand{
 	final boolean SHOW_SUBTYPE_IN_TAB_COMPLETE_FOR_BAR = true;
 	final boolean ENABLE_LOG;
 	final String LOG_FORMAT;
-	final int MAX_IDS_SHOWN = 200; //TODO: move to config
-	final int MAX_ENTITIES_SELECTED = 100; //TODO: move to config
+//	final int MAX_IDS_SHOWN = 200; //move to config?
+	final int MAX_ENTITIES_SELECTED;
 
 	// TODO: Maybe re-add aliases (code:,url:,value: -> code:)
 	final String MOB_PREFIX, PLAYER_PREFIX, HDB_PREFIX, SELF_PREFIX, CODE_PREFIX, AMT_PREFIX, GIVETO_PREFIX, SLOT_PREFIX;
@@ -131,6 +131,8 @@ public class CommandSpawnHead extends EvCommand{
 
 		ENABLE_LOG = pl.getConfig().getBoolean("log.enable", false) && pl.getConfig().getBoolean("log.log-head-command", false);
 		LOG_FORMAT = ENABLE_LOG ? pl.getConfig().getString("log.log-head-command-format", "${TIMESTAMP},gethead command,${SENDER},${HEAD}") : null;
+
+		MAX_ENTITIES_SELECTED = pl.getConfig().getInt("spawnhead-command-entity-select-limit", 100);
 	}
 
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
