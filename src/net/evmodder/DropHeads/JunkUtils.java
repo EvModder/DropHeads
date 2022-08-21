@@ -200,7 +200,7 @@ public class JunkUtils{
 		}
 	}
 
-//	//TODO: not currently used
+// not currently used
 //	// Similar as above, but for Entity instead of ItemStack
 //	final static RefClass craftEntityClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftEntity");
 //	final static RefMethod entityGetHandleMethod = craftEntityClazz.getMethod("getHandle");
@@ -315,7 +315,7 @@ public class JunkUtils{
 		return nearestFace;
 	}
 
-//	//TODO: not currently used
+// not currently used
 //	public interface TestFunc{boolean test(int num);}
 //	public final static int binarySearch(TestFunc f, int a, int b){
 //		while(a < b-1){
@@ -326,7 +326,7 @@ public class JunkUtils{
 //		return a;
 //	}
 
-//	//TODO: not currently used
+// not currently used
 //	public final static int exponentialSearch(TestFunc f, int a){
 //		a = f.test(a) ? 2*a : 1;
 //		while(f.test(a)) a *= 2;

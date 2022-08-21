@@ -32,8 +32,7 @@ import net.evmodder.EvLib.Updater;
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
 // * un-dye heads (sheep,shulker) with cauldron (gimmick)
 // * jeb_ sheep head animated phase through colors (gimmick)
-// * full /minecraft:give command support
-// * namespaced custom heads in /give
+// * full /minecraft:give command support (namespaced custom heads in /give)
 //TEST:
 // * ALL player-visible msgs in plugin translated in translations.yml
 // * replace death message for pets and players with behead message

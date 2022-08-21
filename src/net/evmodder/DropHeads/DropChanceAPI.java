@@ -614,7 +614,7 @@ public class DropChanceAPI{
 				sendTellraw("@a", message.toString());
 				if(entity instanceof Player && REPLACE_PLAYER_DEATH_MESSAGE && evt != null){
 					// Set the behead death message so that other plugins will see it (it will still get cleared by the intercepter)
-					//TODO: in order to do this, we will need to cancel this extra plaintext message in DeathMessagePacketIntercepter
+					// In order to do this, we need to cancel the extra plaintext message in DeathMessagePacketIntercepter
 					if(REPLACE_PLAYER_DEATH_EVT_MESSAGE){
 						final String plainDeathMsg = message.toPlainText();
 						((PlayerDeathEvent)evt).setDeathMessage(plainDeathMsg);

@@ -20,7 +20,7 @@ public class LRUCache<K, V>{
 	}
 	public V put(K k, V v){
 		V old_v = map.put(k, v);
-		if(old_v == null){//TODO: else, move k to end of fifo?
+		if(old_v == null){// else, move k to end of fifo?
 			fifo.add(k);
 			if(fifo.size() > MAX_SIZE) map.remove(fifo.remove());
 		}
