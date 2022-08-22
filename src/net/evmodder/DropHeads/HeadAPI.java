@@ -23,11 +23,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
@@ -79,7 +79,7 @@ public class HeadAPI {
 	// Loads config.getString(key), replacing '${abc-xyz}' with config.getString('abc-xyz')
 	/** DO NOT USE: This function may disappear in a future release */
 	public String loadTranslationStr(String key){
-//		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in translations file: "+key);
+		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in translations file: "+key);
 		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key));
 		int i = msg.indexOf('$');
 		if(i == -1) return msg;
@@ -108,8 +108,7 @@ public class HeadAPI {
 	/** DO NOT USE: This function may disappear in a future release */
 	public TranslationComponent loadTranslationComp(String key){
 //		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in translations file: "+key);
-		final String rawMsg = translationsFile.getString(key);
-		final String msg = TextUtils.translateAlternateColorCodes('&', rawMsg != null ? rawMsg : key);
+		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key, key));
 		int i = msg.indexOf('$');
 		if(i == -1){
 			return new TranslationComponent(msg);
@@ -568,7 +567,7 @@ public class HeadAPI {
 	ItemStack hdb_getItemHead_wrapper(String hdbId){// Calling hdbAPI.getItemHead(id) directly is bad.
 		ItemStack hdbHead = hdbAPI.getItemHead(hdbId);
 		GameProfile profile = HeadUtils.getGameProfile((SkullMeta)hdbHead.getItemMeta());
-		ItemStack head = HeadUtils.makeCustomHead(profile);
+		ItemStack head = HeadUtils.makeCustomHead(profile, /*setOwner=*/false);
 		if(SAVE_TYPE_IN_LORE){
 			head = JunkUtils.setLore(head, new RawTextComponent(
 					HDB_PREFIX + hdbId,
@@ -628,6 +627,19 @@ public class HeadAPI {
 			}
 	}
 
+	private String minimizeTextureCode(String base64){
+		String json = new String(Base64.getDecoder().decode(base64));
+//		pl.getLogger().info("skin json: "+json);
+		final String URL_START_MATCH = "\"url\" : \"http://textures.minecraft.net/texture/";
+		final int startIdx = json.indexOf(URL_START_MATCH)+URL_START_MATCH.length();
+		final int endIdx = json.indexOf('"', startIdx);
+		final String urlCode = json.substring(startIdx, endIdx);
+//		pl.getLogger().info("url code: "+urlCode);
+		return Base64.getEncoder().encodeToString(
+				("{\"textures\":{\"SKIN\":{\"url\":\"http://textures.minecraft.net/texture/"+urlCode+"\"}}}")
+					.getBytes(StandardCharsets.ISO_8859_1));
+	}
+
 	/**
 	 * Get a custom head from an Entity
 	 * @param entity The entity for which to to create a head
@@ -635,13 +647,7 @@ public class HeadAPI {
 	 */
 	public ItemStack getHead(Entity entity/*, boolean saveTypeInLore, boolean unstackable*/){
 		if(entity.getType() == EntityType.PLAYER){
-			OfflinePlayer player = (OfflinePlayer)entity;
-			ItemStack head = getHead(new GameProfile(player.getUniqueId(), player.getName()));
-			//TODO: if update-textures=false, mapUUID and do profile.getProperties().put("texture", <skin code>);
-			SkullMeta meta = (SkullMeta)head.getItemMeta();
-			meta.setOwningPlayer(player);
-			head.setItemMeta(meta);
-			return head;
+			return getHead(new GameProfile(entity.getUniqueId(), entity.getName()));
 		}
 		String textureKey = TextureKeyLookup.getTextureKey(entity);
 		if(!SADDLES_ENABLED && textureKey.endsWith("|SADDLED")) textureKey = textureKey.substring(0, textureKey.length()-8);
@@ -707,26 +713,37 @@ public class HeadAPI {
 				return makeHeadFromTexture(profileName);
 			}
 		}
-		ItemStack head = HeadUtils.makeCustomHead(profile);
+		ItemStack head = HeadUtils.makeCustomHead(profile, /*setOwner=*/!LOCK_PLAYER_SKINS);
 		if(hdbAPI != null){  //-------------------- Handle HeadDatabase
 			String id = hdbAPI.getItemID(head);
 			if(id != null && hdbAPI.isHead(id)) return hdb_getItemHead_wrapper(id);
 		}
-		OfflinePlayer p = null;  //-------------------- Handle players
-		GameProfile pProfile = null;
-		if(profile.getId() != null && (
-				((p=pl.getServer().getOfflinePlayer(profile.getId())) != null
-				&& (p.hasPlayedBefore() || (pProfile=WebUtils.getGameProfile(profile.getId().toString())) != null))
-//				||
-//				((p=pl.getServer().getOfflinePlayer(getMappedUUID(profile.getId()))) != null
-//				&& (p.hasPlayedBefore() || (pProfile=WebUtils.getGameProfile(getMappedUUID(profile.getId()).toString())) != null))
-		)){
-			if(!LOCK_PLAYER_SKINS/* || !profile.isComplete() || profile.isLegacy() || profile.getName() == null*/){
-				profile = pProfile != null ? pProfile : new GameProfile(p.getUniqueId(), p.getName());
+		Player player = null;  //-------------------- Handle players
+		GameProfile webProfile = null;
+		final boolean updateSkin = !profile.getProperties().containsKey("textures") || !LOCK_PLAYER_SKINS;
+		if(profile.getId() != null && 
+				((player=pl.getServer().getPlayer(profile.getId())) != null
+				|| (webProfile=WebUtils.getGameProfile(profile.getId().toString(), updateSkin)) != null)
+		){
+			if(player != null || webProfile != null){
+				if(updateSkin) profile = player != null ? JunkUtils.getProfile(player) : webProfile;
 				profileName = profile.getName();
-				head = HeadUtils.makeCustomHead(profile);
+
+				if(LOCK_PLAYER_SKINS){
+					final Collection<Property> textures = profile.getProperties().get("textures");
+					if(textures == null || textures.isEmpty() || textures.size() > 1){
+						pl.getLogger().warning("Unable to find skin for player: "+profileName);
+					}
+					else{
+						final String newCode = minimizeTextureCode(textures.iterator().next().getValue());
+						profile.getProperties().clear();
+						profile.getProperties().put("textures", new Property("textures", newCode));
+					}
+				}
+				head = HeadUtils.makeCustomHead(profile, /*setOwner=*/!LOCK_PLAYER_SKINS);
 			}
-			boolean isMHF = profileName != null && profileName.startsWith("MHF_");
+
+			final boolean isMHF = profileName != null && profileName.startsWith("MHF_");
 			if(profileName != null){
 				head = JunkUtils.setDisplayName(head, isMHF
 					? new RawTextComponent(ChatColor.YELLOW+profileName, /*insert=*/null, /*click=*/null, /*hover=*/null,
@@ -734,7 +751,7 @@ public class HeadAPI {
 					: getHeadNameFromKey("PLAYER", /*customName=*/profileName));
 			}
 			if(SAVE_TYPE_IN_LORE){
-				head = JunkUtils.setLore(head, new RawTextComponent(
+				head = JunkUtils.setLore(head/*TODO: need to clone for hasPlayedBefore???*/, new RawTextComponent(
 						(isMHF ? MHF_PREFIX : PLAYER_PREFIX) + profileName,
 						/*insert=*/null, /*click=*/null, /*hover=*/null,
 						/*color=*/"dark_gray", /*formats=*/Collections.singletonMap(Format.ITALIC, false)));
@@ -742,9 +759,9 @@ public class HeadAPI {
 		}
 		//-------------------- Handle raw textures
 		else if(profile.getProperties() != null && profile.getProperties().containsKey("textures")){
-			Collection<Property> textures = profile.getProperties().get("textures");
+			final Collection<Property> textures = profile.getProperties().get("textures");
 			if(textures != null && !textures.isEmpty()){
-				String code0 = profile.getProperties().get("textures").iterator().next().getValue();
+				final String code0 = profile.getProperties().get("textures").iterator().next().getValue();
 				return getHead(code0.getBytes());
 			}
 		}

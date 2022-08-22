@@ -15,6 +15,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
+import com.mojang.authlib.GameProfile;
 import io.netty.channel.Channel;
 import javax.annotation.Nonnull;
 import net.evmodder.EvLib.extras.NBTTagUtils;
@@ -314,6 +315,9 @@ public class JunkUtils{
 		}
 		return nearestFace;
 	}
+
+	private final static RefMethod playerGetProfileMethod = craftPlayerClazz.getMethod("getProfile");
+	public final static GameProfile getProfile(Player player){return (GameProfile)playerGetProfileMethod.of(player).call();}
 
 // not currently used
 //	public interface TestFunc{boolean test(int num);}

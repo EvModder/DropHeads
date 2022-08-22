@@ -260,7 +260,7 @@ public class CommandSpawnHead extends EvCommand{
 //			p = pl.getServer().getOfflinePlayer(UUID.fromString(target));
 //			if(p != null && p.hasPlayedBefore()) return new GameProfile(p.getUniqueId(), p.getName());
 //		}catch(IllegalArgumentException ex){}
-		return WebUtils.getGameProfile(target);
+		return WebUtils.getGameProfile(target, /*fetchSkin=*/false);
 	}
 
 	private static class HeadFromString{
@@ -541,10 +541,11 @@ public class CommandSpawnHead extends EvCommand{
 		}
 
 		// Send success message
-		final String messageFormatStr =
+		String messageFormatStr =
 				recipientComps.size() == 0 ? (amtOfEachHead.size() > 1 ? SUCCESSFULLY_SPAWNED_HEADS : SUCCESSFULLY_SPAWNED_HEAD)
 				: recipientComps.size() == 1 ? (amtOfEachHead.size() > 1 ? SUCCESSFULLY_GAVE_HEADS : SUCCESSFULLY_GAVE_HEAD)
 				: (amtOfEachHead.size() > 1 ? SUCCESSFULLY_MULTI_GAVE_HEADS : SUCCESSFULLY_MULTI_GAVE_HEAD);
+		if(!messageFormatStr.contains("%")) messageFormatStr += '%';
 
 		// TODO: This assumes the message has a default color & formats when it actually might not.
 		final Component msgColorAndFormatsPlusComma = new ListComponent(

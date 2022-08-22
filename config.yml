@@ -52,9 +52,8 @@ refresh-item-names: false
 # This setting is ignored if 'save-custom-lore' is true
 refresh-item-lores: false
 
-# Should textures be refreshed when heads are mined or dropped?
-# Note: disabling this does not work currently
-update-on-skin-change: true
+# Should heads update to the match a player's current skin mined or dropped?
+update-on-skin-change: false
 
 # Whether to disable head item stacking (stack to 1 instead of 64)
 # Note: Currently only affects custom (non-vanilla) heads

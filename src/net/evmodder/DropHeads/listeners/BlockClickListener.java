@@ -111,7 +111,7 @@ public class BlockClickListener implements Listener{
 		profile = stripCustomLoreAndNamespace(profile);
 		//hdb
 		final HeadDatabaseAPI hdbAPI = pl.getAPI().getHeadDatabaseAPI();
-		if(hdbAPI != null && (data.hdbId = hdbAPI.getItemID(HeadUtils.makeCustomHead(profile))) != null && hdbAPI.isHead(data.hdbId)){
+		if(hdbAPI != null && (data.hdbId = hdbAPI.getItemID(HeadUtils.makeCustomHead(profile, /*setOwner=*/false))) != null && hdbAPI.isHead(data.hdbId)){
 			data.headType = HeadUtils.getDroppedHeadType(EntityType.UNKNOWN);  // "Head"
 			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(EntityType.UNKNOWN.name());  // "Unknown"
 			String hdbHeadName = hdbAPI.getItemHead(data.hdbId).getItemMeta().getDisplayName();
@@ -129,12 +129,10 @@ public class BlockClickListener implements Listener{
 			data.profileName = new RawTextComponent(profile.getName());
 		}
 		//player
-		else if(profile.getId() != null
-				&& (((data.player=pl.getServer().getOfflinePlayer(profile.getId())) != null && (data.player.hasPlayedBefore()
-					|| (ENABLE_PROFILE_MOJANG_LOOKUP && (tempProfile=WebUtils.getGameProfile(profile.getId().toString())) != null)))
-//				|| ((data.player=pl.getServer().getOfflinePlayer(getMappedUUID(profile.getId()))) != null && (data.player.hasPlayedBefore()
-//					|| (ENABLE_PROFILE_MOJANG_LOOKUP && (tempProfile=WebUtils.getGameProfile(getMappedUUID(profile.getId()).toString())) != null)))
-		)){
+		else if(profile.getId() != null && (data.player=pl.getServer().getOfflinePlayer(profile.getId())) != null
+				&& (data.player.hasPlayedBefore()
+					|| (ENABLE_PROFILE_MOJANG_LOOKUP && (tempProfile=WebUtils.getGameProfile(profile.getId().toString(), /*fetchSkin=*/false)) != null))
+		){
 			data.headType = HeadUtils.getDroppedHeadType(EntityType.PLAYER);  // "Head"
 			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(EntityType.PLAYER.name());  // "Player"
 			data.profileName = new RawTextComponent(UPDATE_PLAYER_HEADS || profile.getName() == null 
@@ -157,7 +155,7 @@ public class BlockClickListener implements Listener{
 			HeadNameData headData = getHeadNameData(HeadUtils.getGameProfile((Skull)skull));
 			if(((Skull)skull).hasOwner() && headData.player == null){
 				OfflinePlayer player = ((Skull)skull).getOwningPlayer();
-				GameProfile profile = ENABLE_PROFILE_MOJANG_LOOKUP ? WebUtils.getGameProfile(player.getUniqueId().toString()) : null;
+				GameProfile profile = ENABLE_PROFILE_MOJANG_LOOKUP ? WebUtils.getGameProfile(player.getUniqueId().toString(), /*fetchSkin=*/false) : null;
 				if(player.hasPlayedBefore() || profile != null){
 					headData.player = player;
 					if(player.getName() != null) headData.profileName = new RawTextComponent(player.getName());
