@@ -537,6 +537,7 @@ public class DropChanceAPI{
 	}
 	private Component getWeaponComponent(Entity killer, ItemStack weapon){
 		if(weapon != null && weapon.getType() != Material.AIR){
+			if(weaponCompCache == null) return JunkUtils.getMurderItemComponent(weapon, JSON_LIMIT);
 			Component weaponComp = weaponCompCache.get(weapon);
 			if(weaponComp == null){
 				weaponComp = JunkUtils.getMurderItemComponent(weapon, JSON_LIMIT);

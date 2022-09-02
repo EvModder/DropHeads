@@ -5,8 +5,8 @@ description: Heads for every mob and player.
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
 #7=pet death msgs, API fix, 1.19 mobs, full-cmd-translation, more pre-jappas(tentative), fix shulker rotation, updated spawn-cause-modifiers
-#7=LRU-item comp name, head-click-disable-web-lookup, 'metamorphosis' (tadpole), minor profile lookup optimization, indirect-kill-threshold in config, offline player head fix, freeze-skin-update
-version: 3.7.7
+#8=
+version: 3.7.7.1
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 
