@@ -41,6 +41,8 @@ import net.evmodder.EvLib.extras.TellrawUtils.TextHoverAction;
 
 // A trashy place to dump stuff that I should probably move to EvLib after ensure cross-version safety
 public class JunkUtils{
+	public final static String SpawnCauseMultiplierKey = "SRM";
+
 	public final static <E extends Enum<E>> E parseEnumOrDefault(@Nonnull String stringValue, E defaultValue){
 		Class<E> enumClass = defaultValue.getDeclaringClass();
 		stringValue = stringValue.toUpperCase();
@@ -52,15 +54,26 @@ public class JunkUtils{
 			return defaultValue;
 		}
 	}
+
 	public final static long timeSinceLastPlayerDamage(Entity entity){
 		long lastDamage = entity.hasMetadata("PlayerDamage") ? entity.getMetadata("PlayerDamage").get(0).asLong() : 0;
 		return System.currentTimeMillis() - lastDamage;
 	}
+
 	public final static double getSpawnCauseMult(Entity e){
-		//return e.hasMetadata("SRM") ? e.getMetadata("SRM").get(0).asDouble() : 1D;
-//		if(e == null) return 1D;
-		if(e.hasMetadata(/*SpawnReasonMultiplier=*/"SRM")) return e.getMetadata("SRM").get(0).asDouble();
-		for(String tag : e.getScoreboardTags()) if(tag.startsWith("SRM:")) return Float.parseFloat(tag.substring(20));
+		if(e.hasMetadata(SpawnCauseMultiplierKey))
+		{
+			return e.getMetadata(SpawnCauseMultiplierKey).get(0).asDouble();
+		}
+
+		for(String tag : e.getScoreboardTags())
+		{
+			if(tag.startsWith(SpawnCauseMultiplierKey + ":"))
+			{
+				return Float.parseFloat(tag.substring(tag.indexOf(":") + 1));
+			}
+		}
+
 		return 1D;
 	}
 
