@@ -46,12 +46,12 @@ public class EntitySpawnListener implements Listener{
 
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void entitySpawnEvent(CreatureSpawnEvent evt){
-		if(evt.getSpawnReason() != null){
-			final Float modifier = spawnModifiers.get(evt.getSpawnReason());
-			if(modifier != null){
-				evt.getEntity().setMetadata(JunkUtils.SPAWN_CAUSE_MULTIPLIER_KEY, new FixedMetadataValue(pl, modifier));
-				evt.getEntity().addScoreboardTag(JunkUtils.SPAWN_CAUSE_MULTIPLIER_KEY+'_'+modifier);
-			}
-		}
+		if(evt.getSpawnReason() == null) return;
+
+		final Float modifier = spawnModifiers.get(evt.getSpawnReason());
+		if(modifier == null) return;
+
+		evt.getEntity().setMetadata(JunkUtils.SPAWN_CAUSE_MULTIPLIER_KEY, new FixedMetadataValue(pl, modifier));
+		evt.getEntity().addScoreboardTag(JunkUtils.SPAWN_CAUSE_MULTIPLIER_KEY+'_'+modifier);
 	}
 }

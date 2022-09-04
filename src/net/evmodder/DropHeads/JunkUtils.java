@@ -54,10 +54,12 @@ public class JunkUtils{
 			return defaultValue;
 		}
 	}
+
 	public final static long timeSinceLastPlayerDamage(Entity entity){
 		long lastDamage = entity.hasMetadata("PlayerDamage") ? entity.getMetadata("PlayerDamage").get(0).asLong() : 0;
 		return System.currentTimeMillis() - lastDamage;
 	}
+
 	public final static double getSpawnCauseMult(Entity e){
 		if(e.hasMetadata(SPAWN_CAUSE_MULTIPLIER_KEY)) return e.getMetadata(SPAWN_CAUSE_MULTIPLIER_KEY).get(0).asDouble();
 		for(String tag : e.getScoreboardTags()) if(tag.startsWith(SPAWN_CAUSE_MULTIPLIER_KEY)) return Float.parseFloat(
