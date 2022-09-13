@@ -6,7 +6,8 @@ website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
 #7=pet death msgs, API fix, 1.19 mobs, full-cmd-translation, more pre-jappas(tentative), fix shulker rotation, updated spawn-cause-modifiers
 #8=
-version: 3.7.7.1
+#2=fix str index out of bounds
+version: 3.7.7.2
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 
