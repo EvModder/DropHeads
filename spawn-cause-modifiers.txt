@@ -4,7 +4,7 @@
 # The new drop-chance is [modifier] * [the old drop-chance]
 
 BEEHIVE: 1			# When a bee is released from a beehive/bee nest
-BREEDING: 0.05		# When an animal breeds to create a baby
+BREEDING: 0.05		# When an animal breeds to create a baby (includes shulker and allay duplication)
 BUILD_IRONGOLEM: 1	# When an iron golem is spawned by being built
 BUILD_SNOWMAN: 1	# When a snowman is spawned by being built
 BUILD_WITHER: 1		# When a wither boss is spawned by being built
