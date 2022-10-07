@@ -63,6 +63,7 @@ public class HeadAPI {
 	final Configuration translationsFile;  //TODO: make private
 	private final boolean GRUM_ENABLED, SADDLES_ENABLED, HOLLOW_SKULLS_ENABLED, TRANSPARENT_SLIME_ENABLED, CRACKED_IRON_GOLEMS_ENABLED, USE_PRE_JAPPA;
 	private final boolean LOCK_PLAYER_SKINS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_VANILLA_HEADS;
+	private final String UNKNOWN_TEXTURE_CODE;
 	private final TranslationComponent LOCAL_HEAD, LOCAL_SKULL, LOCAL_TOE;
 	private final HashMap<EntityType, /*headNameFormat=*/String> headNameFormats;
 	private final HashMap</*textureKey=*/String, /*headNameFormat=*/String> exactTextureKeyHeadNameFormats;
@@ -236,6 +237,7 @@ public class HeadAPI {
 //		String localList = FileIO.loadFile("head-textures.txt", hardcodedList);  // This version does not preserve comments
 		String localList = FileIO.loadFile("head-textures.txt", getClass().getResourceAsStream("/head-textures.txt"));
 		loadTextures(localList, /*logMissingEntities=*/false, /*logUnknownEntities=*/true);
+		UNKNOWN_TEXTURE_CODE = textures.getOrDefault(EntityType.UNKNOWN.name(), "5c90ca5073c49b898a6f8cdbc72e6aca0a425ec83bc4355e3b834fd859282bdd");
 
 		//TODO: decide whether this feature is worth keeping
 		if(pl.getConfig().getBoolean("update-textures", false) && hardcodedList.length() > localList.length()){
@@ -284,7 +286,7 @@ public class HeadAPI {
 		missingHeads.remove(EntityType.ARMOR_STAND); // These 2 are 'alive', but aren't in head-textures.txt
 		for(String head : headsList.split("\n")){
 			head = head.replaceAll(" ", "");
-			int i = head.indexOf(":");
+			final int i = head.indexOf(":");
 			if(i != -1){
 				String texture = head.substring(i+1).trim();
 				if(texture.replace("xxx", "").isEmpty()) continue; //TODO: remove the xxx's
@@ -296,18 +298,18 @@ public class HeadAPI {
 								.getBytes(StandardCharsets.ISO_8859_1));
 				}
 
-				String key = head.substring(0, i).toUpperCase();
+				final String key = head.substring(0, i).toUpperCase();
 				if(textures.put(key, texture) != null) continue; // Don't bother checking EntityType if this head has already been added
 
-				int j = key.indexOf('|');
-				String typeName = (j == -1 ? key : key.substring(0, j));
+				final int j = key.indexOf('|');
+				final String eTypeName = (j == -1 ? key : key.substring(0, j)).toUpperCase();
 				try{
-					EntityType type = EntityType.valueOf(typeName);
+					EntityType type = EntityType.valueOf(eTypeName);
 					missingHeads.remove(type);
 				}
 				catch(IllegalArgumentException ex){
-					if(unknownHeads.add(typeName)){
-						if(logUnknownEntities) pl.getLogger().warning("Unknown entity '"+typeName+"' in head-textures.txt");
+					if(unknownHeads.add(eTypeName)){
+						if(logUnknownEntities) pl.getLogger().warning("Unknown entity '"+eTypeName+"' in head-textures.txt");
 					}
 				}
 			}
@@ -523,15 +525,10 @@ public class HeadAPI {
 	}
 
 	ItemStack makeHeadFromTexture(String textureKey/*, boolean saveTypeInLore, boolean unstackable*/){
-		String code = textures.get(textureKey);
-		if(code == null || code.isEmpty()) return null;
+		final String code = textures.getOrDefault(textureKey, UNKNOWN_TEXTURE_CODE);
+//		if(code == null || code.isEmpty()) return null;
 		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 		head = JunkUtils.setDisplayName(head, getHeadNameFromKey(textureKey, /*customName=*/""));
-
-		UUID uuid = UUID.nameUUIDFromBytes(textureKey.getBytes());// Stable UUID for this textureKey
-		GameProfile profile = new GameProfile(uuid, /*name=*/getDropHeadsNamespacedKey()+textureKey);// Initialized with UUID and name
-		if(code != null) profile.getProperties().put("textures", new Property("textures", code));
-		if(MAKE_UNSTACKABLE) profile.getProperties().put("random_uuid", new Property("random_uuid", UUID.randomUUID().toString()));
 		if(SAVE_TYPE_IN_LORE){
 			int i = textureKey.indexOf('|');
 			String entityTypeName = (i == -1 ? textureKey : textureKey.substring(0, i)).toLowerCase();
@@ -540,28 +537,14 @@ public class HeadAPI {
 					/*insert=*/null, /*click=*/null, /*hover=*/null,
 					/*color=*/"dark_gray", /*formats=*/Collections.singletonMap(Format.ITALIC, false)));
 		}
+		UUID uuid = UUID.nameUUIDFromBytes(textureKey.getBytes());// Stable UUID for this textureKey
+		GameProfile profile = new GameProfile(uuid, /*name=*/getDropHeadsNamespacedKey()+textureKey);// Initialized with UUID and name
+		profile.getProperties().put("textures", new Property("textures", code));
+		if(MAKE_UNSTACKABLE) profile.getProperties().put("random_uuid", new Property("random_uuid", UUID.randomUUID().toString()));
+
 		SkullMeta meta = (SkullMeta) head.getItemMeta();
 		HeadUtils.setGameProfile(meta, profile);
 		head.setItemMeta(meta);
-		return head;
-	}
-	@SuppressWarnings("deprecation")
-	ItemStack headUtils_makeSkull_wrapper(EntityType eType){// Calling HeadUtils.makeSkull(eType) directly is bad.
-		ItemStack head = HeadUtils.makeSkull(eType);
-		head = JunkUtils.setDisplayName(head, getHeadNameFromKey(eType.name(), /*customName=*/""));
-		if(SAVE_TYPE_IN_LORE){
-			head = JunkUtils.setLore(head, new RawTextComponent(
-					MOB_PREFIX + eType.name().toLowerCase(),
-					/*insert=*/null, /*click=*/null, /*hover=*/null,
-					/*color=*/"dark_gray", /*formats=*/Collections.singletonMap(Format.ITALIC, false)));
-		}
-		if(MAKE_UNSTACKABLE){
-			SkullMeta meta = (SkullMeta) head.getItemMeta();
-			GameProfile profile = HeadUtils.getGameProfile(meta);
-			profile.getProperties().put("random_uuid", new Property("random_uuid", UUID.randomUUID().toString()));
-			HeadUtils.setGameProfile(meta, profile);
-			head.setItemMeta(meta);
-		}
 		return head;
 	}
 	ItemStack hdb_getItemHead_wrapper(String hdbId){// Calling hdbAPI.getItemHead(id) directly is bad.
@@ -622,8 +605,7 @@ public class HeadAPI {
 			case ENDER_DRAGON:
 				return new ItemStack(Material.DRAGON_HEAD);
 			default:
-				if(textures.containsKey(type.name())) return makeHeadFromTexture(type.name());
-				return headUtils_makeSkull_wrapper(type);
+				return makeHeadFromTexture(type.name());
 			}
 	}
 

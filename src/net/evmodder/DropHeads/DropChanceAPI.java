@@ -471,7 +471,7 @@ public class DropChanceAPI{
 			switch(mode){
 				case EVENT:
 					if(evt instanceof EntityDeathEvent) ((EntityDeathEvent)evt).getDrops().add(headItem);
-					else entity.getWorld().dropItemNaturally(entity.getLocation(), headItem);
+					else entity.getWorld().dropItemNaturally(entity.getLocation(), headItem);/////////////////////////////////////////
 					headItem = null;
 					break;
 				case PLACE_BY_KILLER:

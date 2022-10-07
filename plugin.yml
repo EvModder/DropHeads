@@ -5,9 +5,8 @@ description: Heads for every mob and player.
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
 #7=pet death msgs, API fix, 1.19 mobs, full-cmd-translation, more pre-jappas(tentative), fix shulker rotation, updated spawn-cause-modifiers
-#8=
-#2=fix str index out of bounds
-version: 3.7.7.2
+#8=fix console error for missing textures (eg item_frame)
+version: 3.7.8
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 
