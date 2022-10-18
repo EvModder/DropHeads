@@ -151,14 +151,14 @@ public class EntityDeathListener implements Listener{
 		) return false;
 
 		final ItemStack murderWeapon = getWeaponFromKiller(killer);
+		final Material murdetWeaponType = murderWeapon == null ? Material.AIR : murderWeapon.getType();
 
-		if(!pl.getDropChanceAPI().getRequiredWeapons().isEmpty() &&
-				(murderWeapon == null || !pl.getDropChanceAPI().getRequiredWeapons().contains(murderWeapon.getType()))) return false;
+		if(!pl.getDropChanceAPI().getRequiredWeapons().isEmpty() && !pl.getDropChanceAPI().getRequiredWeapons().contains(murdetWeaponType)) return false;
 
 		final int lootingLevel = murderWeapon == null ? 0 : murderWeapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
 		final double lootingMod = lootingLevel == 0 ? 1D : Math.pow(pl.getDropChanceAPI().getLootingMult(), lootingLevel);
 		final double lootingAdd = pl.getDropChanceAPI().getLootingAdd()*lootingLevel;
-		final double weaponMod = pl.getDropChanceAPI().getWeaponMult(murderWeapon == null ? Material.AIR : murderWeapon.getType());
+		final double weaponMod = pl.getDropChanceAPI().getWeaponMult(murdetWeaponType);
 		final double timeAliveMod = pl.getDropChanceAPI().getTimeAliveMult(victim);
 		final double rawDropChance = pl.getDropChanceAPI().getRawDropChance(victim);
 		final double permsMod = pl.getDropChanceAPI().getPermsBasedMult(killer);
@@ -179,7 +179,7 @@ public class EntityDeathListener implements Listener{
 					DecimalFormat df = new DecimalFormat("0.0###");
 					pl.getLogger().info("Dropping Head: "+TextureKeyLookup.getTextureKey(victim)
 						+"\nKiller: "+(killer != null ? killer.getType() : "none")
-						+", Weapon: "+(murderWeapon != null ? murderWeapon.getType() : "none")
+						+", Weapon: "+murdetWeaponType
 						+"\nRaw chance: "+df.format(rawDropChance*100D)+"%\nMultipliers >> "+
 						(spawnCauseMod != 1 ? "SpawnReason: "+df.format((spawnCauseMod-1D)*100D)+"%, " : "") +
 						(timeAliveMod != 1 ? "TimeAlive: "+df.format((timeAliveMod-1D)*100D)+"%, " : "") +
