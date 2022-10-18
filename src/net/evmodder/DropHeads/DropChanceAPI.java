@@ -61,7 +61,7 @@ import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
  */
 public class DropChanceAPI{
 	private enum AnnounceMode {GLOBAL, LOCAL, DIRECT, OFF};
-	private final AnnounceMode DEFAULT_ANNOUNCE;
+	private final AnnounceMode DEFAULT_ANNOUNCE, SILENT_ANNOUNCE;
 	private enum DropMode {EVENT, SPAWN, PLACE, PLACE_BY_KILLER, PLACE_BY_VICTIM, GIVE};
 	private final ArrayList<DropMode> DROP_MODES; // TODO: per-mob drop mode?
 
@@ -176,7 +176,9 @@ public class DropChanceAPI{
 		}
 		else headOverwriteBlocks.add(Material.AIR);
 
+		SILENT_ANNOUNCE = parseAnnounceMode(pl.getConfig().getString("silentbehead-announcement", "OFF"), AnnounceMode.OFF);
 		mobAnnounceModes = new HashMap<>();
+		// Legacy config settings 'behead-announcement-mobs' and 'behead-announcement-players'
 		mobAnnounceModes.put(EntityType.UNKNOWN, parseAnnounceMode(pl.getConfig().getString("behead-announcement-mobs", "LOCAL"), AnnounceMode.LOCAL));
 		mobAnnounceModes.put(EntityType.PLAYER, parseAnnounceMode(pl.getConfig().getString("behead-announcement-players", "GLOBAL"), AnnounceMode.GLOBAL));
 		ConfigurationSection announceModes = pl.getConfig().getConfigurationSection("behead-announcement");
@@ -596,7 +598,7 @@ public class DropChanceAPI{
 		if(DEBUG_MODE) pl.getLogger().info(/*"Tellraw message: "+*/message.toPlainText());
 
 		AnnounceMode mode = mobAnnounceModes.getOrDefault(entity.getType(), DEFAULT_ANNOUNCE);
-		if(mode != AnnounceMode.OFF && mode != AnnounceMode.DIRECT && killer != null && (
+		if(mode != AnnounceMode.OFF && mode != SILENT_ANNOUNCE && killer != null && (
 			killer.hasPermission("dropheads.silentbehead") ||
 			(killer.hasPermission("dropheads.silentbehead.invisible")
 				&& killer instanceof LivingEntity && ((LivingEntity)killer).hasPotionEffect(PotionEffectType.INVISIBILITY)
@@ -604,7 +606,7 @@ public class DropChanceAPI{
 			(killer.hasPermission("dropheads.silentbehead.vanished")
 				&& killer instanceof Player && JunkUtils.isVanished((Player)killer)
 			)
-		)) mode = AnnounceMode.DIRECT;
+		)) mode = SILENT_ANNOUNCE;
 
 		final Entity petOwnerToMsg = REPLACE_PET_DEATH_MESSAGE && entity instanceof Tameable && ((Tameable)entity).getOwner() != null
 				? pl.getServer().getEntity(((Tameable)entity).getOwner().getUniqueId()) : null;

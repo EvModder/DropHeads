@@ -5,7 +5,7 @@ description: Heads for every mob and player.
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
 #7=pet death msgs, API fix, 1.19 mobs, full-cmd-translation, more pre-jappas(tentative), fix shulker rotation, updated spawn-cause-modifiers
-#8=fix console error for missing textures (eg item_frame)
+#8=fix console error for missing textures (eg item_frame), customize silentbehead, 
 version: 3.7.8
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
@@ -41,6 +41,14 @@ permissions:
     default: true
     children:
       dropheads.canbehead.player: true
+      # dropheads.canbehead.<entity>: true
+
+  dropheads.alwaysbehead:
+    description: Permission to get heads 100% of the time, unless the victim has canlosehead=false
+    default: false
+    children:
+      dropheads.canbehead: true
+      # dropheads.alwaysbehead.<entity>: true
 
   dropheads.canplacehead:
     description: Permission to place down a head block, if disabled by default in the config
@@ -114,23 +122,18 @@ permissions:
     description: Permission to spawn all the heads in a big cube
     default: false
 
-  dropheads.alwaysbehead:
-    description: This entity will get heads 100% of the time, unless canlosehead is false
-    default: false
-    children:
-      dropheads.canbehead: true
-
   dropheads.silentbehead:
-    description: Permission to hide all behead messages caused by this entity
+    description: Permission to hide behead messages that you caused from everyone else
     default: false
     children:
       dropheads.silentbehead.vanished: true
       dropheads.silentbehead.invisible: true
 
-  dropheads.silentbehead.vanished:  # NOTE: Currently only supports Essentials and VanishNoPacket
-    description: Permission to suppress the behead message while vanished
+  # NOTE: Currently supports Essentials and VanishNoPacket
+  dropheads.silentbehead.vanished:
+    description: Permission to hide behead messages while vanished
     default: true
 
   dropheads.silentbehead.invisible:
-    description: Permission to suppress the behead message while invisible
+    description: Permission to hide behead messages while invisible
     default: true

@@ -1,9 +1,13 @@
 # How to announce beheadings, options are GLOBAL, LOCAL, DIRECT, or OFF
-# To specify per entity, use: "entity_name: '<MODE>'"
+# To customize per entity, use "entity_name: '<MODE>'"
 behead-announcement:
   default: 'LOCAL'
   player: 'GLOBAL'
 #  wither_skeleton: 'OFF'
+
+# Announcement mode for players with the 'dropheads.silentbehead' permission
+# Overrides the above setting; it is recommended to use 'DIRECT' or 'OFF'
+silentbehead-announcement: OFF
 
 # How far 'LOCAL' broadcasts can be heard
 local-broadcast-distance: 200
