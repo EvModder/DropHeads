@@ -101,7 +101,8 @@ public class DeathMessagePacketIntercepter{
 //				pl.getLogger().info("detected death msg:\n"+jsonMsg);
 				final Matcher matcher = uuidPattern.matcher(jsonMsg);
 				if(!matcher.find()){
-					pl.getLogger().warning("Unable to parse death message: "+jsonMsg);
+					pl.getLogger().warning("Unable to find UUID from death message: "+jsonMsg);
+					pl.getLogger().warning("This is probably caused by another plugin destructively modifying the selector");
 					super.write(context, packet, promise);
 					return;
 				}
