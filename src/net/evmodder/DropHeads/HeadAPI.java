@@ -610,13 +610,14 @@ public class HeadAPI {
 	}
 
 	private String minimizeTextureCode(String base64){
-		String json = new String(Base64.getDecoder().decode(base64));
+		final String json = new String(Base64.getDecoder().decode(base64)).replaceAll("\\s", "").toLowerCase();
 //		pl.getLogger().info("skin json: "+json);
-		final String URL_START_MATCH = "\"url\" : \"http://textures.minecraft.net/texture/";
+		final String URL_START_MATCH = "\"url\":\"http://textures.minecraft.net/texture/";
 		final int startIdx = json.indexOf(URL_START_MATCH)+URL_START_MATCH.length();
 		final int endIdx = json.indexOf('"', startIdx);
 		final String urlCode = json.substring(startIdx, endIdx);
 //		pl.getLogger().info("url code: "+urlCode);
+		//TODO: Also keep timestamp (of behead) from json? json.indexOf("\"timestamp\":\"");
 		return Base64.getEncoder().encodeToString(
 				("{\"textures\":{\"SKIN\":{\"url\":\"http://textures.minecraft.net/texture/"+urlCode+"\"}}}")
 					.getBytes(StandardCharsets.ISO_8859_1));
