@@ -15,13 +15,13 @@ local-broadcast-distance: 200
 # Whether 'LOCAL' broadcasts can be heard through a nether portal
 local-broadcast-cross-dimension: true
 
-# Replaces death messages if player behead announcement is GLOBAL
+# Replace player death message with behead message (if announcement is GLOBAL)
 behead-announcement-replaces-player-death-message: true
 
-# Also replace Bukkit event message; can help with DiscordSRV compatibility
+# Replace Bukkit event message; can help with DiscordSRV compatibility
 behead-announcement-replaces-player-death-event-message: false
 
-# Replaces death message that is sent to the owner when a pet is beheaded
+# Replace death message sent to the owner of a pet when it is beheaded
 behead-message-replaces-pet-death-message: true
 
 # Whether to drop heads if not killed by a player
