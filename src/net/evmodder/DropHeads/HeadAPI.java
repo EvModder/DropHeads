@@ -61,7 +61,7 @@ public class HeadAPI {
 	private HeadDatabaseAPI hdbAPI = null;
 //	private int MAX_HDB_ID = -1;
 	final Configuration translationsFile;  //TODO: make private
-	private final boolean GRUM_ENABLED, SADDLES_ENABLED, HOLLOW_SKULLS_ENABLED, TRANSPARENT_SLIME_ENABLED, CRACKED_IRON_GOLEMS_ENABLED, USE_PRE_JAPPA;
+	private final boolean GRUM_ENABLED, SADDLES_ENABLED, HOLLOW_SKULLS_ENABLED, TRANSPARENT_SLIME_ENABLED, CRACKED_IRON_GOLEMS_ENABLED, USE_PRE_JAPPA, USE_PRE_1_20;
 	private final boolean LOCK_PLAYER_SKINS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_VANILLA_HEADS;
 	private final String UNKNOWN_TEXTURE_CODE;
 	private final TranslationComponent LOCAL_HEAD, LOCAL_SKULL, LOCAL_TOE;
@@ -151,6 +151,7 @@ public class HeadAPI {
 		TRANSPARENT_SLIME_ENABLED = pl.getConfig().getBoolean("transparent-slime-heads", false);
 		CRACKED_IRON_GOLEMS_ENABLED = pl.getConfig().getBoolean("cracked-iron-golem-heads", false);
 		USE_PRE_JAPPA = pl.getConfig().getBoolean("use-legacy-head-textures", false);
+		USE_PRE_1_20 = pl.getConfig().getBoolean("use-1.19-vex-head-textures", false);
 		LOCK_PLAYER_SKINS = !pl.getConfig().getBoolean("update-on-skin-change", true);
 		boolean zombifiedPiglensExist = false;
 		try{EntityType.valueOf("ZOMBIFIED_PIGLIN"); zombifiedPiglensExist = true;} catch(IllegalArgumentException ex){}
@@ -638,6 +639,7 @@ public class HeadAPI {
 		if(HOLLOW_SKULLS_ENABLED && EntityUtils.isSkeletal(entity.getType())) textureKey += "|HOLLOW";
 		if(TRANSPARENT_SLIME_ENABLED && entity.getType() == EntityType.SLIME) textureKey += "|TRANSPARENT";
 		if(USE_PRE_JAPPA) textureKey += "|PRE_JAPPA";
+		else if(USE_PRE_1_20) textureKey += "|PRE_1_20";
 		if(GRUM_ENABLED && HeadUtils.hasGrummName(entity)){
 			if(entity.getType() == EntityType.SHULKER) textureKey = textureKey
 					.replace("|SIDE_UP", "").replace("|SIDE_DOWN", "").replace("|SIDE_LEFT", "").replace("|SIDE_RIGHT", "");
