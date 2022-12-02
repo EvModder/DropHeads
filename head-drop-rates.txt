@@ -80,8 +80,14 @@ ZOMBIE_HORSE:       0.070
 ZOMBIE_VILLAGER:    0.019
 ZOMBIFIED_PIGLIN:   0.002
 
+# Hanging Entities
 ARMOR_STAND: 0
 LEASH_HITCH: 0
+PAINTING: 0
+ITEM_FRAME: 0
+GLOW_ITEM_FRAME: 0
+
+# Vehicles
 MINECART: 0
 MINECART_CHEST: 0
 MINECART_COMMAND: 0
@@ -89,5 +95,7 @@ MINECART_FURNACE: 0
 MINECART_HOPPER: 0
 MINECART_MOB_SPAWNER: 0
 MINECART_TNT: 0
+BOAT: 0
+CHEST_BOAT: 0
 
 # You can add custom mobs to this list, but it will only work if an EntityType is defined
