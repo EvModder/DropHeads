@@ -151,7 +151,7 @@ public class HeadAPI {
 		TRANSPARENT_SLIME_ENABLED = pl.getConfig().getBoolean("transparent-slime-heads", false);
 		CRACKED_IRON_GOLEMS_ENABLED = pl.getConfig().getBoolean("cracked-iron-golem-heads", false);
 		USE_PRE_JAPPA = pl.getConfig().getBoolean("use-legacy-head-textures", false);
-		USE_PRE_1_20 = pl.getConfig().getBoolean("use-1.19-vex-head-textures", false);
+		USE_PRE_1_20 = pl.getConfig().getBoolean("use-1.19.2-vex-head-textures", false);
 		LOCK_PLAYER_SKINS = !pl.getConfig().getBoolean("update-on-skin-change", true);
 		boolean zombifiedPiglensExist = false;
 		try{EntityType.valueOf("ZOMBIFIED_PIGLIN"); zombifiedPiglensExist = true;} catch(IllegalArgumentException ex){}

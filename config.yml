@@ -46,8 +46,8 @@ simple-mob-heads-only: false
 # https://minecraft.fandom.com/wiki/Texture_Update
 use-legacy-head-textures: false
 
-# Use the pre-1.20 vex texture for its head (smaller eyebrows)
-use-1.19-vex-head-textures: false
+# Use the pre-1.19.3 vex texture for its head (smaller eyebrows, big mouth)
+use-1.19.2-vex-head-textures: false
 
 # Whether to keep entity heads updated with the latest vanilla textures
 refresh-textures: true
