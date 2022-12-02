@@ -1,5 +1,5 @@
 # How to announce beheadings, options are GLOBAL, LOCAL, DIRECT, or OFF
-# To customize per entity, use "entity_name: '<MODE>'"
+# To customize per killed entity type, use `entity_type: 'MODE'`
 behead-announcement:
   default: 'LOCAL'
   player: 'GLOBAL'
@@ -124,7 +124,7 @@ fix-creative-nbt-copy: true
 # Note: Applies to custom player/mob heads, but not to WITHER_SKULL etc.
 show-head-type-in-lore: true
 
-# Adds support for DropHeads-namespaced heads in the vanilla "/give" command
+# Adds support for DropHeads-namespaced heads in the vanilla `/give` command
 # WARNING: This feature is in EARLY-BETA and may not end up being supported
 substitute-dropheads-in-give-command: true
 
@@ -193,7 +193,7 @@ specific-tool-multipliers:
   IRON_SWORD: 1.1
 
 # (Optional) Modify behead chance based on how long a mob type has been alive
-# Format is "X: V", where if the mob has been alive for X or more time, then
+# Format is `X: V`, where if the mob has been alive for X or more time, then
 # the drop rate is multiplied by V similar to specific-tool-multipliers)
 # Default unit is ticks; other units: s[ec], m[in], h[r], d[ay], w[eek], y[r]
 time-alive-multipliers:
@@ -213,7 +213,7 @@ custom-droprate-multiplier-permissions:
 #  dropheads.group.droprate2x: 2.0
 #  dropheads.group.droprate150percent: 1.5
 
-# Changes the death "Event Priority" that DropHeads registers at
+# Changes the death `Event Priority` that DropHeads registers at
 # Low values => DropHeads runs BEFORE other plugins; high values => runs AFTER
 # Possible values: [LOWEST, LOW, NORMAL, HIGH, HIGHEST, MONITOR]
 death-listener-priority: LOW
