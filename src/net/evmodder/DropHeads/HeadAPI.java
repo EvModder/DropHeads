@@ -71,6 +71,7 @@ public class HeadAPI {
 	private final TreeMap<String, String> textures; // Key="ENTITY_NAME|DATA", Value="eyJ0ZXh0dXJl..."
 	private final HashMap<String, TranslationComponent> entitySubtypeNames;
 	private final HashMap<String, String> replaceHeadsFromTo; // key & value are textureKeys
+	private final Material PIGLIN_HEAD_TYPE;
 
 	private final String PLAYER_PREFIX, MOB_PREFIX, MHF_PREFIX, HDB_PREFIX, CODE_PREFIX;
 
@@ -153,6 +154,13 @@ public class HeadAPI {
 		USE_PRE_JAPPA = pl.getConfig().getBoolean("use-legacy-head-textures", false);
 		USE_PRE_1_20 = pl.getConfig().getBoolean("use-1.19.2-vex-head-textures", false);
 		LOCK_PLAYER_SKINS = !pl.getConfig().getBoolean("update-on-skin-change", true);
+		{
+			Material piglinHeadType = null;
+			if(pl.getConfig().getBoolean("update-piglin-heads", true)){
+				try{piglinHeadType = Material.valueOf("PIGLIN_HEAD");} catch(IllegalArgumentException ex){}
+			}
+			PIGLIN_HEAD_TYPE = piglinHeadType;
+		}
 		boolean zombifiedPiglensExist = false;
 		try{EntityType.valueOf("ZOMBIFIED_PIGLIN"); zombifiedPiglensExist = true;} catch(IllegalArgumentException ex){}
 		final boolean UPDATE_ZOMBIE_PIGMEN_HEADS = zombifiedPiglensExist &&
@@ -606,6 +614,7 @@ public class HeadAPI {
 			case ENDER_DRAGON:
 				return new ItemStack(Material.DRAGON_HEAD);
 			default:
+				if(type.name().equals("PIGLIN") && PIGLIN_HEAD_TYPE != null) return new ItemStack(PIGLIN_HEAD_TYPE);
 				return makeHeadFromTexture(type.name());
 			}
 	}

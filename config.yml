@@ -146,6 +146,10 @@ vanilla-wither-skeleton-skulls: true
 # Replace Zombie_Pigman heads with Zombified_Piglin heads in 1.16+
 update-zombie-pigman-heads: true
 
+# Replaces player-model piglin heads with the vanilla ones added in 1.19.3+
+# Requires 'refresh-textures' to also be set to true.
+update-piglin-heads: true
+
 # If this is false, all heads will be forced to use the player_head type
 # This changes the material type of zombie, creeper, skeleton & wither skulls
 prefer-vanilla-heads: true
