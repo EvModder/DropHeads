@@ -5,8 +5,8 @@ description: Heads for every mob and player.
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
 #7=pet death msgs, API fix, 1.19 mobs, full-cmd-translation, more pre-jappas(tentative), fix shulker rotation, updated spawn-cause-modifiers
-#9=fix ${A/AN} for click-listener(English) in 1.19+, 1.19.3 piglin heads
-version: 3.7.9
+#10=
+version: 3.7.10
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 

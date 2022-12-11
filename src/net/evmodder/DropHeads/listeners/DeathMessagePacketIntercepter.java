@@ -1,6 +1,7 @@
 package net.evmodder.DropHeads.listeners;
 
 import java.util.HashSet;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -60,7 +61,10 @@ public class DeathMessagePacketIntercepter{
 		}
 
 		pl.getServer().getPluginManager().registerEvents(new Listener(){
-			@EventHandler public void onJoin(PlayerJoinEvent evt){injectPlayer(evt.getPlayer());}
+			@EventHandler public void onJoin(PlayerJoinEvent evt){
+				try{injectPlayer(evt.getPlayer());}
+				catch(NoSuchElementException e){/*happens if they disconnect before login is complete*/}
+			}
 			@EventHandler public void onQuit(PlayerQuitEvent evt){removePlayer(evt.getPlayer());}
 		}, pl);
 		for(Player p : pl.getServer().getOnlinePlayers()) injectPlayer(p);
