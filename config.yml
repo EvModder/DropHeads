@@ -229,6 +229,7 @@ replace-heads:
 #  'ILLUSIONER': 'VILLAGER|FLETCHER|SWAMP'
 
 # Whether to enable logging for certain events
+# Placeholders: TIMESTAMP, VICTIM(_UUID), KILLER(_UUID), ITEM, SENDER, HEAD.
 log:
   enable: true
   filename: 'dropheads-log.txt'

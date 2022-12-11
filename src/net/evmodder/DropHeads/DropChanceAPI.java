@@ -651,12 +651,11 @@ public class DropChanceAPI{
 	public void logHeadDrop(Entity entity, Entity killer, ItemStack weapon){
 		pl.writeToLogFile(
 				(entity instanceof Player ? LOG_PLAYER_FORMAT : LOG_MOB_FORMAT)
-				.replaceAll("(?i)\\$\\{(VICTIM|BEHEADED)\\}",
-						Matcher.quoteReplacement(getVictimComponent(entity).toPlainText()))
-				.replaceAll("(?i)\\$\\{(KILLER|BEHEADER)\\}", killer == null ? "" :
-						Matcher.quoteReplacement(getKillerComponent(killer).toPlainText()))
-				.replaceAll("(?i)\\$\\{(ITEM|WEAPON)\\}", weapon == null ? "" :
-						Matcher.quoteReplacement(getWeaponComponent(killer, weapon).toPlainText()))
+				.replaceAll("(?i)\\$\\{(VICTIM|BEHEADED)_UUID\\}", ""+entity.getUniqueId())
+				.replaceAll("(?i)\\$\\{(KILLER|BEHEADER)_UUID\\}", killer == null ? "" : ""+killer.getUniqueId())
+				.replaceAll("(?i)\\$\\{(VICTIM|BEHEADED)\\}", Matcher.quoteReplacement(getVictimComponent(entity).toPlainText()))
+				.replaceAll("(?i)\\$\\{(KILLER|BEHEADER)\\}", killer == null ? "" : Matcher.quoteReplacement(getKillerComponent(killer).toPlainText()))
+				.replaceAll("(?i)\\$\\{(ITEM|WEAPON)\\}", weapon == null ? "" : Matcher.quoteReplacement(getWeaponComponent(killer, weapon).toPlainText()))
 				.replaceAll("(?i)\\$\\{TIMESTAMP\\}", ""+System.currentTimeMillis())
 		);
 	}
