@@ -24,10 +24,10 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import net.evmodder.DropHeads.DropHeads;
+import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
 import net.evmodder.EvLib.extras.TellrawUtils;
 import net.evmodder.EvLib.extras.TextUtils;
-import net.evmodder.EvLib.extras.WebUtils;
 import net.evmodder.EvLib.extras.HeadUtils.HeadType;
 import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.TextClickAction;
@@ -131,7 +131,7 @@ public class BlockClickListener implements Listener{
 		//player
 		else if(profile.getId() != null && (data.player=pl.getServer().getOfflinePlayer(profile.getId())) != null
 				&& (data.player.hasPlayedBefore()
-					|| (ENABLE_PROFILE_MOJANG_LOOKUP && (tempProfile=WebUtils.getGameProfile(profile.getId().toString(), /*fetchSkin=*/false)) != null))
+					|| (ENABLE_PROFILE_MOJANG_LOOKUP && (tempProfile=JunkUtils.getGameProfile(profile.getId().toString(), /*fetchSkin=*/false)) != null))
 		){
 			data.headType = HeadUtils.getDroppedHeadType(EntityType.PLAYER);  // "Head"
 			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(EntityType.PLAYER.name());  // "Player"
@@ -155,7 +155,7 @@ public class BlockClickListener implements Listener{
 			HeadNameData headData = getHeadNameData(HeadUtils.getGameProfile((Skull)skull));
 			if(((Skull)skull).hasOwner() && headData.player == null){
 				OfflinePlayer player = ((Skull)skull).getOwningPlayer();
-				GameProfile profile = ENABLE_PROFILE_MOJANG_LOOKUP ? WebUtils.getGameProfile(player.getUniqueId().toString(), /*fetchSkin=*/false) : null;
+				GameProfile profile = ENABLE_PROFILE_MOJANG_LOOKUP ? JunkUtils.getGameProfile(player.getUniqueId().toString(), /*fetchSkin=*/false) : null;
 				if(player.hasPlayedBefore() || profile != null){
 					headData.player = player;
 					if(player.getName() != null) headData.profileName = new RawTextComponent(player.getName());

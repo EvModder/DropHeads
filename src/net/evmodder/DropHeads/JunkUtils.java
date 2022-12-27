@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.UUID;
 import java.util.stream.Collectors;
+import org.bukkit.Bukkit;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -16,6 +18,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
 import io.netty.channel.Channel;
 import javax.annotation.Nonnull;
 import net.evmodder.EvLib.extras.NBTTagUtils;
@@ -26,6 +29,7 @@ import net.evmodder.EvLib.extras.ReflectionUtils;
 import net.evmodder.EvLib.extras.TellrawUtils;
 import net.evmodder.EvLib.extras.TextUtils;
 import net.evmodder.EvLib.extras.TypeUtils;
+import net.evmodder.EvLib.extras.WebUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefField;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
@@ -320,7 +324,29 @@ public class JunkUtils{
 	}
 
 	private final static RefMethod playerGetProfileMethod = craftPlayerClazz.getMethod("getProfile");
-	public final static GameProfile getProfile(Player player){return (GameProfile)playerGetProfileMethod.of(player).call();}
+	public final static GameProfile getGameProfile(Player player){return (GameProfile)playerGetProfileMethod.of(player).call();}
+
+	@SuppressWarnings("deprecation")
+	public final static GameProfile getGameProfile(String nameOrUUID, boolean fetchSkin){
+		Player player = Bukkit.getServer().getPlayer(UUID.fromString(nameOrUUID));
+		if(player == null) Bukkit.getServer().getPlayer(nameOrUUID);
+		if(player != null){
+			GameProfile profile = new GameProfile(player.getUniqueId(), player.getName());
+			if(fetchSkin){
+				GameProfile rawProfile = getGameProfile(player);
+				if(rawProfile.getProperties() != null && rawProfile.getProperties().containsKey("textures")){
+					final Collection<Property> textures = rawProfile.getProperties().get("textures");
+					if(textures != null && !textures.isEmpty()){
+						final String code0 = textures.iterator().next().getValue();
+						profile.getProperties().put("textures", new Property("textures", code0));
+					}
+				}
+			}
+			WebUtils.addGameProfileToCache(nameOrUUID, profile);
+			return profile;
+		}
+		return WebUtils.getGameProfile(nameOrUUID, fetchSkin);
+	}
 
 // not currently used
 //	public interface TestFunc{boolean test(int num);}

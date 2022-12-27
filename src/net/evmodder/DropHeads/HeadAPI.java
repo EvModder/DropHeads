@@ -27,7 +27,6 @@ import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
@@ -48,7 +47,6 @@ import net.evmodder.EvLib.extras.TellrawUtils.Format;
 import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
 import net.evmodder.EvLib.extras.TextUtils;
-import net.evmodder.EvLib.extras.WebUtils;
 import net.evmodder.EvLib.extras.EntityUtils.CCP;
 
 /**
@@ -106,7 +104,7 @@ public class HeadAPI {
 		builder.append(msg.substring(i));
 		return builder.toString();
 	}
-	// Same as above, but all replacements are treated as TranslationComponents
+	// Loads config.getString(key), replacing '${abc-xyz}' with % in the key and config.getString('abc-xyz') in withComps.
 	/** DO NOT USE: This function may disappear in a future release */
 	public TranslationComponent loadTranslationComp(String key){
 //		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in translations file: "+key);
@@ -126,7 +124,7 @@ public class HeadAPI {
 				final int subStart = i + 1;
 				while(msg.charAt(++i) == '-' || msg.charAt(i) == '.' || (msg.charAt(i) >= 'a' && msg.charAt(i) <= 'z'));
 				if(msg.charAt(i) == '}'){
-					//TOOD: getCurrentColorAndFormatProperties(msg, i) -> put onto newly added with-comp
+					//TODO: getCurrentColorAndFormatProperties(msg, i) -> put onto newly added with-comp
 					withComps.add(loadTranslationComp(msg.substring(subStart, i)));
 					builder.append("%s");
 					++i;
@@ -697,7 +695,8 @@ public class HeadAPI {
 	public ItemStack getHead(GameProfile profile/*, boolean saveTypeInLore, boolean unstackable*/){
 		if(profile == null) return null;
 		String profileName = profile.getName();
-		if(profileName != null){ //-------------------- Handle Entities with textureKey
+		//-------------------- Handle Entities with textureKey
+		if(profileName != null){ 
 			/*if(SAVE_CUSTOM_LORE){*/int idx = profileName.indexOf('>'); if(idx != -1) profileName = profileName.substring(0, idx);/*}*/
 			final boolean isDropHeadsHead = profileName.startsWith(getDropHeadsNamespacedKey());
 			if(isDropHeadsHead) profileName = profileName.substring(10);
@@ -707,21 +706,19 @@ public class HeadAPI {
 				return makeHeadFromTexture(profileName);
 			}
 		}
+		//-------------------- Handle HeadDatabase
 		ItemStack head = HeadUtils.makeCustomHead(profile, /*setOwner=*/!LOCK_PLAYER_SKINS);
-		if(hdbAPI != null){  //-------------------- Handle HeadDatabase
+		if(hdbAPI != null){
 			String id = hdbAPI.getItemID(head);
 			if(id != null && hdbAPI.isHead(id)) return hdb_getItemHead_wrapper(id);
 		}
-		Player player = null;  //-------------------- Handle players
-		GameProfile webProfile = null;
+		//-------------------- Handle players
 		final boolean updateSkin = !profile.getProperties().containsKey("textures") || !LOCK_PLAYER_SKINS;
-		if(profile.getId() != null && 
-				((player=pl.getServer().getPlayer(profile.getId())) != null
-				|| (webProfile=WebUtils.getGameProfile(profile.getId().toString(), updateSkin)) != null)
-		){
-			if(player != null || webProfile != null){
-				if(updateSkin) profile = player != null ? JunkUtils.getProfile(player) : webProfile;
-				profileName = profile.getName();
+		if(profile.getId() != null){
+			final GameProfile freshProfile = JunkUtils.getGameProfile(profile.getId().toString(), updateSkin);
+			if(freshProfile != null){
+				if(updateSkin) profile = freshProfile;
+				profileName = freshProfile.getName();
 
 				if(LOCK_PLAYER_SKINS){
 					final Collection<Property> textures = profile.getProperties().get("textures");
@@ -736,26 +733,25 @@ public class HeadAPI {
 				}
 				head = HeadUtils.makeCustomHead(profile, /*setOwner=*/!LOCK_PLAYER_SKINS);
 			}
-
-			final boolean isMHF = profileName != null && profileName.startsWith("MHF_");
-			if(profileName != null){
-				head = JunkUtils.setDisplayName(head, isMHF
-					? new RawTextComponent(ChatColor.YELLOW+profileName, /*insert=*/null, /*click=*/null, /*hover=*/null,
-							/*color=*/null, /*formats=*/Collections.singletonMap(Format.ITALIC, false))
-					: getHeadNameFromKey("PLAYER", /*customName=*/profileName));
-			}
-			if(SAVE_TYPE_IN_LORE){
-				head = JunkUtils.setLore(head/*TODO: need to clone for hasPlayedBefore???*/, new RawTextComponent(
-						(isMHF ? MHF_PREFIX : PLAYER_PREFIX) + profileName,
-						/*insert=*/null, /*click=*/null, /*hover=*/null,
-						/*color=*/"dark_gray", /*formats=*/Collections.singletonMap(Format.ITALIC, false)));
-			}
+		}
+		final boolean isMHF = profileName != null && profileName.startsWith("MHF_");
+		if(profileName != null){
+			head = JunkUtils.setDisplayName(head, isMHF
+				? new RawTextComponent(ChatColor.YELLOW+profileName, /*insert=*/null, /*click=*/null, /*hover=*/null,
+						/*color=*/null, /*formats=*/Collections.singletonMap(Format.ITALIC, false))
+				: getHeadNameFromKey("PLAYER", /*customName=*/profileName));
+		}
+		if(SAVE_TYPE_IN_LORE){
+			head = JunkUtils.setLore(head/*TODO: need to clone for hasPlayedBefore???*/, new RawTextComponent(
+					(isMHF ? MHF_PREFIX : PLAYER_PREFIX) + profileName,
+					/*insert=*/null, /*click=*/null, /*hover=*/null,
+					/*color=*/"dark_gray", /*formats=*/Collections.singletonMap(Format.ITALIC, false)));
 		}
 		//-------------------- Handle raw textures
 		else if(profile.getProperties() != null && profile.getProperties().containsKey("textures")){
 			final Collection<Property> textures = profile.getProperties().get("textures");
 			if(textures != null && !textures.isEmpty()){
-				final String code0 = profile.getProperties().get("textures").iterator().next().getValue();
+				final String code0 = textures.iterator().next().getValue();
 				return getHead(code0.getBytes());
 			}
 		}
