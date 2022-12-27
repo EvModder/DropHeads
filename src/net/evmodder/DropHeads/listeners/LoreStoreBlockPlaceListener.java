@@ -15,6 +15,12 @@ import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
 
 public class LoreStoreBlockPlaceListener implements Listener{
+	private final boolean HAS_DEFAULT_LORE;
+
+	public LoreStoreBlockPlaceListener(){
+		HAS_DEFAULT_LORE = DropHeads.getPlugin().getConfig().getBoolean("show-head-type-in-lore", false);
+	}
+
 	// This listener is only registered when 'save-custom-lore' = true
 	// Monitor priority since there is no way for us to replace the placed block without cancelling and setting manually
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -31,8 +37,10 @@ public class LoreStoreBlockPlaceListener implements Listener{
 
 		final List<String> customLore = JunkUtils.getLore(headItem);
 		if(customLore == null) return;
-		final List<String> defaultLore = JunkUtils.getLore(DropHeads.getPlugin().getAPI().getHead(profile));
-		if(customLore.equals(defaultLore)) return; // Nothing to save!
+		if(HAS_DEFAULT_LORE){
+			final List<String> defaultLore = JunkUtils.getLore(DropHeads.getPlugin().getAPI().getHead(profile));
+			if(customLore.equals(defaultLore)) return; // Nothing to save!
+		}
 
 		final String texturekey = profile.getName();
 		final String combinedLore = String.join("\n", customLore);

@@ -324,7 +324,7 @@ public class JunkUtils{
 	}
 
 	private final static RefMethod playerGetProfileMethod = craftPlayerClazz.getMethod("getProfile");
-	public final static GameProfile getGameProfile(Player player){return (GameProfile)playerGetProfileMethod.of(player).call();}
+	private final static GameProfile getGameProfile(Player player){return (GameProfile)playerGetProfileMethod.of(player).call();}
 
 	@SuppressWarnings("deprecation")
 	public final static GameProfile getGameProfile(String nameOrUUID, boolean fetchSkin){
