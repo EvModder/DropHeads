@@ -121,8 +121,8 @@ public class BlockClickListener implements Listener{
 		//mob
 		else if(profile.getName() != null && pl.getAPI().textureExists(profile.getName())){
 			data.textureKey = profile.getName();
-			int idx = data.textureKey.indexOf('|');
-			String eTypeName = (idx == -1 ? data.textureKey : data.textureKey.substring(0, idx)).toUpperCase();
+			final int idx = data.textureKey.indexOf('|');
+			final String eTypeName = (idx == -1 ? data.textureKey : data.textureKey.substring(0, idx)).toUpperCase();
 			try{data.headType = HeadUtils.getDroppedHeadType(EntityType.valueOf(eTypeName));}
 			catch(IllegalArgumentException ex){data.headType = HeadUtils.getDroppedHeadType(EntityType.UNKNOWN);}  // "Head"
 			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(data.textureKey);

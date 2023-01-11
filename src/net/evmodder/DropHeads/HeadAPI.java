@@ -696,7 +696,7 @@ public class HeadAPI {
 		if(profile == null) return null;
 		String profileName = profile.getName();
 		//-------------------- Handle Entities with textureKey
-		if(profileName != null){ 
+		if(profileName != null){
 			/*if(SAVE_CUSTOM_LORE){*/int idx = profileName.indexOf('>'); if(idx != -1) profileName = profileName.substring(0, idx);/*}*/
 			final boolean isDropHeadsHead = profileName.startsWith(getDropHeadsNamespacedKey());
 			if(isDropHeadsHead) profileName = profileName.substring(10);

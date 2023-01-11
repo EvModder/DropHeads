@@ -328,7 +328,9 @@ public class JunkUtils{
 
 	@SuppressWarnings("deprecation")
 	public final static GameProfile getGameProfile(String nameOrUUID, boolean fetchSkin){
-		Player player = Bukkit.getServer().getPlayer(UUID.fromString(nameOrUUID));
+		Player player;
+		try{player = Bukkit.getServer().getPlayer(UUID.fromString(nameOrUUID));}
+		catch(java.lang.IllegalArgumentException e){player = null;/*thrown by UUID.fromString*/}
 		if(player == null) Bukkit.getServer().getPlayer(nameOrUUID);
 		if(player != null){
 			GameProfile profile = new GameProfile(player.getUniqueId(), player.getName());
