@@ -75,8 +75,12 @@ track-mob-spawns: true
 charged-creeper-drops: true
 
 # A Minecraft easter egg is that mobs named 'Dinnerbone' or 'Grumm' are
-# upside down.. If you want their heads to share this trait, set to true
-drop-grumm-heads: true
+# upside down. If you want their heads to also be upside down, set to true
+drop-grumm-heads: false
+
+# Should shulker heads be oriented based on what side of a block they were
+# attached to when they were killed?
+drop-sideways-shulker-heads: false
 
 # Should heads of saddled mobs have altered textures (when applicable)?
 drop-saddled-heads: false

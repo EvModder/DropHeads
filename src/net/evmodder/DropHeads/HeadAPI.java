@@ -47,6 +47,7 @@ import net.evmodder.EvLib.extras.TellrawUtils.Format;
 import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
 import net.evmodder.EvLib.extras.TextUtils;
+import net.evmodder.EvLib.extras.WebUtils;
 import net.evmodder.EvLib.extras.EntityUtils.CCP;
 
 /**
@@ -59,7 +60,7 @@ public class HeadAPI {
 	private HeadDatabaseAPI hdbAPI = null;
 //	private int MAX_HDB_ID = -1;
 	final Configuration translationsFile;  //TODO: make private
-	private final boolean GRUM_ENABLED, SADDLES_ENABLED, HOLLOW_SKULLS_ENABLED, TRANSPARENT_SLIME_ENABLED, CRACKED_IRON_GOLEMS_ENABLED, USE_PRE_JAPPA, USE_PRE_1_20;
+	private final boolean GRUMM_ENABLED, SIDEWAYS_SHULKERS_ENABLED, SADDLES_ENABLED, HOLLOW_SKULLS_ENABLED, TRANSPARENT_SLIME_ENABLED, CRACKED_IRON_GOLEMS_ENABLED, USE_PRE_JAPPA, USE_PRE_1_20;
 	private final boolean LOCK_PLAYER_SKINS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_VANILLA_HEADS;
 	private final String UNKNOWN_TEXTURE_CODE;
 	private final TranslationComponent LOCAL_HEAD, LOCAL_SKULL, LOCAL_TOE;
@@ -144,7 +145,8 @@ public class HeadAPI {
 	HeadAPI(){
 		textures = new TreeMap<String, String>();
 		pl = DropHeads.getPlugin();
-		GRUM_ENABLED = pl.getConfig().getBoolean("drop-grumm-heads", true);
+		GRUMM_ENABLED = pl.getConfig().getBoolean("drop-grumm-heads", false);
+		SIDEWAYS_SHULKERS_ENABLED = pl.getConfig().getBoolean("drop-sideways-shulker-heads", true);
 		SADDLES_ENABLED = pl.getConfig().getBoolean("drop-saddled-heads", true);
 		HOLLOW_SKULLS_ENABLED = pl.getConfig().getBoolean("hollow-skeletal-skulls", false);
 		TRANSPARENT_SLIME_ENABLED = pl.getConfig().getBoolean("transparent-slime-heads", false);
@@ -239,14 +241,15 @@ public class HeadAPI {
 		else PLAYER_PREFIX = MOB_PREFIX = MHF_PREFIX = HDB_PREFIX = CODE_PREFIX = null;
 		//---------- </Load translations> ---------------------------------------------------------------------
 
-		String hardcodedList = FileIO.loadResource(pl, "head-textures.txt");
+		//---------- <Load Textures> ----------------------------------------------------------------------
+		final String hardcodedList = FileIO.loadResource(pl, "head-textures.txt");
 		loadTextures(hardcodedList, /*logMissingEntities=*/true, /*logUnknownEntities=*/false);
 //		String localList = FileIO.loadFile("head-textures.txt", hardcodedList);  // This version does not preserve comments
 		String localList = FileIO.loadFile("head-textures.txt", getClass().getResourceAsStream("/head-textures.txt"));
 		loadTextures(localList, /*logMissingEntities=*/false, /*logUnknownEntities=*/true);
 		UNKNOWN_TEXTURE_CODE = textures.getOrDefault(EntityType.UNKNOWN.name(), "5c90ca5073c49b898a6f8cdbc72e6aca0a425ec83bc4355e3b834fd859282bdd");
 
-		//TODO: decide whether this feature is worth keeping
+		boolean writeTextureFile = false;
 		if(pl.getConfig().getBoolean("update-textures", false) && hardcodedList.length() > localList.length()){
 			long oldTextureTime = new File(FileIO.DIR+"/head-textures.txt").lastModified();
 			long newTextureTime = 0;
@@ -256,8 +259,27 @@ public class HeadAPI {
 				newTextureTime = ((File)getFileMethod.invoke(pl)).lastModified();
 			}
 			catch(NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e1){}
-			if(newTextureTime > oldTextureTime) FileIO.saveFile("head-textures.txt", hardcodedList);
+			if(newTextureTime > oldTextureTime){
+				localList=hardcodedList;
+				writeTextureFile = true;
+			}
 		}
+		if(SIDEWAYS_SHULKERS_ENABLED && !localList.contains("SHULKER|SIDE_LEFT")){
+			pl.getLogger().info("Downloading sideways-shulker head textures...");
+			final String shulkers = WebUtils.getReadURL("https://raw.githubusercontent.com/EvModder/DropHeads/master/sideways-shulker-head-textures.txt");
+			localList += "\n" + shulkers;
+			writeTextureFile = true;
+			pl.getLogger().info("Finished downloading sideways-shulker head textures");
+		}
+		if(GRUMM_ENABLED && !localList.contains("|GRUMM:")){
+			pl.getLogger().info("Downloading new Grumm head textures...");
+			final String grumms = WebUtils.getReadURL("https://raw.githubusercontent.com/EvModder/DropHeads/master/grumm-head-textures.txt");
+			localList += "\n" + grumms;
+			writeTextureFile = true;
+			pl.getLogger().info("Finished downloading Grumm head textures");
+		}
+		if(writeTextureFile) FileIO.saveFile("head-textures.txt", localList);
+		//---------- </Load Textures> ---------------------------------------------------------------------
 
 		// This could be optimized by passing 'simple-mob-heads-only' to loadTextures to skip adding any textures with '|'
 		if(pl.getConfig().getBoolean("simple-mob-heads-only", false)){
@@ -306,6 +328,7 @@ public class HeadAPI {
 				}
 
 				final String key = head.substring(0, i).toUpperCase();
+				//TODO: duplicate texture warning?
 				if(textures.put(key, texture) != null) continue; // Don't bother checking EntityType if this head has already been added
 
 				final int j = key.indexOf('|');
@@ -642,12 +665,16 @@ public class HeadAPI {
 		}
 		String textureKey = TextureKeyLookup.getTextureKey(entity);
 		if(!SADDLES_ENABLED && textureKey.endsWith("|SADDLED")) textureKey = textureKey.substring(0, textureKey.length()-8);
+		if(!SIDEWAYS_SHULKERS_ENABLED && textureKey.startsWith("SHULKER|") &&
+			(textureKey.endsWith("SIDE_UP") || textureKey.endsWith("SIDE_DOWN") ||
+					textureKey.endsWith("SIDE_LEFT") || textureKey.endsWith("SIDE_RIGHT") || textureKey.endsWith("GRUMM"))
+		) textureKey = textureKey.substring(0, textureKey.lastIndexOf('|'));
 		if(CRACKED_IRON_GOLEMS_ENABLED && entity.getType() == EntityType.IRON_GOLEM) textureKey += "|HIGH_CRACKINESS";
 		if(HOLLOW_SKULLS_ENABLED && EntityUtils.isSkeletal(entity.getType())) textureKey += "|HOLLOW";
 		if(TRANSPARENT_SLIME_ENABLED && entity.getType() == EntityType.SLIME) textureKey += "|TRANSPARENT";
 		if(USE_PRE_JAPPA) textureKey += "|PRE_JAPPA";
 		else if(USE_PRE_1_20) textureKey += "|PRE_1_20";
-		if(GRUM_ENABLED && HeadUtils.hasGrummName(entity)){
+		if(GRUMM_ENABLED && HeadUtils.hasGrummName(entity)){
 			if(entity.getType() == EntityType.SHULKER) textureKey = textureKey
 					.replace("|SIDE_UP", "").replace("|SIDE_DOWN", "").replace("|SIDE_LEFT", "").replace("|SIDE_RIGHT", "");
 			textureKey += "|GRUMM";
