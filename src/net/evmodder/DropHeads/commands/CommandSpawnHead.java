@@ -545,7 +545,7 @@ public class CommandSpawnHead extends EvCommand{
 				recipientComps.size() == 0 ? (amtOfEachHead.size() > 1 ? SUCCESSFULLY_SPAWNED_HEADS : SUCCESSFULLY_SPAWNED_HEAD)
 				: recipientComps.size() == 1 ? (amtOfEachHead.size() > 1 ? SUCCESSFULLY_GAVE_HEADS : SUCCESSFULLY_GAVE_HEAD)
 				: (amtOfEachHead.size() > 1 ? SUCCESSFULLY_MULTI_GAVE_HEADS : SUCCESSFULLY_MULTI_GAVE_HEAD);
-		if(!messageFormatStr.contains("%")) messageFormatStr += '%';
+		if(!messageFormatStr.contains("%s")) messageFormatStr += "%s";
 
 		// TODO: This assumes the message has a default color & formats when it actually might not.
 		final Component msgColorAndFormatsPlusComma = new ListComponent(
@@ -553,7 +553,7 @@ public class CommandSpawnHead extends EvCommand{
 
 		ListComponent recipientListComp = new ListComponent();
 		ListComponent headItemListComp = new ListComponent();
-		// TODO: line below assumes [recipient-list] is the LAST "%", which might not be a good assumption.
+		// TODO: line below assumes [recipient-list] is the LAST "%s", which might not be a good assumption.
 		final Component recipientColorAndFormats = TellrawUtils.getCurrentColorAndFormatProperties(
 				messageFormatStr.substring(0, messageFormatStr.lastIndexOf('%')));
 		if(recipientColorAndFormats != null) recipientListComp.addComponent(recipientColorAndFormats);

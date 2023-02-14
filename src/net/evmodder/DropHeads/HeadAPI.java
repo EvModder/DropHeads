@@ -60,7 +60,8 @@ public class HeadAPI {
 	private HeadDatabaseAPI hdbAPI = null;
 //	private int MAX_HDB_ID = -1;
 	final Configuration translationsFile;  //TODO: make private
-	private final boolean GRUMM_ENABLED, SIDEWAYS_SHULKERS_ENABLED, SADDLES_ENABLED, HOLLOW_SKULLS_ENABLED, TRANSPARENT_SLIME_ENABLED, CRACKED_IRON_GOLEMS_ENABLED, USE_PRE_JAPPA, USE_PRE_1_20;
+	private final boolean GRUMM_ENABLED, SIDEWAYS_SHULKERS_ENABLED, COLORED_COLLARS_ENABLED, SADDLES_ENABLED; // may trigger additional file downloads.
+	private final boolean HOLLOW_SKULLS_ENABLED, TRANSPARENT_SLIME_ENABLED, CRACKED_IRON_GOLEMS_ENABLED, USE_PRE_JAPPA, USE_PRE_1_20;
 	private final boolean LOCK_PLAYER_SKINS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_VANILLA_HEADS;
 	private final String UNKNOWN_TEXTURE_CODE;
 	private final TranslationComponent LOCAL_HEAD, LOCAL_SKULL, LOCAL_TOE;
@@ -147,6 +148,7 @@ public class HeadAPI {
 		pl = DropHeads.getPlugin();
 		GRUMM_ENABLED = pl.getConfig().getBoolean("drop-grumm-heads", false);
 		SIDEWAYS_SHULKERS_ENABLED = pl.getConfig().getBoolean("drop-sideways-shulker-heads", true);
+		COLORED_COLLARS_ENABLED = pl.getConfig().getBoolean("drop-collared-heads", true);
 		SADDLES_ENABLED = pl.getConfig().getBoolean("drop-saddled-heads", true);
 		HOLLOW_SKULLS_ENABLED = pl.getConfig().getBoolean("hollow-skeletal-skulls", false);
 		TRANSPARENT_SLIME_ENABLED = pl.getConfig().getBoolean("transparent-slime-heads", false);
@@ -243,10 +245,8 @@ public class HeadAPI {
 
 		//---------- <Load Textures> ----------------------------------------------------------------------
 		final String hardcodedList = FileIO.loadResource(pl, "head-textures.txt");
-		loadTextures(hardcodedList, /*logMissingEntities=*/true, /*logUnknownEntities=*/false);
-//		String localList = FileIO.loadFile("head-textures.txt", hardcodedList);  // This version does not preserve comments
+//		String localList = FileIO.loadFile("head-textures.txt", hardcodedList);  // This does not preserve comments
 		String localList = FileIO.loadFile("head-textures.txt", getClass().getResourceAsStream("/head-textures.txt"));
-		loadTextures(localList, /*logMissingEntities=*/false, /*logUnknownEntities=*/true);
 		UNKNOWN_TEXTURE_CODE = textures.getOrDefault(EntityType.UNKNOWN.name(), "5c90ca5073c49b898a6f8cdbc72e6aca0a425ec83bc4355e3b834fd859282bdd");
 
 		boolean writeTextureFile = false;
@@ -271,6 +271,13 @@ public class HeadAPI {
 			writeTextureFile = true;
 			pl.getLogger().info("Finished downloading sideways-shulker head textures");
 		}
+		if(COLORED_COLLARS_ENABLED && !localList.contains("|RED_COLLARED:")){
+			pl.getLogger().info("Downloading colored-collar head textures...");
+			final String collared = WebUtils.getReadURL("https://raw.githubusercontent.com/EvModder/DropHeads/master/colored-collar-head-textures.txt");
+			localList += "\n" + collared;
+			writeTextureFile = true;
+			pl.getLogger().info("Finished downloading colored-collar head textures");
+		}
 		if(GRUMM_ENABLED && !localList.contains("|GRUMM:")){
 			pl.getLogger().info("Downloading new Grumm head textures...");
 			final String grumms = WebUtils.getReadURL("https://raw.githubusercontent.com/EvModder/DropHeads/master/grumm-head-textures.txt");
@@ -279,6 +286,8 @@ public class HeadAPI {
 			pl.getLogger().info("Finished downloading Grumm head textures");
 		}
 		if(writeTextureFile) FileIO.saveFile("head-textures.txt", localList);
+		loadTextures(hardcodedList, /*logMissingEntities=*/true, /*logUnknownEntities=*/false);
+		loadTextures(localList, /*logMissingEntities=*/false, /*logUnknownEntities=*/true);
 		//---------- </Load Textures> ---------------------------------------------------------------------
 
 		// This could be optimized by passing 'simple-mob-heads-only' to loadTextures to skip adding any textures with '|'
