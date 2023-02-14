@@ -118,6 +118,7 @@ public class TextureKeyLookup{
 	private static RefMethod mTraderLlamaGetColor;
 	private static RefMethod mAxolotlGetVariant, mFrogGetVariant;
 	private static RefMethod mVexIsCharging;
+	private static RefMethod mChestBoatGetType;
 	private static RefMethod mGoatIsScreaming, mGoatHasLeftHorn, mGoatHasRightHorn;
 	private static RefMethod mStriderIsShivering, mStriderHasSaddle;
 	private static RefMethod mShulkerGetPeek, mShulkerGetAttachedFace;
@@ -177,6 +178,9 @@ public class TextureKeyLookup{
 				final String usedSting = mBeeHasStung.of(entity).call().equals(true) ? "|STUNG" : "";
 				return "BEE" + pollinated + angry + usedSting;
 			}
+			case "CHEST_BOAT":
+				if(mChestBoatGetType == null) mChestBoatGetType = ReflectionUtils.getRefClass("org.bukkit.entity.ChestBoat").getMethod("getBoatType");
+				return "CHEST_BOAT|"+((Enum)mChestBoatGetType.of(entity).call()).name();
 			case "VEX":
 				if(ReflectionUtils.getServerVersionString().compareTo("v1_13_R3") < 0) return "VEX";
 				if(mVexIsCharging == null) mVexIsCharging = ReflectionUtils.getRefClass("org.bukkit.entity.Vex").getMethod("isCharging");
