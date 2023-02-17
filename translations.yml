@@ -23,6 +23,7 @@ head-type-in-lore:
 head-name-format:
   default: "${MOB_SUBTYPES_DESC}${MOB_TYPE} ${HEAD_TYPE}"
   player: "${NAME} Head"
+  #player: "block.minecraft.player_head.named" # Translates to "PlayerName's Head"
   giant: "${MOB_SUBTYPES_DESC}${MOB_TYPE}'s Toe"
 
 # Used when 'head-click-listener' is enabled in and a head is clicked
