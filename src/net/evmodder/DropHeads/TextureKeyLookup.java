@@ -8,6 +8,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.Llama;
 import org.bukkit.entity.Ocelot;
+import org.bukkit.entity.Painting;
 import org.bukkit.entity.Parrot;
 import org.bukkit.entity.Rabbit;
 import org.bukkit.entity.Sheep;
@@ -151,6 +152,8 @@ public class TextureKeyLookup{
 				return "LLAMA|"+((Llama)entity).getColor().name();
 			case "PARROT":
 				return "PARROT|"+((Parrot)entity).getVariant().name();
+			case "PAINTING":
+				return "PAINTING|"+((Painting)entity).getArt().name();
 			case "RABBIT":
 				if(entity.getCustomName() != null && entity.getCustomName().equals("Toast")) return "RABBIT|TOAST";
 				return "RABBIT|"+((Rabbit)entity).getRabbitType().name();
