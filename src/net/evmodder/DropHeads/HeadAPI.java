@@ -35,6 +35,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+import com.mysql.fabric.xmlrpc.base.Array;
 import me.arcaniax.hdb.api.DatabaseLoadEvent;
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import net.evmodder.EvLib.FileIO;
@@ -209,7 +210,7 @@ public class HeadAPI {
 			});
 		headNameFormats = new HashMap<EntityType, String>();
 		headNameFormats.put(EntityType.UNKNOWN, "${MOB_SUBTYPES_DESC}${MOB_TYPE} ${HEAD_TYPE}"); // Default for mobs
-		headNameFormats.put(EntityType.PLAYER, "${NAME} Head"); // Default for players
+		headNameFormats.put(EntityType.PLAYER, "block.minecraft.player_head.named"); // Default for players
 		ConfigurationSection entityHeadFormatsConfig = translationsFile.getConfigurationSection("head-name-format");
 		if(entityHeadFormatsConfig != null) entityHeadFormatsConfig.getValues(/*deep=*/false)
 			.forEach((entityName, entityHeadNameFormat) -> {
@@ -537,6 +538,12 @@ public class HeadAPI {
 
 		final String headNameFormat = exactTextureKeyHeadNameFormats.getOrDefault(textureKey,
 				headNameFormats.getOrDefault(eType, DEFAULT_HEAD_NAME_FORMAT));
+
+		// A bit of a hacky shortcut..
+		if(headNameFormat.equals("block.minecraft.player_head.named")) return new TranslationComponent(
+				headNameFormat, new Component[]{nameStr.equals("PLAYER") ? new RawTextComponent(customName) : entityTypeNames[0]},
+				/*insert=*/null, /*click=*/null, /*hover=*/null, /*color=*/null, /*formats=*/Collections.singletonMap(Format.ITALIC, false));
+
 		final Pattern pattern = Pattern.compile("\\$\\{(NAME|HEAD_TYPE|MOB_TYPE|MOB_SUBTYPES_ASC|MOB_SUBTYPES_DESC)\\}");
 		final Matcher matcher = pattern.matcher(headNameFormat);
 		String translatedHeadNameFormat = headNameFormat;
