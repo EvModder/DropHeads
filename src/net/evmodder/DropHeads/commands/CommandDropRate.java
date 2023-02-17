@@ -4,6 +4,7 @@ import java.text.DecimalFormat;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -154,9 +155,16 @@ public class CommandDropRate extends EvCommand{
 		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+target+" "+message);
 	}
 
+	private String formatDroprate(double rate){
+		if(rate <= 0) return "0.0";
+		double d = 10; int n=1;
+		while(d*rate < 1D){d *= 10; ++n;}
+		return new DecimalFormat("0."+StringUtils.repeat('0', n)+"####").format(rate);
+	}
+
 	@SuppressWarnings("deprecation") @Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args){
-		DecimalFormat df = new DecimalFormat("0.0####");
+		//DecimalFormat df = new DecimalFormat("0.0####");
 		ItemStack weapon = sender instanceof Player ? ((Player)sender).getInventory().getItemInMainHand() : null;
 		if(weapon.getType() == Material.AIR) weapon = null;
 		Entity entity = null;
@@ -178,13 +186,13 @@ public class CommandDropRate extends EvCommand{
 			else{
 				rawChance = dropChanceAPI.getRawDropChance(entity);
 				sendTellraw(sender.getName(), new TranslationComponent(
-						RAW_DROP_CHANCE_FOR, new SelectorComponent(entity.getUniqueId()), new RawTextComponent(df.format(rawChance*100D))).toString());
+						RAW_DROP_CHANCE_FOR, new SelectorComponent(entity.getUniqueId()), new RawTextComponent(formatDroprate(rawChance*100D))).toString());
 			}
 		}
 		else{
 			rawChance = dropChanceAPI.getRawDropChance(target);
 			if(rawChance != DEFAULT_DROP_CHANCE){
-				sender.sendMessage(String.format(RAW_DROP_CHANCE_FOR, target, df.format(rawChance*100D), df.format(rawChance*100D)));
+				sender.sendMessage(String.format(RAW_DROP_CHANCE_FOR, target, formatDroprate(rawChance*100D), formatDroprate(rawChance*100D)));
 			}
 			else{//TODO: configured drop chance of 0 (e.g., armor_stand) gives not found error
 				sender.sendMessage(String.format(DROP_CHANCE_FOR_NOT_FOUND, target));
@@ -216,7 +224,7 @@ public class CommandDropRate extends EvCommand{
 		final double spawnCauseMod = entity == null ? 1D : JunkUtils.getSpawnCauseMult(entity);
 		final double permMod = dropChanceAPI.getPermsBasedMult(sender);
 		final double finalDropChance = rawChance*spawnCauseMod*timeAliveMod*weaponMod*lootingMod*permMod + lootingAdd;
-		df = new DecimalFormat("0.##");
+		DecimalFormat modFormatter = new DecimalFormat("0.##");
 		
 		if(VANILLA_WSKELE_HANDLING && target.equals("WITHER_SKELETON")){
 			if(!droprateDetails.isEmpty()) droprateDetails.addComponent("\n");
@@ -231,7 +239,7 @@ public class CommandDropRate extends EvCommand{
 				}
 				else if(Math.abs(1D-spawnCauseMod) > 0.001D){
 					droprateMultipliers.addComponent(SPAWN_REASON);
-					droprateMultipliers.addComponent(":§6x"+df.format(spawnCauseMod)+"§7, "/*TODO: translations.yml*/);
+					droprateMultipliers.addComponent(":§6x"+modFormatter.format(spawnCauseMod)+"§7, "/*TODO: translations.yml*/);
 				}
 			}
 			if(USING_TIME_ALIVE_MODIFIERS){
@@ -241,7 +249,7 @@ public class CommandDropRate extends EvCommand{
 				}
 				else if(Math.abs(1D-timeAliveMod) > 0.001D){
 					droprateMultipliers.addComponent(TIME_ALIVE);
-					droprateMultipliers.addComponent(":§6x"+df.format(timeAliveMod)+"§7, "/*TODO: translations.yml*/);
+					droprateMultipliers.addComponent(":§6x"+modFormatter.format(timeAliveMod)+"§7, "/*TODO: translations.yml*/);
 				}
 			}
 			if(USING_WEAPON_MODIFIERS){
@@ -252,13 +260,13 @@ public class CommandDropRate extends EvCommand{
 				else if(weapon != null && Math.abs(1D-weaponMod) > 0.001D){
 					droprateMultipliers.addComponent(WEAPON_TYPE);
 					droprateMultipliers.addComponent(JunkUtils.getMurderItemComponent(weapon, JSON_LIMIT));
-					droprateMultipliers.addComponent(":§6x"+df.format(weaponMod));
+					droprateMultipliers.addComponent(":§6x"+modFormatter.format(weaponMod));
 					droprateMultipliers.addComponent("§7, "/*TODO: translations.yml*/);
 				}
 			}
 			if(Math.abs(1D-permMod) > 0.001D){
 				droprateMultipliers.addComponent(PERMS);
-				droprateMultipliers.addComponent(":§6x"+df.format(permMod)+"§7, "/*TODO: translations.yml*/);
+				droprateMultipliers.addComponent(":§6x"+modFormatter.format(permMod)+"§7, "/*TODO: translations.yml*/);
 			}
 			if(USING_LOOTING_MODIFIERS){
 				if(entity == null){
@@ -267,8 +275,8 @@ public class CommandDropRate extends EvCommand{
 				else if(Math.abs(1D-lootingMod) > 0.001D || Math.abs(lootingAdd) > 0.001D){
 					droprateMultipliers.addComponent(LOOTING_COMP);
 					String lootingMsg = lootingLevel+":";
-					if(Math.abs(1D-lootingMod) > 0.001D) lootingMsg += "§6x"+df.format(lootingMod);
-					if(Math.abs(lootingAdd) > 0.001D) lootingMsg += "§e"+(lootingAdd > 0 ? '+' : '-')+df.format(lootingAdd*100)+"%";
+					if(Math.abs(1D-lootingMod) > 0.001D) lootingMsg += "§6x"+modFormatter.format(lootingMod);
+					if(Math.abs(lootingAdd) > 0.001D) lootingMsg += "§e"+(lootingAdd > 0 ? '+' : '-')+modFormatter.format(lootingAdd*100)+"%";
 					droprateMultipliers.addComponent(lootingMsg);
 				}
 				//else TODO: potential trailing "&7, " at end of list (when looting is not included in modifiers list)
@@ -279,9 +287,8 @@ public class CommandDropRate extends EvCommand{
 				droprateDetails.addComponent(droprateMultipliers);
 			}
 			if(entity != null && rawChance > 0D && Math.abs(finalDropChance-rawChance) > 0.001D){
-				df = new DecimalFormat("0.0####");
 				if(!droprateDetails.isEmpty()) droprateDetails.addComponent("\n");
-				droprateDetails.addComponent(String.format(FINAL_DROP_CHANCE, df.format(finalDropChance*100D)));
+				droprateDetails.addComponent(String.format(FINAL_DROP_CHANCE, formatDroprate(finalDropChance*100D)));
 			}
 		} // end else (not a wither_skeleton)
 		if(!droprateDetails.isEmpty()) sendTellraw(sender.getName(), droprateDetails.toString());
