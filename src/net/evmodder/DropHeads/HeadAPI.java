@@ -473,7 +473,19 @@ public class HeadAPI {
 				break;
 			case "RABBIT":
 				if(textureKey.contains("RABBIT|THE_KILLER_BUNNY")){
-					textureKey = textureKey.replace("RABBIT|THE_KILLER_BUNNY", "KILLER_BUNNY");
+					textureKey = textureKey.replace("RABBIT|THE_KILLER_BUNNY", "entity.minecraft.killer_bunny");
+					dataFlags = textureKey.split("\\|");
+				}
+				break;
+			case "BOAT":
+				if(dataFlags.length > 1 && !dataFlags[1].equals("GRUMM")){
+					textureKey = textureKey.replaceAll("BOAT\\|(\\w+)", "item.minecraft.$1_boat").toLowerCase();
+					dataFlags = textureKey.split("\\|");
+				}
+				break;
+			case "CHEST_BOAT":// TODO: "Acacia Boat with Chest" "Head" looks weird in English
+				if(dataFlags.length > 1 && !dataFlags[1].equals("GRUMM")){
+					textureKey = textureKey.replaceAll("CHEST_BOAT\\|(\\w+)", "item.minecraft.$1_chest_boat").toLowerCase();
 					dataFlags = textureKey.split("\\|");
 				}
 				break;
@@ -495,7 +507,8 @@ public class HeadAPI {
 			components.add(TellrawUtils.getBestGuessLocalizedDisplayName(EntityType.valueOf(dataFlags[0])));
 		}
 		catch(IllegalArgumentException ex){ // Unable to parse EntityType
-			components.add(new TranslationComponent(TextUtils.capitalizeAndSpacify(EntityUtils.getNormalizedEntityName(dataFlags[0]), '_')));
+			if(dataFlags[0].indexOf('.') != -1) components.add(new TranslationComponent(dataFlags[0]));
+			else components.add(new TranslationComponent(TextUtils.capitalizeAndSpacify(EntityUtils.getNormalizedEntityName(dataFlags[0]), '_')));
 		}
 		for(int i=1; i<dataFlags.length; ++i){
 			TranslationComponent subtypeName = entitySubtypeNames.get(dataFlags[i]);

@@ -82,8 +82,8 @@ drop-grumm-heads: false
 # attached to when they were killed?
 drop-sideways-shulker-heads: false
 
-# Should tamed dog and cats have the colored collar visible on their head?
-drop-collared-heads: true
+# Should tamed dog and cats have their (colored) collar visible on their head?
+drop-collared-heads: false
 
 # Should heads of saddled mobs have altered textures (when applicable)?
 drop-saddled-heads: false
