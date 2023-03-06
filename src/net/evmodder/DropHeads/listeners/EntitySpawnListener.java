@@ -45,7 +45,7 @@ public class EntitySpawnListener implements Listener{
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void entitySpawnEvent(CreatureSpawnEvent evt){
+	public void creatureSpawnEvent(CreatureSpawnEvent evt){
 		if(evt.getSpawnReason() == null) return;
 
 		final Float modifier = spawnModifiers.get(evt.getSpawnReason());
