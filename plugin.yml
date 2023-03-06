@@ -5,7 +5,7 @@ description: Heads for every mob and player.
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
 #7=pet death msgs, API fix, 1.19 mobs, full-cmd-translation, more pre-jappas(tentative), fix shulker rotation, updated spawn-cause-modifiers
-#12=head name translation optimization, /droprate more precision, added painting heads
+#12=head name translation optimization, /droprate more precision, added painting heads, togglelocalbeheadmessages
 version: 3.7.12
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
@@ -23,6 +23,12 @@ commands:
     usage: /droprate <mob type>
     aliases: [headrate,headdropchance,dhrate,headchance]
     permission: dropheads.droprate
+    permission-message: You do not have permission to do this.
+
+  togglelocalbeheadmessages:
+    description: Toggle whether you receive (local) behead messages
+    usage: /togglelocalbeheadmessages
+    permission: dropheads.togglebeheadmessages
     permission-message: You do not have permission to do this.
 
   debug_all_heads:
@@ -115,8 +121,17 @@ permissions:
     default: false
 
   dropheads.droprate:
-    description: Permission to check head drop rates with a command
+    description: Permission to use /droprate
     default: op
+
+  dropheads.togglebeheadmessages:
+    description: Permission to use /togglebeheadmessages
+    default: op
+    children:
+      #dropheads.togglebeheadmessages.global: true
+      dropheads.togglebeheadmessages.local: true
+      #dropheads.togglebeheadmessages.direct: true
+      #dropheads.togglebeheadmessages.sheep: true
 
   dropheads.debug:
     description: Permission to spawn all the heads in a big cube

@@ -627,7 +627,9 @@ public class DropChanceAPI{
 				break;
 			case LOCAL:
 				ArrayList<Player> nearbyPlayers = EvUtils.getNearbyPlayers(entity.getLocation(), LOCAL_RANGE, CROSS_DIMENSIONAL_BROADCAST);
-				for(Player p : nearbyPlayers) sendTellraw(p.getName(), message.toString());
+				for(Player p : nearbyPlayers){
+					if(JunkUtils.hasLocalBeheadMessagedEnabled(p)) sendTellraw(p.getName(), message.toString());
+				}
 				if(petOwnerToMsgName != null && nearbyPlayers.stream().noneMatch(p -> p.getName().equals(petOwnerToMsgName))){
 					sendTellraw(petOwnerToMsgName, message.toString());
 				}

@@ -158,8 +158,8 @@ commands:
       giveto: "giveto:"
       slot: "slot:"
     errors:
+      run-by-player: "&cOnly ingame players can run this command without a &e${commands.spawnhead.prefixes.giveto}&c argument"
       permissions:
-        run-by-player: "&cOnly ingame players can run this command without a &e${commands.spawnhead.prefixes.giveto}&c argument"
         mob-heads: "&cYou do not have permission to spawn mob heads"
         player-heads: "&cYou do not have permission to spawn player heads"
         hdb-heads: "&cYou do not have permission to spawn HeadDatabase heads"
@@ -210,3 +210,10 @@ commands:
       looting: "${enchantment.minecraft.looting}"
     vanilla-wither-skeleton-handling-alert: "&7Vanilla wither_skeleton handling is enabled"
     final-drop-rate: "&6Final drop chance: &b%s%%"
+
+  togglebeheadmessages:
+    current-status: "&7Receive local behead messages: &6%s"
+    enabled: "${addServer.resourcePack.enabled}" #Alternative: gui.yes
+    disabled: "${addServer.resourcePack.disabled}" #Alternative: gui.no
+    errors:
+        run-by-player: "&cOnly ingame players can run this command"

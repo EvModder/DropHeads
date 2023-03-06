@@ -98,7 +98,7 @@ public class CommandSpawnHead extends EvCommand{
 		GIVETO_PREFIX = pl.getAPI().loadTranslationStr("commands.spawnhead.prefixes.giveto");
 		SLOT_PREFIX = pl.getAPI().loadTranslationStr("commands.spawnhead.prefixes.slot");
 
-		CMD_MUST_BE_RUN_BY_A_PLAYER = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.permissions.run-by-player");
+		CMD_MUST_BE_RUN_BY_A_PLAYER = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.run-by-player");
 		NO_PERMISSION_TO_SPAWN_MOB_HEADS = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.permissions.mob-heads");
 		NO_PERMISSION_TO_SPAWN_PLAYER_HEADS = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.permissions.player-heads");
 		NO_PERMISSION_TO_SPAWN_HDB_HEADS = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.permissions.hdb-heads");
