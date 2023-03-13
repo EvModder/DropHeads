@@ -21,12 +21,13 @@ public class CommandToggleLocalBeheadMessages extends EvCommand{
 	public CommandToggleLocalBeheadMessages(DropHeads plugin) {
 		super(plugin);
 		pl = plugin;
-		CURRENT_STATUS_STR = pl.getAPI().loadTranslationStr("commands.togglebeheadmessages.current-status");
+		CURRENT_STATUS_STR = pl.getAPI().loadTranslationStr("commands.togglebeheadmessages.current-status", "&7Receive local behead messages: &6%s");
 		//TODO: Use comps for ALL msgs
-		ENABLED_COMP = pl.getAPI().loadTranslationComp("commands.togglebeheadmessages.enabled");
-		DISABLED_COMP = pl.getAPI().loadTranslationComp("commands.togglebeheadmessages.disabled");
+		ENABLED_COMP = pl.getAPI().loadTranslationComp("commands.togglebeheadmessages.enabled", "gui.yes");
+		DISABLED_COMP = pl.getAPI().loadTranslationComp("commands.togglebeheadmessages.disabled", "gui.no");
 
-		CMD_MUST_BE_RUN_BY_A_PLAYER = pl.getAPI().loadTranslationStr("commands.togglebeheadmessages.errors.run-by-player");
+		CMD_MUST_BE_RUN_BY_A_PLAYER = pl.getAPI().loadTranslationStr("commands.togglebeheadmessages.errors.run-by-player",
+				"&cOnly ingame players can run this command");
 	}
 
 	// TODO: optional arg ON/OFF (or local language equivalent?)

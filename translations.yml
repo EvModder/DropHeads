@@ -216,4 +216,4 @@ commands:
     enabled: "${addServer.resourcePack.enabled}" #Alternative: gui.yes
     disabled: "${addServer.resourcePack.disabled}" #Alternative: gui.no
     errors:
-        run-by-player: "&cOnly ingame players can run this command"
+      run-by-player: "&cOnly ingame players can run this command"

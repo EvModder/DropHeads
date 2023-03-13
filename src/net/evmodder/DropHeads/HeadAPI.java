@@ -79,10 +79,11 @@ public class HeadAPI {
 	public final String getDropHeadsNamespacedKey(){return "dropheads:";} // TODO: decide how to expose/implement this
 
 	// Loads config.getString(key), replacing '${abc-xyz}' with config.getString('abc-xyz')
-	/** DO NOT USE: This function may disappear in a future release */
-	public String loadTranslationStr(String key){
+	/** DO NOT USE: These functions may disappear in a future release */
+	public String loadTranslationStr(String key){return loadTranslationStr(key, key);}
+	public String loadTranslationStr(String key, String defaultValue){
 		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in translations file: "+key);
-		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key));
+		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key, defaultValue));
 		int i = msg.indexOf('$');
 		if(i == -1) return msg;
 		StringBuilder builder = new StringBuilder();
@@ -107,10 +108,11 @@ public class HeadAPI {
 		return builder.toString();
 	}
 	// Loads config.getString(key), replacing '${abc-xyz}' with % in the key and config.getString('abc-xyz') in withComps.
-	/** DO NOT USE: This function may disappear in a future release */
-	public TranslationComponent loadTranslationComp(String key){
+	/** DO NOT USE: These functions may disappear in a future release */
+	public TranslationComponent loadTranslationComp(String key){return loadTranslationComp(key, key);}
+	public TranslationComponent loadTranslationComp(String key, String defaultValue){
 //		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in translations file: "+key);
-		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key, key));
+		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key, defaultValue));
 		int i = msg.indexOf('$');
 		if(i == -1){
 			return new TranslationComponent(msg);
