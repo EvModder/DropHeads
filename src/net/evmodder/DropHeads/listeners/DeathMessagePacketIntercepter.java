@@ -78,7 +78,7 @@ public class DeathMessagePacketIntercepter{
 	}
 
 	private void injectPlayer(Player player){
-		JunkUtils.getPlayerChannel(player).pipeline().addBefore("packet_handler", player.getName(), new ChannelDuplexHandler(){
+		JunkUtils.getPlayerChannel(player).pipeline().addBefore("packet_handler", "replace_death_with_behead_msg", new ChannelDuplexHandler(){
 			@Override public void write(ChannelHandlerContext context, Object packet, ChannelPromise promise) throws Exception {
 				if(!outboundPacketClazz.isInstance(packet)){ // Not a chat packet
 					super.write(context, packet, promise);
