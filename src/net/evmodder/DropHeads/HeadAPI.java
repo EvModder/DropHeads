@@ -770,20 +770,18 @@ public class HeadAPI {
 			if(id != null && hdbAPI.isHead(id)) return hdb_getItemHead_wrapper(id);
 		}
 		//-------------------- Handle players
-		Collection<Property> textures = profile.getProperties().get("textures");
-		final boolean updateSkin = textures == null || !LOCK_PLAYER_SKINS;
+		final boolean updateSkin = !profile.getProperties().containsKey("textures") || !LOCK_PLAYER_SKINS;
 		if(profile.getId() != null){
 			final GameProfile freshProfile = JunkUtils.getGameProfile(profile.getId().toString(), updateSkin);
 			if(freshProfile != null){
-				if(updateSkin){
-					profile = freshProfile;
-					textures = profile.getProperties().get("textures");
-				}
+				if(updateSkin) profile = freshProfile;
 				profileName = freshProfile.getName();
 
 				if(LOCK_PLAYER_SKINS){
+					Collection<Property> textures = profile.getProperties().get("textures");
 					if(textures == null || textures.isEmpty() || textures.size() > 1){
 						pl.getLogger().warning("Unable to find skin for player: "+profileName);
+						pl.getLogger().warning("num textures: "+textures.size());
 					}
 					else{
 						final String minCode0 = minimizeTextureCode(textures.iterator().next().getValue());
@@ -808,10 +806,13 @@ public class HeadAPI {
 			}
 		}
 		//-------------------- Handle raw textures
-		else if(textures != null && !textures.isEmpty()){
-			if(textures.size() > 1) pl.getLogger().warning("Multiple textures in getHead() request: "+profileName);
-			final String code0 = textures.iterator().next().getValue();
-			head = getHead(code0.getBytes());
+		else if(profile.getProperties().containsKey("textures")){
+			final Collection<Property> textures = profile.getProperties().get("textures");
+			if(textures != null && !textures.isEmpty()){
+				if(textures.size() > 1) pl.getLogger().warning("Multiple textures in getHead() request: "+profileName);
+				final String code0 = textures.iterator().next().getValue();
+				return getHead(code0.getBytes());
+			}
 		}
 		if(MAKE_UNSTACKABLE){
 			profile.getProperties().put("random_uuid", new Property("random_uuid", UUID.randomUUID().toString()));
