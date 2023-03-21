@@ -46,7 +46,6 @@ import net.evmodder.EvLib.extras.TellrawUtils.TextHoverAction;
 // A trashy place to dump stuff that I should probably move to EvLib after ensure cross-version safety
 public class JunkUtils{
 	public final static String SPAWN_CAUSE_MULTIPLIER_KEY = "SRM";
-	public final static String DISABLE_LOCAL_BEHEAD_MESSAGES_KEY = "DisableLocalBeheadMessages";
 
 	public final static <E extends Enum<E>> E parseEnumOrDefault(@Nonnull String stringValue, E defaultValue){
 		Class<E> enumClass = defaultValue.getDeclaringClass();
@@ -70,10 +69,6 @@ public class JunkUtils{
 		for(String tag : e.getScoreboardTags()) if(tag.startsWith(SPAWN_CAUSE_MULTIPLIER_KEY)) return Float.parseFloat(
 				tag.substring(SPAWN_CAUSE_MULTIPLIER_KEY.length()+1/*+1 because of '_'*/));
 		return 1D;
-	}
-
-	public final static boolean hasLocalBeheadMessagedEnabled(Entity e){
-		return !e.hasMetadata(DISABLE_LOCAL_BEHEAD_MESSAGES_KEY) && !e.getScoreboardTags().contains(DISABLE_LOCAL_BEHEAD_MESSAGES_KEY);
 	}
 
 	public final static ItemStack setDisplayName(@Nonnull ItemStack item, @Nonnull Component name){

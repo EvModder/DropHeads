@@ -113,7 +113,6 @@ public final class DropHeads extends EvPlugin{
 
 		new CommandSpawnHead(this);
 		new CommandDropRate(this);
-		new CommandToggleLocalBeheadMessages(this);
 		new Commanddebug_all_heads(this);
 
 		LOGFILE_ENABLED = config.getBoolean("log.enable", false);
