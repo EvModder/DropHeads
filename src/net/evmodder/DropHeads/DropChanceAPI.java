@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -43,6 +44,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.BlockProjectileSource;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
+import net.evmodder.DropHeads.events.BeheadMessageEvent;
 import net.evmodder.DropHeads.events.EntityBeheadEvent;
 import net.evmodder.DropHeads.listeners.DeathMessagePacketIntercepter;
 import net.evmodder.EvLib.EvUtils;
@@ -582,6 +584,12 @@ public class DropChanceAPI{
 	private void sendTellraw(String target, String message){
 		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+target+" "+message);
 	}
+	private void sendBeheadMessage(Player target, Entity victim, Entity killer, Component message, boolean isGlobal, boolean isPet){
+		BeheadMessageEvent event = new BeheadMessageEvent(target, victim, killer, message, isGlobal, isPet);
+		pl.getServer().getPluginManager().callEvent(event);
+		if(!event.isCancelled()) sendTellraw(target.getName(), event.getMessage().toString());
+		else if(DEBUG_MODE) pl.getLogger().info("BeheadMessageEvent was cancelled");
+	}
 	/**
 	 * Send a head drop announcement message for an entity with recipients are based on:<br>
 	 * * The <code>AnnounceMode</code> setting for the entity's type<br>
@@ -610,11 +618,10 @@ public class DropChanceAPI{
 
 		final Entity petOwnerToMsg = REPLACE_PET_DEATH_MESSAGE && entity instanceof Tameable && ((Tameable)entity).getOwner() != null
 				? pl.getServer().getEntity(((Tameable)entity).getOwner().getUniqueId()) : null;
-		final String petOwnerToMsgName = petOwnerToMsg == null ? null : petOwnerToMsg.getName();
+		final UUID petOwnerToMsgUUID = petOwnerToMsg == null ? null : petOwnerToMsg.getUniqueId();
 
 		switch(mode){
 			case GLOBAL:
-				sendTellraw("@a", message.toString());
 				if(entity instanceof Player && REPLACE_PLAYER_DEATH_MESSAGE && evt != null){
 					// Set the behead death message so that other plugins will see it (it will still get cleared by the intercepter)
 					// In order to do this, we need to cancel the extra plaintext message in DeathMessagePacketIntercepter
@@ -624,19 +631,29 @@ public class DropChanceAPI{
 						deathMessageBlocker.blockSpeficicMessage(plainDeathMsg, /*ticksBlockedFor=*/5);
 					}
 				}
+				for(Player p : pl.getServer().getOnlinePlayers()){
+					sendBeheadMessage(p, entity, killer, message, /*isGlobal=*/true, /*isPetDeathMsg=*/p.getUniqueId() == petOwnerToMsgUUID);
+				}
 				break;
 			case LOCAL:
-				ArrayList<Player> nearbyPlayers = EvUtils.getNearbyPlayers(entity.getLocation(), LOCAL_RANGE, CROSS_DIMENSIONAL_BROADCAST);
-				for(Player p : nearbyPlayers){
-					if(JunkUtils.hasLocalBeheadMessagedEnabled(p)) sendTellraw(p.getName(), message.toString());
+				HashSet<UUID> recipients = new HashSet<UUID>();
+				for(Player p : EvUtils.getNearbyPlayers(entity.getLocation(), LOCAL_RANGE, CROSS_DIMENSIONAL_BROADCAST)){
+					sendBeheadMessage(p, entity, killer, message, /*isGlobal=*/false, /*isPetDeathMsg=*/p.getUniqueId() == petOwnerToMsgUUID);
+					recipients.add(p.getUniqueId());
 				}
-				if(petOwnerToMsgName != null && nearbyPlayers.stream().noneMatch(p -> p.getName().equals(petOwnerToMsgName))){
-					sendTellraw(petOwnerToMsgName, message.toString());
+				if(petOwnerToMsgUUID != null && !recipients.contains(petOwnerToMsg.getUniqueId())){
+					if(petOwnerToMsg instanceof Player == false) pl.getLogger().warning("Non-player pet owner: "+petOwnerToMsg.getName());
+					else sendBeheadMessage((Player)petOwnerToMsg, entity, killer, message, /*isGlobal=*/false, /*isPetDeathMsg=*/true);
 				}
 				break;
 			case DIRECT:
-				if(killer instanceof Player) sendTellraw(killer.getName(), message.toString());
-				if(petOwnerToMsgName != null && !killer.getName().equals(petOwnerToMsgName)) sendTellraw(petOwnerToMsgName, message.toString());
+				if(killer instanceof Player){
+					sendBeheadMessage((Player)killer, entity, killer, message, /*isGlobal=*/false, /*isPetDeathMsg=*/killer.getUniqueId() == petOwnerToMsgUUID);
+				}
+				if(petOwnerToMsgUUID != null && !killer.getUniqueId().equals(petOwnerToMsg.getUniqueId())){
+					if(petOwnerToMsg instanceof Player == false) pl.getLogger().warning("Non-player pet owner: "+petOwnerToMsg.getName());
+					else sendBeheadMessage((Player)petOwnerToMsg, entity, killer, message, /*isGlobal=*/false, /*isPetDeathMsg=*/true);
+				}
 				break;
 			case OFF:
 				break;

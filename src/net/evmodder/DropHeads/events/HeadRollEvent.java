@@ -26,7 +26,7 @@ public class HeadRollEvent extends EntityEvent{
 	 * @param victim the Entity being beheaded
 	 * @param dropChance the configured droprate for the victim's head, between 0 and 1 inclusive
 	 * @param dropRoll the PRNG double drop roll value, between 0 and 1 inclusive
-	 * @param dropSuccess whether the drop roll was determined successful.
+	 * @param dropSuccess whether the drop roll was determined successful
 	 */
 	public HeadRollEvent(final Entity killer, final Entity victim, final double dropChance, final double dropRoll, final boolean dropSuccess){
 		super(victim);

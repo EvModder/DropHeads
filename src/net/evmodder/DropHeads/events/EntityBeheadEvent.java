@@ -16,8 +16,8 @@ public class EntityBeheadEvent extends EntityEvent implements Cancellable{
 	 * @return the list of handlers for this event */
 	public static HandlerList getHandlerList(){return HANDLERS;} // This is actually required for some dumb reason.
 
-	private final Entity killer;
 	private final Entity victim;
+	private final Entity killer;
 	private final Event sourceEvent;
 	private ItemStack headDrop;
 	private boolean cancelled = false;
@@ -47,22 +47,23 @@ public class EntityBeheadEvent extends EntityEvent implements Cancellable{
 
 	/**
 	 * Get the entity that did the beheading.
-	 * It is possible that this differs from getEntity().getKiller() because it
-	 * can identify non-player killers, projectile sources, etc., if configured.
-	 * Use getEntity().getKiller() if you want the killer as determined by Minecraft.
+	 * It is possible that this differs from getSourceEvent().getKiller() because
+	 * it can identify non-player killers, projectile sources, etc., if configured.
+	 * Use getSourceEvent().getKiller() if you want the killer as determined by Minecraft.
 	 * @return the Entity object representing the killer, or null if no entity was responsible
 	 */
 	public Entity getKiller(){return killer;}
 
 	/**
 	 * Get the entity that was beheaded.
+	 * Same as getVictim().
 	 * @return the Entity object representing the victim
 	 */
 	@Override public Entity getEntity(){return entity;}
 
 	/**
 	 * Get the Event which triggered this EntityBeheadEvent (usually an EntityDeathEvent).
-	 * @return a reference to the source event.
+	 * @return a reference to the source event
 	 */
 	public Event getSourceEvent(){return sourceEvent;}
 
@@ -74,19 +75,19 @@ public class EntityBeheadEvent extends EntityEvent implements Cancellable{
 
 	/**
 	 * Set the ItemStack which will result from the beheading.
-	 * @param headDrop The ItemStack to use as the victim's head.
+	 * @param headDrop The ItemStack to use as the victim's head
 	 */
 	public void setHeadItem(final ItemStack headDrop){this.headDrop = headDrop;}
 
 	/**
 	 * Get whether this event has been cancelled.
-	 * @return Whether the event has been cancelled.
+	 * @return Whether the event has been cancelled
 	 */
 	@Override public boolean isCancelled(){return cancelled;}
 
 	/**
 	 * Set whether this event should be cancelled.
-	 * @param cancel whether the event should be cancelled.
+	 * @param cancel whether the event should be cancelled
 	 */
 	@Override public void setCancelled(boolean cancel){cancelled = cancel;}
 
