@@ -25,6 +25,7 @@ import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.Updater;
 
 //TODO:
+// * CHEST(_BOAT)|BAMBOO -> Bamboo (Chest) Raft
 // * /dropheads reload
 // * Refactor CommandSpawnHead (split it up!)
 // * improve the bad textures listed at the bottom of head-textures.txt

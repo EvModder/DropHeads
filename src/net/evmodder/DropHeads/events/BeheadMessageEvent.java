@@ -23,7 +23,6 @@ public class BeheadMessageEvent extends Event implements Cancellable{
 	private boolean cancelled = false;
 	private boolean isGlobal;
 	private boolean isPetDeath;
-	//TODO: private final Selector allRecipients
 
 	/**
 	 * Create an BeheadMessageEvent for DropHeads.

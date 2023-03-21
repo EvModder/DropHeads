@@ -5,7 +5,7 @@ description: Heads for every mob and player.
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
 #7=pet death msgs, API fix, 1.19 mobs, full-cmd-translation, more pre-jappas(tentative), fix shulker rotation, updated spawn-cause-modifiers
-#12=head name translation optimization, /droprate more precision, added painting heads, fixed save-type-in-lore:false missing name
+#12=head name translation optimization, /droprate more precision, added painting heads, fixed save-type-in-lore:false missing name, sniffer
 version: 3.7.12
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
