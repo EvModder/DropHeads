@@ -590,8 +590,8 @@ public class HeadAPI {
 		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 		head = JunkUtils.setDisplayName(head, getHeadNameFromKey(textureKey, /*customName=*/""));
 		if(SAVE_TYPE_IN_LORE){
-			int i = textureKey.indexOf('|');
-			String entityTypeName = (i == -1 ? textureKey : textureKey.substring(0, i)).toLowerCase();
+			final int i = textureKey.indexOf('|');
+			final String entityTypeName = (i == -1 ? textureKey : textureKey.substring(0, i)).toLowerCase();
 			head = JunkUtils.setLore(head, new RawTextComponent(
 					MOB_PREFIX + entityTypeName,
 					/*insert=*/null, /*click=*/null, /*hover=*/null,
@@ -770,51 +770,52 @@ public class HeadAPI {
 			if(id != null && hdbAPI.isHead(id)) return hdb_getItemHead_wrapper(id);
 		}
 		//-------------------- Handle players
-		final boolean updateSkin = !profile.getProperties().containsKey("textures") || !LOCK_PLAYER_SKINS;
+		Collection<Property> textures = profile.getProperties().get("textures");
+		final boolean updateSkin = textures == null || !LOCK_PLAYER_SKINS;
 		if(profile.getId() != null){
 			final GameProfile freshProfile = JunkUtils.getGameProfile(profile.getId().toString(), updateSkin);
 			if(freshProfile != null){
-				if(updateSkin) profile = freshProfile;
+				if(updateSkin){
+					profile = freshProfile;
+					textures = profile.getProperties().get("textures");
+				}
 				profileName = freshProfile.getName();
 
 				if(LOCK_PLAYER_SKINS){
-					final Collection<Property> textures = profile.getProperties().get("textures");
 					if(textures == null || textures.isEmpty() || textures.size() > 1){
 						pl.getLogger().warning("Unable to find skin for player: "+profileName);
 					}
 					else{
-						final String newCode = minimizeTextureCode(textures.iterator().next().getValue());
+						final String minCode0 = minimizeTextureCode(textures.iterator().next().getValue());
 						profile.getProperties().clear();
-						profile.getProperties().put("textures", new Property("textures", newCode));
+						profile.getProperties().put("textures", new Property("textures", minCode0));
 					}
 				}
 				head = HeadUtils.makeCustomHead(profile, /*setOwner=*/!LOCK_PLAYER_SKINS);
 			}
-		}
-		final boolean isMHF = profileName != null && profileName.startsWith("MHF_");
-		if(profileName != null){
-			head = JunkUtils.setDisplayName(head, isMHF
-				? new RawTextComponent(ChatColor.YELLOW+profileName, /*insert=*/null, /*click=*/null, /*hover=*/null,
-						/*color=*/null, /*formats=*/Collections.singletonMap(Format.ITALIC, false))
-				: getHeadNameFromKey("PLAYER", /*customName=*/profileName));
-		}
-		if(SAVE_TYPE_IN_LORE){
-			head = JunkUtils.setLore(head/*TODO: need to clone for hasPlayedBefore???*/, new RawTextComponent(
-					(isMHF ? MHF_PREFIX : PLAYER_PREFIX) + profileName,
-					/*insert=*/null, /*click=*/null, /*hover=*/null,
-					/*color=*/"dark_gray", /*formats=*/Collections.singletonMap(Format.ITALIC, false)));
+			final boolean isMHF = profileName != null && profileName.startsWith("MHF_");
+			if(profileName != null){
+				head = JunkUtils.setDisplayName(head, isMHF
+					? new RawTextComponent(ChatColor.YELLOW+profileName, /*insert=*/null, /*click=*/null, /*hover=*/null,
+							/*color=*/null, /*formats=*/Collections.singletonMap(Format.ITALIC, false))
+					: getHeadNameFromKey("PLAYER", /*customName=*/profileName));
+			}
+			if(SAVE_TYPE_IN_LORE){
+				head = JunkUtils.setLore(head/*TODO: need to clone for hasPlayedBefore???*/, new RawTextComponent(
+						(isMHF ? MHF_PREFIX : PLAYER_PREFIX) + profileName,
+						/*insert=*/null, /*click=*/null, /*hover=*/null,
+						/*color=*/"dark_gray", /*formats=*/Collections.singletonMap(Format.ITALIC, false)));
+			}
 		}
 		//-------------------- Handle raw textures
-		else if(profile.getProperties() != null && profile.getProperties().containsKey("textures")){
-			final Collection<Property> textures = profile.getProperties().get("textures");
-			if(textures != null && !textures.isEmpty()){
-				final String code0 = textures.iterator().next().getValue();
-				return getHead(code0.getBytes());
-			}
+		else if(textures != null && !textures.isEmpty()){
+			if(textures.size() > 1) pl.getLogger().warning("Multiple textures in getHead() request: "+profileName);
+			final String code0 = textures.iterator().next().getValue();
+			head = getHead(code0.getBytes());
 		}
 		if(MAKE_UNSTACKABLE){
 			profile.getProperties().put("random_uuid", new Property("random_uuid", UUID.randomUUID().toString()));
-			SkullMeta meta = (SkullMeta)head.getItemMeta();
+			final SkullMeta meta = (SkullMeta)head.getItemMeta();
 			HeadUtils.setGameProfile(meta, profile);
 			head.setItemMeta(meta);
 		}
