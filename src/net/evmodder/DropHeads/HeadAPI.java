@@ -62,7 +62,7 @@ public class HeadAPI {
 	final Configuration translationsFile;  //TODO: make private
 	private final boolean GRUMM_ENABLED, SIDEWAYS_SHULKERS_ENABLED, COLORED_COLLARS_ENABLED, SADDLES_ENABLED; // may trigger additional file downloads.
 	private final boolean HOLLOW_SKULLS_ENABLED, TRANSPARENT_SLIME_ENABLED, CRACKED_IRON_GOLEMS_ENABLED, USE_PRE_JAPPA, USE_PRE_1_20;
-	private final boolean LOCK_PLAYER_SKINS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_VANILLA_HEADS;
+	private final boolean LOCK_PLAYER_SKINS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_CUSTOM_HEADS;
 	private final String UNKNOWN_TEXTURE_CODE;
 	private final TranslationComponent LOCAL_HEAD, LOCAL_SKULL, LOCAL_TOE;
 	private final HashMap<EntityType, /*headNameFormat=*/String> headNameFormats;
@@ -186,7 +186,7 @@ public class HeadAPI {
 //		SAVE_CUSTOM_LORE = pl.getConfig().getBoolean("save-custom-lore", false);
 		SAVE_TYPE_IN_LORE = pl.getConfig().getBoolean("show-head-type-in-lore", false);
 		MAKE_UNSTACKABLE = pl.getConfig().getBoolean("make-heads-unstackable", false);
-		PREFER_VANILLA_HEADS = pl.getConfig().getBoolean("prefer-vanilla-heads", true);
+		PREFER_CUSTOM_HEADS = !pl.getConfig().getBoolean("prefer-vanilla-heads", true);
 
 		//---------- <Load translations> ----------------------------------------------------------------------
 		translationsFile = FileIO.loadConfig(pl, "translations.yml",
@@ -345,12 +345,17 @@ public class HeadAPI {
 				final int j = key.indexOf('|');
 				final String eTypeName = (j == -1 ? key : key.substring(0, j)).toUpperCase();
 				try{
-					EntityType type = EntityType.valueOf(eTypeName);
-					missingHeads.remove(type);
+					missingHeads.remove(EntityType.valueOf(eTypeName));
 				}
-				catch(IllegalArgumentException ex){
-					if(unknownHeads.add(eTypeName)){
-						if(logUnknownEntities) pl.getLogger().warning("Unknown entity '"+eTypeName+"' in head-textures.txt");
+				catch(IllegalArgumentException e1){
+					try{
+						// Currently only applies for PIG_ZOMBIE
+						missingHeads.remove(EntityType.valueOf(replaceHeadsFromTo.getOrDefault(eTypeName, eTypeName)));
+					}
+					catch(IllegalArgumentException e2){
+						if(unknownHeads.add(eTypeName)){
+							if(logUnknownEntities) pl.getLogger().warning("Unknown entity '"+eTypeName+"' in head-textures.txt");
+						}
 					}
 				}
 			}
@@ -643,14 +648,13 @@ public class HeadAPI {
 				keyDataTagIdx=textureKey.lastIndexOf('|');
 			}
 			// If this is a custom data head (still contains a '|') or eType is null AND the key exists, use it
-			boolean hasCustomData = textureKey.replace("|HOLLOW", "").indexOf('|') != -1;
-			if((hasCustomData || type == null || type == EntityType.UNKNOWN || !PREFER_VANILLA_HEADS) && textures.containsKey(textureKey)){
+			final boolean hasCustomData = textureKey.replace("|HOLLOW", "").indexOf('|') != -1;
+			if((hasCustomData || type == null || type == EntityType.UNKNOWN || PREFER_CUSTOM_HEADS) && textures.containsKey(textureKey)){
 				return makeHeadFromTexture(textureKey/*, saveTypeInLore*/);
 			}
 		}
 		if(type == null) return null;
-		// Otherwise, favor vanilla skulls
-		if(!PREFER_VANILLA_HEADS && type != EntityType.PLAYER) return null;
+		if(type != EntityType.PLAYER) return null;
 		switch(type){
 			case PLAYER:
 				return new ItemStack(Material.PLAYER_HEAD);
