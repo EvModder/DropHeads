@@ -1,6 +1,5 @@
 package net.evmodder.DropHeads.listeners;
 
-import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -21,23 +20,24 @@ public class ProjectileFireListener implements Listener{
 		ALLOW_NON_PLAYER_KILLS = pl.getConfig().getBoolean("drop-for-nonplayer-kills", false);
 	}
 
-	private boolean canShootProjectiles(Material type){
-		switch(type.name()){
-			// TODO: This list is incomplete, but should include all projectiles that trigger an EntityDamageEvent
-			case "BOW":
-			case "CROSS_BOW":
-			case "TRIDENT":
-			case "FIRE_CHARGE":
-			case "SNOWBALL":
-			case "SPLASH_POTION":
-			case "LINGERING_POTION":
-			case "FISHING_ROD":
-			case "EGG":
-				return true;
-			default:
-				return false;
-		}
-	}
+	//B
+//	private boolean canShootProjectiles(Material type){
+//		switch(type.name()){
+//			// TODO: This list is incomplete, but should include all projectiles that trigger an EntityDamageEvent
+//			case "BOW":
+//			case "CROSS_BOW":
+//			case "TRIDENT":
+//			case "FIRE_CHARGE":
+//			case "SNOWBALL":
+//			case "SPLASH_POTION":
+//			case "LINGERING_POTION":
+//			case "FISHING_ROD":
+//			case "EGG":
+//				return true;
+//			default:
+//				return false;
+//		}
+//	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onProjectileLaunch(ProjectileLaunchEvent evt){
@@ -47,13 +47,16 @@ public class ProjectileFireListener implements Listener{
 
 		final LivingEntity shooter = (LivingEntity)evt.getEntity().getShooter();
 		final ItemStack mainHandItem = shooter.getEquipment().getItemInMainHand();
-		final ItemStack offHandItem  = shooter.getEquipment().getItemInOffHand();
-		if((mainHandItem == null || !canShootProjectiles(mainHandItem.getType())) && offHandItem != null && canShootProjectiles(offHandItem.getType())){
-			evt.getEntity().setMetadata("ShotUsing", new FixedMetadataValue(pl, offHandItem));
-		}
-		else if(mainHandItem != null){
-			evt.getEntity().setMetadata("ShotUsing", new FixedMetadataValue(pl, mainHandItem));
-		}
+		//A
+		evt.getEntity().setMetadata("ShotUsing", new FixedMetadataValue(pl, mainHandItem));
+		//B
+//		final ItemStack offHandItem  = shooter.getEquipment().getItemInOffHand();
+//		if((mainHandItem == null || !canShootProjectiles(mainHandItem.getType())) && offHandItem != null && canShootProjectiles(offHandItem.getType())){
+//			evt.getEntity().setMetadata("ShotUsing", new FixedMetadataValue(pl, offHandItem));
+//		}
+//		else if(mainHandItem != null){
+//			evt.getEntity().setMetadata("ShotUsing", new FixedMetadataValue(pl, mainHandItem));
+//		}
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
