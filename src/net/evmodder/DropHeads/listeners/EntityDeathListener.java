@@ -9,6 +9,8 @@ import java.util.Random;
 import java.util.UUID;
 import javax.annotation.Nonnull;
 import org.bukkit.Material;
+import org.bukkit.Nameable;
+import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
@@ -27,6 +29,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.permissions.Permissible;
 import org.bukkit.plugin.EventExecutor;
 import org.bukkit.scheduler.BukkitRunnable;
 import net.evmodder.DropHeads.DropHeads;
@@ -101,11 +104,21 @@ public class EntityDeathListener implements Listener{
 				: null;
 	}
 
+	private String getName(Permissible killer){
+		if(killer instanceof Nameable && ((Nameable)killer).getCustomName() != null) return ((Nameable)killer).getCustomName();
+		if(killer instanceof CommandSender) return ((CommandSender)killer).getName();
+		return killer.getClass().getSimpleName();
+	}
+
 	// Returns true if behead occurred
 	boolean onEntityDeath(@Nonnull final Entity victim, final Entity killer, final Event evt){
+		Permissible killerPermCheck = killer;
 		if(killer != null){
-			if(!killer.hasPermission("dropheads.canbehead."+victim.getType().name().toLowerCase())){
-				if(DEBUG_MODE) pl.getLogger().info("dropheads.canbehead.<type>=false: "+killer.getName());
+			if(ALLOW_PROJECTILE_KILLS && killer instanceof Projectile && ((Projectile)killer).getShooter() instanceof Permissible){
+				killerPermCheck = (Permissible)((Projectile)killer).getShooter();
+			}
+			if(!killerPermCheck.hasPermission("dropheads.canbehead."+victim.getType().name().toLowerCase())){
+				if(DEBUG_MODE) pl.getLogger().info("dropheads.canbehead.<type>=false: "+getName(killerPermCheck));
 				return false;
 			}
 			if(killer instanceof Creeper && ((Creeper)killer).isPowered()){
@@ -125,14 +138,13 @@ public class EntityDeathListener implements Listener{
 					}
 				}
 			}
-			if(killer.hasPermission("dropheads.alwaysbehead."+victim.getType().name().toLowerCase())){
-				if(DEBUG_MODE) pl.getLogger().info("dropheads.alwaysbehead=true: "+killer.getName());
+			if(killerPermCheck.hasPermission("dropheads.alwaysbehead."+victim.getType().name().toLowerCase())){
+				if(DEBUG_MODE) pl.getLogger().info("dropheads.alwaysbehead=true: "+getName(killerPermCheck));
 				if(!victim.hasPermission("dropheads.canlosehead")){
 					if(DEBUG_MODE) pl.getLogger().info("dropheads.canlosehead=false: "+victim.getName());
 					return false;
 				}
-				return pl.getDropChanceAPI().triggerHeadDropEvent(victim, killer, evt,
-						killer instanceof LivingEntity ? ((LivingEntity)killer).getEquipment().getItemInMainHand() : null);
+				return pl.getDropChanceAPI().triggerHeadDropEvent(victim, killer, evt, getWeaponFromKiller(killer));
 			}
 		}
 		// Check if killer qualifies to trigger a behead.
@@ -161,7 +173,7 @@ public class EntityDeathListener implements Listener{
 		final double weaponMod = pl.getDropChanceAPI().getWeaponMult(murdetWeaponType);
 		final double timeAliveMod = pl.getDropChanceAPI().getTimeAliveMult(victim);
 		final double rawDropChance = pl.getDropChanceAPI().getRawDropChance(victim);
-		final double permsMod = pl.getDropChanceAPI().getPermsBasedMult(killer);
+		final double permsMod = pl.getDropChanceAPI().getPermsBasedMult(killerPermCheck);
 		final double spawnCauseMod = JunkUtils.getSpawnCauseMult(victim);
 		final double dropChance = rawDropChance*lootingMod*weaponMod*timeAliveMod*permsMod*spawnCauseMod + lootingAdd;
 
