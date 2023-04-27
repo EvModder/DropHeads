@@ -30,6 +30,9 @@ drop-for-nonplayer-kills: false
 # Whether to drop heads if killed by a projectile weapon
 drop-for-ranged-kills: false
 
+# In vanilla, the main-hand item is used for looting even if shot from offhand
+use-ranged-weapon-for-looting: true
+
 # Whether to drop heads if last-damage-cause is not a valid entity
 drop-for-indirect-kills: false
 indirect-kill-threshold: '30s'

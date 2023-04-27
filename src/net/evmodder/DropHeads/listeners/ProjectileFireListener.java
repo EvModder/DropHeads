@@ -1,5 +1,6 @@
 package net.evmodder.DropHeads.listeners;
 
+import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -13,31 +14,31 @@ import net.evmodder.DropHeads.DropHeads;
 
 public class ProjectileFireListener implements Listener{
 	private final DropHeads pl;
-	private final boolean ALLOW_NON_PLAYER_KILLS;
+	private final boolean ALLOW_NON_PLAYER_KILLS, USE_RANGED_WEAPON_FOR_LOOTING;
 	
 	public ProjectileFireListener(){
 		pl = DropHeads.getPlugin();
 		ALLOW_NON_PLAYER_KILLS = pl.getConfig().getBoolean("drop-for-nonplayer-kills", false);
+		USE_RANGED_WEAPON_FOR_LOOTING = pl.getConfig().getBoolean("use-ranged-weapon-for-looting", true);
 	}
 
-	//B
-//	private boolean canShootProjectiles(Material type){
-//		switch(type.name()){
-//			// TODO: This list is incomplete, but should include all projectiles that trigger an EntityDamageEvent
-//			case "BOW":
-//			case "CROSS_BOW":
-//			case "TRIDENT":
-//			case "FIRE_CHARGE":
-//			case "SNOWBALL":
-//			case "SPLASH_POTION":
-//			case "LINGERING_POTION":
-//			case "FISHING_ROD":
-//			case "EGG":
-//				return true;
-//			default:
-//				return false;
-//		}
-//	}
+	private boolean canShootProjectiles(Material type){
+		switch(type.name()){
+			// TODO: This list is incomplete, but should include all projectiles that trigger an EntityDamageEvent
+			case "BOW":
+			case "CROSS_BOW":
+			case "TRIDENT":
+			case "FIRE_CHARGE":
+			case "SNOWBALL":
+			case "SPLASH_POTION":
+			case "LINGERING_POTION":
+			case "FISHING_ROD":
+			case "EGG":
+				return true;
+			default:
+				return false;
+		}
+	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onProjectileLaunch(ProjectileLaunchEvent evt){
@@ -47,16 +48,14 @@ public class ProjectileFireListener implements Listener{
 
 		final LivingEntity shooter = (LivingEntity)evt.getEntity().getShooter();
 		final ItemStack mainHandItem = shooter.getEquipment().getItemInMainHand();
-		//A
-		evt.getEntity().setMetadata("ShotUsing", new FixedMetadataValue(pl, mainHandItem));
-		//B
-//		final ItemStack offHandItem  = shooter.getEquipment().getItemInOffHand();
-//		if((mainHandItem == null || !canShootProjectiles(mainHandItem.getType())) && offHandItem != null && canShootProjectiles(offHandItem.getType())){
-//			evt.getEntity().setMetadata("ShotUsing", new FixedMetadataValue(pl, offHandItem));
-//		}
-//		else if(mainHandItem != null){
-//			evt.getEntity().setMetadata("ShotUsing", new FixedMetadataValue(pl, mainHandItem));
-//		}
+		final ItemStack offHandItem  = shooter.getEquipment().getItemInOffHand();
+		if(!USE_RANGED_WEAPON_FOR_LOOTING && (mainHandItem == null || !canShootProjectiles(mainHandItem.getType()))
+				&& offHandItem != null && canShootProjectiles(offHandItem.getType())){
+			evt.getEntity().setMetadata("ShotUsing", new FixedMetadataValue(pl, offHandItem));
+		}
+		else if(mainHandItem != null){
+			evt.getEntity().setMetadata("ShotUsing", new FixedMetadataValue(pl, mainHandItem));
+		}
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -64,6 +63,7 @@ public class ProjectileFireListener implements Listener{
 		if(!ALLOW_NON_PLAYER_KILLS && evt.getEntity() instanceof Player == false) return;
 		// This event is more reliable than ProjectileLaunchEvent, so override any existing metadata
 		evt.getProjectile().removeMetadata("ShotUsing", pl);
-		evt.getProjectile().setMetadata("ShotUsing", new FixedMetadataValue(pl, evt.getBow()));
+		evt.getProjectile().setMetadata("ShotUsing", new FixedMetadataValue(pl,
+				USE_RANGED_WEAPON_FOR_LOOTING ? evt.getBow() : evt.getEntity().getEquipment().getItemInMainHand()));
 	}
 }
