@@ -155,22 +155,15 @@ public class CommandSpawnHead extends EvCommand{
 		availablePrefixes.add(AMT_PREFIX);
 		availablePrefixes.add(SLOT_PREFIX);
 
-		// Remove already-used prefixes
 		boolean headNotYetSpecified = true;
+		// Remove already-used prefixes
 		for(int i = 0; i < args.length-1; ++i){
 			final int prefixEnd = args[i].indexOf(':');
 			final String prefix = args[i].substring(0, prefixEnd + 1).toLowerCase();
 			if(prefix.equals(AMT_PREFIX)) availablePrefixes.remove(AMT_PREFIX);
-			else if(prefix.equals(GIVETO_PREFIX)){
-				availablePrefixes.remove(GIVETO_PREFIX);
-				if(args[0].indexOf(':') == -1){
-					availablePrefixes.remove(MOB_PREFIX);
-					availablePrefixes.remove(PLAYER_PREFIX);
-					availablePrefixes.remove(HDB_PREFIX);
-					availablePrefixes.remove("@");
-				}
-			}
-			else if(prefixEnd == -1 && i == 0);
+			else if(prefix.equals(SLOT_PREFIX)) availablePrefixes.remove(SLOT_PREFIX);
+			else if(prefix.equals(GIVETO_PREFIX)) availablePrefixes.remove(GIVETO_PREFIX);
+			//else if(prefixEnd == -1 && i == 0); // Head has already been specified (but without a prefix)
 			else{
 				// These are all mutually-exclusive (they specify the target head)
 				availablePrefixes.remove(MOB_PREFIX);
@@ -180,6 +173,7 @@ public class CommandSpawnHead extends EvCommand{
 				headNotYetSpecified = false;
 			}
 		}
+		// Prefer not showing tab complete for these prefixes until a head has been chosen
 		if(headNotYetSpecified){
 			availablePrefixes.remove(GIVETO_PREFIX);
 			availablePrefixes.remove(AMT_PREFIX);
