@@ -413,7 +413,7 @@ public class HeadAPI {
 		String[] dataFlags = textureKey.split("\\|");
 		switch(/*entity != null ? entity.name() : */dataFlags[0]){
 			case "TROPICAL_FISH":
-				if(dataFlags.length == 2){
+				if(dataFlags.length == 2 && !dataFlags[1].equals("GRUMM")){
 					CCP ccp = EntityUtils.getCCP(dataFlags[1]);
 //					String name = TextUtils.capitalizeAndSpacify(dataFlags[1], '_');
 					return new Component[]{new TranslationComponent(
@@ -643,10 +643,14 @@ public class HeadAPI {
 		if(textureKey != null){
 			// Try successively smaller texture keys until we find one that exists
 			int keyDataTagIdx=textureKey.lastIndexOf('|');
+			final boolean wasGrumm = textureKey.endsWith("|GRUMM");//TODO: remove this hacky workaround once the 3,584 trop fish are added
 			while(keyDataTagIdx != -1 && !textures.containsKey(textureKey)){
+				/*if(DEBUG_MODE) */pl.getLogger().warning("Unable to find key in head-textures.txt: "+textureKey);
 				textureKey = textureKey.substring(0, keyDataTagIdx);
 				keyDataTagIdx=textureKey.lastIndexOf('|');
 			}
+			if(wasGrumm && textures.containsKey(textureKey+"|GRUMM")) textureKey += "|GRUMM";//TODO: remove once the 3,584 trop fish are added
+
 			// If this is a custom data head (still contains a '|') or eType is null AND the key exists, use it
 			final boolean hasCustomData = textureKey.replace("|HOLLOW", "").indexOf('|') != -1;
 			if((hasCustomData || type == null || type == EntityType.UNKNOWN || PREFER_CUSTOM_HEADS) && textures.containsKey(textureKey)){
@@ -654,7 +658,6 @@ public class HeadAPI {
 			}
 		}
 		if(type == null) return null;
-		if(type != EntityType.PLAYER) return null;
 		switch(type){
 			case PLAYER:
 				return new ItemStack(Material.PLAYER_HEAD);
