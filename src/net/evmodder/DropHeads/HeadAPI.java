@@ -82,7 +82,7 @@ public class HeadAPI {
 	/** DO NOT USE: These functions may disappear in a future release */
 	public String loadTranslationStr(String key){return loadTranslationStr(key, key);}
 	public String loadTranslationStr(String key, String defaultValue){
-		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in translations file: "+key);
+		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in 'translations.yml': "+key);
 		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key, defaultValue));
 		int i = msg.indexOf('$');
 		if(i == -1) return msg;
@@ -111,7 +111,7 @@ public class HeadAPI {
 	/** DO NOT USE: These functions may disappear in a future release */
 	public TranslationComponent loadTranslationComp(String key){return loadTranslationComp(key, key);}
 	public TranslationComponent loadTranslationComp(String key, String defaultValue){
-//		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in translations file: "+key);
+//		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in 'translations.yml': "+key);
 		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key, defaultValue));
 		int i = msg.indexOf('$');
 		if(i == -1){
@@ -205,7 +205,7 @@ public class HeadAPI {
 		if(textureKeyHeadFormatsConfig != null) textureKeyHeadFormatsConfig.getValues(/*deep=*/false)
 			.forEach((textureKey, textureKeyHeadNameFormat) -> {
 				if(textureKeyHeadNameFormat instanceof String == false){
-					pl.getLogger().severe("Invalid (non-enclosed-String) value for "+textureKey+" in translations.yml: "+textureKeyHeadNameFormat);
+					pl.getLogger().severe("Invalid (non-enclosed-String) value for "+textureKey+" in 'translations.yml': "+textureKeyHeadNameFormat);
 				}
 				exactTextureKeyHeadNameFormats.put(textureKey.toUpperCase(), (String)textureKeyHeadNameFormat);
 			});
@@ -216,13 +216,13 @@ public class HeadAPI {
 		if(entityHeadFormatsConfig != null) entityHeadFormatsConfig.getValues(/*deep=*/false)
 			.forEach((entityName, entityHeadNameFormat) -> {
 				if(entityHeadNameFormat instanceof String == false){
-					pl.getLogger().severe("Invalid (non-enclosed-String) value for "+entityName+" in translations.yml: "+entityHeadNameFormat);
+					pl.getLogger().severe("Invalid (non-enclosed-String) value for "+entityName+" in 'translations.yml': "+entityHeadNameFormat);
 				}
 				try{
 					EntityType eType = EntityType.valueOf(entityName.toUpperCase().replace("DEFAULT", "UNKNOWN"));
 					headNameFormats.put(eType, (String)entityHeadNameFormat);
 				}
-				catch(IllegalArgumentException ex){pl.getLogger().severe("Unknown entity type in 'head-name-format': "+entityName);}
+				catch(IllegalArgumentException ex){pl.getLogger().severe("Unknown EntityType in 'translations.yml' | head-name-format: "+entityName);}
 			});
 		DEFAULT_HEAD_NAME_FORMAT = headNameFormats.get(EntityType.UNKNOWN);
 
@@ -231,7 +231,7 @@ public class HeadAPI {
 		if(entitySubtypeNamesConfig != null) entitySubtypeNamesConfig.getValues(/*deep=*/false)
 			.forEach((subtypeName, localSubtypeName) -> {
 			if(localSubtypeName instanceof String == false){
-				pl.getLogger().severe("Invalid (non-enclosed-String) value for "+subtypeName+" in translations.yml: "+localSubtypeName);
+				pl.getLogger().severe("Invalid (non-enclosed-String) value for "+subtypeName+" in 'translations.yml': "+localSubtypeName);
 			}
 			entitySubtypeNames.put(subtypeName.toUpperCase(), new TranslationComponent((String)localSubtypeName));
 		});
@@ -246,7 +246,7 @@ public class HeadAPI {
 		//---------- </Load translations> ---------------------------------------------------------------------
 
 		//---------- <Load Textures> ----------------------------------------------------------------------
-		final String hardcodedList = FileIO.loadResource(pl, "head-textures.txt");
+		final String hardcodedList = FileIO.loadResource(pl, "head-textures.txt", /*defaultContent=*/"");
 //		String localList = FileIO.loadFile("head-textures.txt", hardcodedList);  // This does not preserve comments
 		String localList = FileIO.loadFile("head-textures.txt", getClass().getResourceAsStream("/head-textures.txt"));
 		UNKNOWN_TEXTURE_CODE = textures.getOrDefault(EntityType.UNKNOWN.name(), "5c90ca5073c49b898a6f8cdbc72e6aca0a425ec83bc4355e3b834fd859282bdd");
@@ -288,8 +288,8 @@ public class HeadAPI {
 			pl.getLogger().info("Finished downloading Grumm head textures");
 		}
 		if(writeTextureFile) FileIO.saveFile("head-textures.txt", localList);
-		loadTextures(hardcodedList, /*logMissingEntities=*/true, /*logUnknownEntities=*/false);
-		loadTextures(localList, /*logMissingEntities=*/false, /*logUnknownEntities=*/true);
+		if(!hardcodedList.isEmpty()) loadTextures(hardcodedList, /*logMissingEntities=*/true, /*logUnknownEntities=*/false);
+		loadTextures(localList, /*logMissingEntities=*/hardcodedList.isEmpty(), /*logUnknownEntities=*/true);
 		//---------- </Load Textures> ---------------------------------------------------------------------
 
 		// This could be optimized by passing 'simple-mob-heads-only' to loadTextures to skip adding any textures with '|'
@@ -354,7 +354,7 @@ public class HeadAPI {
 					}
 					catch(IllegalArgumentException e2){
 						if(unknownHeads.add(eTypeName)){
-							if(logUnknownEntities) pl.getLogger().warning("Unknown entity '"+eTypeName+"' in head-textures.txt");
+							if(logUnknownEntities) pl.getLogger().warning("Unknown EntityType in 'head-textures.txt': "+eTypeName);
 						}
 					}
 				}
@@ -365,7 +365,7 @@ public class HeadAPI {
 				pl.getLogger().warning("Missing head texture(s) for "+type);
 			}
 			if(!missingHeads.isEmpty()){
-				pl.getLogger().warning("To fix missing textures, try updating the plugin and then deleting the old head-textures.txt file");
+				pl.getLogger().warning("To fix missing textures, update the plugin then delete the old 'head-textures.txt' file");
 			}
 		}
 		// Sometimes a texture value is just a reference to a different texture key
@@ -645,7 +645,7 @@ public class HeadAPI {
 			int keyDataTagIdx=textureKey.lastIndexOf('|');
 			final boolean wasGrumm = textureKey.endsWith("|GRUMM");//TODO: remove this hacky workaround once the 3,584 trop fish are added
 			while(keyDataTagIdx != -1 && !textures.containsKey(textureKey)){
-				/*if(DEBUG_MODE) */pl.getLogger().warning("Unable to find key in head-textures.txt: "+textureKey);
+				/*if(DEBUG_MODE) */pl.getLogger().warning("Unable to find key in 'head-textures.txt': "+textureKey);
 				textureKey = textureKey.substring(0, keyDataTagIdx);
 				keyDataTagIdx=textureKey.lastIndexOf('|');
 			}

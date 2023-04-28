@@ -277,8 +277,8 @@ public class DropChanceAPI{
 //		noLootingEffectMobs = new HashSet<EntityType>();
 		if(PLAYER_HEADS_ONLY){
 			DEFAULT_CHANCE = 0D;
-			String defaultChances = FileIO.loadResource(pl, "head-drop-rates.txt");
-			String chances = FileIO.loadFile("head-drop-rates.txt", defaultChances);
+			final String defaultChances = FileIO.loadResource(pl, "head-drop-rates.txt", /*defaultContent=*/"");
+			final String chances = FileIO.loadFile("head-drop-rates.txt", defaultChances);
 			for(final String line : chances.split("\n")){
 				final String[] parts = line.split(":");
 				if(parts.length < 2 || !parts[0].trim().toUpperCase().equals("PLAYER")) continue;
@@ -286,18 +286,18 @@ public class DropChanceAPI{
 				try{
 					double dropChance = Double.parseDouble(value);
 					if(dropChance < 0D || dropChance > 1D){
-						pl.getLogger().warning("Invalid value: "+value);
+						pl.getLogger().warning("Invalid value in 'head-drop-rates.txt': "+value);
 						pl.getLogger().warning("Drop chance should be a decimal between 0 and 1");
 						if(dropChance > 1D && dropChance <= 100D) dropChance /= 100D;
 						else continue;
 					}
 					mobChances.put(EntityType.PLAYER, dropChance);
 				}
-				catch(NumberFormatException ex){pl.getLogger().severe("Invalid value: "+value);}
+				catch(NumberFormatException ex){pl.getLogger().severe("Invalid value in 'head-drop-rates.txt': "+value);}
 			}
 		}
 		else{
-			String defaultChances = FileIO.loadResource(pl, "head-drop-rates.txt");
+			final String defaultChances = FileIO.loadResource(pl, "head-drop-rates.txt", /*defaultContent=*/"PIG_ZOMBIE: 0");
 			HashSet<String> defaultConfigMobs = new HashSet<>();
 			for(String line2 : defaultChances.split("\n")){
 				String[] parts2 = line2.replace(" ", "").replace("\t", "").toUpperCase().split(":");
@@ -327,13 +327,13 @@ public class DropChanceAPI{
 						subtypeMobChances.put(eType, eTypeChances);
 					}
 					else{
-						pl.getLogger().severe("Unknown entity sub-type: "+parts[0]);
+						pl.getLogger().severe("Unknown entity sub-type in 'head-drop-rates.txt': "+parts[0]);
 					}
 				}
-				catch(NumberFormatException ex){pl.getLogger().severe("Invalid value: "+parts[1]);}
+				catch(NumberFormatException ex){pl.getLogger().severe("Invalid value in 'head-drop-rates.txt': "+parts[1]);}
 				catch(IllegalArgumentException ex){
 					// Only throw an error for mobs that aren't defined in the default config (which may be from future/past versions)
-					if(!defaultConfigMobs.contains(eName)) pl.getLogger().severe("Unknown entity type: "+eName);
+					if(!defaultConfigMobs.contains(eName)) pl.getLogger().severe("Unknown EntityType in 'head-drop-rates.txt': "+eName);
 				}
 			}//for(line : dropRatesFile)
 			DEFAULT_CHANCE = mobChances.getOrDefault(EntityType.UNKNOWN, 0D);
