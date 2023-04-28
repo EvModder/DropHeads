@@ -138,7 +138,7 @@ public class DeathMessagePacketIntercepter{
 	private void removePlayer(Player player){
 		final Channel channel = JunkUtils.getPlayerChannel(player);
 		channel.eventLoop().submit(()->{
-			channel.pipeline().remove(player.getName());
+			channel.pipeline().remove("replace_death_with_behead_msg");
 			return null;
 		});
 	}
