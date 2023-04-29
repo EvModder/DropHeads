@@ -82,7 +82,7 @@ public final class DropHeads extends EvPlugin{
 		if(config.getBoolean("track-mob-spawns", true)){
 			getServer().getPluginManager().registerEvents(new EntitySpawnListener(), this);
 		}
-		if(config.getBoolean("drop-for-ranged-kills", false)){
+		if(config.getBoolean("drop-for-ranged-kills", false) && config.getBoolean("use-ranged-weapon-for-looting", true)){
 			getServer().getPluginManager().registerEvents(new ProjectileFireListener(), this);
 		}
 		if(config.getBoolean("drop-for-indirect-kills", false) && !config.getBoolean("drop-for-nonplayer-kills", false)){

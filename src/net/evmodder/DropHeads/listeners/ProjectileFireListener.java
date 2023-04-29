@@ -14,12 +14,11 @@ import net.evmodder.DropHeads.DropHeads;
 
 public class ProjectileFireListener implements Listener{
 	private final DropHeads pl;
-	private final boolean ALLOW_NON_PLAYER_KILLS, USE_RANGED_WEAPON_FOR_LOOTING;
+	private final boolean ALLOW_NON_PLAYER_KILLS;
 	
 	public ProjectileFireListener(){
 		pl = DropHeads.getPlugin();
 		ALLOW_NON_PLAYER_KILLS = pl.getConfig().getBoolean("drop-for-nonplayer-kills", false);
-		USE_RANGED_WEAPON_FOR_LOOTING = pl.getConfig().getBoolean("use-ranged-weapon-for-looting", true);
 	}
 
 	private boolean canShootProjectiles(Material type){
@@ -44,13 +43,12 @@ public class ProjectileFireListener implements Listener{
 	public void onProjectileLaunch(ProjectileLaunchEvent evt){
 		// Skip if already has metadata (defers to EntityShootBowEvent)
 		if(evt.getEntity().hasMetadata("ShotUsing") || evt.getEntity().getShooter() instanceof LivingEntity == false
-				|| (!ALLOW_NON_PLAYER_KILLS && evt.getEntity() instanceof Player == false)) return;
+				|| (!ALLOW_NON_PLAYER_KILLS && evt.getEntity().getShooter() instanceof Player == false)) return;
 
 		final LivingEntity shooter = (LivingEntity)evt.getEntity().getShooter();
 		final ItemStack mainHandItem = shooter.getEquipment().getItemInMainHand();
 		final ItemStack offHandItem  = shooter.getEquipment().getItemInOffHand();
-		if(!USE_RANGED_WEAPON_FOR_LOOTING && (mainHandItem == null || !canShootProjectiles(mainHandItem.getType()))
-				&& offHandItem != null && canShootProjectiles(offHandItem.getType())){
+		if((mainHandItem == null || !canShootProjectiles(mainHandItem.getType())) && offHandItem != null && canShootProjectiles(offHandItem.getType())){
 			evt.getEntity().setMetadata("ShotUsing", new FixedMetadataValue(pl, offHandItem));
 		}
 		else if(mainHandItem != null){
@@ -63,7 +61,6 @@ public class ProjectileFireListener implements Listener{
 		if(!ALLOW_NON_PLAYER_KILLS && evt.getEntity() instanceof Player == false) return;
 		// This event is more reliable than ProjectileLaunchEvent, so override any existing metadata
 		evt.getProjectile().removeMetadata("ShotUsing", pl);
-		evt.getProjectile().setMetadata("ShotUsing", new FixedMetadataValue(pl,
-				USE_RANGED_WEAPON_FOR_LOOTING ? evt.getBow() : evt.getEntity().getEquipment().getItemInMainHand()));
+		evt.getProjectile().setMetadata("ShotUsing", new FixedMetadataValue(pl, evt.getBow()));
 	}
 }

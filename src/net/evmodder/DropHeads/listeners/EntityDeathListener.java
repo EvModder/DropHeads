@@ -46,7 +46,8 @@ public class EntityDeathListener implements Listener{
 	private final Random rand;
 	private final HashSet<UUID> explodingChargedCreepers;
 	private final EventPriority PRIORITY;
-	private final boolean ALLOW_NON_PLAYER_KILLS, ALLOW_INDIRECT_KILLS, ALLOW_PROJECTILE_KILLS;//TODO: pkillonly config per-mob?
+	private final boolean ALLOW_NON_PLAYER_KILLS, ALLOW_INDIRECT_KILLS, ALLOW_PROJECTILE_KILLS, USE_RANGED_WEAPON_FOR_LOOTING;
+	//TODO: pkillonly config per-mob?
 	private final boolean PLAYER_HEADS_ONLY, CHARGED_CREEPER_DROPS, VANILLA_WSKELE_HANDLING;
 	private final long INDIRECT_KILL_THRESHOLD_MILLIS;
 	private final boolean DEBUG_MODE;
@@ -58,6 +59,7 @@ public class EntityDeathListener implements Listener{
 		ALLOW_NON_PLAYER_KILLS = pl.getConfig().getBoolean("drop-for-nonplayer-kills", !pl.getConfig().getBoolean("player-kills-only", true));
 		ALLOW_INDIRECT_KILLS = pl.getConfig().getBoolean("drop-for-indirect-kills", false);
 		ALLOW_PROJECTILE_KILLS = pl.getConfig().getBoolean("drop-for-ranged-kills", false);
+		USE_RANGED_WEAPON_FOR_LOOTING = pl.getConfig().getBoolean("use-ranged-weapon-for-looting", true);
 		PLAYER_HEADS_ONLY = pl.getConfig().getBoolean("player-heads-only", false);
 		CHARGED_CREEPER_DROPS = pl.getConfig().getBoolean("charged-creeper-drops", true);
 		VANILLA_WSKELE_HANDLING = pl.getConfig().getBoolean("vanilla-wither-skeleton-skulls", false);
@@ -98,9 +100,14 @@ public class EntityDeathListener implements Listener{
 
 	private ItemStack getWeaponFromKiller(Entity killer){
 		return killer != null ?
-					killer instanceof LivingEntity ? ((LivingEntity)killer).getEquipment().getItemInMainHand() :
-					killer instanceof Projectile && killer.hasMetadata("ShotUsing") ? (ItemStack)killer.getMetadata("ShotUsing").get(0).value() :
-					null
+					killer instanceof LivingEntity ?
+						((LivingEntity)killer).getEquipment().getItemInMainHand() :
+						killer instanceof Projectile ?
+							USE_RANGED_WEAPON_FOR_LOOTING ?
+								killer.hasMetadata("ShotUsing") ? (ItemStack)killer.getMetadata("ShotUsing").get(0).value() : null
+								: ((Projectile)killer).getShooter() instanceof LivingEntity ?
+									((LivingEntity)((Projectile)killer).getShooter()).getEquipment().getItemInMainHand() : null
+						: null
 				: null;
 	}
 
