@@ -75,7 +75,9 @@ public class HeadAPI {
 
 	private final String PLAYER_PREFIX, MOB_PREFIX, MHF_PREFIX, HDB_PREFIX, CODE_PREFIX;
 
-	/** DO NOT USE: This function is intended for internal use only */
+	/** DO NOT USE: This function is intended for internal use only
+	 * @return the String "dropheads:"
+	 */
 	public final String getDropHeadsNamespacedKey(){return "dropheads:";} // TODO: decide how to expose/implement this
 
 	// Loads config.getString(key), replacing '${abc-xyz}' with config.getString('abc-xyz')
@@ -525,7 +527,7 @@ public class HeadAPI {
 		}
 		return components.toArray(new Component[0]);
 	}
-	/** DO NOT USE: This function may disappear in a future release */
+	/* DO NOT USE: This function may disappear in a future release */
 	public Component getHeadNameFromKey(@Nonnull String textureKey, @Nonnull String customName){
 		// Attempt to parse out an EntityType
 		EntityType eType;

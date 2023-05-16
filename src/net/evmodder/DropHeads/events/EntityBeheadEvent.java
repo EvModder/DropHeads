@@ -81,7 +81,7 @@ public class EntityBeheadEvent extends EntityEvent implements Cancellable{
 
 	/**
 	 * Get whether this event has been cancelled.
-	 * @return Whether the event has been cancelled
+	 * @return whether the event has been cancelled
 	 */
 	@Override public boolean isCancelled(){return cancelled;}
 

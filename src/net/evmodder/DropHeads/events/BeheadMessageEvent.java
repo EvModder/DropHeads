@@ -28,7 +28,10 @@ public class BeheadMessageEvent extends Event implements Cancellable{
 	 * Create an BeheadMessageEvent for DropHeads.
 	 * @param recipient the Player being sent the behead message
 	 * @param victim the Entity which was beheaded
+	 * @param killer the Entity which caused the death of <code>victim</code>, or <code>null</code> if no entity was responsible
 	 * @param beheadMessage the message being sent
+	 * @param isGlobal whether the behead message is globally announced
+	 * @param isPetDeath whether the behead message is for a pet
 	 */
 	public BeheadMessageEvent(final Player recipient, final Entity victim, final Entity killer,
 			final Component beheadMessage, final boolean isGlobal, final boolean isPetDeath){
@@ -43,7 +46,7 @@ public class BeheadMessageEvent extends Event implements Cancellable{
 	/**
 	 * Get the player who is being sent the behead message.
 	 * For global behead messages, this can be any online player.
-	 * @return the Entity object representing the killer, or null if no entity was responsible
+	 * @return the Player recipient
 	 */
 	public Player getRecipient(){return recipient;}
 
@@ -55,19 +58,19 @@ public class BeheadMessageEvent extends Event implements Cancellable{
 	
 	/**
 	 * Get the entity that did the beheading.
-	 * @return the Entity object representing the killer, or null if no entity was responsible
+	 * @return the Entity for the killer, or <code>null</code> if no entity was responsible
 	 */
 	public Entity getKiller(){return killer;}
 
 	/**
 	 * Get whether this message is sent to all online players.
-	 * @return Whether the behead message is globally announced
+	 * @return whether the behead message is globally announced
 	 */
 	public boolean isGlobal(){return isGlobal;}
 
 	/**
 	 * Get whether this is a pet death message sent to their owner.
-	 * @return Whether the behead message is for a pet
+	 * @return whether the behead message is for a pet
 	 */
 	public boolean isPetDeath(){return isPetDeath;}
 
@@ -79,13 +82,13 @@ public class BeheadMessageEvent extends Event implements Cancellable{
 
 	/**
 	 * Set the behead message.
-	 * @param message The new behead Component message to use
+	 * @param message the new behead Component message to use
 	 */
-	public void setMessage(final Component beheadMessage){this.beheadMessage = beheadMessage;}
+	public void setMessage(final Component message){beheadMessage = message;}
 
 	/**
 	 * Get whether this event has been cancelled.
-	 * @return Whether the event has been cancelled
+	 * @return whether the event has been cancelled
 	 */
 	@Override public boolean isCancelled(){return cancelled;}
 
