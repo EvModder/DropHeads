@@ -75,14 +75,22 @@ public final class HeadAPI {
 
 	private final String PLAYER_PREFIX, MOB_PREFIX, MHF_PREFIX, HDB_PREFIX, CODE_PREFIX;
 
-	/** DO NOT USE: This function is intended for internal use only
-	 * @return the String "dropheads:"
+	/** <strong>DO NOT USE:</strong> This function is intended for internal use only
+	 * @return <code>"dropheads:"</code>
 	 */
 	public final String getDropHeadsNamespacedKey(){return "dropheads:";} // TODO: decide how to expose/implement this
 
 	// Loads config.getString(key), replacing '${abc-xyz}' with config.getString('abc-xyz')
-	/** DO NOT USE: These functions may disappear in a future release */
+	/** <strong>DO NOT USE:</strong> This function will likely disappear in a future release
+	 * @param key path in <a href="https://github.com/EvModder/DropHeads/blob/master/translations.yml">translations.yml"</a>
+	 * @return the value at that path, or the value of <code>key</code> if not found
+	 */
 	public String loadTranslationStr(String key){return loadTranslationStr(key, key);}
+	/** <strong>DO NOT USE:</strong> This function will likely disappear in a future release
+	 * @param key path in <a href="https://github.com/EvModder/DropHeads/blob/master/translations.yml">translations.yml"</a>
+	 * @param defaultValue a value for if the key is not found
+	 * @return the value at that path, or the value of <code>defaultValue</code> if not found
+	 */
 	public String loadTranslationStr(String key, String defaultValue){
 		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in 'translations.yml': "+key);
 		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key, defaultValue));
@@ -110,8 +118,16 @@ public final class HeadAPI {
 		return builder.toString();
 	}
 	// Loads config.getString(key), replacing '${abc-xyz}' with % in the key and config.getString('abc-xyz') in withComps.
-	/** DO NOT USE: These functions may disappear in a future release */
+	/** <strong>DO NOT USE:</strong> This function will likely disappear in a future release
+	 * @param key path in <a href="https://github.com/EvModder/DropHeads/blob/master/translations.yml">translations.yml"</a>
+	 * @return the parsed value at that path, or the parsed value of <code>key</code> if not found
+	 */
 	public TranslationComponent loadTranslationComp(String key){return loadTranslationComp(key, key);}
+	/** <strong>DO NOT USE:</strong> This function will likely disappear in a future release
+	 * @param key path in <a href="https://github.com/EvModder/DropHeads/blob/master/translations.yml">translations.yml"</a>
+	 * @param defaultValue a value for if the key is not found
+	 * @return the parsed value at that path, or the parsed value of <code>defaultValue</code> if not found
+	 */
 	public TranslationComponent loadTranslationComp(String key, String defaultValue){
 //		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in 'translations.yml': "+key);
 		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key, defaultValue));
@@ -390,17 +406,25 @@ public final class HeadAPI {
 	 * @return An immutable map (textureKey => Base64 encoded texture URL)
 	 */
 	public Map<String, String> getTextures(){return Collections.unmodifiableMap(textures);}
-	/** DO NOT USE: This function is intended for internal use only */
+	/** <strong>DO NOT USE:</strong> This function is intended for internal use only
+	 * @return an instance of the HDB API
+	 */
 	public HeadDatabaseAPI getHeadDatabaseAPI(){return hdbAPI;}
-	/** DO NOT USE: This function is intended for internal use only */
+	/** <strong>DO NOT USE:</strong> This function is intended for internal use only
+	 * @param head the item to check
+	 * @return whether the head is from HDB
+	 */
 	public boolean isHeadDatabaseHead(ItemStack head){
 		if(hdbAPI == null) return false;
 		String id = hdbAPI.getItemID(head);
 		return id != null && hdbAPI.isHead(id);
 	}
 
-	//TODO: prefer avoiding public for these head-name-component getters?
-	/** DO NOT USE: This function may change/disappear in a future release */
+	//only used by BlockClickListener
+	/** <strong>DO NOT USE:</strong> This function will likely disappear in a future release
+	 * @param headType one of: {HEAD, SKULL, TOE}
+	 * @return a localized translation component
+	 */
 	public TranslationComponent getHeadTypeName(HeadType headType){
 		if(headType == null) return LOCAL_HEAD;
 		switch(headType){
@@ -409,7 +433,12 @@ public final class HeadAPI {
 			case HEAD: default: return LOCAL_HEAD;
 		}
 	}
-	/** DO NOT USE: This function may change/disappear in a future release */
+	//only used by BlockClickListener
+	/** Returns a localized Component[] where the first element is the entity's type and remaining elements describe the entity's sub-types.
+	 * The ordering of sub-types is the same as their corresponding names in <code>textureKey.split("|")</code>.
+	 * @param textureKey a texture key describing the entity
+	 * @return localized components for type name and sub-type names
+	 */
 	public Component[] getEntityTypeAndSubtypeNamesFromKey(/*EntityType entity, */String textureKey){
 		if(textureKey.equals("PLAYER|GRUMM")) return new Component[]{new RawTextComponent("Grumm")};
 		String[] dataFlags = textureKey.split("\\|");
@@ -527,7 +556,11 @@ public final class HeadAPI {
 		}
 		return components.toArray(new Component[0]);
 	}
-	/* DO NOT USE: This function may disappear in a future release */
+	/** DO NOT USE: This function will likely disappear in a future release
+	 * @param textureKey the key (from <a href="https://github.com/EvModder/DropHeads/blob/master/head-textures.txt">head-textures.txt"</a>)
+	 * @param customName the custom name of the entity, usually null for non-players
+	 * @return localized name component
+	 */
 	public Component getHeadNameFromKey(@Nonnull String textureKey, @Nonnull String customName){
 		// Attempt to parse out an EntityType
 		EntityType eType;
@@ -635,7 +668,7 @@ public final class HeadAPI {
 	}
 
 	/**
-	 * Get a custom head from an entity type or texture key (e.g., FOX|SNOW|SLEEPING)
+	 * Get a custom head from an entity type or texture key (e.g., <code>FOX|SNOW|SLEEPING</code>)
 	 * @param type The entity type for the head, can be null
 	 * @param textureKey The texture key for the head
 	 * @return The result head ItemStack
