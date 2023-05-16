@@ -55,7 +55,7 @@ import net.evmodder.EvLib.extras.EntityUtils.CCP;
  * 
  * Warning: This class is still in BETA and some functions may change (or disappear!) in future releases
  */
-public class HeadAPI {
+public final class HeadAPI {
 	private final DropHeads pl;
 	private HeadDatabaseAPI hdbAPI = null;
 //	private int MAX_HDB_ID = -1;

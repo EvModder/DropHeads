@@ -77,7 +77,7 @@ public class HeadRollEvent extends EntityEvent{
 
 	/**
 	 * Set whether the drop roll should be considered a success.
-	 * @param whether the head drop will succeed or fail
+	 * @param success whether the head drop will succeed or fail
 	 */
 	public void setDropSuccess(final boolean success){dropSuccess = success;}
 

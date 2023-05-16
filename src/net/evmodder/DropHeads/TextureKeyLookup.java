@@ -27,10 +27,8 @@ import org.bukkit.entity.ZombieVillager;
 
 /**
  * Utility class for getting the specific texture-key for an entity based on its attributes, sub-type, state, etc.
- * 
- * Warning: This class may change (or become unavailable) in future releases
  */
-public class TextureKeyLookup{
+public final class TextureKeyLookup{
 	@SuppressWarnings("deprecation")
 	private static String getTropicalFishKey(CCP ccp){
 		if(EntityUtils.getCommonTropicalFishId(ccp) != null){

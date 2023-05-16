@@ -61,7 +61,7 @@ import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
  * 
  * Warning: This class is still in BETA and some functions may change (or disappear!) in future releases
  */
-public class DropChanceAPI{
+public final class DropChanceAPI{
 	private enum AnnounceMode {GLOBAL, LOCAL, DIRECT, OFF};
 	private final AnnounceMode DEFAULT_ANNOUNCE, SILENT_ANNOUNCE;
 	private enum DropMode {EVENT, SPAWN, PLACE, PLACE_BY_KILLER, PLACE_BY_VICTIM, GIVE};
