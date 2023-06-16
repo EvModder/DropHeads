@@ -422,7 +422,7 @@ public final class HeadAPI {
 
 	//only used by BlockClickListener
 	/** <strong>DO NOT USE:</strong> This function will likely disappear in a future release
-	 * @param headType one of: {HEAD, SKULL, TOE}
+	 * @param headType one of: <code>{HEAD, SKULL, TOE}</code>
 	 * @return a localized translation component
 	 */
 	public TranslationComponent getHeadTypeName(HeadType headType){
@@ -556,7 +556,7 @@ public final class HeadAPI {
 		}
 		return components.toArray(new Component[0]);
 	}
-	/** DO NOT USE: This function will likely disappear in a future release
+	/** <strong>DO NOT USE:</strong> This function will likely disappear in a future release
 	 * @param textureKey the key (from <a href="https://github.com/EvModder/DropHeads/blob/master/head-textures.txt">head-textures.txt"</a>)
 	 * @param customName the custom name of the entity, usually null for non-players
 	 * @return localized name component

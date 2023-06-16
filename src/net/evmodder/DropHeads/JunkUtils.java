@@ -81,7 +81,6 @@ public class JunkUtils{
 
 	public final static String getDisplayName(@Nonnull ItemStack item){
 		RefNBTTagCompound tag = NBTTagUtils.getTag(item);
-		if(tag == null) return null;
 		RefNBTTagCompound display = tag.hasKey("display") ? (RefNBTTagCompound)tag.get("display") : new RefNBTTagCompound();
 		return display.hasKey("Name") ? display.getString("Name") : null;
 	}
@@ -90,10 +89,7 @@ public class JunkUtils{
 		RefNBTTagCompound tag = NBTTagUtils.getTag(item);
 		RefNBTTagCompound display = tag.hasKey("display") ? (RefNBTTagCompound)tag.get("display") : new RefNBTTagCompound();
 		RefNBTTagList loreList = new RefNBTTagList();
-		for(Component loreLine : lore){
-			RefNBTTagString refString = new RefNBTTagString(loreLine.toString());
-			loreList.add(refString);
-		}
+		for(Component loreLine : lore) loreList.add(new RefNBTTagString(loreLine.toString()));
 		display.set("Lore", loreList);
 		tag.set("display", display);
 		return NBTTagUtils.setTag(item, tag);
