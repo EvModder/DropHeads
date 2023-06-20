@@ -15,6 +15,7 @@ CUSTOM: 0			# When a creature is spawned by plugins
 DEFAULT: 1			# When an entity is missing a SpawnReason
 DISPENSE_EGG: 0.05	# When a creature is spawned by a dispenser dispensing an egg
 DROWNED: 0.5		# When an entity is spawned by another entity drowning
+DUPLICATION: 0.05	# When an Allay duplicates itself
 EGG: 0.05			# When a creature spawns from an egg
 ENDER_PEARL: 1		# When a endermite is spawned as a result of enderpearl usage
 EXPLOSION: 1		# When an effect cloud is spawned as a result of a creeper exploding

@@ -5,6 +5,7 @@ AXOLOTL:            0.007
 BAT:                0.010
 BEE:                0.006
 BLAZE:              0.005
+CAMEL:              0.006
 CAT:                0.004
 CAVE_SPIDER:        0.001
 CHICKEN:            0.001
@@ -56,6 +57,7 @@ SILVERFISH:         0.005
 SKELETON:           0.003
 SKELETON_HORSE:     0.009
 SLIME:              0.004
+SNIFFER:            0.009
 SNOWMAN:            0.008
 SPIDER:             0.004
 SQUID:              0.005
