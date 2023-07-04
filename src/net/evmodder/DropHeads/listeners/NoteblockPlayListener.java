@@ -28,10 +28,11 @@ public class NoteblockPlayListener implements Listener{
 		if(!profile.getName().startsWith(dhNamespaceKey)) return;
 		int endIdx = profile.getName().indexOf('|');
 		if(endIdx == -1) endIdx = profile.getName().indexOf('>');
-		final String entityName = endIdx == -1 ? profile.getName() : profile.getName().substring(dhNamespaceKey.length(), endIdx);
+		final String entityName = profile.getName().substring(dhNamespaceKey.length(), endIdx != -1 ? endIdx : profile.getName().length());
 		final String soundName = "ENTITY_"+entityName+"_AMBIENT";
 		try{
 			nb.getWorld().playSound(nb.getLocation(), Sound.valueOf(soundName), SoundCategory.RECORDS, /*volume=*/1f, /*pitch=*/1f);
+			evt.setCancelled(true);
 		}
 		catch(IllegalArgumentException e){
 			DropHeads.getPlugin().getLogger().warning("Unable to find sound effect: "+soundName);
