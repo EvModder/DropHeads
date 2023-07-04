@@ -62,7 +62,7 @@ refresh-item-names: false
 # This setting is ignored if 'save-custom-lore' is true
 refresh-item-lores: false
 
-# Should heads update to the match a player's current skin mined or dropped?
+# Whether heads should update to the player's current skin when mined/dropped
 update-on-skin-change: false
 
 # Whether to disable head item stacking (stack to 1 instead of 64)
@@ -103,14 +103,14 @@ transparent-slime-heads: false
 # Note: Disable if your console shows DropHeads errors on startup
 update-plugin: true
 
-# If this is true, head-textures.txt will be overwritten each plugin update
+# Whether head-textures.txt will be overwritten for each plugin update
 # Set to false if you want to manually update textures (or set your own)
 update-textures: true
 
 # Run in debug mode (prints extra information to console)
 debug-messages: false
 
-# If this is set to true, players will not be able to place down head blocks
+# Whether players will be able allowed to place heads as blocks
 # unless they are given the 'dropheads.canplacehead' permission
 prevent-head-placement: false
 prevent-head-placement-message: '&7[&6DropHeads&7]&c No permission to place head blocks'
@@ -160,13 +160,17 @@ update-zombie-pigman-heads: true
 # Requires 'refresh-textures' to also be set to true.
 update-piglin-heads: true
 
+# Whether to use material types for zombie, creeper, skeleton & wither skulls
 # If this is false, all heads will be forced to use the player_head type
-# This changes the material type of zombie, creeper, skeleton & wither skulls
 prefer-vanilla-heads: true
 
-# If this is true, Iron Golems will drop "cracked" heads which can be repaired
+# Whether Iron Golems will drop "cracked" heads which can be repaired
 # to the normal texture by placing them and clicking on them with iron ingots
 cracked-iron-golem-heads: false
+
+# Whether to replace the noteblock sound with the ambient mob sound when the
+# noteblock played has a custom mob head on top of it
+noteblocks-mob-sounds: true
 
 # A list of mob heads a player can wear to avoid provoking endermen
 endermen-camouflage-heads: []
