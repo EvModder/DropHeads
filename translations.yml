@@ -87,12 +87,12 @@ entity-subtype-names:
   librarian: "entity.minecraft.villager.librarian"          #Villager/ZombieVillager
   mason: "entity.minecraft.villager.mason"                  #Villager/ZombieVillager
   nitwit: "entity.minecraft.villager.nitwit"                #Villager/ZombieVillager
-  shepherd: "entity.minecraft.villager.none"                #Villager/ZombieVillager
+  none: "entity.minecraft.villager.none"                    #Villager/ZombieVillager
   shepherd: "entity.minecraft.villager.shepherd"            #Villager/ZombieVillager
   toolsmith: "entity.minecraft.villager.toolsmith"          #Villager/ZombieVillager
   weaponsmith: "entity.minecraft.villager.weaponsmith"      #Villager/ZombieVillager
-  blue: "color.minecraft.blue"                              #Axolotl
-  cyan: color.minecraft.cyan"                               #Axolotl
+  blue: "color.minecraft.blue"                              #Axolotl/Shulker/Sheep/Parrot
+  cyan: color.minecraft.cyan"                               #Axolotl/Shulker/Sheep/Parrot
   gold: "color.minecraft.yellow"                            #Axolotl
   lucy: "color.minecraft.pink"                              #Axolotl
   wild: "color.minecraft.brown"                             #Axolotl
@@ -101,9 +101,7 @@ entity-subtype-names:
   sideways: "Sideways"                                      #Shulker
   upside_down: "Upside Down"                                #Shulker
   black: "color.minecraft.black"                            #Shulker/Sheep/Horse/Cat/Rabbit
-  blue: "color.minecraft.blue"                              #Shulker/Sheep/Parrot
   brown: "color.minecraft.brown"                            #Shulker/Sheep/Horse/Llama/TraderLlama/Rabbit/MushroomCow/Panda
-  cyan: "color.minecraft.cyan"                              #Shulker/Sheep/Parrot
   gray: "color.minecraft.gray"                              #Shulker/Sheep/Parrot/Horse/Llama/TraderLlama
   green: "color.minecraft.green"                            #Shulker/Sheep/Parrot
   light_blue: "color.minecraft.light_blue"                  #Shulker/Sheep
