@@ -707,7 +707,7 @@ public final class HeadAPI {
 			case ENDER_DRAGON:
 				return new ItemStack(Material.DRAGON_HEAD);
 			default:
-				if(type.name().equals("PIGLIN") && PIGLIN_HEAD_TYPE != null) return new ItemStack(PIGLIN_HEAD_TYPE);
+				if(PIGLIN_HEAD_TYPE != null && type.name().equals("PIGLIN")) return new ItemStack(PIGLIN_HEAD_TYPE);
 				return makeHeadFromTexture(type.name());
 			}
 	}
@@ -802,6 +802,7 @@ public final class HeadAPI {
 			if(isDropHeadsHead || textures.containsKey(profileName)){
 				profileName = replaceHeadsFromTo.getOrDefault(profileName, profileName);
 				if(profileName.equals("OCELOT|WILD_OCELOT")) profileName = "OCELOT";
+				if(profileName.equals("PIGLIN") && PIGLIN_HEAD_TYPE != null) return new ItemStack(PIGLIN_HEAD_TYPE);
 				return makeHeadFromTexture(profileName);
 			}
 		}
