@@ -59,15 +59,18 @@ public class Commanddebug_all_heads extends EvCommand{
 			sender.sendMessage(ChatColor.RED+"This command can only be run by in-game players!");
 			return true;
 		}
-		boolean noGrumm = args.length == 0 || !args[args.length-1].toLowerCase().equals("true");
-		boolean noPreJappa = args.length < 2 || !args[args.length-2].toLowerCase().equals("true");
+		final boolean noGrumm = args.length == 0 || !args[args.length-1].toLowerCase().equals("true");
+		final boolean noPreJappa = args.length < 2 || !args[args.length-2].toLowerCase().equals("true");
+		final boolean noSubtypes = args.length >= 3 && args[args.length-3].toLowerCase().equals("true");
 		sender.sendMessage("Skipping Grumm heads: "+noGrumm);
 		sender.sendMessage("Skipping Pre-JAPPA heads: "+noPreJappa);
+		sender.sendMessage("Skipping entity subtypes: "+noSubtypes);
 
 		// Get & filter head keys
 		List<String> textureKeys = new ArrayList<>();
 		textureKeys.addAll(pl.getAPI().getTextures().keySet());
 		sender.sendMessage("Total # texture keys: "+textureKeys.size());
+		if(noSubtypes) textureKeys.removeIf(key -> key.contains("|"));
 		if(noGrumm) textureKeys.removeIf(key -> key.endsWith("|GRUMM") && !key.startsWith("SHULKER|"));
 		if(noPreJappa) textureKeys.removeIf(key -> key.contains("|PRE_JAPPA"));
 		if(!SHOW_PLAIN_IF_HAS_DATA_TAG){
@@ -86,6 +89,7 @@ public class Commanddebug_all_heads extends EvCommand{
 					else badKey = key.substring(0, i);
 					// Only remove if we have 2+ sub categories for a key
 					if(!hasSubKey.add(badKey)){
+						// Exceptions we want to keep:
 						if(key.startsWith("SHULKER") || key.startsWith("BEE") || key.startsWith("WOLF") || key.startsWith("CAT")) continue;
 						hasMultipleSubKeys.add(badKey);
 					}
