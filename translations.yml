@@ -1,5 +1,9 @@
 # Use this file to translate heads and messages to your preferred language
 
+# Whether to make use of the 1.19.4+ "fallback" translation feature, which
+# can improve head name localization for servers with the resource pack
+use-translation-fallbacks: true
+
 # The messages used to announce beheading
 message-beheaded: '&6${VICTIM}&r was decapitated'
 message-beheaded-by-entity: '&6${VICTIM}&r was decapitated by &6${KILLER}&r'
@@ -21,10 +25,10 @@ head-type-in-lore:
 # The display name format used when creating head items
 # You can add other entity types here if you want
 head-name-format:
+  player: "block.minecraft.player_head.named" # Translates to "PlayerName's Head"
+  #player: "${NAME} Head"
   default: "${MOB_SUBTYPES_DESC}${MOB_TYPE} ${HEAD_TYPE}"
-  player: "${NAME} Head"
-  #player: "block.minecraft.player_head.named" # Translates to "PlayerName's Head"
-  giant: "${MOB_SUBTYPES_DESC}${MOB_TYPE}'s Toe"
+  giant: "${MOB_TYPE}'s Toe"
 
 # Used when 'head-click-listener' is enabled in and a head is clicked
 head-click-format-players: "&7[&6DropHeads&7]&f That's ${NAME}'s Head"

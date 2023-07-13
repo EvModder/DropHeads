@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
@@ -62,7 +63,7 @@ public final class HeadAPI {
 	final Configuration translationsFile;  //TODO: make private
 	private final boolean GRUMM_ENABLED, SIDEWAYS_SHULKERS_ENABLED, COLORED_COLLARS_ENABLED, SADDLES_ENABLED; // may trigger additional file downloads.
 	private final boolean HOLLOW_SKULLS_ENABLED, TRANSPARENT_SLIME_ENABLED, CRACKED_IRON_GOLEMS_ENABLED, USE_PRE_JAPPA, USE_PRE_1_20;
-	private final boolean LOCK_PLAYER_SKINS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_CUSTOM_HEADS;
+	private final boolean LOCK_PLAYER_SKINS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_CUSTOM_HEADS, USE_TRANSLATE_FALLBACKS;
 	private final String UNKNOWN_TEXTURE_CODE;
 	private final TranslationComponent LOCAL_HEAD, LOCAL_SKULL, LOCAL_TOE;
 	private final HashMap<EntityType, /*headNameFormat=*/String> headNameFormats;
@@ -213,9 +214,20 @@ public final class HeadAPI {
 				getClass().getResourceAsStream("/translations.yml"), false);
 		translationsFile.setDefaults(embeddedTranslationsFile);
 		FileIO.deleteFile("translations-temp-DELETE.yml");
-		LOCAL_HEAD = new TranslationComponent(translationsFile.getString("head-type-names.head"));
-		LOCAL_SKULL = new TranslationComponent(translationsFile.getString("head-type-names.skull", "Skull"));
-		LOCAL_TOE = new TranslationComponent(translationsFile.getString("head-type-names.toe", "Toe"));
+		// See if we can use the 1.19.4 "fallback" feature
+		USE_TRANSLATE_FALLBACKS = translationsFile.getBoolean("use-translation-fallbacks", false) && Bukkit.getBukkitVersion().compareTo("1.19.4") >= 0;
+
+		if(USE_TRANSLATE_FALLBACKS){
+			LOCAL_HEAD = new TranslationComponent("head_type.head", translationsFile.getString("head-type-names.head"));
+			LOCAL_SKULL = new TranslationComponent("head_type.skull", translationsFile.getString("head-type-names.skull", "Skull"));
+			LOCAL_TOE = new TranslationComponent("head_type.toe", translationsFile.getString("head-type-names.toe", "Toe"));
+		}
+		else{
+			//RawText?
+			LOCAL_HEAD = new TranslationComponent(translationsFile.getString("head-type-names.head"));
+			LOCAL_SKULL = new TranslationComponent(translationsFile.getString("head-type-names.skull", "Skull"));
+			LOCAL_TOE = new TranslationComponent(translationsFile.getString("head-type-names.toe", "Toe"));
+		}
 
 		MOB_SUBTYPES_SEPARATOR = translationsFile.getString("mob-subtype-separator", " ");
 		exactTextureKeyHeadNameFormats = new HashMap<String, String>();
@@ -251,7 +263,11 @@ public final class HeadAPI {
 			if(localSubtypeName instanceof String == false){
 				pl.getLogger().severe("Invalid (non-enclosed-String) value for "+subtypeName+" in 'translations.yml': "+localSubtypeName);
 			}
-			entitySubtypeNames.put(subtypeName.toUpperCase(), new TranslationComponent((String)localSubtypeName));
+			TranslationComponent comp = new TranslationComponent(/*jsonKey=*/(String)localSubtypeName);
+			if(USE_TRANSLATE_FALLBACKS && comp.toPlainText().equals((String)localSubtypeName)){
+				comp = new TranslationComponent(/*jsonKey=*/"entity_subtype."+subtypeName, /*fallback=*/(String)localSubtypeName);
+			}//RawText if fallbacks==false && equals==true?
+			entitySubtypeNames.put(subtypeName.toUpperCase(), comp);
 		});
 		if(SAVE_TYPE_IN_LORE){
 			PLAYER_PREFIX = translationsFile.getString("head-type-in-lore.player");
