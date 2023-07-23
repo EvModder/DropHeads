@@ -43,9 +43,12 @@ public class ItemDropListener implements Listener{
 		if(profile.getName() == null) return true; // Cannot determine if it has a customName or not, so assume it does
 		final String displayName = ChatColor.stripColor(meta.getDisplayName());
 		final int endIdx = profile.getName().indexOf('>');
-		final int startIdx = profile.getName().startsWith(dhNamespaceKey) ? dhNamespaceKey.length() : 0;
-		final String textureKey = profile.getName().substring(startIdx, endIdx == -1 ? profile.getName().length() : endIdx);
-		final String expectedName = ChatColor.stripColor(pl.getAPI().getHeadNameFromKey(textureKey, /*customName=*/"").toPlainText());
+		final boolean isMobHead = profile.getName().startsWith(dhNamespaceKey);
+		final int startIdx = isMobHead ? dhNamespaceKey.length() : 0;
+		final String profileName = profile.getName().substring(startIdx, endIdx == -1 ? profile.getName().length() : endIdx);
+		final String textureKey = isMobHead ? profileName : "PLAYER";
+		final String customName = isMobHead ? /*todo:*/"" : profileName;
+		final String expectedName = ChatColor.stripColor(pl.getAPI().getHeadNameFromKey(textureKey, customName).toPlainText());
 		return !expectedName.equals(displayName);
 	}
 
