@@ -1,6 +1,7 @@
 package net.evmodder.DropHeads.commands;
 
 import java.text.DecimalFormat;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,7 +18,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 import net.evmodder.DropHeads.DropChanceAPI;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.DropHeads.JunkUtils;
+import net.evmodder.DropHeads.InternalAPI;
+import net.evmodder.DropHeads.StaticUtils;
 import net.evmodder.EvLib.EvCommand;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
@@ -28,55 +30,34 @@ import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
 
 public class CommandDropRate extends EvCommand{
 	final private DropHeads pl;
+	final private String CMD_TRANSLATE_PATH = "commands.droprate.";
 	final private DropChanceAPI dropChanceAPI;
-	final boolean ONLY_SHOW_VALID_ENTITIES = true;
-	final boolean USING_SPAWN_MODIFIERS, NEED_CERTAIN_WEAPONS, USING_LOOTING_MODIFIERS, USING_TIME_ALIVE_MODIFIERS, USING_WEAPON_MODIFIERS;
-	final boolean VANILLA_WSKELE_HANDLING;
-	final HashSet<String> entityNames;
-	final double DEFAULT_DROP_CHANCE;
-	final int JSON_LIMIT;
-	
-	final String DROP_CHANCE_FOR_NOT_FOUND;
-	final String RAW_DROP_CHANCE_FOR;
-	final String FINAL_DROP_CHANCE;
+	final private boolean ONLY_SHOW_VALID_ENTITIES = true;
+	final private boolean USING_SPAWN_MODIFIERS, NEED_CERTAIN_WEAPONS, USING_LOOTING_MODIFIERS, USING_TIME_ALIVE_MODIFIERS, USING_WEAPON_MODIFIERS;
+	final private boolean VANILLA_WSKELE_HANDLING;
+	final private HashSet<String> entityNames;
+	final private double DEFAULT_DROP_CHANCE;
+	final private int JSON_LIMIT;
 
-	final String RESTRICTIONS_HEADER;
-	final String VICTIM_MUST_HAVE_PERM;
-	final String KILLER_MUST_HAVE_PERM;
-	final String ALWAYS_BEHEAD_PERM;
-	final Component REQUIRED_WEAPONS;
-	final String MULTIPLIERS_HEADER;
-	final String SPAWN_REASON;
-	final String TIME_ALIVE;
-	final String WEAPON_TYPE;
-	final String PERMS;
-	final TranslationComponent LOOTING_COMP;
-	final String VANILLA_WSKELE_BEHAVIOR_ALERT;
+	final private Component REQUIRED_WEAPONS;
+	final private TranslationComponent LOOTING_COMP; //TODO: Use comp (instead of String) for other translations as well
+	private final HashMap<String, String> translations;
+	private String translate(String key){
+		String value = translations.get(key);
+		if(value == null) translations.put(key, value = pl.getInternalAPI().loadTranslationStr(CMD_TRANSLATE_PATH + key)
+				.replaceAll("%%?(?!s)", "%%")); // Allow a bit more flexibility with using %
+		return value;
+	}
 
 	public CommandDropRate(DropHeads plugin) {
 		super(plugin);
 		pl = plugin;
-		DROP_CHANCE_FOR_NOT_FOUND = pl.getAPI().loadTranslationStr("commands.droprate.not-found").replaceAll("%%?(?!s)", "%%");
-		RAW_DROP_CHANCE_FOR = pl.getAPI().loadTranslationStr("commands.droprate.raw-drop-rate-for").replaceAll("%%?(?!s)", "%%");
-		FINAL_DROP_CHANCE = pl.getAPI().loadTranslationStr("commands.droprate.final-drop-rate").replaceAll("%%?(?!s)", "%%");
-
-		RESTRICTIONS_HEADER = pl.getAPI().loadTranslationStr("commands.droprate.restrictions.header");
-		VICTIM_MUST_HAVE_PERM = pl.getAPI().loadTranslationStr("commands.droprate.restrictions.victim-must-have-perm");
-		KILLER_MUST_HAVE_PERM = pl.getAPI().loadTranslationStr("commands.droprate.restrictions.killer-must-have-perm");
-		ALWAYS_BEHEAD_PERM = pl.getAPI().loadTranslationStr("commands.droprate.restrictions.always-behead-perm");
-
-		MULTIPLIERS_HEADER = pl.getAPI().loadTranslationStr("commands.droprate.multipliers.header");
-		SPAWN_REASON = pl.getAPI().loadTranslationStr("commands.droprate.multipliers.spawn-reason");
-		TIME_ALIVE = pl.getAPI().loadTranslationStr("commands.droprate.multipliers.time-alive");
-		WEAPON_TYPE = pl.getAPI().loadTranslationStr("commands.droprate.multipliers.weapon-type");
-		PERMS = pl.getAPI().loadTranslationStr("commands.droprate.multipliers.perms");
-		//TODO: Should we do it this way for all the other msgs as well?
-		LOOTING_COMP = pl.getAPI().loadTranslationComp("commands.droprate.multipliers.looting");
-
-		VANILLA_WSKELE_BEHAVIOR_ALERT = pl.getAPI().loadTranslationStr("commands.droprate.vanilla-wither-skeleton-handling-alert");
-
 		dropChanceAPI = pl.getDropChanceAPI();
 		JSON_LIMIT = pl.getConfig().getInt("message-json-limit", 15000);
+
+		translations = new HashMap<>();
+		final InternalAPI api = pl.getInternalAPI();
+		LOOTING_COMP = api.loadTranslationComp(CMD_TRANSLATE_PATH+"multipliers.looting");
 
 		if(NEED_CERTAIN_WEAPONS = !dropChanceAPI.getRequiredWeapons().isEmpty()){
 			ListComponent requiredWeapons = new ListComponent();
@@ -87,7 +68,7 @@ public class CommandDropRate extends EvCommand{
 				requiredWeapons.addComponent(new TranslationComponent("item.minecraft."+mat.name().toLowerCase()));
 			}
 			REQUIRED_WEAPONS = new TranslationComponent(
-				pl.getAPI().loadTranslationStr("commands.droprate.restrictions.required-weapons"),
+					api.loadTranslationStr(CMD_TRANSLATE_PATH+"restrictions.required-weapons"),
 				requiredWeapons
 			);
 		}
@@ -181,21 +162,21 @@ public class CommandDropRate extends EvCommand{
 		if(entity != null){
 			if(!entity.hasPermission("dropheads.canlosehead")){
 				sendTellraw(sender.getName(), new TranslationComponent(
-						RAW_DROP_CHANCE_FOR, new SelectorComponent(entity.getUniqueId()), new RawTextComponent("0"/*0 in translations.yml?*/)).toString());
+						translate("raw-drop-rate-for"), new SelectorComponent(entity.getUniqueId()), new RawTextComponent("0"/*0 in translations.yml?*/)).toString());
 			}
 			else{
 				rawChance = dropChanceAPI.getRawDropChance(entity);
 				sendTellraw(sender.getName(), new TranslationComponent(
-						RAW_DROP_CHANCE_FOR, new SelectorComponent(entity.getUniqueId()), new RawTextComponent(formatDroprate(rawChance*100D))).toString());
+						translate("raw-drop-rate-for"), new SelectorComponent(entity.getUniqueId()), new RawTextComponent(formatDroprate(rawChance*100D))).toString());
 			}
 		}
 		else{
 			rawChance = dropChanceAPI.getRawDropChance(target);
 			if(rawChance != DEFAULT_DROP_CHANCE){
-				sender.sendMessage(String.format(RAW_DROP_CHANCE_FOR, target, formatDroprate(rawChance*100D), formatDroprate(rawChance*100D)));
+				sender.sendMessage(String.format(translate("raw-drop-rate-for"), target, formatDroprate(rawChance*100D), formatDroprate(rawChance*100D)));
 			}
 			else{//TODO: configured drop chance of 0 (e.g., armor_stand) gives not found error
-				sender.sendMessage(String.format(DROP_CHANCE_FOR_NOT_FOUND, target));
+				sender.sendMessage(String.format(translate("not-found"), target));
 				return false;
 			}
 		}
@@ -207,10 +188,10 @@ public class CommandDropRate extends EvCommand{
 		final boolean senderAlwaysBeheads = sender.hasPermission("dropheads.alwaysbehead."+target.toLowerCase());
 		final boolean notUsingRequiredWeapon = NEED_CERTAIN_WEAPONS && (weapon == null || !dropChanceAPI.getRequiredWeapons().contains(weapon.getType()));
 		if(victimCantLoseHead || senderCantBehead || senderAlwaysBeheads || notUsingRequiredWeapon){
-			droprateDetails.addComponent(RESTRICTIONS_HEADER);
-			if(victimCantLoseHead){rawChance=-1D;droprateDetails.addComponent(VICTIM_MUST_HAVE_PERM);}
-			if(senderCantBehead){rawChance=-1D;droprateDetails.addComponent(KILLER_MUST_HAVE_PERM);}
-			if(senderAlwaysBeheads){rawChance=-1D;droprateDetails.addComponent(ALWAYS_BEHEAD_PERM);}
+			droprateDetails.addComponent(translate("restrictions.header"));
+			if(victimCantLoseHead){rawChance=-1D;droprateDetails.addComponent(translate("restrictions.victim-must-have-perm"));}
+			if(senderCantBehead){rawChance=-1D;droprateDetails.addComponent(translate("restrictions.killer-must-have-perm"));}
+			if(senderAlwaysBeheads){rawChance=-1D;droprateDetails.addComponent(translate("restrictions.always-behead-perm"));}
 			if(notUsingRequiredWeapon){rawChance=-1D;droprateDetails.addComponent(REQUIRED_WEAPONS);}
 		}
 
@@ -221,51 +202,51 @@ public class CommandDropRate extends EvCommand{
 				: Math.min(Math.pow(dropChanceAPI.getLootingMult(), lootingLevel), dropChanceAPI.getLootingMult()*lootingLevel);
 		final double lootingAdd = dropChanceAPI.getLootingAdd()*lootingLevel;
 		final double timeAliveMod = entity == null ? 1D : dropChanceAPI.getTimeAliveMult(entity);
-		final double spawnCauseMod = entity == null ? 1D : JunkUtils.getSpawnCauseMult(entity);
+		final double spawnCauseMod = entity == null ? 1D : StaticUtils.getSpawnCauseMult(entity);
 		final double permMod = dropChanceAPI.getPermsBasedMult(sender);
 		final double finalDropChance = rawChance*spawnCauseMod*timeAliveMod*weaponMod*lootingMod*permMod + lootingAdd;
 		DecimalFormat modFormatter = new DecimalFormat("0.##");
 		
 		if(VANILLA_WSKELE_HANDLING && target.equals("WITHER_SKELETON")){
 			if(!droprateDetails.isEmpty()) droprateDetails.addComponent("\n");
-			droprateDetails.addComponent(VANILLA_WSKELE_BEHAVIOR_ALERT);
+			droprateDetails.addComponent(translate("vanilla-wither-skeleton-handling-alert"));
 		}
 		else{
 			ListComponent droprateMultipliers = new ListComponent();
 			if(USING_SPAWN_MODIFIERS){
 				if(entity == null){
-					droprateMultipliers.addComponent(SPAWN_REASON);
+					droprateMultipliers.addComponent(translate("multipliers.spawn-reason"));
 					droprateMultipliers.addComponent("§7, "/*TODO: translations.yml*/);
 				}
 				else if(Math.abs(1D-spawnCauseMod) > 0.001D){
-					droprateMultipliers.addComponent(SPAWN_REASON);
+					droprateMultipliers.addComponent(translate("multipliers.spawn-reason"));
 					droprateMultipliers.addComponent(":§6x"+modFormatter.format(spawnCauseMod)+"§7, "/*TODO: translations.yml*/);
 				}
 			}
 			if(USING_TIME_ALIVE_MODIFIERS){
 				if(entity == null){
-					droprateMultipliers.addComponent(TIME_ALIVE);
+					droprateMultipliers.addComponent(translate("multipliers.time-alive"));
 					droprateMultipliers.addComponent("§7, "/*TODO: translations.yml*/);
 				}
 				else if(Math.abs(1D-timeAliveMod) > 0.001D){
-					droprateMultipliers.addComponent(TIME_ALIVE);
+					droprateMultipliers.addComponent(translate("multipliers.time-alive"));
 					droprateMultipliers.addComponent(":§6x"+modFormatter.format(timeAliveMod)+"§7, "/*TODO: translations.yml*/);
 				}
 			}
 			if(USING_WEAPON_MODIFIERS){
 				if(entity == null){
-					droprateMultipliers.addComponent(WEAPON_TYPE);
+					droprateMultipliers.addComponent(translate("multipliers.weapon-type"));
 					droprateMultipliers.addComponent("§7, "/*TODO: translations.yml*/);
 				}
 				else if(weapon != null && Math.abs(1D-weaponMod) > 0.001D){
-					droprateMultipliers.addComponent(WEAPON_TYPE);
-					droprateMultipliers.addComponent(JunkUtils.getMurderItemComponent(weapon, JSON_LIMIT));
+					droprateMultipliers.addComponent(translate("multipliers.weapon-type"));
+					droprateMultipliers.addComponent(StaticUtils.getMurderItemComponent(weapon, JSON_LIMIT));
 					droprateMultipliers.addComponent(":§6x"+modFormatter.format(weaponMod));
 					droprateMultipliers.addComponent("§7, "/*TODO: translations.yml*/);
 				}
 			}
 			if(Math.abs(1D-permMod) > 0.001D){
-				droprateMultipliers.addComponent(PERMS);
+				droprateMultipliers.addComponent(translate("multipliers.perms"));
 				droprateMultipliers.addComponent(":§6x"+modFormatter.format(permMod)+"§7, "/*TODO: translations.yml*/);
 			}
 			if(USING_LOOTING_MODIFIERS){
@@ -283,12 +264,12 @@ public class CommandDropRate extends EvCommand{
 			}
 			if(!droprateMultipliers.isEmpty()){
 				if(!droprateDetails.isEmpty()) droprateDetails.addComponent("\n");
-				droprateDetails.addComponent(MULTIPLIERS_HEADER);
+				droprateDetails.addComponent(translate("multipliers.header"));
 				droprateDetails.addComponent(droprateMultipliers);
 			}
 			if(entity != null && rawChance > 0D && Math.abs(finalDropChance-rawChance) > 0.001D){
 				if(!droprateDetails.isEmpty()) droprateDetails.addComponent("\n");
-				droprateDetails.addComponent(String.format(FINAL_DROP_CHANCE, formatDroprate(finalDropChance*100D)));
+				droprateDetails.addComponent(String.format(translate("final-drop-rate"), formatDroprate(finalDropChance*100D)));
 			}
 		} // end else (not a wither_skeleton)
 		if(!droprateDetails.isEmpty()) sendTellraw(sender.getName(), droprateDetails.toString());

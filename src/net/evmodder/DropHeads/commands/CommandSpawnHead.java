@@ -28,7 +28,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.DropHeads.JunkUtils;
+import net.evmodder.DropHeads.InternalAPI;
+import net.evmodder.DropHeads.StaticUtils;
 import net.evmodder.DropHeads.TextureKeyLookup;
 import net.evmodder.EvLib.EvCommand;
 import net.evmodder.EvLib.extras.EntityUtils;
@@ -44,90 +45,36 @@ import net.evmodder.EvLib.extras.SelectorUtils.Selector;
 import net.evmodder.EvLib.extras.TellrawUtils;
 
 public class CommandSpawnHead extends EvCommand{
-	final DropHeads pl;
-	final boolean SHOW_SUBTYPE_IN_TAB_COMPLETE_FOR_BAR = true;
-	final boolean ENABLE_LOG;
-	final String LOG_FORMAT;
-//	final int MAX_IDS_SHOWN = 200; //move to config?
-	final int MAX_ENTITIES_SELECTED;
+	final private DropHeads pl;
+	final private String CMD_TRANSLATE_PATH = "commands.spawnhead.";
+	final private boolean ENABLE_LOG;
+	final private String LOG_FORMAT;
+//	final private int MAX_HDB_IDS_SHOWN = 200;
+	final private int MAX_ENTITIES_SELECTED;
 
-	// TODO: Maybe re-add aliases (code:,url:,value: -> code:)
-	final String MOB_PREFIX, PLAYER_PREFIX, HDB_PREFIX, SELF_PREFIX, CODE_PREFIX, AMT_PREFIX, GIVETO_PREFIX, SLOT_PREFIX;
+	// TODO: Maybe add aliases (eg, ['url:','value:'] -> 'code:')
+	final private String MOB_PREFIX, PLAYER_PREFIX, HDB_PREFIX, SELF_PREFIX, CODE_PREFIX, AMT_PREFIX, GIVETO_PREFIX, SLOT_PREFIX;
 
-	final String CMD_MUST_BE_RUN_BY_A_PLAYER;
-	final String NO_PERMISSION_TO_SPAWN_MOB_HEADS;
-	final String NO_PERMISSION_TO_SPAWN_HDB_HEADS;
-	final String NO_PERMISSION_TO_SPAWN_CODE_HEADS;
-	final String NO_PERMISSION_TO_SPAWN_PLAYER_HEADS;
-	final String MISSING_TEXTURE_MOB;
-	final String MISSING_TEXTURE_MOB_SUBTYPE;
-	final String MISSING_TEXTURE_URL;
-	final String MISSING_TEXTURE_HDB;
-	
-	final String ERROR_HDB_NOT_INSTALLED;
-	final String ERROR_HEAD_NOT_FOUND;
-	final String ERROR_GIVETO_NOT_FOUND;
-	final String ERROR_INVALID_SLOT;
-	final String ERROR_SLOT_OCCUPIED_FOR_SELF;
-	final String ERROR_SLOT_OCCUPIED_FOR_TARGET;
-	final String ERROR_MULTIPLE_HEADS_SINGLE_SLOT;
-	final String ERROR_NOT_ENOUGH_INV_SPACE_FOR_SELF;
-	final String ERROR_NOT_ENOUGH_INV_SPACE_FOR_TARGET;
-	final String ERROR_NO_MATCHING_ENTITIES;
-	final String ERROR_TOO_MANY_ENTITIES;
-
-	final String GETTING_HEAD_WITH_DATA_VALUE;
-	final String ITEM_WITH_AMOUNT_FORMAT;
-	final String SUCCESSFULLY_SPAWNED_HEAD;
-	final String SUCCESSFULLY_SPAWNED_HEADS;
-	final String SUCCESSFULLY_GAVE_HEAD;
-	final String SUCCESSFULLY_GAVE_HEADS;
-	final String SUCCESSFULLY_MULTI_GAVE_HEAD;
-	final String SUCCESSFULLY_MULTI_GAVE_HEADS;
+	private final HashMap<String, String> translations;
+	private String translate(String key){
+		String value = translations.get(key);
+		if(value == null) translations.put(key, value = pl.getInternalAPI().loadTranslationStr(CMD_TRANSLATE_PATH + key));
+		return value;
+	}
 
 	public CommandSpawnHead(DropHeads plugin){
 		super(plugin);
 		pl = plugin;
-		// MOB_PREFIX, PLAYER_PREFIX, HDB_PREFIX, SELF_PREFIX, CODE_PREFIX, AMT_PREFIX, GIVETO_PREFIX, SLOT_PREFIX
-		MOB_PREFIX = pl.getAPI().loadTranslationStr("commands.spawnhead.prefixes.mob");
-		PLAYER_PREFIX = pl.getAPI().loadTranslationStr("commands.spawnhead.prefixes.player");
-		HDB_PREFIX = pl.getAPI().loadTranslationStr("commands.spawnhead.prefixes.hdb");
-		SELF_PREFIX = pl.getAPI().loadTranslationStr("commands.spawnhead.prefixes.self");
-		CODE_PREFIX = pl.getAPI().loadTranslationStr("commands.spawnhead.prefixes.code");
-		AMT_PREFIX = pl.getAPI().loadTranslationStr("commands.spawnhead.prefixes.amount");
-		GIVETO_PREFIX = pl.getAPI().loadTranslationStr("commands.spawnhead.prefixes.giveto");
-		SLOT_PREFIX = pl.getAPI().loadTranslationStr("commands.spawnhead.prefixes.slot");
-
-		CMD_MUST_BE_RUN_BY_A_PLAYER = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.run-by-player");
-		NO_PERMISSION_TO_SPAWN_MOB_HEADS = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.permissions.mob-heads");
-		NO_PERMISSION_TO_SPAWN_PLAYER_HEADS = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.permissions.player-heads");
-		NO_PERMISSION_TO_SPAWN_HDB_HEADS = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.permissions.hdb-heads");
-		NO_PERMISSION_TO_SPAWN_CODE_HEADS = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.permissions.code-heads");
-		MISSING_TEXTURE_MOB = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.missing-textures.mob");
-		MISSING_TEXTURE_MOB_SUBTYPE = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.missing-textures.mob-subtype");
-		MISSING_TEXTURE_URL = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.missing-textures.url");
-		MISSING_TEXTURE_HDB = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.missing-textures.hdb");
-
-		ERROR_HDB_NOT_INSTALLED = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.hdb-not-installed");
-		ERROR_HEAD_NOT_FOUND = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.head-not-found");
-		ERROR_GIVETO_NOT_FOUND = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.giveto-not-found");
-		ERROR_INVALID_SLOT = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.invalid-slot");
-		ERROR_SLOT_OCCUPIED_FOR_SELF = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.slot-unavailable.self");
-		ERROR_SLOT_OCCUPIED_FOR_TARGET = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.slot-unavailable.target");
-		ERROR_MULTIPLE_HEADS_SINGLE_SLOT = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.slot-unavailable.multiple-heads");
-		ERROR_NOT_ENOUGH_INV_SPACE_FOR_SELF = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.not-enough-inv-space.self");
-		ERROR_NOT_ENOUGH_INV_SPACE_FOR_TARGET = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.not-enough-inv-space.target");
-		ERROR_NO_MATCHING_ENTITIES = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.no-matching-entities");
-		ERROR_TOO_MANY_ENTITIES = pl.getAPI().loadTranslationStr("commands.spawnhead.errors.too-many-matching-entities");
-
-		GETTING_HEAD_WITH_DATA_VALUE = pl.getAPI().loadTranslationStr("commands.spawnhead.success.has-data-value");
-		ITEM_WITH_AMOUNT_FORMAT = pl.getAPI().loadTranslationStr("commands.spawnhead.success.item-with-amount-format");
-		SUCCESSFULLY_SPAWNED_HEAD = pl.getAPI().loadTranslationStr("commands.spawnhead.success.spawned-head");
-		SUCCESSFULLY_SPAWNED_HEADS = pl.getAPI().loadTranslationStr("commands.spawnhead.success.spawned-heads");
-		SUCCESSFULLY_GAVE_HEAD = pl.getAPI().loadTranslationStr("commands.spawnhead.success.gave-head");
-		SUCCESSFULLY_GAVE_HEADS = pl.getAPI().loadTranslationStr("commands.spawnhead.success.gave-heads");
-		SUCCESSFULLY_MULTI_GAVE_HEAD = pl.getAPI().loadTranslationStr("commands.spawnhead.success.multi-gave-head");
-		SUCCESSFULLY_MULTI_GAVE_HEADS = pl.getAPI().loadTranslationStr("commands.spawnhead.success.multi-gave-heads");
+		translations = new HashMap<>();
+		final InternalAPI api = pl.getInternalAPI();
+		MOB_PREFIX = api.loadTranslationStr(CMD_TRANSLATE_PATH+"prefixes.mob");
+		PLAYER_PREFIX = api.loadTranslationStr(CMD_TRANSLATE_PATH+"prefixes.player");
+		HDB_PREFIX = api.loadTranslationStr(CMD_TRANSLATE_PATH+"prefixes.hdb");
+		SELF_PREFIX = api.loadTranslationStr(CMD_TRANSLATE_PATH+"prefixes.self");
+		CODE_PREFIX = api.loadTranslationStr(CMD_TRANSLATE_PATH+"prefixes.code");
+		AMT_PREFIX = api.loadTranslationStr(CMD_TRANSLATE_PATH+"prefixes.amount");
+		GIVETO_PREFIX = api.loadTranslationStr(CMD_TRANSLATE_PATH+"prefixes.giveto");
+		SLOT_PREFIX = api.loadTranslationStr(CMD_TRANSLATE_PATH+"prefixes.slot");
 
 		ENABLE_LOG = pl.getConfig().getBoolean("log.enable", false) && pl.getConfig().getBoolean("log.log-head-command", false);
 		LOG_FORMAT = ENABLE_LOG ? pl.getConfig().getString("log.log-head-command-format", "${TIMESTAMP},gethead command,${SENDER},${HEAD}") : null;
@@ -199,7 +146,7 @@ public class CommandSpawnHead extends EvCommand{
 		final String target = argWithCompletePrefix.substring(prefixEnd + 1);
 		final String targetUppercase = target.toUpperCase();
 
-		if(prefix.equals(MOB_PREFIX)){
+		if(prefix.equals(MOB_PREFIX) || target.indexOf('|') != -1){
 			for(String key : pl.getAPI().getTextures().keySet()){
 				if(key.startsWith(targetUppercase) && key.lastIndexOf('|') <= target.length()) tabCompletes.add(prefix + key);
 			}
@@ -210,14 +157,14 @@ public class CommandSpawnHead extends EvCommand{
 					.collect(Collectors.toList());
 		}
 		else if(prefix.equals(HDB_PREFIX)){
-			if(pl.getAPI().getHeadDatabaseAPI() == null/* MAX_HDB_ID == -1 */) return null;
+			if(pl.getInternalAPI().getHeadDatabaseAPI() == null/* MAX_HDB_ID == -1 */) return null;
 //			try{if(Integer.parseInt(target) > MAX_HDB_ID) return null;}
 //			catch(NumberFormatException ex){return null;}
 			return Arrays.asList(prefix + target);
 //			if(MAX_HDB_ID != -1){
 //				int numResults = ((""+MAX_HDB_ID).length() - target.length())*11;
 //				tabCompletes.addAll(
-//						generateNumericCompletions(/*id_prefix=*/target, /*highest_id=*/MAX_HDB_ID, /*max_ids_shown=*/MAX_IDS_SHOWN)
+//						generateNumericCompletions(/*id_prefix=*/target, /*highest_id=*/MAX_HDB_ID, /*max_ids_shown=*/MAX_HDB_IDS_SHOWN)
 //						.stream().map(id -> prefix+id).collect(Collectors.toList())
 //				);
 //			}
@@ -254,14 +201,14 @@ public class CommandSpawnHead extends EvCommand{
 //			p = pl.getServer().getOfflinePlayer(UUID.fromString(target));
 //			if(p != null && p.hasPlayedBefore()) return new GameProfile(p.getUniqueId(), p.getName());
 //		}catch(IllegalArgumentException ex){}
-		return JunkUtils.getGameProfile(target, /*fetchSkin=*/false, /*nullForSync=*/null);
+		return StaticUtils.getGameProfile(target, /*fetchSkin=*/false, /*nullForSync=*/null);
 	}
 
 	private static class HeadFromString{
 		public final ItemStack head;
 		public final boolean noFurtherError;
-		public final String target;
-		public HeadFromString(ItemStack h, boolean u, String t){head=h; noFurtherError=u; target=t;}
+		public final String targetHead;
+		public HeadFromString(ItemStack h, boolean u, String t){head=h; noFurtherError=u; targetHead=t;}
 	}
 	private HeadFromString getHeadFromTargetString(String fullTarget, CommandSender sender){
 		int prefixEnd = fullTarget.indexOf(':');
@@ -284,11 +231,11 @@ public class CommandSpawnHead extends EvCommand{
 		if(prefix.equals(MOB_PREFIX) || prefix.equals("key:") || (prefix.isEmpty() && target.contains("|"))){
 			target = target.toUpperCase();
 			if(!sender.hasPermission("dropheads.spawn.mobs")){
-				sender.sendMessage(NO_PERMISSION_TO_SPAWN_MOB_HEADS);
+				sender.sendMessage(translate("errors.permissions.mob-heads"));
 				return new HeadFromString(null, true, null);
 			}
 			if(!pl.getAPI().textureExists(target) && !pl.getAPI().textureExists(textureKey)){
-				sender.sendMessage(String.format(MISSING_TEXTURE_MOB, target));
+				sender.sendMessage(String.format(translate("errors.missing-textures.mob"), target));
 				return new HeadFromString(null, false, null);
 			}
 			EntityType eType = EntityUtils.getEntityByName(target);
@@ -296,36 +243,36 @@ public class CommandSpawnHead extends EvCommand{
 				textureKey = eType.name() + (extraData == null ? "" : "|" + extraData);
 			}
 			if(extraData != null){
-				if(pl.getAPI().textureExists(textureKey)) sender.sendMessage(String.format(GETTING_HEAD_WITH_DATA_VALUE, extraData));
-				else sender.sendMessage(String.format(MISSING_TEXTURE_MOB_SUBTYPE, eType, extraData));
+				if(pl.getAPI().textureExists(textureKey)) sender.sendMessage(String.format(translate("success.has-data-value"), extraData));
+				else sender.sendMessage(String.format(translate("errors.missing-textures.mob-subtype"), eType, extraData));
 			}
 			head = pl.getAPI().getHead(eType, textureKey);
 		}
 		else if(prefix.equals(HDB_PREFIX)){
 			if(!sender.hasPermission("dropheads.spawn.hdb")){
-				sender.sendMessage(NO_PERMISSION_TO_SPAWN_HDB_HEADS);
+				sender.sendMessage(translate("errors.permissions.hdb-heads"));
 				return new HeadFromString(null, true, null);
 			}
-			if(pl.getAPI().getHeadDatabaseAPI() == null){
-				sender.sendMessage(ERROR_HDB_NOT_INSTALLED);
+			if(pl.getInternalAPI().getHeadDatabaseAPI() == null){
+				sender.sendMessage(translate("errors.hdb-not-installed"));
 				return new HeadFromString(null, true, null);
 			}
-			if(!pl.getAPI().getHeadDatabaseAPI().isHead(target)){
-				sender.sendMessage(String.format(MISSING_TEXTURE_HDB, target));
+			if(!pl.getInternalAPI().getHeadDatabaseAPI().isHead(target)){
+				sender.sendMessage(String.format(translate("errors.missing-textures.hdb"), target));
 				return new HeadFromString(null, true, null);
 			}
-			ItemStack unwrappedHDBhead = pl.getAPI().getHeadDatabaseAPI().getItemHead(target);
+			ItemStack unwrappedHDBhead = pl.getInternalAPI().getHeadDatabaseAPI().getItemHead(target);
 			head = pl.getAPI().getHead(HeadUtils.getGameProfile((SkullMeta)unwrappedHDBhead.getItemMeta()));
 		}
 		else if(prefix.equals(CODE_PREFIX) || (prefix.isEmpty() && target.length() > TextUtils.MAX_PLAYERNAME_MONO_WIDTH
 				&& searchForPlayer(target) == null)){
 			if(!sender.hasPermission("dropheads.spawn.code")){
-				sender.sendMessage(NO_PERMISSION_TO_SPAWN_CODE_HEADS);
+				sender.sendMessage(translate("errors.permissions.code-heads"));
 				return new HeadFromString(null, true, null);
 			}
 			String url = WebUtils.getTextureURL(target, /*verify=*/true);
 			if(url == null){
-				sender.sendMessage(String.format(MISSING_TEXTURE_URL, target));
+				sender.sendMessage(String.format(translate("errors.missing-textures.url"), target));
 				return new HeadFromString(null, false, null);
 			}
 			target = Base64.getEncoder().encodeToString(
@@ -350,14 +297,14 @@ public class CommandSpawnHead extends EvCommand{
 			if(profile != null){
 				if(!sender.hasPermission("dropheads.spawn.players")
 						&& (!profile.getName().equals(sender.getName()) || !sender.hasPermission("dropheads.spawn.self"))){
-					sender.sendMessage(NO_PERMISSION_TO_SPAWN_PLAYER_HEADS);
+					sender.sendMessage(translate("errors.permissions.player-heads"));
 					return new HeadFromString(null, true, null);
 				}
 				target = profile.getName();
 				head = pl.getAPI().getHead(profile);
 			}
 		}
-		if(head == null) sender.sendMessage(String.format(ERROR_HEAD_NOT_FOUND, prefix, target));
+		if(head == null) sender.sendMessage(String.format(translate("errors.head-not-found"), prefix, target));
 		return new HeadFromString(head, true, target);
 	}
 
@@ -375,7 +322,7 @@ public class CommandSpawnHead extends EvCommand{
 		}
 		// This should be unreachable due to earlier checks, but still nice to have in case code breaks.
 		if(!(entity instanceof LivingEntity)) pl.getLogger().severe("Cannot give item to non-LivingEntity!");
-		return JunkUtils.setIfEmpty(((LivingEntity)entity).getEquipment(), item, EquipmentSlot.valueOf(slot.toUpperCase()));
+		return StaticUtils.setIfEmpty(((LivingEntity)entity).getEquipment(), item, EquipmentSlot.valueOf(slot.toUpperCase()));
 	}
 
 	private void logGiveHeadCommand(String headName, String senderName, int amount, String recipients){
@@ -404,7 +351,7 @@ public class CommandSpawnHead extends EvCommand{
 				if(!slot.matches("[1-2]?[0-9]|3[0-5]")){ // Valid number slots are 0 to 35
 					try{EquipmentSlot.valueOf(slot.toUpperCase());}
 					catch(IllegalArgumentException ex){
-						sender.sendMessage(String.format(ERROR_INVALID_SLOT, slot));
+						sender.sendMessage(String.format(translate("errors.invalid-slot"), slot));
 						return true;
 					}
 				}
@@ -434,11 +381,11 @@ public class CommandSpawnHead extends EvCommand{
 				Collection<Entity> selected = Selector.fromString(sender, giveTo).resolve();
 				if(selected != null){
 					if(selected.size() > MAX_ENTITIES_SELECTED){
-						sender.sendMessage(String.format(ERROR_TOO_MANY_ENTITIES, selected.size()));
+						sender.sendMessage(String.format(translate("errors.too-many-matching-entities"), selected.size()));
 						return true;
 					}
 					if(selected.size() == 0){
-						sender.sendMessage(String.format(ERROR_NO_MATCHING_ENTITIES, giveTo));
+						sender.sendMessage(String.format(translate("errors.no-matching-entities"), giveTo));
 						return true;
 					}
 					final boolean isEquipmentSlot = slot != null && !slot.matches("[0-9]+");
@@ -453,12 +400,12 @@ public class CommandSpawnHead extends EvCommand{
 		}
 		if(giveTargets.isEmpty()){
 			if(giveTo != null){
-				sender.sendMessage(String.format(ERROR_GIVETO_NOT_FOUND, giveTo));
+				sender.sendMessage(String.format(translate("errors.giveto-not-found"), giveTo));
 				return true;
 			}
 			if(sender instanceof Player) giveTargets.add((Player)sender);
 			else{
-				sender.sendMessage(CMD_MUST_BE_RUN_BY_A_PLAYER);
+				sender.sendMessage(translate("errors.run-by-player"));
 				return true;
 			}
 		}
@@ -469,7 +416,7 @@ public class CommandSpawnHead extends EvCommand{
 			Collection<Entity> selected = Selector.fromString(sender, fullTarget).resolve();
 			if(selected == null) throw new IllegalArgumentException("null");
 			if(selected.size() > MAX_ENTITIES_SELECTED){
-				sender.sendMessage(String.format(ERROR_TOO_MANY_ENTITIES, selected.size()));
+				sender.sendMessage(String.format(translate("errors.too-many-matching-entities"), selected.size()));
 				return true;
 			}
 			final boolean permMobs = sender.hasPermission("dropheads.spawn.mobs");
@@ -486,11 +433,11 @@ public class CommandSpawnHead extends EvCommand{
 						sender.getName(), head.getAmount(), giveTargets.toString());
 			}
 			if(headItems.isEmpty()){
-				sender.sendMessage(String.format(ERROR_HEAD_NOT_FOUND, /*prefix=*/"", fullTarget));
+				sender.sendMessage(String.format(translate("errors.head-not-found"), /*prefix=*/"", fullTarget));
 				return false;
 			}
 			if(headItems.size() > 1 && slot != null && !slot.matches("[0-9]+")){
-				sender.sendMessage(ERROR_MULTIPLE_HEADS_SINGLE_SLOT);
+				sender.sendMessage(translate("errors.slot-unavailable.multiple-heads"));
 				return true;
 			}
 		}
@@ -500,7 +447,7 @@ public class CommandSpawnHead extends EvCommand{
 			if(head == null) return headFromString.noFurtherError;
 			if(amount > 0) head.setAmount(amount);
 			headItems.add(head);
-			if(ENABLE_LOG) logGiveHeadCommand(headFromString.target, sender.getName(), head.getAmount(), giveTargets.toString());
+			if(ENABLE_LOG) logGiveHeadCommand(headFromString.targetHead, sender.getName(), head.getAmount(), giveTargets.toString());
 		}
 
 		// Give the head item(s)
@@ -510,7 +457,7 @@ public class CommandSpawnHead extends EvCommand{
 		ArrayList<Component> recipientComps = new ArrayList<>();
 		boolean firstHeadSoAddRecipients = true;
 		for(ItemStack head : headItems){
-			Component headNameComp = JunkUtils.getItemDisplayNameComponent(head);
+			Component headNameComp = StaticUtils.getItemDisplayNameComponent(head);
 			String headNameStr = headNameComp.toString();
 			int amtSum = amtOfEachHead.getOrDefault(headNameStr, 0);
 			if(amtSum == 0) headNameComps.add(headNameComp);
@@ -520,10 +467,12 @@ public class CommandSpawnHead extends EvCommand{
 				final boolean isSelf = giveTarget instanceof Player && sender.getName().equals(((Entity)giveTarget).getName());
 				if(!giveHeadItem(giveTarget, head, slot)){
 					if(notEnoughInvSpaceWarned.add(((Entity)giveTarget).getUniqueId())){
-						if(isSelf) sender.sendMessage(slot != null ? String.format(ERROR_SLOT_OCCUPIED_FOR_SELF, slot)
-								: ERROR_NOT_ENOUGH_INV_SPACE_FOR_SELF);
-						else sender.sendMessage(slot != null ? String.format(ERROR_SLOT_OCCUPIED_FOR_TARGET, ((Entity)giveTarget).getName(), slot)
-								: String.format(ERROR_NOT_ENOUGH_INV_SPACE_FOR_TARGET, ((Entity)giveTarget).getName()));
+						if(isSelf) sender.sendMessage(slot != null
+								? String.format(translate("errors.slot-unavailable.self"), slot)
+								: translate("errors.not-enough-inv-space.self"));
+						else sender.sendMessage(slot != null
+								? String.format(translate("errors.slot-unavailable.target"), ((Entity)giveTarget).getName(), slot)
+								: String.format(translate("errors.not-enough-inv-space.target"), ((Entity)giveTarget).getName()));
 					}
 					if(notEnoughInvSpaceWarned.size() == giveTargets.size()) return true;
 				}
@@ -536,9 +485,9 @@ public class CommandSpawnHead extends EvCommand{
 
 		// Send success message
 		String messageFormatStr =
-				recipientComps.size() == 0 ? (amtOfEachHead.size() > 1 ? SUCCESSFULLY_SPAWNED_HEADS : SUCCESSFULLY_SPAWNED_HEAD)
-				: recipientComps.size() == 1 ? (amtOfEachHead.size() > 1 ? SUCCESSFULLY_GAVE_HEADS : SUCCESSFULLY_GAVE_HEAD)
-				: (amtOfEachHead.size() > 1 ? SUCCESSFULLY_MULTI_GAVE_HEADS : SUCCESSFULLY_MULTI_GAVE_HEAD);
+				recipientComps.size() == 0 ? (amtOfEachHead.size() > 1 ? translate("success.spawned-heads") : translate("success.spawned-head"))
+				: recipientComps.size() == 1 ? (amtOfEachHead.size() > 1 ? translate("success.gave-heads") : translate("success.gave-head"))
+				: (amtOfEachHead.size() > 1 ? translate("success.multi-gave-heads") : translate("success.multi-gave-head"));
 		if(!messageFormatStr.contains("%s")) messageFormatStr += "%s";
 
 		// TODO: This assumes the message has a default color & formats when it actually might not.
@@ -558,20 +507,20 @@ public class CommandSpawnHead extends EvCommand{
 		if(amtOfEachHead.size() == 1){
 			final Integer amt = amtOfEachHead.values().iterator().next();
 			headItemListComp.addComponent(amt == 1 ? headNameComps.get(0) : new TranslationComponent(
-					ITEM_WITH_AMOUNT_FORMAT, headNameComps.get(0), new RawTextComponent(amt.toString())));
+					translate("success.item-with-amount-format"), headNameComps.get(0), new RawTextComponent(amt.toString())));
 		}
 		else{
 			// TODO: line below assumes [head-list] is the FIRST "%", which might not be a good assumption.
 //			final Component headColorAndFormats = TellrawUtils.getCurrentColorAndFormatProperties(
 //					messageFormatStr.substring(0, messageFormatStr.indexOf('%')));
-//			final Component amtColorAndFormats = TellrawUtils.getCurrentColorAndFormatProperties(ITEM_WITH_AMOUNT_FORMAT);
+//			final Component amtColorAndFormats = TellrawUtils.getCurrentColorAndFormatProperties(translate("success.item-with-amount-format");
 			//TODO: uncomment line below once TranslationComponent supports properly applying color codes from "jsonKey" to "with"/children
 			headItemListComp.addComponent("");
 //			if(headColorAndFormats != null) headItemListComp.addComponent(headColorAndFormats);
 			for(int i=0; i<headNameComps.size(); ++i){
 				Integer amt = amtOfEachHead.get(headNameComps.get(i).toString());
 				if(amt > 1){
-					headItemListComp.addComponent(new TranslationComponent(ITEM_WITH_AMOUNT_FORMAT,
+					headItemListComp.addComponent(new TranslationComponent(translate("success.item-with-amount-format"),
 							headNameComps.get(i), new RawTextComponent(amt.toString())));
 					if(i != headNameComps.size()-1){
 						headItemListComp.addComponent(msgColorAndFormatsPlusComma);
