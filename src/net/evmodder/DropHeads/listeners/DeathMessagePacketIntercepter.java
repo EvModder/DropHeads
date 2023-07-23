@@ -39,6 +39,7 @@ public class DeathMessagePacketIntercepter{
 			"{nms}.IChatBaseComponent$ChatSerializer", "{nm}.network.chat.IChatBaseComponent$ChatSerializer");
 	private final RefField chatBaseCompField;
 	private final RefMethod getChatBaseComp;
+	private final RefMethod getJsonKyori; private final Object jsonSerializerKyori;
 	private final RefMethod toJsonMethod = chatSerializerClazz.findMethod(/*isStatic=*/true, String.class, chatBaseCompClazz);
 	private final Pattern uuidPattern = Pattern.compile("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}");
 
@@ -51,12 +52,21 @@ public class DeathMessagePacketIntercepter{
 		blockedSpecificMsgs = new HashSet<>();
 		
 		RefField field = null;
-		RefMethod method = null;
+		RefMethod method = null, kyoriMethod = null; Object kyoriObj = null;
 		try{field = outboundPacketClazz.findField(chatBaseCompClazz);}
-		catch(RuntimeException ex){method = outboundPacketClazz.getMethod("content");}
+		catch(RuntimeException e1){
+			try{
+				method = outboundPacketClazz.getMethod("adventure$content");
+				kyoriObj = ReflectionUtils.getRefClass("net.kyori.adventure.text.serializer.json.JSONComponentSerializer").getMethod("json").call();
+				kyoriMethod = ReflectionUtils.getRefClass("net.kyori.adventure.text.serializer.ComponentSerializer").findMethodByName("serialize");
+			}
+			catch(RuntimeException e2){method = outboundPacketClazz.getMethod("content");}
+		}
 		finally{
 			chatBaseCompField = field;
 			getChatBaseComp = method;
+			getJsonKyori = kyoriMethod;
+			jsonSerializerKyori = kyoriObj;
 		}
 
 		pl.getServer().getPluginManager().registerEvents(new Listener(){
@@ -70,6 +80,7 @@ public class DeathMessagePacketIntercepter{
 	}
 
 	public boolean hasDeathMessage(Entity e){
+		//net.minecraft.network.protocol.game.ClientboundSystemChatPacket ee; ee.content();
 		return e instanceof Player || (
 				e instanceof Tameable &&
 				((Tameable)e).getOwner() != null &&
@@ -84,19 +95,25 @@ public class DeathMessagePacketIntercepter{
 					super.write(context, packet, promise);
 					return;
 				}
+//				pl.getLogger().info("chat packet:\n"+packet+"\n");
 				final Object chatBaseComp = chatBaseCompField == null ? packet : chatBaseCompField.of(packet).get();
 				if(chatBaseComp == null){ // Chat packet does not have a comp field/method (pre-1.19)
 					super.write(context, packet, promise);
 					return;
 				}
-				final String jsonMsg = (String)(chatBaseCompField == null ? getChatBaseComp.of(packet).call() : toJsonMethod.call(chatBaseComp));
+//				if(chatBaseCompField != null) pl.getLogger().info("chat packet base comp:\n"+chatBaseComp+"\n");
+				final String jsonMsg = (String)(chatBaseCompField != null ? toJsonMethod.call(chatBaseComp) :
+					getJsonKyori == null ? getChatBaseComp.of(packet).call() : getJsonKyori.of(jsonSerializerKyori).call(getChatBaseComp.of(packet).call())
+				);
 				if(jsonMsg == null){ // Chat comp is not a json object
 					super.write(context, packet, promise);
 					return;
 				}
+//				pl.getLogger().info("chat packet json:\n"+jsonMsg+"\n");
 				if(blockedSpecificMsgs.contains(jsonMsg)){
 					return;
 				}
+//				pl.getLogger().info("chat packet isn't blocked");
 				if(!jsonMsg.startsWith("{\"translate\":\"death.") || unblockedSpecificDeathMsgs.remove(jsonMsg)){
 					super.write(context, packet, promise);
 					return;
