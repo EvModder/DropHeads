@@ -323,11 +323,11 @@ public class JunkUtils{
 	private final static GameProfile getGameProfile(Player player){return (GameProfile)playerGetProfileMethod.of(player).call();}
 
 	@SuppressWarnings("deprecation")
-	public final static GameProfile getGameProfile(String nameOrUUID, boolean fetchSkin){
+	public final static GameProfile getGameProfile(String nameOrUUID, boolean fetchSkin, Plugin nullForSync){
 		Player player;
 		try{player = Bukkit.getServer().getPlayer(UUID.fromString(nameOrUUID));}
 		catch(java.lang.IllegalArgumentException e){player = null;/*thrown by UUID.fromString*/}
-		if(player == null) Bukkit.getServer().getPlayer(nameOrUUID);
+		if(player == null) player = Bukkit.getServer().getPlayer(nameOrUUID);
 		if(player != null){
 			GameProfile profile = new GameProfile(player.getUniqueId(), player.getName());
 			if(fetchSkin){
@@ -343,7 +343,7 @@ public class JunkUtils{
 			WebUtils.addGameProfileToCache(nameOrUUID, profile);
 			return profile;
 		}
-		return WebUtils.getGameProfile(nameOrUUID, fetchSkin);
+		return WebUtils.getGameProfile(nameOrUUID, fetchSkin, nullForSync);
 	}
 
 // not currently used

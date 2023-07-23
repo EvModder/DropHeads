@@ -254,7 +254,7 @@ public class CommandSpawnHead extends EvCommand{
 //			p = pl.getServer().getOfflinePlayer(UUID.fromString(target));
 //			if(p != null && p.hasPlayedBefore()) return new GameProfile(p.getUniqueId(), p.getName());
 //		}catch(IllegalArgumentException ex){}
-		return JunkUtils.getGameProfile(target, /*fetchSkin=*/false);
+		return JunkUtils.getGameProfile(target, /*fetchSkin=*/false, /*nullForSync=*/null);
 	}
 
 	private static class HeadFromString{

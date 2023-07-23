@@ -257,5 +257,6 @@ log:
 # Performance settings, edit at your own risk
 message-json-limit: 15000
 weapon-tellraw-component-cache-size: 5
+async-offline-profile-requests: false
 head-click-enable-profile-requests: true
 spawnhead-command-entity-select-limit: 100

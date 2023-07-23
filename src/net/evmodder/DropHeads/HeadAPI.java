@@ -64,6 +64,7 @@ public final class HeadAPI {
 	private final boolean GRUMM_ENABLED, SIDEWAYS_SHULKERS_ENABLED, COLORED_COLLARS_ENABLED, SADDLES_ENABLED; // may trigger additional file downloads.
 	private final boolean HOLLOW_SKULLS_ENABLED, TRANSPARENT_SLIME_ENABLED, CRACKED_IRON_GOLEMS_ENABLED, USE_PRE_JAPPA, USE_PRE_1_20;
 	private final boolean LOCK_PLAYER_SKINS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_CUSTOM_HEADS, USE_TRANSLATE_FALLBACKS;
+	private final boolean ASYNC_PROFILE_REQUESTS;
 	private final String UNKNOWN_TEXTURE_CODE;
 	private final TranslationComponent LOCAL_HEAD, LOCAL_SKULL, LOCAL_TOE;
 	private final HashMap<EntityType, /*headNameFormat=*/String> headNameFormats;
@@ -177,6 +178,7 @@ public final class HeadAPI {
 		USE_PRE_JAPPA = pl.getConfig().getBoolean("use-legacy-head-textures", false);
 		USE_PRE_1_20 = pl.getConfig().getBoolean("use-1.19.2-vex-head-textures", false);
 		LOCK_PLAYER_SKINS = !pl.getConfig().getBoolean("update-on-skin-change", true);
+		ASYNC_PROFILE_REQUESTS = pl.getConfig().getBoolean("async-offline-profile-requests", false);
 		{
 			Material piglinHeadType = null;
 			if(pl.getConfig().getBoolean("update-piglin-heads", true)){
@@ -580,7 +582,7 @@ public final class HeadAPI {
 	public Component getHeadNameFromKey(@Nonnull String textureKey, @Nonnull String customName){
 		// Attempt to parse out an EntityType
 		EntityType eType;
-		int i = textureKey.indexOf('|');
+		final int i = textureKey.indexOf('|');
 		final String nameStr = (i == -1 ? textureKey : textureKey.substring(0, i)).toUpperCase();
 		try{eType = EntityType.valueOf(nameStr);}
 		catch(IllegalArgumentException ex){
@@ -813,9 +815,9 @@ public final class HeadAPI {
 		//-------------------- Handle Entities with textureKey
 		if(profileName != null){
 			/*if(SAVE_CUSTOM_LORE){*/int idx = profileName.indexOf('>'); if(idx != -1) profileName = profileName.substring(0, idx);/*}*/
-			final boolean isDropHeadsHead = profileName.startsWith(getDropHeadsNamespacedKey());
-			if(isDropHeadsHead) profileName = profileName.substring(10);
-			if(isDropHeadsHead || textures.containsKey(profileName)){
+			final boolean isDropHeadsMobHead = profileName.startsWith(getDropHeadsNamespacedKey());
+			if(isDropHeadsMobHead) profileName = profileName.substring(10);
+			if(isDropHeadsMobHead || textures.containsKey(profileName)){
 				profileName = replaceHeadsFromTo.getOrDefault(profileName, profileName);
 				if(profileName.equals("OCELOT|WILD_OCELOT")) profileName = "OCELOT";
 				if(profileName.equals("PIGLIN") && PIGLIN_HEAD_TYPE != null) return new ItemStack(PIGLIN_HEAD_TYPE);
@@ -831,7 +833,7 @@ public final class HeadAPI {
 		//-------------------- Handle players
 		final boolean updateSkin = !profile.getProperties().containsKey("textures") || !LOCK_PLAYER_SKINS;
 		if(profile.getId() != null){
-			final GameProfile freshProfile = JunkUtils.getGameProfile(profile.getId().toString(), updateSkin);
+			final GameProfile freshProfile = JunkUtils.getGameProfile(profile.getId().toString(), updateSkin, ASYNC_PROFILE_REQUESTS ? pl : null);
 			if(freshProfile != null){
 				if(updateSkin) profile = freshProfile;
 				profileName = freshProfile.getName();
