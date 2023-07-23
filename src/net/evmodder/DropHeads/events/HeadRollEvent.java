@@ -4,8 +4,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.entity.EntityEvent;
 
-/**
- * Event which indicates a head drop roll has occurred and the success/failure has been determined.
+/** Event which indicates a head drop roll has occurred and the success/failure has been determined.
  * This event allows you to analyze and modify the drop chance success.
  * If the success of this event is set to false, no head will be dropped; if it is set to true, a head will be dropped.
  */
@@ -20,8 +19,7 @@ public class HeadRollEvent extends EntityEvent{
 	private final double dropChance, dropRoll;
 	private boolean dropSuccess;
 
-	/**
-	 * Create a HeadRollEvent for DropHeads.
+	/** Create a HeadRollEvent for DropHeads.
 	 * @param killer the Entity doing the beheading
 	 * @param victim the Entity being beheaded
 	 * @param dropChance the configured droprate for the victim's head, between 0 and 1 inclusive
@@ -37,52 +35,44 @@ public class HeadRollEvent extends EntityEvent{
 		this.dropSuccess = dropSuccess;
 	}
 
-	/**
-	 * Get the entity that may have done the beheading.
+	/** Get the entity that may have done the beheading.
 	 * @return the Entity object representing the killer, or null if no entity was responsible
 	 */
 	public Entity getKiller(){return killer;}
 
-	/**
-	 * Get the entity that may have been beheaded.
+	/** Get the entity that may have been beheaded.
 	 * @return the Entity object representing the victim
 	 */
 	public Entity getVictim(){return victim;}
 
-	/**
-	 * Get the entity that may have been beheaded.
+	/** Get the entity that may have been beheaded.
 	 * @return the Entity object representing the victim
 	 */
 	@Override public Entity getEntity(){return entity;}
 
-	/**
-	 * Get the configured droprate for the victim's head, between 0 and 1 inclusive.
+	/** Get the configured droprate for the victim's head, between 0 and 1 inclusive.
 	 * @return the droprate
 	 */
 	public double getDropChance(){return dropChance;}
 
-	/**
-	 * Get the PRNG value of the drop roll, uniform between 0 and 1 inclusive.
+	/** Get the PRNG value of the drop roll, uniform between 0 and 1 inclusive.
 	 * When this value is lower than the droprate, the roll is successful.
 	 * Success of a roll can be later modified by listeners of the event
 	 * @return the drop roll value in the range [0, 1]
 	 */
 	public double getDropRoll(){return dropRoll;}
 
-	/**
-	 * Get whether the effective drop roll was determined to be a success.
+	/** Get whether the effective drop roll was determined to be a success.
 	 * @return the success of the drop roll
 	 */
 	public boolean getDropSuccess(){return dropSuccess;}
 
-	/**
-	 * Set whether the drop roll should be considered a success.
+	/** Set whether the drop roll should be considered a success.
 	 * @param success whether the head drop will succeed or fail
 	 */
 	public void setDropSuccess(final boolean success){dropSuccess = success;}
 
-	/**
-	 * Get the list of handlers for this event.
+	/** Get the list of handlers for this event.
 	 * @return the list of handlers for this event
 	 */
 	@Override public HandlerList getHandlers(){return HANDLERS;}

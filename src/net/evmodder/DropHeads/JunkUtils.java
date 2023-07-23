@@ -44,8 +44,9 @@ import net.evmodder.EvLib.extras.TellrawUtils.TextClickAction;
 import net.evmodder.EvLib.extras.TellrawUtils.TextHoverAction;
 
 // A trashy place to dump stuff that I should probably move to EvLib after ensure cross-version safety
-public class JunkUtils{
+public final class JunkUtils{
 	public final static String SPAWN_CAUSE_MULTIPLIER_KEY = "SRM";
+	public final static String TXTR_KEY_PREFIX = "dropheads:";
 
 	public final static <E extends Enum<E>> E parseEnumOrDefault(@Nonnull String stringValue, E defaultValue){
 		Class<E> enumClass = defaultValue.getDeclaringClass();
@@ -344,6 +345,17 @@ public class JunkUtils{
 			return profile;
 		}
 		return WebUtils.getGameProfile(nameOrUUID, fetchSkin, nullForSync);
+	}
+
+	final static String stripComments(String fileContent){ // Copied roughly from FileIO
+		StringBuilder output = new StringBuilder();
+		for(String line : fileContent.split("\n")){
+			line = line.trim().replace("//", "#");
+			final int cut = line.indexOf('#');
+			if(cut == -1) output.append('\n').append(line);
+			else if(cut > 0) output.append('\n').append(line.substring(0, cut).trim());
+		}
+		return output.length() == 0 ? "" : output.substring(1);
 	}
 
 // not currently used

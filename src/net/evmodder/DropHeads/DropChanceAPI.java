@@ -56,10 +56,8 @@ import net.evmodder.EvLib.extras.TellrawUtils.Component;
 import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
 
-/**
- * Public API hook for getting head drop chance data loaded from DropHeads configs
- * 
- * Warning: This class is still in BETA and some functions may change (or disappear!) in future releases
+/** Public API for head drop chance logic loaded from DropHeads configs.
+ * Warning: Functions may change or disappear in future releases
  */
 public final class DropChanceAPI{
 	private enum AnnounceMode {GLOBAL, LOCAL, DIRECT, OFF};
@@ -99,8 +97,7 @@ public final class DropChanceAPI{
 	private final LRUCache<ItemStack, Component> weaponCompCache;
 	private final int WEAPON_COMP_CACHE_SIZE;
 
-	/**
-	 * Get the default head drop chance for an entity when a drop chance chance is specified in the config
+	/** Get the default head drop chance for an entity when a drop chance chance is specified in the config.
 	 * @return The default drop chance [0, 1]
 	 */
 	public double getDefaultDropChance(){return DEFAULT_CHANCE;}
@@ -373,13 +370,11 @@ public final class DropChanceAPI{
 		catch(IllegalArgumentException ex){/*The permissions are already defined; perhaps this is just a plugin or server reload*/}
 	}
 
-	/**
-	 * Get the set of weapons that are allowed to cause a head drop; will be <code>null</code> if no specific weapon(s) are required
+	/** Get the set of weapons that are allowed to cause a head drop; will be <code>null</code> if no specific weapon(s) are required.
 	 * @return An immutable set of Material types, or <code>null</code>
 	 */
 	public Set<Material> getRequiredWeapons(){return mustUseTools;}
-	/**
-	 * Get the raw drop chance (ignore all modifiers) of a head for a specific texture key.
+	/** Get the raw drop chance (ignore all modifiers) of a head for a specific texture key.
 	 * @param textureKey The target texture key
 	 * @return The drop chance [0, 1]
 	 */
@@ -401,8 +396,7 @@ public final class DropChanceAPI{
 		}
 		return mobChances.getOrDefault(eType, DEFAULT_CHANCE);
 	}
-	/**
-	 * Get the raw drop chance (ignore all modifiers) of a head for a specific entity.
+	/** Get the raw drop chance (ignore all modifiers) of a head for a specific entity.
 	 * @param entity The target entity
 	 * @return The drop chance [0, 1]
 	 */
@@ -420,37 +414,31 @@ public final class DropChanceAPI{
 		}
 		return mobChances.getOrDefault(entity.getType(), DEFAULT_CHANCE);
 	}
-	/**
-	 * Get a map of all configured drop chances.
+	/** Get a map of all configured drop chances.
 	 * @return An immutable map (EntityType => drop chance)
 	 */
 	public Map<EntityType, Double> getRawDropChances(){return mobChances;}
-	/**
-	 * Get the percent chance added to the drop chance (per looting level)
+	/** Get the percent chance added to the drop chance (per looting level).
 	 * @return The drop chance increase amount
 	 */
 	public double getLootingAdd(){return LOOTING_ADD;}
-	/**
-	 * Get the drop chance multiplier applied (per looting level)
+	/** Get the drop chance multiplier applied (per looting level).
 	 * @return The drop chance modifier
 	 */
 	public double getLootingMult(){return LOOTING_MULT;}
-	/**
-	 * Get the drop chance multiplier applied based on Material of the weapon used
+	/** Get the drop chance multiplier applied based on Material of the weapon used.
 	 * @param weapon The type of weapon used
 	 * @return The weapon-type multiplier
 	 */
 	public double getWeaponMult(Material weapon){return weaponMults.getOrDefault(weapon, 1D);}
-	/**
-	 * Get the drop chance multiplier applied based on how many ticks an entity has been alive
+	/** Get the drop chance multiplier applied based on how many ticks an entity has been alive.
 	 * @param entity The entity to check the lifetime of
 	 * @return The time-alive multiplier
 	 */
 	public double getTimeAliveMult(Entity entity){
 		return timeAliveMults.getOrDefault(entity.getType(), DEFAULT_TIME_ALIVE_MULTS).floorEntry(entity.getTicksLived()).getValue();
 	}
-	/**
-	 * Get the drop chance multipliers applied based on permissions of the killer
+	/** Get the drop chance multipliers applied based on permissions of the killer.
 	 * @param killer The entity to check for drop chance multiplier permissions
 	 * @return The aggregate multiplier from any relevent permission nodes
 	 */
@@ -462,8 +450,7 @@ public final class DropChanceAPI{
 				.reduce(1D, (a, b) -> a * b);
 	}
 
-	/**
-	 * Drop a head item for an entity using the appropriate <code>DropMode</code> setting
+	/** Drop a head item for an entity using the appropriate <code>DropMode</code> setting.
 	 * @param headItem The head item which will be dropped
 	 * @param entity The entity from which the head item came
 	 * @param killer The entity responsible for causing the head item to drop
@@ -553,8 +540,7 @@ public final class DropChanceAPI{
 		return null;
 	}
 
-	/**
-	 * Generate a behead message component
+	/** Generate a behead message component.
 	 * @param entity The entity that was beheaded
 	 * @param killer The entity that did the beheading
 	 * @param weapon The weapon item used to do the beheading
@@ -590,8 +576,7 @@ public final class DropChanceAPI{
 		if(!event.isCancelled()) sendTellraw(target.getName(), event.getMessage().toString());
 		else if(DEBUG_MODE) pl.getLogger().info("BeheadMessageEvent was cancelled");
 	}
-	/**
-	 * Send a head drop announcement message for an entity with recipients are based on:<br>
+	/** Send a head drop announcement message for an entity with recipients are based on:<br>
 	 * * The <code>AnnounceMode</code> setting for the entity's type<br>
 	 * * The permissions of the killer<br>
 	 * * The pet-owner of the entity, if exists<br>
@@ -660,9 +645,7 @@ public final class DropChanceAPI{
 		}
 	}
 
-
-	/**
-	 * Logs a behead event to the DropHeads log file
+	/** Logs a behead event to the DropHeads log file.
 	 * @param entity The entity that was beheaded
 	 * @param killer The entity that did the beheading
 	 * @param weapon The weapon item used to do the beheading
@@ -680,8 +663,7 @@ public final class DropChanceAPI{
 	}
 
 	// NOTE: "public" -- used by PeacefulPetHeads
-	/**
-	 * Attempt to drop a head item for an Entity with a custom behead message
+	/** Attempt to drop a head item for an Entity with a custom behead message.
 	 * @param entity The entity for which to to create a head
 	 * @param killer The entity which did the killing, or null
 	 * @param evt The <code>Entity*Event</code> from which this function is being called
@@ -706,8 +688,7 @@ public final class DropChanceAPI{
 //		pl.getLogger().info("trigger head drop success");
 		return true;
 	}
-	/**
-	 * Attempt to drop a head item for an Entity with the regular behead message
+	/** Attempt to drop a head item for an Entity with the regular behead message.
 	 * @param entity The entity for which to to create a head
 	 * @param killer The entity which did the killing, or null
 	 * @param evt The <code>Entity*Event</code> from which this function is being called

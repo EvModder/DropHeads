@@ -11,6 +11,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
+import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
 
 public class EndermanProvokeListener implements Listener{
@@ -36,7 +37,7 @@ public class EndermanProvokeListener implements Listener{
 		if(!HeadUtils.isPlayerHead(head.getType())) return HeadUtils.getEntityFromHead(head.getType());
 		final GameProfile profile = HeadUtils.getGameProfile((SkullMeta)head.getItemMeta());
 		if(profile != null && profile.getName() != null){
-			String profileName = profile.getName().startsWith(pl.getAPI().getDropHeadsNamespacedKey()) ? profile.getName().substring(10) : profile.getName();
+			String profileName = profile.getName().startsWith(JunkUtils.TXTR_KEY_PREFIX) ? profile.getName().substring(10) : profile.getName();
 			if(pl.getAPI().textureExists(profileName)){
 				int idx = profileName.indexOf('|');
 				String eTypeName = (idx == -1 ? profileName : profileName.substring(0, idx)).toUpperCase();

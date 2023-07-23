@@ -37,22 +37,24 @@ import net.evmodder.EvLib.Updater;
 // * use 'fallback' in TextUtils for head-type, etc.
 //TEST:
 // * ALL player-visible msgs in plugin translated in translations.yml
-// * replace death message for pets and players with behead message
 // * Trophies/Luck attribute
 // * hide behead msgs for vanished players
 // * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
 // * place-head-block, overwrite-blocks, facing-direction, place-as: KILLER/VICTIM/SERVER
 // * middle-click copy with correct item name // WORKS well enough; can still bug out if u middle-click twice
 // * head-item-drop-mode
-// * hollow skeletal skulls
 // * /droprate - check (TODO: or edit) per mob (& cmd for spawn modifiers)
 // * prevent placing heads
 // * update-textures=true (head-textures.txt file overwritten when plugin is updated)
+//Export -> JAVADOC -> javadoc sources:
+// * EvLib: https://evmodder.github.io/EvLib/
+// * HeadDatabaseAPI: https://javadoc.io/doc/com.arcaniax/HeadDatabase-API/
+// * Bukkit-1.13: https://hub.spigotmc.org/javadocs/bukkit/
 
 public final class DropHeads extends EvPlugin{
 	private static DropHeads instance;
 	public static DropHeads getPlugin(){return instance;}
-	private HeadAPI api; public HeadAPI getAPI(){return api;}
+	private InternalAPI api; public HeadAPI getAPI(){return api;} public InternalAPI getInternalAPI(){return api;}
 	private DropChanceAPI dropChanceAPI; public DropChanceAPI getDropChanceAPI(){return dropChanceAPI;}
 	private DeathMessagePacketIntercepter deathMessageBlocker;
 	private boolean LOGFILE_ENABLED;
@@ -61,10 +63,9 @@ public final class DropHeads extends EvPlugin{
 	@Override public void onEvEnable(){
 		if(config.getBoolean("update-plugin", false)){
 			new Updater(/*plugin=*/this, /*id=*/274151, getFile(), Updater.UpdateType.DEFAULT, /*announce=*/true);
-			//TODO: if 'update-textures', trigger overwrite in HeadAPI on next restart?
 		}
 		instance = this;
-		api = new HeadAPI();
+		api = new InternalAPI();
 		final boolean GLOBAL_PLAYER_BEHEAD_MSG = config.getString("behead-announcement.player",
 				config.getString("behead-announcement.default", "GLOBAL")).toUpperCase().equals("GLOBAL");
 		final boolean WANT_TO_REPLACE_PLAYER_DEATH_MSG = config.getBoolean("behead-announcement-replaces-player-death-message",

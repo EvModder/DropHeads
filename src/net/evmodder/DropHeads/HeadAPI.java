@@ -51,16 +51,14 @@ import net.evmodder.EvLib.extras.TextUtils;
 import net.evmodder.EvLib.extras.WebUtils;
 import net.evmodder.EvLib.extras.EntityUtils.CCP;
 
-/**
- * Public API hook for general DropHeads features
- * 
- * Warning: This class is still in BETA and some functions may change (or disappear!) in future releases
+/** Public API for general DropHeads features.
+ * Warning: Functions may change or disappear in future releases
  */
-public final class HeadAPI {
+public class HeadAPI {
 	private final DropHeads pl;
-	private HeadDatabaseAPI hdbAPI = null;
-//	private int MAX_HDB_ID = -1;
-	final Configuration translationsFile;  //TODO: make private
+	protected HeadDatabaseAPI hdbAPI = null;
+	protected final Configuration translationsFile;
+//	private final int MAX_HDB_ID = -1;
 	private final boolean GRUMM_ENABLED, SIDEWAYS_SHULKERS_ENABLED, COLORED_COLLARS_ENABLED, SADDLES_ENABLED; // may trigger additional file downloads.
 	private final boolean HOLLOW_SKULLS_ENABLED, TRANSPARENT_SLIME_ENABLED, CRACKED_IRON_GOLEMS_ENABLED, USE_PRE_JAPPA, USE_PRE_1_20;
 	private final boolean LOCK_PLAYER_SKINS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_CUSTOM_HEADS, USE_TRANSLATE_FALLBACKS;
@@ -77,92 +75,64 @@ public final class HeadAPI {
 
 	private final String PLAYER_PREFIX, MOB_PREFIX, MHF_PREFIX, HDB_PREFIX, CODE_PREFIX;
 
-	/** <strong>DO NOT USE:</strong> This function is intended for internal use only
-	 * @return <code>"dropheads:"</code>
-	 */
-	public final String getDropHeadsNamespacedKey(){return "dropheads:";} // TODO: decide how to expose/implement this
+	void loadTextures(String headsList, boolean logMissingEntities, boolean logUnknownEntities){
+		HashSet<EntityType> missingHeads = new HashSet<EntityType>();
+		HashSet<String> unknownHeads = new HashSet<String>();
+		if(logMissingEntities) missingHeads.addAll(Arrays.asList(EntityType.values()).stream()
+				.filter(x -> x.isAlive()/* && x.isMeow() */).collect(Collectors.toList()));
+		missingHeads.remove(EntityType.PLAYER);
+		missingHeads.remove(EntityType.ARMOR_STAND); // These 2 are 'alive', but aren't in head-textures.txt
+		for(String head : headsList.split("\n")){
+			head = head.replaceAll(" ", "");
+			final int i = head.indexOf(":");
+			if(i != -1){
+				String texture = head.substring(i+1).trim();
+				if(texture.replace("xxx", "").isEmpty()) continue; //TODO: remove the xxx's
+				if(texture.length() > 50 && texture.length() < 80 //TODO: usually exactly 64
+						&& texture.chars().allMatch(ch -> (ch >= 'a' && ch <= 'f') || (ch >= '0' && ch <= '9'))){
+					// Convert from Mojang server texture id to Base64-encoded json
+					texture = Base64.getEncoder().encodeToString(
+							("{\"textures\":{\"SKIN\":{\"url\":\"http://textures.minecraft.net/texture/"+texture+"\"}}}")
+								.getBytes(StandardCharsets.ISO_8859_1));
+				}
 
-	// Loads config.getString(key), replacing '${abc-xyz}' with config.getString('abc-xyz')
-	/** <strong>DO NOT USE:</strong> This function will likely disappear in a future release
-	 * @param key path in <a href="https://github.com/EvModder/DropHeads/blob/master/translations.yml">translations.yml"</a>
-	 * @return the value at that path, or the value of <code>key</code> if not found
-	 */
-	public String loadTranslationStr(String key){return loadTranslationStr(key, key);}
-	/** <strong>DO NOT USE:</strong> This function will likely disappear in a future release
-	 * @param key path in <a href="https://github.com/EvModder/DropHeads/blob/master/translations.yml">translations.yml"</a>
-	 * @param defaultValue a value for if the key is not found
-	 * @return the value at that path, or the value of <code>defaultValue</code> if not found
-	 */
-	public String loadTranslationStr(String key, String defaultValue){
-		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in 'translations.yml': "+key);
-		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key, defaultValue));
-		int i = msg.indexOf('$');
-		if(i == -1) return msg;
-		StringBuilder builder = new StringBuilder();
-		builder.append(msg.substring(0, i));
-		while(true){
-			if(msg.charAt(++i) == '{'){
-				final int subStart = i + 1;
-				while(msg.charAt(++i) == '-' || msg.charAt(i) == '.' || (msg.charAt(i) >= 'a' && msg.charAt(i) <= 'z'));
-				if(msg.charAt(i) == '}'){
-					builder.append(loadTranslationStr(msg.substring(subStart, i)));
-					++i;
+				final String key = head.substring(0, i).toUpperCase();
+				//TODO: duplicate texture warning?
+				if(textures.put(key, texture) != null) continue; // Don't bother checking EntityType if this head has already been added
+
+				final int j = key.indexOf('|');
+				final String eTypeName = (j == -1 ? key : key.substring(0, j)).toUpperCase();
+				try{
+					missingHeads.remove(EntityType.valueOf(eTypeName));
 				}
-				else builder.append(msg.substring(subStart-2, i));
-			}
-			else builder.append('$');
-			final int nextI = msg.indexOf('$', i);
-			if(nextI == -1) break;
-			builder.append(msg.substring(i, nextI));
-			i = nextI;
-		}
-		builder.append(msg.substring(i));
-		return builder.toString();
-	}
-	// Loads config.getString(key), replacing '${abc-xyz}' with % in the key and config.getString('abc-xyz') in withComps.
-	/** <strong>DO NOT USE:</strong> This function will likely disappear in a future release
-	 * @param key path in <a href="https://github.com/EvModder/DropHeads/blob/master/translations.yml">translations.yml"</a>
-	 * @return the parsed value at that path, or the parsed value of <code>key</code> if not found
-	 */
-	public TranslationComponent loadTranslationComp(String key){return loadTranslationComp(key, key);}
-	/** <strong>DO NOT USE:</strong> This function will likely disappear in a future release
-	 * @param key path in <a href="https://github.com/EvModder/DropHeads/blob/master/translations.yml">translations.yml"</a>
-	 * @param defaultValue a value for if the key is not found
-	 * @return the parsed value at that path, or the parsed value of <code>defaultValue</code> if not found
-	 */
-	public TranslationComponent loadTranslationComp(String key, String defaultValue){
-//		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in 'translations.yml': "+key);
-		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key, defaultValue));
-		int i = msg.indexOf('$');
-		if(i == -1){
-			return new TranslationComponent(msg);
-		}
-		if(i == 0 && msg.charAt(1) == '{' && msg.indexOf('}') == msg.length()-1){
-			return loadTranslationComp(msg.substring(2, msg.length()-1));
-		}
-		ArrayList<Component> withComps = new ArrayList<>();
-		StringBuilder builder = new StringBuilder();
-		builder.append(msg.substring(0, i));
-		while(true){
-			if(msg.charAt(++i) == '{'){
-				final int subStart = i + 1;
-				while(msg.charAt(++i) == '-' || msg.charAt(i) == '.' || (msg.charAt(i) >= 'a' && msg.charAt(i) <= 'z'));
-				if(msg.charAt(i) == '}'){
-					//TODO: getCurrentColorAndFormatProperties(msg, i) -> put onto newly added with-comp
-					withComps.add(loadTranslationComp(msg.substring(subStart, i)));
-					builder.append("%s");
-					++i;
+				catch(IllegalArgumentException e1){
+					try{
+						// Currently only applies for PIG_ZOMBIE
+						missingHeads.remove(EntityType.valueOf(replaceHeadsFromTo.getOrDefault(eTypeName, eTypeName)));
+					}
+					catch(IllegalArgumentException e2){
+						if(unknownHeads.add(eTypeName)){
+							if(logUnknownEntities) pl.getLogger().warning("Unknown EntityType in 'head-textures.txt': "+eTypeName);
+						}
+					}
 				}
-				else builder.append(msg.substring(subStart-2, i));
 			}
-			else builder.append('$');
-			final int nextI = msg.indexOf('$', i);
-			if(nextI == -1) break;
-			builder.append(msg.substring(i, nextI));
-			i = nextI;
 		}
-		builder.append(msg.substring(i));
-		return new TranslationComponent(builder.toString(), withComps.toArray(new Component[0]));
+		if(logMissingEntities){
+			for(EntityType type : missingHeads){
+				pl.getLogger().warning("Missing head texture(s) for "+type);
+			}
+			if(!missingHeads.isEmpty()){
+				pl.getLogger().warning("To fix missing textures, update the plugin then delete the old 'head-textures.txt' file");
+			}
+		}
+		// Sometimes a texture value is just a reference to a different texture key
+		Iterator<Entry<String, String>> it = textures.entrySet().iterator();
+		while(it.hasNext()){
+			Entry<String, String> e = it.next();
+			String redirect = e.getValue();
+			for(int i=0; i<5 && (redirect=textures.get(redirect)) != null; ++i) e.setValue(redirect);
+		}
 	}
 
 	HeadAPI(){
@@ -287,7 +257,7 @@ public final class HeadAPI {
 		String localList = FileIO.loadFile("head-textures.txt", getClass().getResourceAsStream("/head-textures.txt"));
 		UNKNOWN_TEXTURE_CODE = textures.getOrDefault(EntityType.UNKNOWN.name(), "5c90ca5073c49b898a6f8cdbc72e6aca0a425ec83bc4355e3b834fd859282bdd");
 
-		boolean writeTextureFile = false;
+		boolean writeTextureFile = false, updateTextures = false;
 		if(pl.getConfig().getBoolean("update-textures", false) && hardcodedList.length() > localList.length()){
 			long oldTextureTime = new File(FileIO.DIR+"/head-textures.txt").lastModified();
 			long newTextureTime = 0;
@@ -300,26 +270,27 @@ public final class HeadAPI {
 			if(newTextureTime > oldTextureTime){
 				localList=hardcodedList;
 				writeTextureFile = true;
+				updateTextures = true;
 			}
 		}
-		if(SIDEWAYS_SHULKERS_ENABLED && !localList.contains("SHULKER|SIDE_LEFT")){
+		if(SIDEWAYS_SHULKERS_ENABLED && (!localList.contains("SHULKER|SIDE_LEFT") || updateTextures)){
 			pl.getLogger().info("Downloading sideways-shulker head textures...");
 			final String shulkers = WebUtils.getReadURL("https://raw.githubusercontent.com/EvModder/DropHeads/master/sideways-shulker-head-textures.txt");
-			localList += "\n" + shulkers;
+			localList += "\n" + JunkUtils.stripComments(shulkers);
 			writeTextureFile = true;
 			pl.getLogger().info("Finished downloading sideways-shulker head textures");
 		}
-		if(COLORED_COLLARS_ENABLED && !localList.contains("|RED_COLLARED:")){
+		if(COLORED_COLLARS_ENABLED && (!localList.contains("|RED_COLLARED:") || updateTextures)){
 			pl.getLogger().info("Downloading colored-collar head textures...");
 			final String collared = WebUtils.getReadURL("https://raw.githubusercontent.com/EvModder/DropHeads/master/colored-collar-head-textures.txt");
-			localList += "\n" + collared;
+			localList += "\n" + JunkUtils.stripComments(collared);
 			writeTextureFile = true;
 			pl.getLogger().info("Finished downloading colored-collar head textures");
 		}
-		if(GRUMM_ENABLED && !localList.contains("|GRUMM:")){
+		if(GRUMM_ENABLED && (!localList.contains("|GRUMM:") || updateTextures)){
 			pl.getLogger().info("Downloading new Grumm head textures...");
 			final String grumms = WebUtils.getReadURL("https://raw.githubusercontent.com/EvModder/DropHeads/master/grumm-head-textures.txt");
-			localList += "\n" + grumms;
+			localList += "\n" + JunkUtils.stripComments(grumms);
 			writeTextureFile = true;
 			pl.getLogger().info("Finished downloading Grumm head textures");
 		}
@@ -353,97 +324,21 @@ public final class HeadAPI {
 		}, pl);
 	}
 
-	void loadTextures(String headsList, boolean logMissingEntities, boolean logUnknownEntities){
-		HashSet<EntityType> missingHeads = new HashSet<EntityType>();
-		HashSet<String> unknownHeads = new HashSet<String>();
-		if(logMissingEntities) missingHeads.addAll(Arrays.asList(EntityType.values()).stream()
-				.filter(x -> x.isAlive()/* && x.isMeow() */).collect(Collectors.toList()));
-		missingHeads.remove(EntityType.PLAYER);
-		missingHeads.remove(EntityType.ARMOR_STAND); // These 2 are 'alive', but aren't in head-textures.txt
-		for(String head : headsList.split("\n")){
-			head = head.replaceAll(" ", "");
-			final int i = head.indexOf(":");
-			if(i != -1){
-				String texture = head.substring(i+1).trim();
-				if(texture.replace("xxx", "").isEmpty()) continue; //TODO: remove the xxx's
-				if(texture.length() > 50 && texture.length() < 80 //TODO: usually exactly 64
-						&& texture.chars().allMatch(ch -> (ch >= 'a' && ch <= 'f') || (ch >= '0' && ch <= '9'))){
-					// Convert from Mojang server texture id to Base64-encoded json
-					texture = Base64.getEncoder().encodeToString(
-							("{\"textures\":{\"SKIN\":{\"url\":\"http://textures.minecraft.net/texture/"+texture+"\"}}}")
-								.getBytes(StandardCharsets.ISO_8859_1));
-				}
-
-				final String key = head.substring(0, i).toUpperCase();
-				//TODO: duplicate texture warning?
-				if(textures.put(key, texture) != null) continue; // Don't bother checking EntityType if this head has already been added
-
-				final int j = key.indexOf('|');
-				final String eTypeName = (j == -1 ? key : key.substring(0, j)).toUpperCase();
-				try{
-					missingHeads.remove(EntityType.valueOf(eTypeName));
-				}
-				catch(IllegalArgumentException e1){
-					try{
-						// Currently only applies for PIG_ZOMBIE
-						missingHeads.remove(EntityType.valueOf(replaceHeadsFromTo.getOrDefault(eTypeName, eTypeName)));
-					}
-					catch(IllegalArgumentException e2){
-						if(unknownHeads.add(eTypeName)){
-							if(logUnknownEntities) pl.getLogger().warning("Unknown EntityType in 'head-textures.txt': "+eTypeName);
-						}
-					}
-				}
-			}
-		}
-		if(logMissingEntities){
-			for(EntityType type : missingHeads){
-				pl.getLogger().warning("Missing head texture(s) for "+type);
-			}
-			if(!missingHeads.isEmpty()){
-				pl.getLogger().warning("To fix missing textures, update the plugin then delete the old 'head-textures.txt' file");
-			}
-		}
-		// Sometimes a texture value is just a reference to a different texture key
-		Iterator<Entry<String, String>> it = textures.entrySet().iterator();
-		while(it.hasNext()){
-			Entry<String, String> e = it.next();
-			String redirect = e.getValue();
-			for(int i=0; i<5 && (redirect=textures.get(redirect)) != null; ++i) e.setValue(redirect);
-		}
-	}
-
-	/**
-	 * Check if a texture exists for the given key.
+	/** Check if a texture exists for the given key.
 	 * @param textureKey The texture key to check for
 	 * @return Whether the texture exists
 	 */
 	public boolean textureExists(String textureKey){return textures.containsKey(textureKey);}
-	/**
-	 * Get a map of all existing textures.
+	/** Get a map of all existing textures.
 	 * @return An immutable map (textureKey => Base64 encoded texture URL)
 	 */
 	public Map<String, String> getTextures(){return Collections.unmodifiableMap(textures);}
-	/** <strong>DO NOT USE:</strong> This function is intended for internal use only
-	 * @return an instance of the HDB API
-	 */
-	public HeadDatabaseAPI getHeadDatabaseAPI(){return hdbAPI;}
-	/** <strong>DO NOT USE:</strong> This function is intended for internal use only
-	 * @param head the item to check
-	 * @return whether the head is from HDB
-	 */
-	public boolean isHeadDatabaseHead(ItemStack head){
-		if(hdbAPI == null) return false;
-		String id = hdbAPI.getItemID(head);
-		return id != null && hdbAPI.isHead(id);
-	}
 
-	//only used by BlockClickListener
-	/** <strong>DO NOT USE:</strong> This function will likely disappear in a future release
+	/** Returns a localized TranslationComponent name for a given HeadType.
 	 * @param headType one of: <code>{HEAD, SKULL, TOE}</code>
 	 * @return a localized translation component
 	 */
-	public TranslationComponent getHeadTypeName(HeadType headType){
+	public TranslationComponent getHeadTypeName(HeadType headType){ //only used by BlockClickListener
 		if(headType == null) return LOCAL_HEAD;
 		switch(headType){
 			case SKULL: return LOCAL_SKULL;
@@ -451,8 +346,9 @@ public final class HeadAPI {
 			case HEAD: default: return LOCAL_HEAD;
 		}
 	}
+
 	//only used by BlockClickListener
-	/** Returns a localized Component[] where the first element is the entity's type and remaining elements describe the entity's sub-types.
+	/** Returns a localized Component[] where the first element is the entity's type and subsequent elements describe the sub-types.
 	 * The ordering of sub-types is the same as their corresponding names in <code>textureKey.split("|")</code>.
 	 * @param textureKey a texture key describing the entity
 	 * @return localized components for type name and sub-type names
@@ -574,12 +470,8 @@ public final class HeadAPI {
 		}
 		return components.toArray(new Component[0]);
 	}
-	/** <strong>DO NOT USE:</strong> This function will likely disappear in a future release
-	 * @param textureKey the key (from <a href="https://github.com/EvModder/DropHeads/blob/master/head-textures.txt">head-textures.txt"</a>)
-	 * @param customName the custom name of the entity, usually null for non-players
-	 * @return localized name component
-	 */
-	public Component getHeadNameFromKey(@Nonnull String textureKey, @Nonnull String customName){
+
+	Component getFullHeadNameFromKey(@Nonnull String textureKey, @Nonnull String customName){
 		// Attempt to parse out an EntityType
 		EntityType eType;
 		final int i = textureKey.indexOf('|');
@@ -642,11 +534,11 @@ public final class HeadAPI {
 				/*insert=*/null, /*click=*/null, /*hover=*/null, /*color=*/null, /*formats=*/Collections.singletonMap(Format.ITALIC, false));
 	}
 
-	ItemStack makeHeadFromTexture(String textureKey/*, boolean saveTypeInLore, boolean unstackable*/){
+	private ItemStack makeHeadFromTexture(String textureKey/*, boolean saveTypeInLore, boolean unstackable*/){
 		final String code = textures.getOrDefault(textureKey, UNKNOWN_TEXTURE_CODE);
 //		if(code == null || code.isEmpty()) return null;
 		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-		head = JunkUtils.setDisplayName(head, getHeadNameFromKey(textureKey, /*customName=*/""));
+		head = JunkUtils.setDisplayName(head, getFullHeadNameFromKey(textureKey, /*customName=*/""));
 		if(SAVE_TYPE_IN_LORE){
 			final int i = textureKey.indexOf('|');
 			final String entityTypeName = (i == -1 ? textureKey : textureKey.substring(0, i)).toLowerCase();
@@ -656,7 +548,7 @@ public final class HeadAPI {
 					/*color=*/"dark_gray", /*formats=*/Collections.singletonMap(Format.ITALIC, false)));
 		}
 		UUID uuid = UUID.nameUUIDFromBytes(textureKey.getBytes());// Stable UUID for this textureKey
-		GameProfile profile = new GameProfile(uuid, /*name=*/getDropHeadsNamespacedKey()+textureKey);// Initialized with UUID and name
+		GameProfile profile = new GameProfile(uuid, /*name=*/JunkUtils.TXTR_KEY_PREFIX+textureKey);// Initialized with UUID and name
 		profile.getProperties().put("textures", new Property("textures", code));
 		if(MAKE_UNSTACKABLE) profile.getProperties().put("random_uuid", new Property("random_uuid", UUID.randomUUID().toString()));
 
@@ -665,7 +557,7 @@ public final class HeadAPI {
 		head.setItemMeta(meta);
 		return head;
 	}
-	ItemStack hdb_getItemHead_wrapper(String hdbId){// Calling hdbAPI.getItemHead(id) directly is bad.
+	private ItemStack hdb_getItemHead_wrapper(String hdbId){// Calling hdbAPI.getItemHead(id) directly is bad.
 		ItemStack hdbHead = hdbAPI.getItemHead(hdbId);
 		GameProfile profile = HeadUtils.getGameProfile((SkullMeta)hdbHead.getItemMeta());
 		ItemStack head = HeadUtils.makeCustomHead(profile, /*setOwner=*/false);
@@ -685,8 +577,44 @@ public final class HeadAPI {
 		return head;
 	}
 
-	/**
-	 * Get a custom head from an entity type or texture key (e.g., <code>FOX|SNOW|SLEEPING</code>)
+	private String minimizeTextureCode(String base64){
+		final String json = new String(Base64.getDecoder().decode(base64)).replaceAll("\\s", "").toLowerCase();
+//		pl.getLogger().info("skin json: "+json);
+		final String URL_START_MATCH = "\"url\":\"http://textures.minecraft.net/texture/";
+		final int startIdx = json.indexOf(URL_START_MATCH)+URL_START_MATCH.length();
+		final int endIdx = json.indexOf('"', startIdx);
+		final String urlCode = json.substring(startIdx, endIdx);
+//		pl.getLogger().info("url code: "+urlCode);
+		//TODO: Also keep timestamp (of behead) from json? json.indexOf("\"timestamp\":\"");
+		return Base64.getEncoder().encodeToString(
+				("{\"textures\":{\"SKIN\":{\"url\":\"http://textures.minecraft.net/texture/"+urlCode+"\"}}}")
+					.getBytes(StandardCharsets.ISO_8859_1));
+	}
+
+	/** Get a custom head from a Base64 code.
+	 * @param code The Base64 encoded skin texture URL
+	 * @return The result head ItemStack
+	 */
+	public ItemStack getHead(byte[] code){
+		String strCode = new String(code);
+		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+		head = JunkUtils.setDisplayName(head, pl.getAPI().getFullHeadNameFromKey(/*textureKey=*/"UNKNOWN|CUSTOM", /*customName=*/strCode));
+		GameProfile profile = new GameProfile(/*uuid=*/UUID.nameUUIDFromBytes(code), /*name=*/null/*strCode*/);
+		profile.getProperties().put("textures", new Property("textures", strCode));
+		if(MAKE_UNSTACKABLE) profile.getProperties().put("random_uuid", new Property("random_uuid", UUID.randomUUID().toString()));
+		if(SAVE_TYPE_IN_LORE){
+			head = JunkUtils.setLore(head, new RawTextComponent(
+					CODE_PREFIX + (strCode.length() > 18 ? strCode.substring(0, 16)+"..." : strCode),
+					/*insert=*/null, /*click=*/null, /*hover=*/null,
+					/*color=*/"dark_gray", /*formats=*/Collections.singletonMap(Format.ITALIC, false)));
+		}
+		SkullMeta meta = (SkullMeta)head.getItemMeta();
+		HeadUtils.setGameProfile(meta, profile);
+		head.setItemMeta(meta);
+		return head;
+	}
+
+	/** Get a custom head from an entity type or texture key (e.g., <code>FOX|SNOW|SLEEPING</code>).
 	 * @param type The entity type for the head, can be null
 	 * @param textureKey The texture key for the head
 	 * @return The result head ItemStack
@@ -730,82 +658,7 @@ public final class HeadAPI {
 			}
 	}
 
-	private String minimizeTextureCode(String base64){
-		final String json = new String(Base64.getDecoder().decode(base64)).replaceAll("\\s", "").toLowerCase();
-//		pl.getLogger().info("skin json: "+json);
-		final String URL_START_MATCH = "\"url\":\"http://textures.minecraft.net/texture/";
-		final int startIdx = json.indexOf(URL_START_MATCH)+URL_START_MATCH.length();
-		final int endIdx = json.indexOf('"', startIdx);
-		final String urlCode = json.substring(startIdx, endIdx);
-//		pl.getLogger().info("url code: "+urlCode);
-		//TODO: Also keep timestamp (of behead) from json? json.indexOf("\"timestamp\":\"");
-		return Base64.getEncoder().encodeToString(
-				("{\"textures\":{\"SKIN\":{\"url\":\"http://textures.minecraft.net/texture/"+urlCode+"\"}}}")
-					.getBytes(StandardCharsets.ISO_8859_1));
-	}
-
-	/**
-	 * Get a custom head from an Entity
-	 * @param entity The entity for which to to create a head
-	 * @return The result head ItemStack
-	 */
-	public ItemStack getHead(Entity entity/*, boolean saveTypeInLore, boolean unstackable*/){
-		if(entity.getType() == EntityType.PLAYER){
-			return getHead(new GameProfile(entity.getUniqueId(), entity.getName()));
-		}
-		String textureKey = TextureKeyLookup.getTextureKey(entity);
-		if(!SADDLES_ENABLED && textureKey.endsWith("|SADDLED")) textureKey = textureKey.substring(0, textureKey.length()-8);
-		if(!SIDEWAYS_SHULKERS_ENABLED && textureKey.startsWith("SHULKER|") &&
-			(textureKey.endsWith("SIDE_UP") || textureKey.endsWith("SIDE_DOWN") ||
-					textureKey.endsWith("SIDE_LEFT") || textureKey.endsWith("SIDE_RIGHT") || textureKey.endsWith("GRUMM"))
-		) textureKey = textureKey.substring(0, textureKey.lastIndexOf('|'));
-		if(CRACKED_IRON_GOLEMS_ENABLED && entity.getType() == EntityType.IRON_GOLEM) textureKey += "|HIGH_CRACKINESS";
-		if(HOLLOW_SKULLS_ENABLED && EntityUtils.isSkeletal(entity.getType())) textureKey += "|HOLLOW";
-		if(TRANSPARENT_SLIME_ENABLED && entity.getType() == EntityType.SLIME) textureKey += "|TRANSPARENT";
-		if(USE_PRE_JAPPA) textureKey += "|PRE_JAPPA";
-		else if(USE_PRE_1_20) textureKey += "|PRE_1_20";
-		if(GRUMM_ENABLED && HeadUtils.hasGrummName(entity)){
-			if(entity.getType() == EntityType.SHULKER) textureKey = textureKey
-					.replace("|SIDE_UP", "").replace("|SIDE_DOWN", "").replace("|SIDE_LEFT", "").replace("|SIDE_RIGHT", "");
-			textureKey += "|GRUMM";
-		}
-		ItemStack head = getHead(entity.getType(), textureKey);
-//		if(head.getDisplayName().contains("${NAME}")){
-//			replace ${NAME} with entity.getCustomName() in item display name
-//		}
-		return head;
-	}
-
-	/**
-	 * Get a custom head from a Base64 code
-	 * @param code The Base64 encoded skin texture URL
-	 * @return The result head ItemStack
-	 */
-	public ItemStack getHead(byte[] code){
-		String strCode = new String(code);
-		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-		head = JunkUtils.setDisplayName(head, pl.getAPI().getHeadNameFromKey(/*textureKey=*/"UNKNOWN|CUSTOM", /*customName=*/strCode));
-		GameProfile profile = new GameProfile(/*uuid=*/UUID.nameUUIDFromBytes(code), /*name=*/null/*strCode*/);
-		profile.getProperties().put("textures", new Property("textures", strCode));
-		if(MAKE_UNSTACKABLE) profile.getProperties().put("random_uuid", new Property("random_uuid", UUID.randomUUID().toString()));
-		if(SAVE_TYPE_IN_LORE){
-			head = JunkUtils.setLore(head, new RawTextComponent(
-					CODE_PREFIX + (strCode.length() > 18 ? strCode.substring(0, 16)+"..." : strCode),
-					/*insert=*/null, /*click=*/null, /*hover=*/null,
-					/*color=*/"dark_gray", /*formats=*/Collections.singletonMap(Format.ITALIC, false)));
-		}
-		SkullMeta meta = (SkullMeta)head.getItemMeta();
-		HeadUtils.setGameProfile(meta, profile);
-		head.setItemMeta(meta);
-		return head;
-	}
-
-//	private UUID getMappedUUID(UUID uuid){
-//		long b1 = uuid.getLeastSignificantBits(), b2 = uuid.getMostSignificantBits();
-//		return new UUID(-b1, -b2);
-//	}
-	/**
-	 * Get a custom head from a GameProfile
+	/** Get a custom head from a GameProfile.
 	 * @param profile The profile information to create a head
 	 * @return The result head ItemStack
 	 */
@@ -815,9 +668,9 @@ public final class HeadAPI {
 		//-------------------- Handle Entities with textureKey
 		if(profileName != null){
 			/*if(SAVE_CUSTOM_LORE){*/int idx = profileName.indexOf('>'); if(idx != -1) profileName = profileName.substring(0, idx);/*}*/
-			final boolean isDropHeadsMobHead = profileName.startsWith(getDropHeadsNamespacedKey());
-			if(isDropHeadsMobHead) profileName = profileName.substring(10);
-			if(isDropHeadsMobHead || textures.containsKey(profileName)){
+			final boolean hasTextureKey = profileName.startsWith(JunkUtils.TXTR_KEY_PREFIX);
+			if(hasTextureKey) profileName = profileName.substring(JunkUtils.TXTR_KEY_PREFIX.length());
+			if(hasTextureKey || textures.containsKey(profileName)){
 				profileName = replaceHeadsFromTo.getOrDefault(profileName, profileName);
 				if(profileName.equals("OCELOT|WILD_OCELOT")) profileName = "OCELOT";
 				if(profileName.equals("PIGLIN") && PIGLIN_HEAD_TYPE != null) return new ItemStack(PIGLIN_HEAD_TYPE);
@@ -857,7 +710,7 @@ public final class HeadAPI {
 				head = JunkUtils.setDisplayName(head, isMHF
 					? new RawTextComponent(ChatColor.YELLOW+profileName, /*insert=*/null, /*click=*/null, /*hover=*/null,
 							/*color=*/null, /*formats=*/Collections.singletonMap(Format.ITALIC, false))
-					: getHeadNameFromKey("PLAYER", /*customName=*/profileName));
+					: getFullHeadNameFromKey("PLAYER", /*customName=*/profileName));
 			}
 			if(SAVE_TYPE_IN_LORE){
 				head = JunkUtils.setLore(head/*TODO: need to clone for hasPlayedBefore???*/, new RawTextComponent(
@@ -881,6 +734,37 @@ public final class HeadAPI {
 			HeadUtils.setGameProfile(meta, profile);
 			head.setItemMeta(meta);
 		}
+		return head;
+	}
+
+	/** Get a custom head from an Entity.
+	 * @param entity The entity for which to to create a head
+	 * @return The result head ItemStack
+	 */
+	public ItemStack getHead(Entity entity/*, boolean saveTypeInLore, boolean unstackable*/){
+		if(entity.getType() == EntityType.PLAYER){
+			return getHead(new GameProfile(entity.getUniqueId(), entity.getName()));
+		}
+		String textureKey = TextureKeyLookup.getTextureKey(entity);
+		if(!SADDLES_ENABLED && textureKey.endsWith("|SADDLED")) textureKey = textureKey.substring(0, textureKey.length()-8);
+		if(!SIDEWAYS_SHULKERS_ENABLED && textureKey.startsWith("SHULKER|") &&
+			(textureKey.endsWith("SIDE_UP") || textureKey.endsWith("SIDE_DOWN") ||
+					textureKey.endsWith("SIDE_LEFT") || textureKey.endsWith("SIDE_RIGHT") || textureKey.endsWith("GRUMM"))
+		) textureKey = textureKey.substring(0, textureKey.lastIndexOf('|'));
+		if(CRACKED_IRON_GOLEMS_ENABLED && entity.getType() == EntityType.IRON_GOLEM) textureKey += "|HIGH_CRACKINESS";
+		if(HOLLOW_SKULLS_ENABLED && EntityUtils.isSkeletal(entity.getType())) textureKey += "|HOLLOW";
+		if(TRANSPARENT_SLIME_ENABLED && entity.getType() == EntityType.SLIME) textureKey += "|TRANSPARENT";
+		if(USE_PRE_JAPPA) textureKey += "|PRE_JAPPA";
+		else if(USE_PRE_1_20) textureKey += "|PRE_1_20";
+		if(GRUMM_ENABLED && HeadUtils.hasGrummName(entity)){
+			if(entity.getType() == EntityType.SHULKER) textureKey = textureKey
+					.replace("|SIDE_UP", "").replace("|SIDE_DOWN", "").replace("|SIDE_LEFT", "").replace("|SIDE_RIGHT", "");
+			textureKey += "|GRUMM";
+		}
+		ItemStack head = getHead(entity.getType(), textureKey);
+//		if(head.getDisplayName().contains("${NAME}")){
+//			replace ${NAME} with entity.getCustomName() in item display name
+//		}
 		return head;
 	}
 }

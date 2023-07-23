@@ -19,7 +19,7 @@ import org.bukkit.util.Vector;
 import net.evmodder.DropHeads.DropChanceAPI;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.InternalAPI;
-import net.evmodder.DropHeads.StaticUtils;
+import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.EvLib.EvCommand;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
@@ -202,7 +202,7 @@ public class CommandDropRate extends EvCommand{
 				: Math.min(Math.pow(dropChanceAPI.getLootingMult(), lootingLevel), dropChanceAPI.getLootingMult()*lootingLevel);
 		final double lootingAdd = dropChanceAPI.getLootingAdd()*lootingLevel;
 		final double timeAliveMod = entity == null ? 1D : dropChanceAPI.getTimeAliveMult(entity);
-		final double spawnCauseMod = entity == null ? 1D : StaticUtils.getSpawnCauseMult(entity);
+		final double spawnCauseMod = entity == null ? 1D : JunkUtils.getSpawnCauseMult(entity);
 		final double permMod = dropChanceAPI.getPermsBasedMult(sender);
 		final double finalDropChance = rawChance*spawnCauseMod*timeAliveMod*weaponMod*lootingMod*permMod + lootingAdd;
 		DecimalFormat modFormatter = new DecimalFormat("0.##");
@@ -240,7 +240,7 @@ public class CommandDropRate extends EvCommand{
 				}
 				else if(weapon != null && Math.abs(1D-weaponMod) > 0.001D){
 					droprateMultipliers.addComponent(translate("multipliers.weapon-type"));
-					droprateMultipliers.addComponent(StaticUtils.getMurderItemComponent(weapon, JSON_LIMIT));
+					droprateMultipliers.addComponent(JunkUtils.getMurderItemComponent(weapon, JSON_LIMIT));
 					droprateMultipliers.addComponent(":§6x"+modFormatter.format(weaponMod));
 					droprateMultipliers.addComponent("§7, "/*TODO: translations.yml*/);
 				}

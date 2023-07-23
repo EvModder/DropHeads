@@ -11,13 +11,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.NotePlayEvent;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
+import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
 
 public class NoteblockPlayListener implements Listener{
-	final private String dhNamespaceKey;
-	public NoteblockPlayListener(){
-		dhNamespaceKey = DropHeads.getPlugin().getAPI().getDropHeadsNamespacedKey();
-	}
+	private final static int DH_MOB_PROFILE_PREFIX_LENGTH = JunkUtils.TXTR_KEY_PREFIX.length();
 
 	public Sound getAmbientSound(String eType){
 		switch(eType){
@@ -83,11 +81,11 @@ public class NoteblockPlayListener implements Listener{
 		if(nb.getY() >= nb.getWorld().getMaxHeight() || nb.getRelative(BlockFace.UP).getType() != Material.PLAYER_HEAD) return;
 		final Skull skull = (Skull) nb.getRelative(BlockFace.UP).getState();
 		final GameProfile profile = HeadUtils.getGameProfile(skull);
-		if(!profile.getName().startsWith(dhNamespaceKey)) return;
+		if(!profile.getName().startsWith(JunkUtils.TXTR_KEY_PREFIX)) return;
 		int endIdx = profile.getName().indexOf('|');
 		if(endIdx == -1) endIdx = profile.getName().indexOf('>');
-		else if(profile.getName().startsWith("BEE|ANGRY", dhNamespaceKey.length())) endIdx = dhNamespaceKey.length() + 9;
-		final String entityName = profile.getName().substring(dhNamespaceKey.length(), endIdx != -1 ? endIdx : profile.getName().length());
+		else if(profile.getName().startsWith("BEE|ANGRY", DH_MOB_PROFILE_PREFIX_LENGTH)) endIdx = DH_MOB_PROFILE_PREFIX_LENGTH + 9;
+		final String entityName = profile.getName().substring(DH_MOB_PROFILE_PREFIX_LENGTH, endIdx != -1 ? endIdx : profile.getName().length());
 		try{
 			final Sound sound = getAmbientSound(entityName);
 			nb.getWorld().playSound(nb.getLocation(), sound, SoundCategory.RECORDS, /*volume=*/1f, /*pitch=*/1f);

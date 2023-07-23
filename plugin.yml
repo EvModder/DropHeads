@@ -4,9 +4,9 @@ author: EvModder
 description: Heads for every mob and player.
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
-#7=pet death msgs, API fix, 1.19 mobs, full-cmd-translation, more pre-jappas(tentative), fix shulker rotation, updated spawn-cause-modifiers
-#14=noteblock sounds, piglin head auto-update, translation fallbacks, fix behead-replaces-death-msg on 1.20+ paper servers, async profile lookup
-version: 3.7.14
+#8=noteblock sounds, piglin head auto-update, translation fallbacks, fix behead-replaces-death-msg on 1.20+ paper servers, async profile lookup,api refactor, memory savings, various bugfixes/msg edits, grumm vex txtr fix
+#0
+version: 3.8.0
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 

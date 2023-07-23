@@ -79,7 +79,7 @@ public class BlockClickListener implements Listener{
 		if(profile != null && profile.getName() != null){
 			String name = profile.getName();
 			int idx = name.indexOf('>'); if(idx != -1) name = name.substring(0, idx);
-			if(name.startsWith(pl.getAPI().getDropHeadsNamespacedKey())) name = name.substring(10);
+			if(name.startsWith(JunkUtils.TXTR_KEY_PREFIX)) name = name.substring(10);
 
 			if(!name.equals(profile.getName())) return new GameProfile(profile.getId(), name);
 		}
@@ -111,7 +111,7 @@ public class BlockClickListener implements Listener{
 		}
 		profile = stripCustomLoreAndNamespace(profile);
 		//hdb
-		final HeadDatabaseAPI hdbAPI = pl.getAPI().getHeadDatabaseAPI();
+		final HeadDatabaseAPI hdbAPI = pl.getInternalAPI().getHeadDatabaseAPI();
 		if(hdbAPI != null && (data.hdbId = hdbAPI.getItemID(HeadUtils.makeCustomHead(profile, /*setOwner=*/false))) != null && hdbAPI.isHead(data.hdbId)){
 			data.headType = HeadUtils.getDroppedHeadType(EntityType.UNKNOWN);  // "Head"
 			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(EntityType.UNKNOWN.name());  // "Unknown"
@@ -242,7 +242,7 @@ public class BlockClickListener implements Listener{
 
 		final TranslationComponent headTypeName = pl.getAPI().getHeadTypeName(data.headType);
 		final String englishName = ChatColor.stripColor(
-				data.textureKey != null ? pl.getAPI().getHeadNameFromKey(data.textureKey, /*customName=*/"").toPlainText() :
+				data.textureKey != null ? pl.getInternalAPI().getFullHeadNameFromKey(data.textureKey, /*customName=*/"").toPlainText() :
 					data.player != null && data.player.getName() != null ? data.player.getName() :
 					data.profileName.toPlainText()
 				);

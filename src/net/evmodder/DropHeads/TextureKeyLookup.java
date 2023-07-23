@@ -25,12 +25,12 @@ import org.bukkit.entity.Wolf;
 import org.bukkit.entity.Zombie;
 import org.bukkit.entity.ZombieVillager;
 
-/**
- * Utility class for getting the specific texture-key for an entity based on its attributes, sub-type, state, etc.
+/** Utility for getting a TextureKey from an Entity based on its sub-type, attributes, state, etc.
  */
 public final class TextureKeyLookup{
-	/**
-	 * Default constructor, unused. Only necessary due to the limitations of of Java 1.8
+	/** Default constructor, unused. Reason it's here:
+	 * 1) Javadoc complains if a class doesn't have a constructor
+	 * 2) I cannot convert this class to an interface since Java<9 does not allow private interface methods
 	 */
 	private TextureKeyLookup(){}
 
@@ -130,8 +130,7 @@ public final class TextureKeyLookup{
 	private static java.lang.reflect.Field ghastIsAttackingField;
 	private static RefMethod mGhastIsCharging;
 
-	/**
-	 * Find the most specific available head texture for a given entity.
+	/** Find the most specific available head texture for a given entity.
 	 * @param entity The entity for which we want a texture key
 	 * @return The String key used to identify the target texture
 	 */

@@ -19,11 +19,9 @@ public class ItemDropListener implements Listener{
 	private final DropHeads pl;
 	private final boolean /*TEXTURE_UPDATE, */FORCE_NAME_UPDATE, FORCE_LORE_UPDATE, TYPE_UPDATE;
 	private final boolean SAVE_TYPE_IN_LORE;
-	private final String dhNamespaceKey;
 
 	public ItemDropListener(){
 		pl = DropHeads.getPlugin();
-		dhNamespaceKey = pl.getAPI().getDropHeadsNamespacedKey();
 		//FORCE_TEXTURE_UPDATE = pl.getConfig().getBoolean("refresh-textures", false);
 		FORCE_NAME_UPDATE = pl.getConfig().getBoolean("refresh-item-names", false);
 		FORCE_LORE_UPDATE = pl.getConfig().getBoolean("refresh-item-lores", false) && !pl.getConfig().getBoolean("save-custom-lore", true);
@@ -43,19 +41,19 @@ public class ItemDropListener implements Listener{
 		if(profile.getName() == null) return true; // Cannot determine if it has a customName or not, so assume it does
 		final String displayName = ChatColor.stripColor(meta.getDisplayName());
 		final int endIdx = profile.getName().indexOf('>');
-		final boolean isMobHead = profile.getName().startsWith(dhNamespaceKey);
-		final int startIdx = isMobHead ? dhNamespaceKey.length() : 0;
+		final boolean isMobHead = profile.getName().startsWith(JunkUtils.TXTR_KEY_PREFIX);
+		final int startIdx = isMobHead ? JunkUtils.TXTR_KEY_PREFIX.length() : 0;
 		final String profileName = profile.getName().substring(startIdx, endIdx == -1 ? profile.getName().length() : endIdx);
 		final String textureKey = isMobHead ? profileName : "PLAYER";
 		final String customName = isMobHead ? /*todo:*/"" : profileName;
-		final String expectedName = ChatColor.stripColor(pl.getAPI().getHeadNameFromKey(textureKey, customName).toPlainText());
+		final String expectedName = ChatColor.stripColor(pl.getInternalAPI().getFullHeadNameFromKey(textureKey, customName).toPlainText());
 		return !expectedName.equals(displayName);
 	}
 
 	@EventHandler(ignoreCancelled = true)
 	public void onBarf(ItemSpawnEvent evt){
 		if(!HeadUtils.isPlayerHead(evt.getEntity().getItemStack().getType()) || !evt.getEntity().getItemStack().hasItemMeta()
-				|| pl.getAPI().isHeadDatabaseHead(evt.getEntity().getItemStack())) return;
+				|| pl.getInternalAPI().isHeadDatabaseHead(evt.getEntity().getItemStack())) return;
 
 		ItemStack originalItem = evt.getEntity().getItemStack();
 		final SkullMeta originalMeta = (SkullMeta) originalItem.getItemMeta();

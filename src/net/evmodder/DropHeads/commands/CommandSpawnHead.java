@@ -29,7 +29,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.InternalAPI;
-import net.evmodder.DropHeads.StaticUtils;
+import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.DropHeads.TextureKeyLookup;
 import net.evmodder.EvLib.EvCommand;
 import net.evmodder.EvLib.extras.EntityUtils;
@@ -201,7 +201,7 @@ public class CommandSpawnHead extends EvCommand{
 //			p = pl.getServer().getOfflinePlayer(UUID.fromString(target));
 //			if(p != null && p.hasPlayedBefore()) return new GameProfile(p.getUniqueId(), p.getName());
 //		}catch(IllegalArgumentException ex){}
-		return StaticUtils.getGameProfile(target, /*fetchSkin=*/false, /*nullForSync=*/null);
+		return JunkUtils.getGameProfile(target, /*fetchSkin=*/false, /*nullForSync=*/null);
 	}
 
 	private static class HeadFromString{
@@ -322,7 +322,7 @@ public class CommandSpawnHead extends EvCommand{
 		}
 		// This should be unreachable due to earlier checks, but still nice to have in case code breaks.
 		if(!(entity instanceof LivingEntity)) pl.getLogger().severe("Cannot give item to non-LivingEntity!");
-		return StaticUtils.setIfEmpty(((LivingEntity)entity).getEquipment(), item, EquipmentSlot.valueOf(slot.toUpperCase()));
+		return JunkUtils.setIfEmpty(((LivingEntity)entity).getEquipment(), item, EquipmentSlot.valueOf(slot.toUpperCase()));
 	}
 
 	private void logGiveHeadCommand(String headName, String senderName, int amount, String recipients){
@@ -457,7 +457,7 @@ public class CommandSpawnHead extends EvCommand{
 		ArrayList<Component> recipientComps = new ArrayList<>();
 		boolean firstHeadSoAddRecipients = true;
 		for(ItemStack head : headItems){
-			Component headNameComp = StaticUtils.getItemDisplayNameComponent(head);
+			Component headNameComp = JunkUtils.getItemDisplayNameComponent(head);
 			String headNameStr = headNameComp.toString();
 			int amtSum = amtOfEachHead.getOrDefault(headNameStr, 0);
 			if(amtSum == 0) headNameComps.add(headNameComp);
