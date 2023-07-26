@@ -16,42 +16,41 @@ import net.evmodder.EvLib.FileIO;
 
 public class EntitySpawnListener implements Listener{
 	private final DropHeads pl;
-	private final Map<SpawnReason, Float> spawnModifiers = new HashMap<SpawnReason, Float>();
+	private final Map<SpawnReason, Float> spawnMultipliers;
 	private final boolean WARN_FOR_UNKNOWN_SPAWN_REASON = false;
 	
 	public EntitySpawnListener(){
 		pl = DropHeads.getPlugin();
+		spawnMultipliers = new HashMap<>();
 
-		//load spawn cause modifiers
-		final InputStream defaultModifiers = pl.getClass().getResourceAsStream("/spawn-cause-modifiers.txt");
-		final String modifiers = FileIO.loadFile("spawn-cause-modifiers.txt", defaultModifiers);
-		for(String line : modifiers.split("\n")){
+		final InputStream defaultSpawnMults = pl.getClass().getResourceAsStream("/spawn-cause-multipliers.txt");
+		FileIO.moveFile("spawn-cause-modifiers.txt", "spawn-cause-multipliers.txt");//TODO: delete, someday
+		final String multipliers = FileIO.loadFile("spawn-cause-multipliers.txt", defaultSpawnMults);
+		for(String line : multipliers.split("\n")){
 			line = line.replace(" ", "").replace("\t", "").toUpperCase();
 			final int i = line.indexOf(":");
 			if(i != -1){
 				try{
-					SpawnReason reason = SpawnReason.valueOf(line.substring(0, i));
-					Float modifier = Float.parseFloat(line.substring(i+1));
-					if(Math.abs(1F - modifier) > 0.0001) spawnModifiers.put(reason, modifier);
+					final SpawnReason reason = SpawnReason.valueOf(line.substring(0, i));
+					final Float mult = Float.parseFloat(line.substring(i+1));
+					if(Math.abs(1F - mult) > 0.0001) spawnMultipliers.put(reason, mult);
 				}
 				catch(IllegalArgumentException ex){
 					if(WARN_FOR_UNKNOWN_SPAWN_REASON) pl.getLogger().warning("Unknown SpawnReason: '"+line+"' in config file!");
 				}
 			}
 		}
-		if(spawnModifiers.isEmpty()){
-			HandlerList.unregisterAll(this);
-		}
+		if(spawnMultipliers.isEmpty()) HandlerList.unregisterAll(this);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void creatureSpawnEvent(CreatureSpawnEvent evt){
 		if(evt.getSpawnReason() == null) return;
 
-		final Float modifier = spawnModifiers.get(evt.getSpawnReason());
-		if(modifier == null) return;
+		final Float mult = spawnMultipliers.get(evt.getSpawnReason());
+		if(mult == null) return;
 
-		evt.getEntity().setMetadata(JunkUtils.SPAWN_CAUSE_MULTIPLIER_KEY, new FixedMetadataValue(pl, modifier));
-		evt.getEntity().addScoreboardTag(JunkUtils.SPAWN_CAUSE_MULTIPLIER_KEY+'_'+modifier);
+		evt.getEntity().setMetadata(JunkUtils.SPAWN_CAUSE_MULTIPLIER_KEY, new FixedMetadataValue(pl, mult));
+		evt.getEntity().addScoreboardTag(JunkUtils.SPAWN_CAUSE_MULTIPLIER_KEY+'_'+mult);
 	}
 }

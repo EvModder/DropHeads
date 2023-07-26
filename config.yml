@@ -69,7 +69,7 @@ update-on-skin-change: false
 # Note: Currently only affects custom (non-vanilla) heads
 make-heads-unstackable: false
 
-# Track mob spawn reasons, edits drop rates using 'spawn-cause-modifiers.txt'
+# Track mob spawn reasons, edits drop rates using 'spawn-cause-multipliers.txt'
 track-mob-spawns: true
 
 # Enable the mechanic where the first mob killed by a charged creeper's
@@ -215,11 +215,11 @@ specific-tool-multipliers:
 # the drop rate is multiplied by V similar to specific-tool-multipliers)
 # Default unit is ticks; other units: s[ec], m[in], h[r], d[ay], w[eek], y[r]
 time-alive-multipliers:
-  # This example will prevent player beheads if they have been alive < 1min
+  # Example: this will prevent player beheads if they have been alive < 1min
   player:
     0s: 0.0
     1m: 1.0
-  # For all other mob types, this will make heads more common for older mobs
+  # Example: for all other mobs, this will make heads more common as they age
   default:
     3h: 1.1
     2d: 2.0
