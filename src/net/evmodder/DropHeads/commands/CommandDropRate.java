@@ -33,7 +33,7 @@ public class CommandDropRate extends EvCommand{
 	final private String CMD_TRANSLATE_PATH = "commands.droprate.";
 	final private DropChanceAPI dropChanceAPI;
 	final private boolean ONLY_SHOW_VALID_ENTITIES = true;
-	final private boolean USING_SPAWN_MODIFIERS, NEED_CERTAIN_WEAPONS, USING_LOOTING_MODIFIERS, USING_TIME_ALIVE_MODIFIERS, USING_WEAPON_MODIFIERS;
+	final private boolean USING_SPAWN_MULTS, NEED_CERTAIN_WEAPONS, USING_LOOTING_MULTS, USING_TIME_ALIVE_MULTS, USING_WEAPON_MULTS;
 	final private boolean VANILLA_WSKELE_HANDLING;
 	final private HashSet<String> entityNames;
 	final private double DEFAULT_DROP_CHANCE;
@@ -73,13 +73,15 @@ public class CommandDropRate extends EvCommand{
 			);
 		}
 		else REQUIRED_WEAPONS = null;
-		ConfigurationSection specificToolModifiers = pl.getConfig().getConfigurationSection("specific-tool-modifiers");
-		USING_WEAPON_MODIFIERS = specificToolModifiers != null && specificToolModifiers.getKeys(false)
-				.stream().anyMatch(toolName -> Material.getMaterial(toolName.toUpperCase()) != null);
-		USING_SPAWN_MODIFIERS = pl.getConfig().getBoolean("track-mob-spawns", true);
-		USING_LOOTING_MODIFIERS = dropChanceAPI.getLootingMult() != 1D || dropChanceAPI.getLootingAdd() != 0D;
-		USING_TIME_ALIVE_MODIFIERS = pl.getConfig().isConfigurationSection("time-alive-modifiers")
-				&& !pl.getConfig().getConfigurationSection("time-alive-modifiers").getKeys(false).isEmpty();
+		ConfigurationSection specificToolMults = pl.getConfig().getConfigurationSection("specific-tool-multipliers");
+		if(specificToolMults == null) specificToolMults = pl.getConfig().getConfigurationSection("specific-tool-modifiers");
+		USING_WEAPON_MULTS = specificToolMults != null && specificToolMults.getKeys(false).stream()
+				.anyMatch(toolName -> Material.getMaterial(toolName.toUpperCase()) != null);
+		USING_SPAWN_MULTS = pl.getConfig().getBoolean("track-mob-spawns", true);
+		USING_LOOTING_MULTS = dropChanceAPI.getLootingMult() != 1D || dropChanceAPI.getLootingAdd() != 0D;
+		ConfigurationSection timeAliveMults = pl.getConfig().getConfigurationSection("time-alive-multipliers");
+		if(timeAliveMults == null) timeAliveMults = pl.getConfig().getConfigurationSection("time-alive-modifiers");
+		USING_TIME_ALIVE_MULTS = timeAliveMults != null && !timeAliveMults.getKeys(false).isEmpty();
 		VANILLA_WSKELE_HANDLING = pl.getConfig().getBoolean("vanilla-wither-skeleton-skulls", true);
 
 		//String defaultChances = FileIO.loadResource(pl, "head-drop-rates.txt"); // Already done in EntityDeathListener
@@ -196,16 +198,16 @@ public class CommandDropRate extends EvCommand{
 		}
 
 		// Multipliers:
-		final double weaponMod = weapon == null ? 1D : dropChanceAPI.getWeaponMult(weapon.getType());
+		final double weaponMult = weapon == null ? 1D : dropChanceAPI.getWeaponMult(weapon.getType());
 		final int lootingLevel = weapon == null ? 0 : weapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
-		final double lootingMod = lootingLevel == 0 ? 1D
+		final double lootingMult = lootingLevel == 0 ? 1D
 				: Math.min(Math.pow(dropChanceAPI.getLootingMult(), lootingLevel), dropChanceAPI.getLootingMult()*lootingLevel);
 		final double lootingAdd = dropChanceAPI.getLootingAdd()*lootingLevel;
-		final double timeAliveMod = entity == null ? 1D : dropChanceAPI.getTimeAliveMult(entity);
-		final double spawnCauseMod = entity == null ? 1D : JunkUtils.getSpawnCauseMult(entity);
-		final double permMod = dropChanceAPI.getPermsBasedMult(sender);
-		final double finalDropChance = rawChance*spawnCauseMod*timeAliveMod*weaponMod*lootingMod*permMod + lootingAdd;
-		DecimalFormat modFormatter = new DecimalFormat("0.##");
+		final double timeAliveMult = entity == null ? 1D : dropChanceAPI.getTimeAliveMult(entity);
+		final double spawnCauseMult = entity == null ? 1D : JunkUtils.getSpawnCauseMult(entity);
+		final double permMult = dropChanceAPI.getPermsBasedMult(sender);
+		final double finalDropChance = Math.min(1D, rawChance*spawnCauseMult*timeAliveMult*weaponMult*lootingMult*permMult + lootingAdd);
+		DecimalFormat multFormatter = new DecimalFormat("0.##");
 		
 		if(VANILLA_WSKELE_HANDLING && target.equals("WITHER_SKELETON")){
 			if(!droprateDetails.isEmpty()) droprateDetails.addComponent("\n");
@@ -213,54 +215,54 @@ public class CommandDropRate extends EvCommand{
 		}
 		else{
 			ListComponent droprateMultipliers = new ListComponent();
-			if(USING_SPAWN_MODIFIERS){
+			if(USING_SPAWN_MULTS){
 				if(entity == null){
 					droprateMultipliers.addComponent(translate("multipliers.spawn-reason"));
 					droprateMultipliers.addComponent("§7, "/*TODO: translations.yml*/);
 				}
-				else if(Math.abs(1D-spawnCauseMod) > 0.001D){
+				else if(Math.abs(1D-spawnCauseMult) > 0.001D){
 					droprateMultipliers.addComponent(translate("multipliers.spawn-reason"));
-					droprateMultipliers.addComponent(":§6x"+modFormatter.format(spawnCauseMod)+"§7, "/*TODO: translations.yml*/);
+					droprateMultipliers.addComponent(":§6x"+multFormatter.format(spawnCauseMult)+"§7, "/*TODO: translations.yml*/);
 				}
 			}
-			if(USING_TIME_ALIVE_MODIFIERS){
+			if(USING_TIME_ALIVE_MULTS){
 				if(entity == null){
 					droprateMultipliers.addComponent(translate("multipliers.time-alive"));
 					droprateMultipliers.addComponent("§7, "/*TODO: translations.yml*/);
 				}
-				else if(Math.abs(1D-timeAliveMod) > 0.001D){
+				else if(Math.abs(1D-timeAliveMult) > 0.001D){
 					droprateMultipliers.addComponent(translate("multipliers.time-alive"));
-					droprateMultipliers.addComponent(":§6x"+modFormatter.format(timeAliveMod)+"§7, "/*TODO: translations.yml*/);
+					droprateMultipliers.addComponent(":§6x"+multFormatter.format(timeAliveMult)+"§7, "/*TODO: translations.yml*/);
 				}
 			}
-			if(USING_WEAPON_MODIFIERS){
+			if(USING_WEAPON_MULTS){
 				if(entity == null){
 					droprateMultipliers.addComponent(translate("multipliers.weapon-type"));
 					droprateMultipliers.addComponent("§7, "/*TODO: translations.yml*/);
 				}
-				else if(weapon != null && Math.abs(1D-weaponMod) > 0.001D){
+				else if(weapon != null && Math.abs(1D-weaponMult) > 0.001D){
 					droprateMultipliers.addComponent(translate("multipliers.weapon-type"));
 					droprateMultipliers.addComponent(JunkUtils.getMurderItemComponent(weapon, JSON_LIMIT));
-					droprateMultipliers.addComponent(":§6x"+modFormatter.format(weaponMod));
+					droprateMultipliers.addComponent(":§6x"+multFormatter.format(weaponMult));
 					droprateMultipliers.addComponent("§7, "/*TODO: translations.yml*/);
 				}
 			}
-			if(Math.abs(1D-permMod) > 0.001D){
+			if(Math.abs(1D-permMult) > 0.001D){
 				droprateMultipliers.addComponent(translate("multipliers.perms"));
-				droprateMultipliers.addComponent(":§6x"+modFormatter.format(permMod)+"§7, "/*TODO: translations.yml*/);
+				droprateMultipliers.addComponent(":§6x"+multFormatter.format(permMult)+"§7, "/*TODO: translations.yml*/);
 			}
-			if(USING_LOOTING_MODIFIERS){
+			if(USING_LOOTING_MULTS){
 				if(entity == null){
 					droprateMultipliers.addComponent(LOOTING_COMP);
 				}
-				else if(Math.abs(1D-lootingMod) > 0.001D || Math.abs(lootingAdd) > 0.001D){
+				else if(Math.abs(1D-lootingMult) > 0.001D || Math.abs(lootingAdd) > 0.001D){
 					droprateMultipliers.addComponent(LOOTING_COMP);
 					String lootingMsg = lootingLevel+":";
-					if(Math.abs(1D-lootingMod) > 0.001D) lootingMsg += "§6x"+modFormatter.format(lootingMod);
-					if(Math.abs(lootingAdd) > 0.001D) lootingMsg += "§e"+(lootingAdd > 0 ? '+' : '-')+modFormatter.format(lootingAdd*100)+"%";
+					if(Math.abs(1D-lootingMult) > 0.001D) lootingMsg += "§6x"+multFormatter.format(lootingMult);
+					if(Math.abs(lootingAdd) > 0.001D) lootingMsg += "§e"+(lootingAdd > 0 ? '+' : '-')+multFormatter.format(lootingAdd*100)+"%";
 					droprateMultipliers.addComponent(lootingMsg);
 				}
-				//else TODO: potential trailing "&7, " at end of list (when looting is not included in modifiers list)
+				//else TODO: potential trailing "&7, " at end of list (when looting is not included in multipliers list)
 			}
 			if(!droprateMultipliers.isEmpty()){
 				if(!droprateDetails.isEmpty()) droprateDetails.addComponent("\n");

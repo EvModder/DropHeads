@@ -15,6 +15,7 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.bukkit.Material;
+import org.bukkit.Statistic;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
@@ -65,7 +66,7 @@ public final class DropChanceAPI{
 	private enum DropMode {EVENT, SPAWN, PLACE, PLACE_BY_KILLER, PLACE_BY_VICTIM, GIVE};
 	private final ArrayList<DropMode> DROP_MODES; // TODO: per-mob drop mode?
 
-	private final boolean PLAYER_HEADS_ONLY, REPLACE_PLAYER_DEATH_EVT_MESSAGE, REPLACE_PET_DEATH_MESSAGE, REPLACE_PLAYER_DEATH_MESSAGE;
+	private final boolean PLAYER_HEADS_ONLY, REPLACE_PLAYER_DEATH_EVT_MESSAGE, REPLACE_PET_DEATH_MESSAGE, REPLACE_PLAYER_DEATH_MESSAGE/*, USE_TRANSLATE_FALLBACKS*/;
 	private final boolean VANILLA_WSKELE_HANDLING;
 	private final double LOOTING_ADD, LOOTING_MULT;
 	private final boolean DEBUG_MODE, LOG_PLAYER_BEHEAD, LOG_MOB_BEHEAD;
@@ -158,6 +159,8 @@ public final class DropChanceAPI{
 				pl.getConfig(), pl.getAPI().translationsFile);
 		MSH_BEHEAD_BY_WITH_NAMED = parseStringOrStringList("message-beheaded-by-entity-with-item-named", "${KILLER} beheaded ${VICTIM} using ${ITEM}",
 				pl.getConfig(), pl.getAPI().translationsFile);
+//		USE_TRANSLATE_FALLBACKS = pl.getAPI().translationsFile.getBoolean("use-translation-fallbacks", false)
+//				&& Bukkit.getBukkitVersion().compareTo("1.19.4") >= 0;
 
 		DROP_MODES = new ArrayList<>();
 		if(pl.getConfig().contains("head-item-drop-mode"))
@@ -211,24 +214,6 @@ public final class DropChanceAPI{
 		timeAliveMults = new HashMap<EntityType, TreeMap<Integer, Double>>();
 		// Ensure there is always a lower entry, and it defaults to 1
 		final TreeMap<Integer, Double> defaultTimeAliveMults = new TreeMap<>(); defaultTimeAliveMults.put(Integer.MIN_VALUE, 1D);
-
-		//========== <DEPRECATED> ==============================
-		ConfigurationSection specificToolBonuses = pl.getConfig().getConfigurationSection("specific-tool-modifiers");
-		if(specificToolBonuses != null) for(String toolName : specificToolBonuses.getKeys(false)){
-			Material mat = Material.getMaterial(toolName.toUpperCase());
-			if(mat != null) weaponMults.put(mat, specificToolBonuses.getDouble(toolName) + 1D);
-		}
-		ConfigurationSection specificTimeAliveBonuses = pl.getConfig().getConfigurationSection("time-alive-modifiers");
-		if(specificTimeAliveBonuses != null) for(String formattedTime : specificTimeAliveBonuses.getKeys(false)){
-			try{
-				final int timeInTicks = (int)(TextUtils.parseTimeInMillis(formattedTime, /*default unit=millis-per-tick=*/50)/50L);
-				defaultTimeAliveMults.put(timeInTicks, specificTimeAliveBonuses.getDouble(formattedTime) + 1D);
-			}
-			catch(NumberFormatException ex){
-				pl.getLogger().severe("Error parsing time string for time-alive-modifiers: \""+formattedTime+'"');
-			}
-		}
-		//========== <DEPRECATED/> =============================
 
 		ConfigurationSection specificToolMults = pl.getConfig().getConfigurationSection("specific-tool-multipliers");
 		if(specificToolMults != null) for(String toolName : specificToolMults.getKeys(false)){
@@ -374,7 +359,7 @@ public final class DropChanceAPI{
 	 * @return An immutable set of Material types, or <code>null</code>
 	 */
 	public Set<Material> getRequiredWeapons(){return mustUseTools;}
-	/** Get the raw drop chance (ignore all modifiers) of a head for a specific texture key.
+	/** Get the raw drop chance (ignore all multipliers) of a head for a specific texture key.
 	 * @param textureKey The target texture key
 	 * @return The drop chance [0, 1]
 	 */
@@ -396,7 +381,7 @@ public final class DropChanceAPI{
 		}
 		return mobChances.getOrDefault(eType, DEFAULT_CHANCE);
 	}
-	/** Get the raw drop chance (ignore all modifiers) of a head for a specific entity.
+	/** Get the raw drop chance (ignore all multipliers) of a head for a specific entity.
 	 * @param entity The target entity
 	 * @return The drop chance [0, 1]
 	 */
@@ -423,7 +408,7 @@ public final class DropChanceAPI{
 	 */
 	public double getLootingAdd(){return LOOTING_ADD;}
 	/** Get the drop chance multiplier applied (per looting level).
-	 * @return The drop chance modifier
+	 * @return The drop chance multiplier
 	 */
 	public double getLootingMult(){return LOOTING_MULT;}
 	/** Get the drop chance multiplier applied based on Material of the weapon used.
@@ -436,7 +421,11 @@ public final class DropChanceAPI{
 	 * @return The time-alive multiplier
 	 */
 	public double getTimeAliveMult(Entity entity){
-		return timeAliveMults.getOrDefault(entity.getType(), DEFAULT_TIME_ALIVE_MULTS).floorEntry(entity.getTicksLived()).getValue();
+		return timeAliveMults.getOrDefault(entity.getType(), DEFAULT_TIME_ALIVE_MULTS).floorEntry(
+				entity.getType() == EntityType.PLAYER
+					? ((Player)entity).getStatistic(Statistic.TIME_SINCE_DEATH)
+					: entity.getTicksLived()
+		).getValue();
 	}
 	/** Get the drop chance multipliers applied based on permissions of the killer.
 	 * @param killer The entity to check for drop chance multiplier permissions
@@ -564,6 +553,7 @@ public final class DropChanceAPI{
 		}
 		else message.addComponent(MSG_BEHEAD[rand.nextInt(MSG_BEHEAD.length)]);
 		message.replaceRawDisplayTextWithComponent("${VICTIM}", getVictimComponent(entity));
+		//TODO: If(USE_TRANSLATE_FALLBACKS) return TranslateComp({key}, {with}, fallback=message)
 		return message;
 	}
 
