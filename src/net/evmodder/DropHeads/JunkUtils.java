@@ -291,7 +291,8 @@ public final class JunkUtils{
 			}
 			return (boolean)vanishMethodIsVanished.of(vanishMethodGetManager.of(vanishPlugin).call()).call(p);
 		}
-		return p.getServer().getOnlinePlayers().stream().allMatch(p2 -> p2.isOp() || p2.getUniqueId().equals(p.getUniqueId()) || !p2.canSee(p));
+		return p.getServer().getOnlinePlayers().stream().allMatch(p2 -> !p2.canSee(p) || p2.isOp() || p2.getUniqueId().equals(p.getUniqueId()))
+			&& p.getServer().getOnlinePlayers().stream().anyMatch(p2 -> !p2.canSee(p));
 	}
 
 	public final static ItemStack giveItemToEntity(Entity entity, ItemStack item){
