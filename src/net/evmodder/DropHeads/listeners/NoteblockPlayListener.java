@@ -29,6 +29,8 @@ public class NoteblockPlayListener implements Listener{
 				return Sound.ENTITY_ZOMBIE_AMBIENT; //TODO: play at 2x volume?
 			case "COD":
 				return Sound.ENTITY_COD_FLOP;
+			case "SALMON":
+				return Sound.ENTITY_SALMON_FLOP;
 			case "PUFFERFISH":
 				return Sound.ENTITY_PUFFER_FISH_FLOP;
 			case "TROPICAL_FISH":
