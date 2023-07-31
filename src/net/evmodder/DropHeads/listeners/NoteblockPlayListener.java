@@ -6,6 +6,7 @@ import org.bukkit.SoundCategory;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Skull;
+import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.NotePlayEvent;
@@ -27,6 +28,12 @@ public class NoteblockPlayListener implements Listener{
 				return Sound.ENTITY_LEASH_KNOT_PLACE;
 			case "GIANT":
 				return Sound.ENTITY_ZOMBIE_AMBIENT; //TODO: play at 2x volume?
+			case "COD":
+				return Sound.ENTITY_COD_FLOP;
+			case "PUFFERFISH":
+				return Sound.ENTITY_PUFFER_FISH_FLOP;
+			case "TROPICAL_FISH":
+				return Sound.ENTITY_TROPICAL_FISH_FLOP;
 			case "MINECART":
 			case "MINECART_CHEST":
 			case "MINECART_COMMAND":
@@ -35,8 +42,6 @@ public class NoteblockPlayListener implements Listener{
 			case "MINECART_MOB_SPAWNER":
 			case "MINECART_TNT":
 				return Sound.ENTITY_MINECART_RIDING;
-			case "PUFFERFISH":
-				return Sound.ENTITY_PUFFER_FISH_AMBIENT;
 			case "SNIFFER":
 				return Sound.valueOf("ENTITY_SNIFFER_IDLE");
 			case "TADPOLE":
