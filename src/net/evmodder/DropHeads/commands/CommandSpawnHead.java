@@ -96,13 +96,15 @@ public class CommandSpawnHead extends EvCommand{
 		if(permMobs) availablePrefixes.add(MOB_PREFIX);
 		if(permPlayers) availablePrefixes.add(PLAYER_PREFIX);
 		if(sender.hasPermission("dropheads.spawn.hdb")) availablePrefixes.add(HDB_PREFIX);
-		if(availablePrefixes.isEmpty()) return permSelf ?
-				(permGiveTo ? Arrays.asList(SLOT_PREFIX, AMT_PREFIX, GIVETO_PREFIX) : Arrays.asList(SLOT_PREFIX, AMT_PREFIX)) : null;
+		boolean headNotYetSpecified = true;
+		if(availablePrefixes.isEmpty()){
+			if(permSelf) headNotYetSpecified = false;
+			else return null;
+		}
 		if(permGiveTo) availablePrefixes.add(GIVETO_PREFIX);
 		availablePrefixes.add(AMT_PREFIX);
 		availablePrefixes.add(SLOT_PREFIX);
 
-		boolean headNotYetSpecified = true;
 		// Remove already-used prefixes
 		for(int i = 0; i < args.length-1; ++i){
 			final int prefixEnd = args[i].indexOf(':');
@@ -128,7 +130,9 @@ public class CommandSpawnHead extends EvCommand{
 		}
 
 		// Tab completions of prefixes
-		List<String> tabCompletes = availablePrefixes.stream().filter(prefix -> prefix.startsWith(lastArg)).collect(Collectors.toList());
+		List<String> tabCompletes = availablePrefixes;
+		//= availablePrefixes.stream().filter(prefix -> prefix.startsWith(lastArg)).collect(Collectors.toList());
+		tabCompletes.removeIf(p -> !p.startsWith(lastArg));
 
 		int prefixEnd = lastArg.indexOf(':');
 		String argWithCompletePrefix = lastArg;
@@ -142,21 +146,21 @@ public class CommandSpawnHead extends EvCommand{
 		}
 		tabCompletes.clear();
 
-		final String prefix = prefixEnd == -1 ? availablePrefixes.get(0) : argWithCompletePrefix.substring(0, prefixEnd + 1).toLowerCase();
+		final String prefix = prefixEnd == -1 ? null : argWithCompletePrefix.substring(0, prefixEnd + 1).toLowerCase();
 		final String target = argWithCompletePrefix.substring(prefixEnd + 1);
 		final String targetUppercase = target.toUpperCase();
 
-		if(prefix.equals(MOB_PREFIX) || target.indexOf('|') != -1){
+		if(MOB_PREFIX.equals(prefix) || target.indexOf('|') != -1){
 			for(String key : pl.getAPI().getTextures().keySet()){
-				if(key.startsWith(targetUppercase) && key.lastIndexOf('|') <= target.length()) tabCompletes.add(prefix + key);
+				if(key.startsWith(targetUppercase) && key.lastIndexOf('|') <= target.length()) tabCompletes.add(MOB_PREFIX + key);
 			}
 		}
-		else if(prefix.equals(PLAYER_PREFIX)){
+		else if(PLAYER_PREFIX.equals(prefix)){
 			return pl.getServer().getOnlinePlayers().stream()
 					.filter(p -> p.getName().toUpperCase().startsWith(targetUppercase)).map(p -> prefix + p.getName())
 					.collect(Collectors.toList());
 		}
-		else if(prefix.equals(HDB_PREFIX)){
+		else if(HDB_PREFIX.equals(prefix)){
 			if(pl.getInternalAPI().getHeadDatabaseAPI() == null/* MAX_HDB_ID == -1 */) return null;
 //			try{if(Integer.parseInt(target) > MAX_HDB_ID) return null;}
 //			catch(NumberFormatException ex){return null;}
@@ -169,20 +173,20 @@ public class CommandSpawnHead extends EvCommand{
 //				);
 //			}
 		}
-		else if(prefix.equals(SELF_PREFIX)) tabCompletes.add(sender.getName());
-		else if(prefix.equals(AMT_PREFIX)){
+		else if(SELF_PREFIX.equals(prefix)) tabCompletes.add(sender.getName());
+		else if(AMT_PREFIX.equals(prefix)){
 			//return Stream.of("64", "2304").filter(amt -> amt.startsWith(target)).map(amt -> prefix + amt).collect(Collectors.toList());
 			return Arrays.asList(prefix + target);
 		}
-		else if(prefix.equals(SLOT_PREFIX)){
+		else if(SLOT_PREFIX.equals(prefix)){
 			return Stream.concat(IntStream.range(0, target.matches("[0-9]+") ? 36 : 9).mapToObj(i -> String.valueOf(i)),
 					Arrays.stream(EquipmentSlot.values()).map(e -> e.name().toLowerCase())).filter(s -> s.startsWith(target))
 					.map(s -> prefix+s).collect(Collectors.toList());
 		}
-		else if(prefix.equals(GIVETO_PREFIX)){
+		else if(GIVETO_PREFIX.equals(prefix)){
 			return Selector.getTabComplete(sender, target).stream().map(s -> prefix+s).collect(Collectors.toList());
 		}
-		else if(prefix.equals("@")){
+		else if("@".equals(prefix)){
 			if(!permMobs && !permPlayers) return permSelf ? Arrays.asList("@s") : null;
 			tabCompletes = Selector.getTabComplete(sender, target);
 			if(!permMobs) tabCompletes.removeIf(s -> s.startsWith("@e"));
@@ -293,7 +297,9 @@ public class CommandSpawnHead extends EvCommand{
 			}
 		}
 		else if(prefix.equals(PLAYER_PREFIX) || (prefix.isEmpty()/* && ... */)){
-			GameProfile profile = searchForPlayer(target);
+			pl.getLogger().info("AA");
+			final GameProfile profile = searchForPlayer(target);
+			pl.getLogger().info("BB");
 			if(profile != null){
 				if(!sender.hasPermission("dropheads.spawn.players")
 						&& (!profile.getName().equals(sender.getName()) || !sender.hasPermission("dropheads.spawn.self"))){
@@ -303,6 +309,7 @@ public class CommandSpawnHead extends EvCommand{
 				target = profile.getName();
 				head = pl.getAPI().getHead(profile);
 			}
+			pl.getLogger().info("CC");
 		}
 		if(head == null) sender.sendMessage(String.format(translate("errors.head-not-found"), prefix, target));
 		return new HeadFromString(head, true, target);
