@@ -170,7 +170,7 @@ cracked-iron-golem-heads: false
 
 # Whether to replace the noteblock sound with the ambient mob sound when the
 # noteblock played has a custom mob head on top of it
-noteblock-mob-sounds: true
+noteblock-mob-sounds: false
 
 # A list of mob heads a player can wear to avoid provoking endermen
 endermen-camouflage-heads: []

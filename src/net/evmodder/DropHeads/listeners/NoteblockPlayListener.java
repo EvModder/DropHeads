@@ -1,21 +1,59 @@
 package net.evmodder.DropHeads.listeners;
 
+import java.util.HashMap;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Skull;
+import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.NotePlayEvent;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.JunkUtils;
+import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.extras.HeadUtils;
+import net.evmodder.EvLib.extras.WebUtils;
 
 public class NoteblockPlayListener implements Listener{
-	private final static int DH_MOB_PROFILE_PREFIX_LENGTH = JunkUtils.TXTR_KEY_PREFIX.length();
+	private final int DH_MOB_PROFILE_PREFIX_LENGTH;
+	private final HashMap<String, Sound> nbSounds;
+
+	public NoteblockPlayListener(){
+		final DropHeads pl = DropHeads.getPlugin();
+		DH_MOB_PROFILE_PREFIX_LENGTH = JunkUtils.TXTR_KEY_PREFIX.length();
+		nbSounds = new HashMap</*txtrKey, Sound*/>();
+
+		String sounds = FileIO.loadFile("noteblock-sounds.txt", (String)null);
+		if(sounds == null){
+			pl.getLogger().info("Downloading noteblock sound config...");
+			sounds = WebUtils.getReadURL("https://raw.githubusercontent.com/EvModder/DropHeads/master/noteblock-sounds.txt");
+			sounds = FileIO.loadFile("noteblock-sounds.txt", sounds);
+			if(sounds == null){pl.getLogger().severe("Request to download noteblock-sounds.txt failed"); return;}
+		}
+		for(String line : sounds.split("\n")){
+			line = line.replace(" ", "").replace("\t", "").toUpperCase();
+			final int i = line.indexOf(":");
+			if(i == -1) continue;
+			final String key = line.substring(0, i);
+			if(!pl.getAPI().textureExists(key)){pl.getLogger().warning("Unknown textureKey in noteblock-sounds.txt: "+key); continue;}
+			final String sound = line.substring(i+1);
+			try{nbSounds.put(key, Sound.valueOf(sound));}
+			catch(IllegalArgumentException e1){
+				final int endIdx = key.indexOf('|');
+				try{
+					final EntityType eType = EntityType.valueOf(endIdx == -1 ? key : key.substring(endIdx));
+					pl.getLogger().warning("Unknown sound for "+eType+" in noteblock-sounds.txt: "+sound);
+				}
+				// Don't give warning for unknown sound if EntityType is also unknown (likely future version)
+				catch(IllegalArgumentException e2){}
+				continue;
+			}
+		}
+	}
 
 	public Sound getAmbientSound(String eType){
 		switch(eType){
@@ -84,21 +122,31 @@ public class NoteblockPlayListener implements Listener{
 	@EventHandler(ignoreCancelled = true)
 	public void onNoteblockPlay(NotePlayEvent evt){
 		final Block nb = evt.getBlock();
-		if(nb.getY() >= nb.getWorld().getMaxHeight() || nb.getRelative(BlockFace.UP).getType() != Material.PLAYER_HEAD) return;
+//		if(nb.getY() >= nb.getWorld().getMaxHeight() || nb.getRelative(BlockFace.UP).getType() != Material.PLAYER_HEAD) return;
+		if(nb.getY() >= nb.getWorld().getMaxHeight() || !HeadUtils.isHead(nb.getRelative(BlockFace.UP).getType())) return;
 		final Skull skull = (Skull) nb.getRelative(BlockFace.UP).getState();
-		final GameProfile profile = HeadUtils.getGameProfile(skull);
-		if(!profile.getName().startsWith(JunkUtils.TXTR_KEY_PREFIX)) return;
-		int endIdx = profile.getName().indexOf('|');
-		if(endIdx == -1) endIdx = profile.getName().indexOf('>');
-		else if(profile.getName().startsWith("BEE|ANGRY", DH_MOB_PROFILE_PREFIX_LENGTH)) endIdx = DH_MOB_PROFILE_PREFIX_LENGTH + 9;
-		final String entityName = profile.getName().substring(DH_MOB_PROFILE_PREFIX_LENGTH, endIdx != -1 ? endIdx : profile.getName().length());
-		try{
-			final Sound sound = getAmbientSound(entityName);
-			nb.getWorld().playSound(nb.getLocation(), sound, SoundCategory.RECORDS, /*volume=*/1f, /*pitch=*/1f);
-			evt.setCancelled(true);
+		if(skull.getType().name().endsWith("_WALL_HEAD")) return;
+
+		String textureKey;
+		if(skull.getType() == Material.PLAYER_HEAD){
+			final GameProfile profile = HeadUtils.getGameProfile(skull);
+			if(!profile.getName().startsWith(JunkUtils.TXTR_KEY_PREFIX)) return;
+			final int endIdx = profile.getName().indexOf('>');
+			textureKey = profile.getName().substring(DH_MOB_PROFILE_PREFIX_LENGTH, endIdx != -1 ? endIdx : profile.getName().length());
 		}
-		catch(IllegalArgumentException e){
-			DropHeads.getPlugin().getLogger().warning("Unable to find sound effect for entity: "+entityName);
+		else textureKey = HeadUtils.getEntityFromHead(skull.getType()).name();
+		Sound sound;
+		int endIdx;
+		while((sound=nbSounds.get(textureKey)) == null && (endIdx=textureKey.lastIndexOf('|')) != -1) textureKey = textureKey.substring(0, endIdx);
+		if(sound == null){
+			try{sound = Sound.valueOf("ENTITY_"+textureKey+"_AMBIENT");}
+			catch(IllegalArgumentException ex){
+				DropHeads.getPlugin().getLogger().warning("Unable to find noteblock sound for entity: "+textureKey);
+				if((sound=nbSounds.get("UNKNOWN")) == null) return;
+			}
 		}
+		// Got a sound, now play it
+		nb.getWorld().playSound(nb.getLocation(), sound, SoundCategory.RECORDS, /*volume=*/1f, /*pitch=*/1f);
+		evt.setCancelled(true);
 	}
 }

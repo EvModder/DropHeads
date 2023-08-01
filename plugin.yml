@@ -5,8 +5,8 @@ description: Heads for every mob and player.
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
 #8=noteblock sounds, piglin auto update, translation fallbacks, async web lookup, javadoc refresh
-#1=multipliers>modifiers, craftbukkit behead msg, llama grumms
-version: 3.8.1
+#2=noteblock sounds file
+version: 3.8.2
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 
