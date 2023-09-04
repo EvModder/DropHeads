@@ -695,15 +695,19 @@ public class HeadAPI {
 					Collection<Property> textures = profile.getProperties().get("textures");
 					if(textures == null || textures.isEmpty() || textures.size() > 1){
 						pl.getLogger().warning("Unable to find skin for player: "+profileName);
-						pl.getLogger().warning("num textures: "+textures.size());
+						pl.getLogger().warning("num texturesLL: "+textures.size());
+						head = new ItemStack(Material.PLAYER_HEAD);
+						final SkullMeta meta = (SkullMeta) head.getItemMeta();
+						meta.setOwningPlayer(Bukkit.getOfflinePlayer(profile.getId()));
+						head.setItemMeta(meta);
 					}
 					else{
 						final String minCode0 = minimizeTextureCode(textures.iterator().next().getValue());
 						profile.getProperties().clear();
 						profile.getProperties().put("textures", new Property("textures", minCode0));
+						head = HeadUtils.makeCustomHead(profile, /*setOwner=*/!LOCK_PLAYER_SKINS);
 					}
 				}
-				head = HeadUtils.makeCustomHead(profile, /*setOwner=*/!LOCK_PLAYER_SKINS);
 			}
 			final boolean isMHF = profileName != null && profileName.startsWith("MHF_");
 			if(profileName != null){
