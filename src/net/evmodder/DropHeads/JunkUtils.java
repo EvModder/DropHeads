@@ -272,8 +272,8 @@ public final class JunkUtils{
 		sendPacketMethod.of(playerConnection).call(castPacket);
 	}
 
-	static RefMethod essMethodGetUser, essMethodIsVanished;
-	static RefMethod vanishMethodGetManager, vanishMethodIsVanished;
+	private static RefMethod essMethodGetUser, essMethodIsVanished;
+	private static RefMethod vanishMethodGetManager, vanishMethodIsVanished;
 	public final static boolean isVanished(Player p){
 		Plugin essPlugin = p.getServer().getPluginManager().getPlugin("Essentials");
 		if(essPlugin != null){
@@ -324,6 +324,9 @@ public final class JunkUtils{
 	private final static RefMethod playerGetProfileMethod = craftPlayerClazz.getMethod("getProfile");
 	private final static GameProfile getGameProfile(Player player){return (GameProfile)playerGetProfileMethod.of(player).call();}
 
+	private final static RefMethod propertyGetValueMethod = ReflectionUtils.getRefClass(Property.class).findMethodByName("getValue", "value");
+	public final static String getPropertyValue(Property p){return (String)propertyGetValueMethod.of(p).call();}
+
 	@SuppressWarnings("deprecation")
 	public final static GameProfile getGameProfile(String nameOrUUID, boolean fetchSkin, Plugin nullForSync){
 		Player player;
@@ -337,7 +340,7 @@ public final class JunkUtils{
 				if(rawProfile.getProperties() != null && rawProfile.getProperties().containsKey("textures")){
 					final Collection<Property> textures = rawProfile.getProperties().get("textures");
 					if(textures != null && !textures.isEmpty()){
-						final String code0 = textures.iterator().next().getValue();
+						final String code0 = getPropertyValue(textures.iterator().next());
 						profile.getProperties().put("textures", new Property("textures", code0));
 					}
 				}

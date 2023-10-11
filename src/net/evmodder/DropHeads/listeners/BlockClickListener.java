@@ -262,7 +262,7 @@ public class BlockClickListener implements Listener{
 			if(isPlayerHead){
 				GameProfile profile = HeadUtils.getGameProfile((Skull)evt.getClickedBlock().getState());
 				Collection<Property> textures = profile.getProperties().get("textures");
-				if(textures != null && !textures.isEmpty()) code0 = profile.getProperties().get("textures").iterator().next().getValue();
+				if(textures != null && !textures.isEmpty()) code0 = JunkUtils.getPropertyValue(profile.getProperties().get("textures").iterator().next());
 			}
 			blob.replaceRawDisplayTextWithComponent("${TEXTURE}", new RawTextComponent(code0));
 			blob.replaceRawDisplayTextWithComponent("${BASE64}", new RawTextComponent(code0));

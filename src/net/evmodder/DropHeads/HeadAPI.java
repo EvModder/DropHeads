@@ -702,7 +702,7 @@ public class HeadAPI {
 						head.setItemMeta(meta);
 					}
 					else{
-						final String minCode0 = minimizeTextureCode(textures.iterator().next().getValue());
+						final String minCode0 = minimizeTextureCode(JunkUtils.getPropertyValue(textures.iterator().next()));
 						profile.getProperties().clear();
 						profile.getProperties().put("textures", new Property("textures", minCode0));
 						head = HeadUtils.makeCustomHead(profile, /*setOwner=*/!LOCK_PLAYER_SKINS);
@@ -728,7 +728,7 @@ public class HeadAPI {
 			final Collection<Property> textures = profile.getProperties().get("textures");
 			if(textures != null && !textures.isEmpty()){
 				if(textures.size() > 1) pl.getLogger().warning("Multiple textures in getHead() request: "+profileName);
-				final String code0 = textures.iterator().next().getValue();
+				final String code0 = JunkUtils.getPropertyValue(textures.iterator().next());
 				return getHead(code0.getBytes());
 			}
 		}
