@@ -86,10 +86,6 @@ public class BlockClickListener implements Listener{
 		return profile;
 	}
 
-//	private UUID getMappedUUID(UUID uuid){
-//		long b1 = uuid.getLeastSignificantBits(), b2 = uuid.getMostSignificantBits();
-//		return new UUID(-b1, -b2);
-//	}
 	class HeadNameData{
 		// Only 1 of these 3 is ever defined.
 		public String hdbId, textureKey;

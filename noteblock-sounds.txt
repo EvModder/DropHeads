@@ -1,7 +1,8 @@
-# This file lets you define custom noteblock sounds for different mob heads
+# This file lets you define the noteblock sounds for different mob heads
 #
-# Default: ENTITY_{entity-type}_AMBIENT
-#
+# Default sound will be "ENTITY_{entity-type}_AMBIENT",
+# unless overridden below
+
 UNKNOWN: AMBIENT_CAVE
 
 ALLAY: ENTITY_ALLAY_AMBIENT_WITHOUT_ITEM

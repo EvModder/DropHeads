@@ -39,17 +39,6 @@ public class NoteblockPlayListener implements Listener{
 			final int i = line.indexOf(":");
 			if(i == -1) continue;
 			final String key = line.substring(0, i);
-			if(!pl.getAPI().textureExists(key)){
-				try{//TODO: remove this if/catch error supressor once I add a head for "BOAT"
-					final int endIdx = key.indexOf('|');
-					EntityType.valueOf(endIdx == -1 ? key : key.substring(endIdx));
-					// Don't give warning for unknown textureKey if EntityType is valid
-				}
-				catch(IllegalArgumentException e2){
-					pl.getLogger().warning("Unknown textureKey in noteblock-sounds.txt: "+key);
-				}
-				continue;
-			}
 			final String sound = line.substring(i+1);
 			try{nbSounds.put(key, Sound.valueOf(sound));}
 			catch(IllegalArgumentException e1){

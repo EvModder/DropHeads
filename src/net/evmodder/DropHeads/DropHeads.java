@@ -113,7 +113,7 @@ public final class DropHeads extends EvPlugin{
 		if(!config.getStringList("endermen-camouflage-heads").isEmpty()){
 			getServer().getPluginManager().registerEvents(new EndermanProvokeListener(), this);
 		}
-		if(config.getBoolean("noteblock-mob-sounds", true)){
+		if(config.getBoolean("noteblock-mob-sounds", false)){
 			getServer().getPluginManager().registerEvents(new NoteblockPlayListener(), this);
 		}
 
