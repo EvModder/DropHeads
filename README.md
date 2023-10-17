@@ -21,5 +21,6 @@ A light-weight, highly configurable head collecting plugin for Minecraft
 For plugin developers interested in hooking into the DropHeads API
 <br>
 <br>
+Support me ♥
 <br>
-[![](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/EvModder)
+[Ko-fi link](https://ko-fi.com/evmodder) 
