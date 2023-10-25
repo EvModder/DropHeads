@@ -242,6 +242,9 @@ replace-heads:
   'PIG_ZOMBIE': 'ZOMBIFIED_PIGLIN'
 #  'ILLUSIONER': 'VILLAGER|FLETCHER|SWAMP'
 
+# Whether to send usage statistics to bStats
+bstats-enabled: true
+
 # Whether to enable logging for certain events
 # Placeholders: TIMESTAMP, VICTIM(_UUID), KILLER(_UUID), ITEM, SENDER, HEAD.
 log:

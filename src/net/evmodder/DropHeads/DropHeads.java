@@ -64,6 +64,7 @@ public final class DropHeads extends EvPlugin{
 		if(config.getBoolean("update-plugin", false)){
 			new Updater(/*plugin=*/this, /*id=*/274151, getFile(), Updater.UpdateType.DEFAULT, /*announce=*/true);
 		}
+		if(config.getBoolean("bstats-enabled", true)) new MetricsLite(this, /*bStats id=*/20140);
 		instance = this;
 		api = new InternalAPI();
 		final boolean GLOBAL_PLAYER_BEHEAD_MSG = config.getString("behead-announcement.player",
