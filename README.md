@@ -22,4 +22,4 @@ For plugin developers interested in hooking into the DropHeads API
 <br>
 <br>
 <br>
-[![](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/EvModder)
+<a href='https://ko-fi.com/F2F5Q7ATV' target='_blank'><img height='30' style='border:0px;height:30px;' src='https://storage.ko-fi.com/cdn/brandasset/kofi_button_dark.png' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
