@@ -35,6 +35,7 @@ import net.evmodder.EvLib.Updater;
 // * jeb_ sheep head animated phase through colors (gimmick)
 // * full /minecraft:give command support (namespaced custom heads in /give)
 // * use 'fallback' in TextUtils for head-type, etc.
+// * img.shields/io/bukkit/downloads/id ? other badges on GitHub?
 //TEST:
 // * ALL player-visible msgs in plugin translated in translations.yml
 // * Trophies/Luck attribute

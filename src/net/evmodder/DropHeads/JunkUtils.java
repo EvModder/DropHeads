@@ -334,9 +334,9 @@ public final class JunkUtils{
 		catch(java.lang.IllegalArgumentException e){player = null;/*thrown by UUID.fromString*/}
 		if(player == null) player = Bukkit.getServer().getPlayer(nameOrUUID);
 		if(player != null){
-			GameProfile profile = new GameProfile(player.getUniqueId(), player.getName());
+			final GameProfile profile = new GameProfile(player.getUniqueId(), player.getName());
 			if(fetchSkin){
-				GameProfile rawProfile = getGameProfile(player);
+				final GameProfile rawProfile = getGameProfile(player);
 				if(rawProfile.getProperties() != null && rawProfile.getProperties().containsKey("textures")){
 					final Collection<Property> textures = rawProfile.getProperties().get("textures");
 					if(textures != null && !textures.isEmpty()){

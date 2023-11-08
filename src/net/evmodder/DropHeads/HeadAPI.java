@@ -577,12 +577,16 @@ public class HeadAPI {
 		return head;
 	}
 
-	private String minimizeTextureCode(String base64){
+	private String minimizeTextureCode(final String base64){
 		final String json = new String(Base64.getDecoder().decode(base64)).replaceAll("\\s", "").toLowerCase();
 //		pl.getLogger().info("skin json: "+json);
 		final String URL_START_MATCH = "\"url\":\"http://textures.minecraft.net/texture/";
 		final int startIdx = json.indexOf(URL_START_MATCH)+URL_START_MATCH.length();
 		final int endIdx = json.indexOf('"', startIdx);
+		if(startIdx == -1 || endIdx <= startIdx){
+			pl.getLogger().severe("Unable to decode texture URL from JSON:\n"+json+"\n");
+			return base64;
+		}
 		final String urlCode = json.substring(startIdx, endIdx);
 //		pl.getLogger().info("url code: "+urlCode);
 		//TODO: Also keep timestamp (of behead) from json? json.indexOf("\"timestamp\":\"");
