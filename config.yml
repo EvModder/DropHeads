@@ -46,11 +46,15 @@ player-heads-only: false
 simple-mob-heads-only: false
 
 # Use pre-JAPPA style heads, from before the Minecraft 1.14 texture update
+# It is the same as the "Programmer Art" resource pack in the modern game
 # https://minecraft.fandom.com/wiki/Texture_Update
 use-legacy-head-textures: false
 
 # Use the pre-1.19.3 vex texture for its head (smaller eyebrows, big mouth)
 use-1.19.2-vex-head-textures: false
+
+# Use the pre-1.20.3 bat texture for its head (smaller eyes/ears, less purple)
+use-1.20.2-bat-head-textures: false
 
 # Whether to keep entity heads updated with the latest vanilla textures
 refresh-textures: true

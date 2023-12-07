@@ -60,7 +60,7 @@ public class HeadAPI {
 	protected final Configuration translationsFile;
 //	private final int MAX_HDB_ID = -1;
 	private final boolean GRUMM_ENABLED, SIDEWAYS_SHULKERS_ENABLED, COLORED_COLLARS_ENABLED, SADDLES_ENABLED; // may trigger additional file downloads.
-	private final boolean HOLLOW_SKULLS_ENABLED, TRANSPARENT_SLIME_ENABLED, CRACKED_IRON_GOLEMS_ENABLED, USE_PRE_JAPPA, USE_PRE_1_20;
+	private final boolean HOLLOW_SKULLS_ENABLED, TRANSPARENT_SLIME_ENABLED, CRACKED_IRON_GOLEMS_ENABLED, USE_PRE_JAPPA, USE_OLD_VEX, USE_OLD_BAT;
 	private final boolean LOCK_PLAYER_SKINS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_CUSTOM_HEADS, USE_TRANSLATE_FALLBACKS;
 	private final boolean ASYNC_PROFILE_REQUESTS;
 	private final String UNKNOWN_TEXTURE_CODE;
@@ -146,7 +146,8 @@ public class HeadAPI {
 		TRANSPARENT_SLIME_ENABLED = pl.getConfig().getBoolean("transparent-slime-heads", false);
 		CRACKED_IRON_GOLEMS_ENABLED = pl.getConfig().getBoolean("cracked-iron-golem-heads", false);
 		USE_PRE_JAPPA = pl.getConfig().getBoolean("use-legacy-head-textures", false);
-		USE_PRE_1_20 = pl.getConfig().getBoolean("use-1.19.2-vex-head-textures", false);
+		USE_OLD_VEX = pl.getConfig().getBoolean("use-1.19.2-vex-head-textures", false);
+		USE_OLD_BAT = pl.getConfig().getBoolean("use-1.20.2-bat-head-textures", false);
 		LOCK_PLAYER_SKINS = !pl.getConfig().getBoolean("update-on-skin-change", true);
 		ASYNC_PROFILE_REQUESTS = pl.getConfig().getBoolean("async-offline-profile-requests", false);
 		{
@@ -763,7 +764,8 @@ public class HeadAPI {
 		if(HOLLOW_SKULLS_ENABLED && EntityUtils.isSkeletal(entity.getType())) textureKey += "|HOLLOW";
 		if(TRANSPARENT_SLIME_ENABLED && entity.getType() == EntityType.SLIME) textureKey += "|TRANSPARENT";
 		if(USE_PRE_JAPPA) textureKey += "|PRE_JAPPA";
-		else if(USE_PRE_1_20) textureKey += "|PRE_1_20";
+		else if(USE_OLD_VEX && textureKey.startsWith("VEX")) textureKey += "|PRE_1_20";
+		else if(USE_OLD_BAT && textureKey.startsWith("BAT")) textureKey += "|PRE_1_21";
 		if(GRUMM_ENABLED && HeadUtils.hasGrummName(entity)){
 			if(entity.getType() == EntityType.SHULKER) textureKey = textureKey
 					.replace("|SIDE_UP", "").replace("|SIDE_DOWN", "").replace("|SIDE_LEFT", "").replace("|SIDE_RIGHT", "");
