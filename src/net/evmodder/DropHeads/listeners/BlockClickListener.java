@@ -62,11 +62,11 @@ public class BlockClickListener implements Listener{
 							pl.getConfig().getString("head-click-format-unknown", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head")));
 			MOB_SUBTYPES_SEPARATOR = translations.getString("mob-subtype-separator", " ");
 			UPDATE_PLAYER_HEADS = pl.getConfig().getBoolean("update-on-skin-change", true);
-			ASYNC_PROFILE_REQUESTS = pl.getConfig().getBoolean("async-offline-profile-requests", false) ||
+			ASYNC_PROFILE_REQUESTS = pl.getConfig().getBoolean("async-offline-profile-requests", true) ||
 					!pl.getConfig().getBoolean("head-click-enable-profile-requests", true);
 		}
 		else{
-			CLICK_MSG_DELAY_TICKS = 10;
+			CLICK_MSG_DELAY_TICKS = 5;
 			HEAD_DISPLAY_PLAYERS = HEAD_DISPLAY_MOBS = HEAD_DISPLAY_HDB = HEAD_DISPLAY_UNKNOWN = MOB_SUBTYPES_SEPARATOR = null;
 			ASYNC_PROFILE_REQUESTS = UPDATE_PLAYER_HEADS = false;
 		}

@@ -112,7 +112,7 @@ prevent-head-placement-message: '&7[&6DropHeads&7]&c No permission to place head
 # Note: The output head-click-info can be configured in translate.yml
 head-click-listener: true
 # Set to 0 for no limit on head click message frequency
-head-click-max-rate-in-ticks: 0
+head-click-max-rate-in-ticks: 5
 
 # Saves lore of heads in GameProfile when placed (used by some other plugins)
 # Only works for player-type heads, eg: won't work for minecraft:creeper_head
