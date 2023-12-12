@@ -31,7 +31,7 @@ import net.evmodder.EvLib.Updater;
 // * improve textures listed at the bottom of head-textures.txt
 // * move textures to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."?
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
-// * un-dye heads (sheep,shulker) with cauldron (gimmick)
+// * un-dye heads (sheep,shulker) with cauldron (gimmick). Note that washing banners only removes pattern, not color
 // * jeb_ sheep head animated phase through colors (gimmick)
 // * full /minecraft:give command support (namespaced custom heads in /give)
 // * use 'fallback' in TextUtils for head-type, etc.

@@ -66,7 +66,8 @@ public final class DropChanceAPI{
 	private enum DropMode {EVENT, SPAWN, PLACE, PLACE_BY_KILLER, PLACE_BY_VICTIM, GIVE};
 	private final ArrayList<DropMode> DROP_MODES; // TODO: per-mob drop mode?
 
-	private final boolean PLAYER_HEADS_ONLY, REPLACE_PLAYER_DEATH_EVT_MESSAGE, REPLACE_PET_DEATH_MESSAGE, REPLACE_PLAYER_DEATH_MESSAGE/*, USE_TRANSLATE_FALLBACKS*/;
+	private final boolean PLAYER_HEADS_ONLY;
+	private final boolean REPLACE_PLAYER_DEATH_EVT_MESSAGE, REPLACE_PET_DEATH_MESSAGE, REPLACE_PLAYER_DEATH_MESSAGE/*, USE_TRANSLATE_FALLBACKS*/;
 	private final boolean VANILLA_WSKELE_HANDLING;
 	private final double LOOTING_ADD, LOOTING_MULT;
 	private final boolean DEBUG_MODE, LOG_PLAYER_BEHEAD, LOG_MOB_BEHEAD;
@@ -171,7 +172,7 @@ public final class DropChanceAPI{
 		if(DROP_MODES.isEmpty()) DROP_MODES.add(DropMode.EVENT);
 
 		headOverwriteBlocks = new HashSet<>();
-		if(pl.getConfig().contains("head-place-overwrite-blocks"))
+		if(pl.getConfig().contains("head-place-overwrite-blocks") && DROP_MODES.stream().anyMatch(mode -> mode.name().startsWith("PLACE")))
 		for(String matName : pl.getConfig().getStringList("head-place-overwrite-blocks")){
 			try{headOverwriteBlocks.add(Material.valueOf(matName.toUpperCase()));}
 			catch(IllegalArgumentException ex){pl.getLogger().severe("Unknown material in 'head-place-overwrite-blocks': "+matName);}

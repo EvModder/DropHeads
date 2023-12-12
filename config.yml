@@ -179,7 +179,7 @@ endermen-camouflage-heads: []
 # give a head to the killer, but will drop the item if their inventory is full
 head-item-drop-mode: 'EVENT'
 
-head-place-overwrite-blocks: ['AIR', 'WATER', 'GRASS']
+head-place-overwrite-blocks: ['AIR', 'WATER', 'SHORT_GRASS']
 
 # (Optional) Require using listed hand-held items in order to get head drops
 # If this list is empty, any weapon can be used to get heads
