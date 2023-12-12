@@ -72,6 +72,7 @@ public class HeadAPI {
 	private final HashMap<String, TranslationComponent> entitySubtypeNames;
 	private final HashMap<String, String> replaceHeadsFromTo; // key & value are textureKeys
 	private final Material PIGLIN_HEAD_TYPE;
+	private final static String TEXTURE_DL_URL = "https://raw.githubusercontent.com/EvModder/DropHeads/master/extra-textures/";
 
 	private final String PLAYER_PREFIX, MOB_PREFIX, MHF_PREFIX, HDB_PREFIX, CODE_PREFIX;
 
@@ -145,9 +146,9 @@ public class HeadAPI {
 		HOLLOW_SKULLS_ENABLED = pl.getConfig().getBoolean("hollow-skeletal-skulls", false);
 		TRANSPARENT_SLIME_ENABLED = pl.getConfig().getBoolean("transparent-slime-heads", false);
 		CRACKED_IRON_GOLEMS_ENABLED = pl.getConfig().getBoolean("cracked-iron-golem-heads", false);
-		USE_PRE_JAPPA = pl.getConfig().getBoolean("use-legacy-head-textures", false);
-		USE_OLD_VEX = pl.getConfig().getBoolean("use-1.19.2-vex-head-textures", false);
-		USE_OLD_BAT = pl.getConfig().getBoolean("use-1.20.2-bat-head-textures", false);
+		USE_PRE_JAPPA = pl.getConfig().getBoolean("use-legacy-head-textures", false) || Bukkit.getBukkitVersion().compareTo("1.14") < 0; // v<1.14
+		USE_OLD_VEX = pl.getConfig().getBoolean("use-1.19.2-vex-head-textures", false) || Bukkit.getBukkitVersion().compareTo("1.19.3") < 0; // v<1.19.3
+		USE_OLD_BAT = pl.getConfig().getBoolean("use-1.20.2-bat-head-textures", false) || Bukkit.getBukkitVersion().compareTo("1.20.3") < 0; // v<1.20.3
 		LOCK_PLAYER_SKINS = !pl.getConfig().getBoolean("update-on-skin-change", true);
 		ASYNC_PROFILE_REQUESTS = pl.getConfig().getBoolean("async-offline-profile-requests", false);
 		{
@@ -187,7 +188,7 @@ public class HeadAPI {
 				getClass().getResourceAsStream("/translations.yml"), false);
 		translationsFile.setDefaults(embeddedTranslationsFile);
 		FileIO.deleteFile("translations-temp-DELETE.yml");
-		// See if we can use the 1.19.4 "fallback" feature
+		// See if we can use the 1.19.4+ "fallback" feature
 		USE_TRANSLATE_FALLBACKS = translationsFile.getBoolean("use-translation-fallbacks", false) && Bukkit.getBukkitVersion().compareTo("1.19.4") >= 0;
 
 		if(USE_TRANSLATE_FALLBACKS){
@@ -276,21 +277,28 @@ public class HeadAPI {
 		}
 		if(SIDEWAYS_SHULKERS_ENABLED && (!localList.contains("SHULKER|SIDE_LEFT") || updateTextures)){
 			pl.getLogger().info("Downloading sideways-shulker head textures...");
-			final String shulkers = WebUtils.getReadURL("https://raw.githubusercontent.com/EvModder/DropHeads/master/sideways-shulker-head-textures.txt");
+			final String shulkers = WebUtils.getReadURL(TEXTURE_DL_URL+"sideways-shulker-head-textures.txt");
 			localList += "\n" + JunkUtils.stripComments(shulkers);
 			writeTextureFile = true;
 			pl.getLogger().info("Finished downloading sideways-shulker head textures");
 		}
 		if(COLORED_COLLARS_ENABLED && (!localList.contains("|RED_COLLARED:") || updateTextures)){
 			pl.getLogger().info("Downloading colored-collar head textures...");
-			final String collared = WebUtils.getReadURL("https://raw.githubusercontent.com/EvModder/DropHeads/master/colored-collar-head-textures.txt");
+			final String collared = WebUtils.getReadURL(TEXTURE_DL_URL+"colored-collar-head-textures.txt");
 			localList += "\n" + JunkUtils.stripComments(collared);
 			writeTextureFile = true;
 			pl.getLogger().info("Finished downloading colored-collar head textures");
 		}
+		if(USE_PRE_JAPPA && (!localList.contains("|PRE_JAPPA:") || updateTextures)){
+			pl.getLogger().info("Downloading pre-JAPPA head textures...");
+			final String preJappas = WebUtils.getReadURL(TEXTURE_DL_URL+"pre-jappa-head-textures.txt");
+			localList += "\n" + JunkUtils.stripComments(preJappas);
+			writeTextureFile = true;
+			pl.getLogger().info("Finished downloading pre-JAPPA head textures");
+		}
 		if(GRUMM_ENABLED && (!localList.contains("|GRUMM:") || updateTextures)){
-			pl.getLogger().info("Downloading new Grumm head textures...");
-			final String grumms = WebUtils.getReadURL("https://raw.githubusercontent.com/EvModder/DropHeads/master/grumm-head-textures.txt");
+			pl.getLogger().info("Downloading Grumm head textures...");
+			final String grumms = WebUtils.getReadURL(TEXTURE_DL_URL+"grumm-head-textures.txt");
 			localList += "\n" + JunkUtils.stripComments(grumms);
 			writeTextureFile = true;
 			pl.getLogger().info("Finished downloading Grumm head textures");
