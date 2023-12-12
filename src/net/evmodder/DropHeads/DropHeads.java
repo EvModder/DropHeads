@@ -25,11 +25,11 @@ import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.Updater;
 
 //TODO:
-// * CHEST(_BOAT)|BAMBOO -> Bamboo (Chest) Raft
 // * /dropheads reload
-// * Refactor CommandSpawnHead (split it up!)
-// * improve the bad textures listed at the bottom of head-textures.txt
-// * move textures to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."
+// * /droprate edit
+// * refactor CommandSpawnHead (split it up!)
+// * improve textures listed at the bottom of head-textures.txt
+// * move textures to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."?
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
 // * un-dye heads (sheep,shulker) with cauldron (gimmick)
 // * jeb_ sheep head animated phase through colors (gimmick)
@@ -37,15 +37,9 @@ import net.evmodder.EvLib.Updater;
 // * use 'fallback' in TextUtils for head-type, etc.
 // * img.shields/io/bukkit/downloads/id ? other badges on GitHub?
 //TEST:
-// * ALL player-visible msgs in plugin translated in translations.yml
 // * Trophies/Luck attribute
-// * hide behead msgs for vanished players
-// * Multiple possible behead messages, with one picked randomly EG:["$ was beheaded", "$ lost their head", "$ got decapitated"]
 // * place-head-block, overwrite-blocks, facing-direction, place-as: KILLER/VICTIM/SERVER
 // * middle-click copy with correct item name // WORKS well enough; can still bug out if u middle-click twice
-// * head-item-drop-mode
-// * /droprate - check (TODO: or edit) per mob (& cmd for spawn modifiers)
-// * prevent placing heads
 // * update-textures=true (head-textures.txt file overwritten when plugin is updated)
 //Export -> JAVADOC -> javadoc sources:
 // * EvLib: https://evmodder.github.io/EvLib/

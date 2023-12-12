@@ -440,13 +440,15 @@ public class HeadAPI {
 				break;
 			case "BOAT":
 				if(dataFlags.length > 1 && !dataFlags[1].equals("GRUMM")){
-					textureKey = textureKey.replaceAll("BOAT\\|(\\w+)", "item.minecraft.$1_boat").toLowerCase();
+					if(dataFlags[1].equals("BAMBOO")) textureKey = textureKey.replace("BOAT|BAMBOO", "item.minecraft.bamboo_raft");
+					else textureKey = textureKey.replaceAll("BOAT\\|(\\w+)", "item.minecraft.$1_boat").toLowerCase();
 					dataFlags = textureKey.split("\\|");
 				}
 				break;
 			case "CHEST_BOAT":// TODO: "Acacia Boat with Chest" "Head" looks weird in English
 				if(dataFlags.length > 1 && !dataFlags[1].equals("GRUMM")){
-					textureKey = textureKey.replaceAll("CHEST_BOAT\\|(\\w+)", "item.minecraft.$1_chest_boat").toLowerCase();
+					if(dataFlags[1].equals("BAMBOO")) textureKey = textureKey.replace("CHEST_BOAT|BAMBOO", "item.minecraft.bamboo_chest_raft");
+					else textureKey = textureKey.replaceAll("CHEST_BOAT\\|(\\w+)", "item.minecraft.$1_chest_boat").toLowerCase();
 					dataFlags = textureKey.split("\\|");
 				}
 				break;
