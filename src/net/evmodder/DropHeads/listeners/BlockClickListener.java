@@ -2,8 +2,6 @@ package net.evmodder.DropHeads.listeners;
 
 import java.util.Base64;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.UUID;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
@@ -41,7 +39,7 @@ public class BlockClickListener implements Listener{
 	private final boolean SHOW_CLICK_INFO, REPAIR_IRON_GOLEM_HEADS, UPDATE_PLAYER_HEADS, ASYNC_PROFILE_REQUESTS;
 	private final String HEAD_DISPLAY_PLAYERS, HEAD_DISPLAY_MOBS, HEAD_DISPLAY_HDB, HEAD_DISPLAY_UNKNOWN, MOB_SUBTYPES_SEPARATOR;
 	private final int CLICK_MSG_DELAY_TICKS; // So they dont spam themselves
-	private final HashSet<UUID> recentClickers;
+	private boolean infoClickInCooldown = false;
 
 	public BlockClickListener(Configuration translations){
 		pl = DropHeads.getPlugin();
@@ -72,7 +70,6 @@ public class BlockClickListener implements Listener{
 			HEAD_DISPLAY_PLAYERS = HEAD_DISPLAY_MOBS = HEAD_DISPLAY_HDB = HEAD_DISPLAY_UNKNOWN = MOB_SUBTYPES_SEPARATOR = null;
 			ASYNC_PROFILE_REQUESTS = UPDATE_PLAYER_HEADS = false;
 		}
-		recentClickers = CLICK_MSG_DELAY_TICKS > 0 ? new HashSet<UUID>() : null;
 	}
 
 	GameProfile stripCustomLoreAndNamespace(GameProfile profile){
@@ -189,11 +186,7 @@ public class BlockClickListener implements Listener{
 	@EventHandler(ignoreCancelled = true)
 	public void onBlockClickEvent(PlayerInteractEvent evt){
 		if(evt.useInteractedBlock() == Result.DENY || evt.getAction() != Action.RIGHT_CLICK_BLOCK
-			|| evt.getPlayer().isSneaking() || !HeadUtils.isHead(evt.getClickedBlock().getType())
-			|| (recentClickers != null && !recentClickers.add(evt.getPlayer().getUniqueId()))) return;
-		final UUID uuid = evt.getPlayer().getUniqueId();
-		if(recentClickers != null) new BukkitRunnable(){
-			@Override public void run(){recentClickers.remove(uuid);}}.runTaskLater(pl, CLICK_MSG_DELAY_TICKS);
+			|| evt.getPlayer().isSneaking() || !HeadUtils.isHead(evt.getClickedBlock().getType())) return;
 
 		final boolean isPlayerHead = HeadUtils.isPlayerHead(evt.getClickedBlock().getType());
 
@@ -228,6 +221,13 @@ public class BlockClickListener implements Listener{
 
 		if(!SHOW_CLICK_INFO || !evt.getPlayer().hasPermission("dropheads.clickinfo")) return;
 
+		if(CLICK_MSG_DELAY_TICKS > 0){
+			// Note: Unfortunately we need to cancel the click before knowing if they have perms to see the click msg
+			if(infoClickInCooldown){evt.setCancelled(true); return;}
+			infoClickInCooldown = true;
+			new BukkitRunnable(){@Override public void run(){infoClickInCooldown = false;}}.runTaskLater(pl, CLICK_MSG_DELAY_TICKS);
+		}
+
 		final HeadNameData data = getHeadNameData(evt.getClickedBlock().getState());
 
 		final String HEAD_DISPLAY;
@@ -235,6 +235,7 @@ public class BlockClickListener implements Listener{
 		else if(data.player != null){if(!evt.getPlayer().hasPermission("dropheads.clickinfo.players")) return; HEAD_DISPLAY = HEAD_DISPLAY_PLAYERS;}
 		else if(data.hdbId != null){if(!evt.getPlayer().hasPermission("dropheads.clickinfo.hdb")) return; HEAD_DISPLAY = HEAD_DISPLAY_HDB;}
 		else{if(!evt.getPlayer().hasPermission("dropheads.clickinfo.unknown")) return; HEAD_DISPLAY = HEAD_DISPLAY_UNKNOWN;}
+		evt.setCancelled(true); // No more return statements. They will be shown an info message, so cancel the vanilla click
 
 		final TranslationComponent headTypeName = pl.getAPI().getHeadTypeName(data.headType);
 		final String englishName = ChatColor.stripColor(
@@ -244,7 +245,6 @@ public class BlockClickListener implements Listener{
 				);
 		final String aOrAn = isVowel(englishName.charAt(0)) ? "an" : "a"; // Yes, an imperfect solution, I know. :/
 
-		evt.setCancelled(true);
 		final ListComponent blob = TellrawUtils.convertHexColorsToComponentsWithReset(HEAD_DISPLAY);
 		blob.replaceRawDisplayTextWithComponent("${TYPE}", headTypeName);//these 3 are aliases of eachother
 		blob.replaceRawDisplayTextWithComponent("${HEAD_TYPE}", headTypeName);
