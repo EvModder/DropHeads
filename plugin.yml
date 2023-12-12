@@ -4,11 +4,14 @@ author: EvModder
 description: Heads for every mob and player.
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
-#8=noteblock sounds, piglin auto update, translation fallbacks, async web lookup, javadoc refresh
-#3=bStats,geyser fix,armadillo/breeze/new-bat heads
-version: 3.8.3
+#9=Reorganized texture files. Old version will no longer be able to download textures!
+#0=
+version: 3.9.0
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
+
+# Hidden config.yml settings:
+# use-legacy-head-textures,use-1.19.2-vex-head-textures,use-1.20.2-bat-head-textures
 
 commands:
   spawnhead:

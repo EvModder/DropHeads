@@ -28,7 +28,6 @@ import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTTagList;
 import net.evmodder.EvLib.extras.ReflectionUtils;
 import net.evmodder.EvLib.extras.TellrawUtils;
 import net.evmodder.EvLib.extras.TextUtils;
-import net.evmodder.EvLib.extras.TypeUtils;
 import net.evmodder.EvLib.extras.WebUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefField;
@@ -149,7 +148,7 @@ public final class JunkUtils{
 	}
 
 	public final static Component getItemDisplayNameComponent(@Nonnull ItemStack item){
-		String rarityColor = TypeUtils.getRarityColor(item).name().toLowerCase();
+		String rarityColor = TextUtils.getRarityColor(item).name().toLowerCase();
 		String rawDisplayName = JunkUtils.getDisplayName(item);
 		if(rawDisplayName != null){
 			return new ListComponent(
@@ -166,7 +165,7 @@ public final class JunkUtils{
 	}
 	public final static Component getMurderItemComponent(@Nonnull ItemStack item, int JSON_LIMIT){
 		TextHoverAction hoverAction = new TextHoverAction(HoverEvent.SHOW_ITEM, JunkUtils.convertItemStackToJson(item, JSON_LIMIT));
-		String rarityColor = TypeUtils.getRarityColor(item).name().toLowerCase();
+		String rarityColor = TextUtils.getRarityColor(item).name().toLowerCase();
 		String rawDisplayName = JunkUtils.getDisplayName(item);
 		if(rawDisplayName != null){
 			return new ListComponent(
