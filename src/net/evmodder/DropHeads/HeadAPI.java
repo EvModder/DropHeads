@@ -49,7 +49,6 @@ import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
 import net.evmodder.EvLib.extras.TextUtils;
 import net.evmodder.EvLib.extras.WebUtils;
-import net.evmodder.EvLib.extras.EntityUtils.CCP;
 
 /** Public API for general DropHeads features.
  * Warning: Functions may change or disappear in future releases
@@ -368,17 +367,17 @@ public class HeadAPI {
 		switch(/*entity != null ? entity.name() : */dataFlags[0]){
 			case "TROPICAL_FISH":
 				if(dataFlags.length == 2 && !dataFlags[1].equals("GRUMM")){
-					CCP ccp = EntityUtils.getCCP(dataFlags[1]);
+					int pccInt = EntityUtils.getPCCInt(/*common_name=*/dataFlags[1]);
 //					String name = TextUtils.capitalizeAndSpacify(dataFlags[1], '_');
 					return new Component[]{new TranslationComponent(
-							"entity.minecraft.tropical_fish.predefined."+EntityUtils.getCommonTropicalFishId(ccp))};
+							"entity.minecraft.tropical_fish.predefined."+EntityUtils.getCommonTropicalFishId(pccInt))};
 				}
 				else if(dataFlags.length > 2) try{
 					DyeColor bodyColor = DyeColor.valueOf(dataFlags[1]);
 					DyeColor patternColor = dataFlags.length == 3 ? bodyColor : DyeColor.valueOf(dataFlags[2]);
 					org.bukkit.entity.TropicalFish.Pattern pattern = org.bukkit.entity.TropicalFish.Pattern
 							.valueOf(dataFlags[dataFlags.length == 3 ? 2 : 3]);
-					return new Component[]{TellrawUtils.getLocalizedDisplayName(new CCP(bodyColor, patternColor, pattern))};
+					return new Component[]{TellrawUtils.getLocalizedDisplayNameForTropicalFish(EntityUtils.intFromPCC(pattern, bodyColor, patternColor))};
 				}
 				catch(IllegalArgumentException e){}
 				break;

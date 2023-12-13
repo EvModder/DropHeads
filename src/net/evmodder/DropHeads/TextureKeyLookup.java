@@ -16,7 +16,6 @@ import org.bukkit.entity.Shulker;
 import org.bukkit.entity.Tameable;
 import org.bukkit.entity.TropicalFish;
 import net.evmodder.EvLib.extras.EntityUtils;
-import net.evmodder.EvLib.extras.EntityUtils.CCP;
 import net.evmodder.EvLib.extras.ReflectionUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
@@ -35,18 +34,20 @@ public final class TextureKeyLookup{
 	private TextureKeyLookup(){}
 
 	@SuppressWarnings("deprecation")
-	private static String getTropicalFishKey(CCP ccp){
-		if(EntityUtils.getCommonTropicalFishId(ccp) != null){
+	private static String getTropicalFishKey(TropicalFish fish){
+		int pccInt = EntityUtils.getPCCInt(fish);
+		Integer id = EntityUtils.getCommonTropicalFishId(pccInt);
+		if(id != null){
 //			System.out.println("name: "+EntityUtils.getTropicalFishEnglishName(ccp).toUpperCase().replace(' ', '_'));
-			return "TROPICAL_FISH|"+EntityUtils.getTropicalFishEnglishName(ccp).toUpperCase().replace(' ', '_');
+			return "TROPICAL_FISH|"+EntityUtils.getTropicalFishEnglishName(pccInt).toUpperCase().replace(' ', '_');
 		}
 		else{
 //			System.out.println("fallback name: "+new StringBuilder("TROPICAL_FISH|")
-//					.append(ccp.bodyColor.name()).append('|').append(ccp.patternColor.name())
-//					.append('|').append(ccp.pattern.name()).toString());
+//					.append(fish.getBodyColor().name()).append('|').append(fish.getPatternColor().name())
+//					.append('|').append(fish.getPattern().name()).toString());
 			return new StringBuilder("TROPICAL_FISH|")
-					.append(ccp.bodyColor.name()).append('|').append(ccp.patternColor.name())
-					.append('|').append(ccp.pattern.name()).toString();
+					.append(fish.getBodyColor().name()).append('|').append(fish.getPatternColor().name())
+					.append('|').append(fish.getPattern().name()).toString();
 		}
 	}
 	private static BlockFace turnLeft(BlockFace face){
@@ -165,7 +166,7 @@ public final class TextureKeyLookup{
 			case "SHULKER":
 				return getShulkerKey((Shulker)entity);
 			case "TROPICAL_FISH":
-				return getTropicalFishKey(EntityUtils.getCCP((TropicalFish)entity));
+				return getTropicalFishKey((TropicalFish)entity);
 				/*CCP fishData = new CCP(f.getBodyColor(), f.getPatternColor(), f.getPattern());
 				String name = HeadUtils.tropicalFishNames.get(fishData);
 				if(name == null) name = EvUtils.getNormalizedName(entity.getType());
