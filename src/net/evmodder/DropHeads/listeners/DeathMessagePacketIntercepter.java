@@ -41,7 +41,8 @@ public class DeathMessagePacketIntercepter{
 	private final RefMethod getChatBaseComp;
 	private final RefMethod getJsonKyori; private final Object jsonSerializerKyori;
 	private final RefMethod toJsonMethod = chatSerializerClazz.findMethod(/*isStatic=*/true, String.class, chatBaseCompClazz);
-	private final Pattern uuidPattern = Pattern.compile("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}");
+	private final Pattern uuidPattern1 = Pattern.compile("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}");
+	private final Pattern uuidPattern2 = Pattern.compile("\\[I?;?\\s*(-?[0-9]{,10}),\\s*(-?[0-9]{,10}),\\s*(-?[0-9]{,10}),\\s*(-?[0-9]{,10})\\s*\\]");
 
 	public DeathMessagePacketIntercepter(boolean replacePlayerDeathMsg, boolean replacePetDeathMsg){
 		pl = DropHeads.getPlugin();
@@ -88,6 +89,11 @@ public class DeathMessagePacketIntercepter{
 		);
 	}
 
+	private UUID parseUUIDFromFourIntStrings(String s1, String s2, String s3, String s4){
+		final Integer i1 = Integer.parseInt(s1), i2 = Integer.parseInt(s2), i3 = Integer.parseInt(s3), i4 = Integer.parseInt(s4); 
+		return new UUID((long)i1 << 32 | i2 & 0xFFFFFFFFL, (long)i3 << 32 | i4 & 0xFFFFFFFFL);
+	}
+
 	private void injectPlayer(Player player){
 		JunkUtils.getPlayerChannel(player).pipeline().addBefore("packet_handler", "replace_death_with_behead_msg", new ChannelDuplexHandler(){
 			@Override public void write(ChannelHandlerContext context, Object packet, ChannelPromise promise) throws Exception {
@@ -119,14 +125,19 @@ public class DeathMessagePacketIntercepter{
 					return;
 				}
 //				pl.getLogger().info("detected death msg:\n"+jsonMsg);
-				final Matcher matcher = uuidPattern.matcher(jsonMsg);
-				if(!matcher.find()){
-					pl.getLogger().warning("Unable to find UUID from death message: "+jsonMsg);
-					pl.getLogger().warning("This is probably caused by another plugin destructively modifying the selector");
-					super.write(context, packet, promise);
-					return;
+				final UUID uuid; // uuid of entity that died
+				final Matcher matcher1 = uuidPattern1.matcher(jsonMsg);
+				if(matcher1.find()) uuid = UUID.fromString(matcher1.group());
+				else{
+					final Matcher matcher2 = uuidPattern2.matcher(jsonMsg);
+					if(matcher2.find()) uuid = parseUUIDFromFourIntStrings(matcher2.group(0), matcher2.group(1), matcher2.group(2), matcher2.group(3));
+					else{
+						pl.getLogger().warning("Unable to find UUID from death message: "+jsonMsg);
+						pl.getLogger().warning("This is probably caused by another plugin destructively modifying the selector");
+						super.write(context, packet, promise);
+						return;
+					}
 				}
-				final UUID uuid = UUID.fromString(matcher.group()); // uuid of entity which died
 				if(unblockedDeathBroadcasts.contains(uuid)){
 					super.write(context, packet, promise);
 					return;
