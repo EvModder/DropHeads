@@ -1,9 +1,11 @@
 PLAYER:             0.250
 UNKNOWN:            0.000 // the default chance
-ALLAY:              0.050
+ALLAY:              0.006
+ARMADILLO:          0.009
 AXOLOTL:            0.007
 BAT:                0.010
 BEE:                0.006
+BREEZE:             0.030
 BLAZE:              0.005
 CAMEL:              0.006
 CAT:                0.004

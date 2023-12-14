@@ -4,7 +4,7 @@ author: EvModder
 description: Heads for every mob and player.
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
-#9=Reorganized texture file downloads,split out jappas, auto-version detection,fix grass vs short_grass,global click-info cooldown
+#9=Reorganized texture file downloads,split out jappas, auto-version detection,fix grass vs short_grass,global click-info cooldown,fix death msgs 1.20.3+
 #0=
 version: 3.9.0
 api-version: 1.13

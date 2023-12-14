@@ -42,7 +42,7 @@ public class DeathMessagePacketIntercepter{
 	private final RefMethod getJsonKyori; private final Object jsonSerializerKyori;
 	private final RefMethod toJsonMethod = chatSerializerClazz.findMethod(/*isStatic=*/true, String.class, chatBaseCompClazz);
 	private final Pattern uuidPattern1 = Pattern.compile("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}");
-	private final Pattern uuidPattern2 = Pattern.compile("\\[I?;?\\s*(-?[0-9]{,10}),\\s*(-?[0-9]{,10}),\\s*(-?[0-9]{,10}),\\s*(-?[0-9]{,10})\\s*\\]");
+	private final Pattern uuidPattern2 = Pattern.compile("\\[I?;?\\s*(-?[0-9]+),\\s*(-?[0-9]+),\\s*(-?[0-9]+),\\s*(-?[0-9]+)\\s*\\]");
 
 	public DeathMessagePacketIntercepter(boolean replacePlayerDeathMsg, boolean replacePetDeathMsg){
 		pl = DropHeads.getPlugin();
@@ -130,7 +130,7 @@ public class DeathMessagePacketIntercepter{
 				if(matcher1.find()) uuid = UUID.fromString(matcher1.group());
 				else{
 					final Matcher matcher2 = uuidPattern2.matcher(jsonMsg);
-					if(matcher2.find()) uuid = parseUUIDFromFourIntStrings(matcher2.group(0), matcher2.group(1), matcher2.group(2), matcher2.group(3));
+					if(matcher2.find()) uuid = parseUUIDFromFourIntStrings(matcher2.group(1), matcher2.group(2), matcher2.group(3), matcher2.group(4));
 					else{
 						pl.getLogger().warning("Unable to find UUID from death message: "+jsonMsg);
 						pl.getLogger().warning("This is probably caused by another plugin destructively modifying the selector");
