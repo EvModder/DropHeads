@@ -27,6 +27,7 @@ import net.evmodder.EvLib.Updater;
 //TODO:
 // * /dropheads reload
 // * /droprate edit
+// * use skullMeta.setNoteBlockSound()?
 // * refactor CommandSpawnHead (split it up!)
 // * improve textures listed at the bottom of head-textures.txt
 // * move textures to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."?
@@ -59,7 +60,7 @@ public final class DropHeads extends EvPlugin{
 		if(config.getBoolean("update-plugin", false)){
 			new Updater(/*plugin=*/this, /*id=*/274151, getFile(), Updater.UpdateType.DEFAULT, /*announce=*/true);
 		}
-		if(config.getBoolean("bstats-enabled", true)) new MetricsLite(this, /*bStats id=*/20140);
+		if(config.getBoolean("bstats-enabled", true) && !config.isSet("new")) new MetricsLite(this, /*bStats id=*/20140);
 		instance = this;
 		api = new InternalAPI();
 		final boolean GLOBAL_PLAYER_BEHEAD_MSG = config.getString("behead-announcement.player",
