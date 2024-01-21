@@ -4,9 +4,9 @@ author: EvModder
 description: Heads for every mob and player.
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
-#9=Reorganized texture file downloads,split out jappas, auto-version detection,fix grass vs short_grass,global click-info cooldown,fix death msgs 1.20.3+
-#0=
-version: 3.9.0
+#9=Reorganized texture file downloads, global click-info cooldown
+#1=droprate edit cmd
+version: 3.9.1
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 
@@ -23,7 +23,7 @@ commands:
 
   droprate:
     description: Check the drop rate for a head
-    usage: /droprate <mob type>
+    usage: /droprate <mob> [new value] [update file]
     aliases: [headrate,headdropchance,dhrate,headchance]
     permission: dropheads.droprate
     permission-message: You do not have permission to do this.

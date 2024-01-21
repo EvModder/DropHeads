@@ -197,6 +197,10 @@ commands:
   droprate:
     not-found: "&6Drop chance for \"&c%s&6\" not found! &7(defaults to &b0%%&7)"
     raw-drop-rate-for: "&6Drop chance for &e%s&6: &b%s%%"
+    unknown-entity: "&cUnknown head type: \"&6%s&6\""
+    input-rate-invalid: "&cDrop chance must be between &b0.0&c and &b1.0"
+    rate-not-changed: "&cDrop chance for &e%s&c is already set to &b%s%%"
+    rate-changed: "&aDrop chance for &e%s&a updated from &b%s%% &ato &b%s%%"
     restrictions:
       header: "§7Drop restrictions:"
       victim-must-have-perm: "\n&c&l>&7 Victim must have the '&cdropheads.canlosehead&7' perm"

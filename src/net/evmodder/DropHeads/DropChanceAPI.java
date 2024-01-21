@@ -1,5 +1,8 @@
 package net.evmodder.DropHeads;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -14,6 +17,7 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Material;
 import org.bukkit.Statistic;
 import org.bukkit.block.Block;
@@ -255,7 +259,7 @@ public final class DropChanceAPI{
 		}
 
 		//Load individual mobs' drop chances
-		HashMap<EntityType, Double> mobChances = new HashMap<>();
+		mobChances = new HashMap<>();
 		subtypeMobChances = new HashMap<EntityType, HashMap<String, Double>>();
 //		noLootingEffectMobs = new HashSet<EntityType>();
 		if(PLAYER_HEADS_ONLY){
@@ -325,10 +329,9 @@ public final class DropChanceAPI{
 				pl.getLogger().warning("Wither Skeleton Skull drop chance has been modified in 'head-drop-rates.txt', "
 						+ "but this value will be ignored because 'vanilla-wither-skeleton-skulls' is set to true.");
 			}
-			// No need storing 0-chance mobs if the default drop chance is 0
-			if(DEFAULT_CHANCE == 0D) mobChances.entrySet().removeIf(entry -> entry.getValue() == 0D);
+//			// No need storing chance-per-mob if it is the default
+//			mobChances.entrySet().removeIf(entry -> entry.getValue() == DEFAULT_CHANCE);
 		}  // if(!PLAYER_HEADS_ONLY)
-		this.mobChances = Collections.unmodifiableMap(mobChances);
 
 		// Dynamically add all the children perms of "dropheads.alwaysbehead.<entity>" and "dropheads.canbehead.<entity>"
 		final Permission alwaysBeheadPerm = pl.getServer().getPluginManager().getPermission("dropheads.alwaysbehead");
@@ -362,14 +365,15 @@ public final class DropChanceAPI{
 	public Set<Material> getRequiredWeapons(){return mustUseTools;}
 	/** Get the raw drop chance (ignore all multipliers) of a head for a specific texture key.
 	 * @param textureKey The target texture key
-	 * @return The drop chance [0, 1]
+	 * @param useDefault Whether to return the default-chance if key is not found, otherwise will return null
+	 * @return The drop chance [0, 1] or null
 	 */
-	public double getRawDropChance(String textureKey){
+	public Double getRawDropChance(String textureKey, boolean useDefault){
 		int keyDataTagIdx = textureKey.indexOf('|');
 		final String entityName = keyDataTagIdx == -1 ? textureKey : textureKey.substring(0, keyDataTagIdx);
 		EntityType eType;
 		try{eType = EntityType.valueOf(entityName.toUpperCase());}
-		catch(IllegalArgumentException ex){return DEFAULT_CHANCE;}
+		catch(IllegalArgumentException ex){return useDefault ? DEFAULT_CHANCE : null;}
 		final HashMap<String, Double> eSubtypeChances = subtypeMobChances.get(eType);
 		if(eSubtypeChances != null){
 			keyDataTagIdx = textureKey.lastIndexOf('|');
@@ -380,7 +384,7 @@ public final class DropChanceAPI{
 			}
 			if(subtypeChance != null) return subtypeChance;
 		}
-		return mobChances.getOrDefault(eType, DEFAULT_CHANCE);
+		return useDefault ? mobChances.getOrDefault(eType, DEFAULT_CHANCE) : mobChances.get(eType);
 	}
 	/** Get the raw drop chance (ignore all multipliers) of a head for a specific entity.
 	 * @param entity The target entity
@@ -403,7 +407,7 @@ public final class DropChanceAPI{
 	/** Get a map of all configured drop chances.
 	 * @return An immutable map (EntityType => drop chance)
 	 */
-	public Map<EntityType, Double> getRawDropChances(){return mobChances;}
+	public Map<EntityType, Double> getRawDropChances(){return Collections.unmodifiableMap(mobChances);}
 	/** Get the percent chance added to the drop chance (per looting level).
 	 * @return The drop chance increase amount
 	 */
@@ -438,6 +442,41 @@ public final class DropChanceAPI{
 				.filter(e -> killer.hasPermission(e.getKey()))
 				.map(e -> e.getValue())
 				.reduce(1D, (a, b) -> a * b);
+	}
+
+	/** Set the raw drop chance of a head for a specific texture key.
+	 * @param textureKey The target texture key
+	 * @param newChance The new drop chance to use for the entity
+	 * @param updateFile Whether to also update <code>plugins/DropHeads/head-drop-rates.txt</code> file (permanently change value)
+	 * @return Whether the change took place
+	 */
+	public boolean setRawDropChance(String textureKey, double newChance, boolean updateFile){
+		if(getRawDropChance(textureKey, /*useDefault=*/false) == newChance) return false;
+		final int keyDataTagIdx = textureKey.indexOf('|');
+		final String entityName = keyDataTagIdx == -1 ? textureKey : textureKey.substring(0, keyDataTagIdx);
+		EntityType eType;
+		try{eType = EntityType.valueOf(entityName);}
+		catch(IllegalArgumentException ex){return false;}
+		if(keyDataTagIdx != -1){
+			if(!pl.getAPI().textureExists(textureKey)) return false;
+			final HashMap<String, Double> eSubtypeChances = subtypeMobChances.getOrDefault(eType, new HashMap<>());
+			eSubtypeChances.put(textureKey, newChance);
+			subtypeMobChances.put(eType, eSubtypeChances);
+		}
+		else mobChances.put(eType, newChance);
+		if(!updateFile) return true;
+
+		String spaces = StringUtils.repeat(' ', 19-textureKey.length()); // TODO: alternative to this hacky spacing nonsense?
+		String insertLine = textureKey + ':' + spaces + newChance;
+		String content;
+		try{content = new String(Files.readAllBytes(Paths.get(FileIO.DIR+"head-drop-rates.txt")));}
+		catch(IOException e){e.printStackTrace(); return false;}
+
+		String updated = content.replaceAll(
+				"(?m)^"+textureKey.replace("|", "\\|")+":\\s*\\d*\\.?\\d+(\n?)",
+				(newChance == DEFAULT_CHANCE) ? "" : insertLine+"$1");
+		if(updated.equals(content)) updated += "\n"+insertLine;
+		return FileIO.saveFile("head-drop-rates.txt", updated);
 	}
 
 	/** Drop a head item for an entity using the appropriate <code>DropMode</code> setting.

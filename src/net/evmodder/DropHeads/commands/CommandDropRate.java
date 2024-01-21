@@ -1,11 +1,13 @@
 package net.evmodder.DropHeads.commands;
 
 import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -36,7 +38,6 @@ public class CommandDropRate extends EvCommand{
 	final private boolean USING_SPAWN_MULTS, NEED_CERTAIN_WEAPONS, USING_LOOTING_MULTS, USING_TIME_ALIVE_MULTS, USING_WEAPON_MULTS;
 	final private boolean VANILLA_WSKELE_HANDLING;
 	final private HashSet<String> entityNames;
-	final private double DEFAULT_DROP_CHANCE;
 	final private int JSON_LIMIT;
 
 	final private Component REQUIRED_WEAPONS;
@@ -87,25 +88,18 @@ public class CommandDropRate extends EvCommand{
 		//String defaultChances = FileIO.loadResource(pl, "head-drop-rates.txt"); // Already done in EntityDeathListener
 		String chances = FileIO.loadFile("head-drop-rates.txt", "");
 		entityNames = new HashSet<String>();
-		double chanceForUnknown = 0D;
 		for(String line : chances.split("\n")){
 			String[] parts = line.replace(" ", "").replace("\t", "").toUpperCase().split(":");
 			if(parts.length < 2) continue;
 			parts[0] = parts[0].replace("DEFAULT", "UNKNOWN");
-			try{
-				final double dropChance = Double.parseDouble(parts[1]);
-				if(parts[0].equals("UNKNOWN")) chanceForUnknown = dropChance;
-				if(ONLY_SHOW_VALID_ENTITIES){
-					int dataTagSep = parts[0].indexOf('|');
-					String eName = dataTagSep == -1 ? parts[0] : parts[0].substring(0, dataTagSep);
-					EntityType.valueOf(eName); // If entity does not exist, this drops to the catch below
-				}
-				entityNames.add(parts[0]);
+			if(ONLY_SHOW_VALID_ENTITIES){
+				final int dataTagSep = parts[0].indexOf('|');
+				final String eName = dataTagSep == -1 ? parts[0] : parts[0].substring(0, dataTagSep);
+				try{EntityType.valueOf(eName);}
+				catch(IllegalArgumentException ex){continue;}
 			}
-			catch(NumberFormatException ex){}
-			catch(IllegalArgumentException ex){}
+			entityNames.add(parts[0]);
 		}
-		DEFAULT_DROP_CHANCE = chanceForUnknown;
 	}
 
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
@@ -113,6 +107,8 @@ public class CommandDropRate extends EvCommand{
 			args[0] = args[0].toUpperCase();
 			return entityNames.stream().filter(name -> name.startsWith(args[0])).collect(Collectors.toList());
 		}
+		if(args.length == 2) return Arrays.asList();
+		if(args.length == 3) return Arrays.asList("true");
 		return null;
 	}
 
@@ -164,21 +160,56 @@ public class CommandDropRate extends EvCommand{
 		if(entity != null){
 			if(!entity.hasPermission("dropheads.canlosehead")){
 				sendTellraw(sender.getName(), new TranslationComponent(
-						translate("raw-drop-rate-for"), new SelectorComponent(entity.getUniqueId()), new RawTextComponent("0"/*0 in translations.yml?*/)).toString());
+						translate("raw-drop-rate-for"), new SelectorComponent(entity.getUniqueId()),
+						new RawTextComponent("0"/*0 in translations.yml?*/)).toString());
 			}
 			else{
 				rawChance = dropChanceAPI.getRawDropChance(entity);
 				sendTellraw(sender.getName(), new TranslationComponent(
-						translate("raw-drop-rate-for"), new SelectorComponent(entity.getUniqueId()), new RawTextComponent(formatDroprate(rawChance*100D))).toString());
+						translate("raw-drop-rate-for"), new SelectorComponent(entity.getUniqueId()),
+						new RawTextComponent(formatDroprate(rawChance*100D))).toString());
 			}
 		}
-		else{
-			rawChance = dropChanceAPI.getRawDropChance(target);
-			if(rawChance != DEFAULT_DROP_CHANCE){
-				sender.sendMessage(String.format(translate("raw-drop-rate-for"), target, formatDroprate(rawChance*100D), formatDroprate(rawChance*100D)));
+		else if(args.length > 1){
+			if(!args[1].matches("[0-9]*.?[0-9]+")) return false;
+
+			final int keyDataTagIdx = target.indexOf('|');
+			final String entityName = keyDataTagIdx == -1 ? target : target.substring(0, keyDataTagIdx);
+			try{EntityType.valueOf(entityName.toUpperCase());}
+			catch(IllegalArgumentException ex){
+				sender.sendMessage(String.format(translate("unknown-entity"), target));
+				return true;
 			}
-			else{//TODO: configured drop chance of 0 (e.g., armor_stand) gives not found error
+			if(keyDataTagIdx != -1 && !pl.getAPI().textureExists(target)){
+				sender.sendMessage(String.format(translate("unknown-entity"), target));
+				return true;
+			}
+
+			final double newChance = Double.parseDouble(args[1]);
+			final Double oldChance = dropChanceAPI.getRawDropChance(target, /*useDefault=*/false);
+			final boolean updateFile = args.length == 3 && args[2].toLowerCase().equals("true");
+
+			if(newChance > 1) sender.sendMessage(translate("input-rate-invalid"));
+			else if(newChance == oldChance) sender.sendMessage(String.format(translate("rate-not-changed"), target, formatDroprate(oldChance*100D)));
+			else{
+				if(dropChanceAPI.setRawDropChance(target, newChance, updateFile))
+					sender.sendMessage(String.format(translate("rate-changed"), target,
+							formatDroprate(oldChance*100D), formatDroprate(newChance*100D)));
+				else{
+					sender.sendMessage(ChatColor.RED+"Unknown error occurred attempting to set drop chance");
+					pl.getLogger().severe("Unknown error occurred attempting to set drop chance");
+				}
+			}
+			return true;
+		}
+		else{
+			rawChance = dropChanceAPI.getRawDropChance(target, /*useDefault=*/false);
+			if(rawChance != null){
+				sender.sendMessage(String.format(translate("raw-drop-rate-for"), target, formatDroprate(rawChance*100D)));
+			}
+			else{
 				sender.sendMessage(String.format(translate("not-found"), target));
+				//TODO: if default-chance != 0 && target is valid entity, tell them what default chance is.
 				return false;
 			}
 		}
@@ -214,42 +245,42 @@ public class CommandDropRate extends EvCommand{
 			droprateDetails.addComponent(translate("vanilla-wither-skeleton-handling-alert"));
 		}
 		else{
-			ListComponent droprateMultipliers = new ListComponent();
+			final ListComponent droprateMultipliers = new ListComponent();
+			final String LIST_SEP = "§7, ";//TODO: translations.yml
 			if(USING_SPAWN_MULTS){
 				if(entity == null){
 					droprateMultipliers.addComponent(translate("multipliers.spawn-reason"));
-					droprateMultipliers.addComponent("§7, "/*TODO: translations.yml*/);
+					droprateMultipliers.addComponent(LIST_SEP);
 				}
 				else if(Math.abs(1D-spawnCauseMult) > 0.001D){
 					droprateMultipliers.addComponent(translate("multipliers.spawn-reason"));
-					droprateMultipliers.addComponent(":§6x"+multFormatter.format(spawnCauseMult)+"§7, "/*TODO: translations.yml*/);
+					droprateMultipliers.addComponent(":§6x"+multFormatter.format(spawnCauseMult)+LIST_SEP);
 				}
 			}
 			if(USING_TIME_ALIVE_MULTS){
 				if(entity == null){
 					droprateMultipliers.addComponent(translate("multipliers.time-alive"));
-					droprateMultipliers.addComponent("§7, "/*TODO: translations.yml*/);
+					droprateMultipliers.addComponent(LIST_SEP);
 				}
 				else if(Math.abs(1D-timeAliveMult) > 0.001D){
 					droprateMultipliers.addComponent(translate("multipliers.time-alive"));
-					droprateMultipliers.addComponent(":§6x"+multFormatter.format(timeAliveMult)+"§7, "/*TODO: translations.yml*/);
+					droprateMultipliers.addComponent(":§6x"+multFormatter.format(timeAliveMult)+LIST_SEP);
 				}
 			}
 			if(USING_WEAPON_MULTS){
 				if(entity == null){
 					droprateMultipliers.addComponent(translate("multipliers.weapon-type"));
-					droprateMultipliers.addComponent("§7, "/*TODO: translations.yml*/);
+					droprateMultipliers.addComponent(LIST_SEP);
 				}
 				else if(weapon != null && Math.abs(1D-weaponMult) > 0.001D){
 					droprateMultipliers.addComponent(translate("multipliers.weapon-type"));
 					droprateMultipliers.addComponent(JunkUtils.getMurderItemComponent(weapon, JSON_LIMIT));
-					droprateMultipliers.addComponent(":§6x"+multFormatter.format(weaponMult));
-					droprateMultipliers.addComponent("§7, "/*TODO: translations.yml*/);
+					droprateMultipliers.addComponent(":§6x"+multFormatter.format(weaponMult)+LIST_SEP);
 				}
 			}
 			if(Math.abs(1D-permMult) > 0.001D){
 				droprateMultipliers.addComponent(translate("multipliers.perms"));
-				droprateMultipliers.addComponent(":§6x"+multFormatter.format(permMult)+"§7, "/*TODO: translations.yml*/);
+				droprateMultipliers.addComponent(":§6x"+multFormatter.format(permMult)+LIST_SEP);
 			}
 			if(USING_LOOTING_MULTS){
 				if(entity == null){
@@ -262,7 +293,7 @@ public class CommandDropRate extends EvCommand{
 					if(Math.abs(lootingAdd) > 0.001D) lootingMsg += "§e"+(lootingAdd > 0 ? '+' : '-')+multFormatter.format(lootingAdd*100)+"%";
 					droprateMultipliers.addComponent(lootingMsg);
 				}
-				//else TODO: potential trailing "&7, " at end of list (when looting is not included in multipliers list)
+				//else TODO: potential trailing "&7, " at end of list
 			}
 			if(!droprateMultipliers.isEmpty()){
 				if(!droprateDetails.isEmpty()) droprateDetails.addComponent("\n");
