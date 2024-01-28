@@ -360,7 +360,7 @@ public final class DropChanceAPI{
 	}
 
 	/** Get the set of weapons that are allowed to cause a head drop; will be <code>null</code> if no specific weapon(s) are required.
-	 * @return An immutable set of Material types, or <code>null</code>
+	 * @return An unmodifiable set of Material types, or <code>null</code>
 	 */
 	public Set<Material> getRequiredWeapons(){return mustUseTools;}
 	/** Get the raw drop chance (ignore all multipliers) of a head for a specific texture key.
@@ -405,7 +405,7 @@ public final class DropChanceAPI{
 		return mobChances.getOrDefault(entity.getType(), DEFAULT_CHANCE);
 	}
 	/** Get a map of all configured drop chances.
-	 * @return An immutable map (EntityType => drop chance)
+	 * @return An unmodifiable map (EntityType => drop chance)
 	 */
 	public Map<EntityType, Double> getRawDropChances(){return Collections.unmodifiableMap(mobChances);}
 	/** Get the percent chance added to the drop chance (per looting level).

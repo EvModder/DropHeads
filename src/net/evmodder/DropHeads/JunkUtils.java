@@ -254,11 +254,15 @@ public final class JunkUtils{
 	private final static RefClass playerConnectionClazz = ReflectionUtils.getRefClass("{nms}.PlayerConnection", "{nm}.server.network.PlayerConnection");
 	private final static RefField playerConnectionField = entityPlayerClazz.findField(playerConnectionClazz);
 	private final static RefClass networkManagerClazz = ReflectionUtils.getRefClass("{nms}.NetworkManager", "{nm}.network.NetworkManager");
-	private final static RefField networkManagerField = playerConnectionClazz.findField(networkManagerClazz);
-	private final static RefField channelField = networkManagerClazz.findField(Channel.class);
+	private static RefField networkManagerField;
+	private static RefField channelField;
 	public static Channel getPlayerChannel(Player player){
 		final Object playerEntity = playerGetHandleMethod.of(player).call();
 		final Object playerConnection = playerConnectionField.of(playerEntity).get();
+		if(networkManagerField == null){
+			networkManagerField = playerConnectionClazz.findField(networkManagerClazz);
+			channelField = networkManagerClazz.findField(Channel.class);
+		}
 		final Object networkManager = networkManagerField.of(playerConnection).get();
 		return (Channel)channelField.of(networkManager).get();
 	}

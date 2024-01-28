@@ -338,7 +338,7 @@ public class HeadAPI {
 	 */
 	public boolean textureExists(String textureKey){return textures.containsKey(textureKey);}
 	/** Get a map of all existing textures.
-	 * @return An immutable map (textureKey => Base64 encoded texture URL)
+	 * @return An unmodifiable map (textureKey => Base64 encoded texture URL)
 	 */
 	public Map<String, String> getTextures(){return Collections.unmodifiableMap(textures);}
 
