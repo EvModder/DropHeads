@@ -1,6 +1,7 @@
 package net.evmodder.DropHeads;
 
 import java.io.File;
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -26,6 +27,7 @@ import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
@@ -183,10 +185,9 @@ public class HeadAPI {
 		//---------- <Load translations> ----------------------------------------------------------------------
 		translationsFile = FileIO.loadConfig(pl, "translations.yml",
 				getClass().getResourceAsStream("/translations.yml"), /*notifyIfNew=*/false);
-		Configuration embeddedTranslationsFile = FileIO.loadConfig(pl, "translations-temp-DELETE.yml",
-				getClass().getResourceAsStream("/translations.yml"), false);
+		Configuration embeddedTranslationsFile = YamlConfiguration.loadConfiguration(
+				new InputStreamReader(getClass().getResourceAsStream("/translations.yml")));
 		translationsFile.setDefaults(embeddedTranslationsFile);
-		FileIO.deleteFile("translations-temp-DELETE.yml");
 		// See if we can use the 1.19.4+ "fallback" feature
 		USE_TRANSLATE_FALLBACKS = translationsFile.getBoolean("use-translation-fallbacks", false) && Bukkit.getBukkitVersion().compareTo("1.19.4") >= 0;
 
@@ -277,28 +278,28 @@ public class HeadAPI {
 		if(SIDEWAYS_SHULKERS_ENABLED && (!localList.contains("SHULKER|SIDE_LEFT") || updateTextures)){
 			pl.getLogger().info("Downloading sideways-shulker head textures...");
 			final String shulkers = WebUtils.getReadURL(TEXTURE_DL_URL+"sideways-shulker-head-textures.txt");
-			localList += "\n" + JunkUtils.stripComments(shulkers);
+			localList += "\n" + shulkers;//JunkUtils.stripComments(shulkers);
 			writeTextureFile = true;
 			pl.getLogger().info("Finished downloading sideways-shulker head textures");
 		}
 		if(COLORED_COLLARS_ENABLED && (!localList.contains("|RED_COLLARED:") || updateTextures)){
 			pl.getLogger().info("Downloading colored-collar head textures...");
 			final String collared = WebUtils.getReadURL(TEXTURE_DL_URL+"colored-collar-head-textures.txt");
-			localList += "\n" + JunkUtils.stripComments(collared);
+			localList += "\n" + collared;//JunkUtils.stripComments(collared);
 			writeTextureFile = true;
 			pl.getLogger().info("Finished downloading colored-collar head textures");
 		}
 		if(USE_PRE_JAPPA && (!localList.contains("|PRE_JAPPA:") || updateTextures)){
 			pl.getLogger().info("Downloading pre-JAPPA head textures...");
 			final String preJappas = WebUtils.getReadURL(TEXTURE_DL_URL+"pre-jappa-head-textures.txt");
-			localList += "\n" + JunkUtils.stripComments(preJappas);
+			localList += "\n" + preJappas;//JunkUtils.stripComments(preJappas);
 			writeTextureFile = true;
 			pl.getLogger().info("Finished downloading pre-JAPPA head textures");
 		}
 		if(GRUMM_ENABLED && (!localList.contains("|GRUMM:") || updateTextures)){
 			pl.getLogger().info("Downloading Grumm head textures...");
 			final String grumms = WebUtils.getReadURL(TEXTURE_DL_URL+"grumm-head-textures.txt");
-			localList += "\n" + JunkUtils.stripComments(grumms);
+			localList += "\n" + grumms;//JunkUtils.stripComments(grumms);
 			writeTextureFile = true;
 			pl.getLogger().info("Finished downloading Grumm head textures");
 		}

@@ -19,7 +19,6 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import io.netty.channel.Channel;
 import javax.annotation.Nonnull;
 import net.evmodder.EvLib.extras.NBTTagUtils;
 import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTTagString;
@@ -30,7 +29,6 @@ import net.evmodder.EvLib.extras.TellrawUtils;
 import net.evmodder.EvLib.extras.TextUtils;
 import net.evmodder.EvLib.extras.WebUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
-import net.evmodder.EvLib.extras.ReflectionUtils.RefField;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
 import net.evmodder.EvLib.extras.TellrawUtils.ClickEvent;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
@@ -248,33 +246,6 @@ public final class JunkUtils{
 		}
 	}
 
-	private final static RefClass craftPlayerClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftPlayer");
-	private final static RefMethod playerGetHandleMethod = craftPlayerClazz.getMethod("getHandle");
-	private final static RefClass entityPlayerClazz = ReflectionUtils.getRefClass("{nms}.EntityPlayer", "{nm}.server.level.EntityPlayer");
-	private final static RefClass playerConnectionClazz = ReflectionUtils.getRefClass("{nms}.PlayerConnection", "{nm}.server.network.PlayerConnection");
-	private final static RefField playerConnectionField = entityPlayerClazz.findField(playerConnectionClazz);
-	private final static RefClass networkManagerClazz = ReflectionUtils.getRefClass("{nms}.NetworkManager", "{nm}.network.NetworkManager");
-	private static RefField networkManagerField;
-	private static RefField channelField;
-	public static Channel getPlayerChannel(Player player){
-		final Object playerEntity = playerGetHandleMethod.of(player).call();
-		final Object playerConnection = playerConnectionField.of(playerEntity).get();
-		if(networkManagerField == null){
-			networkManagerField = playerConnectionClazz.findField(networkManagerClazz);
-			channelField = networkManagerClazz.findField(Channel.class);
-		}
-		final Object networkManager = networkManagerField.of(playerConnection).get();
-		return (Channel)channelField.of(networkManager).get();
-	}
-	private final static RefClass classPacket = ReflectionUtils.getRefClass("{nms}.Packet", "{nm}.network.protocol.Packet");
-	private final static RefMethod sendPacketMethod = playerConnectionClazz.findMethod(/*isStatic=*/false, Void.TYPE, classPacket);
-	public static void sendPacket(Player player, Object packet){
-		Object entityPlayer = playerGetHandleMethod.of(player).call();
-		Object playerConnection = playerConnectionField.of(entityPlayer).get();
-		Object castPacket = classPacket.getRealClass().cast(packet);
-		sendPacketMethod.of(playerConnection).call(castPacket);
-	}
-
 	private static RefMethod essMethodGetUser, essMethodIsVanished;
 	private static RefMethod vanishMethodGetManager, vanishMethodIsVanished;
 	public final static boolean isVanished(Player p){
@@ -324,6 +295,7 @@ public final class JunkUtils{
 		return nearestFace;
 	}
 
+	private final static RefClass craftPlayerClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftPlayer");
 	private final static RefMethod playerGetProfileMethod = craftPlayerClazz.getMethod("getProfile");
 	private final static GameProfile getGameProfile(Player player){return (GameProfile)playerGetProfileMethod.of(player).call();}
 
@@ -354,16 +326,18 @@ public final class JunkUtils{
 		return WebUtils.getGameProfile(nameOrUUID, fetchSkin, nullForSync);
 	}
 
-	final static String stripComments(String fileContent){ // Copied roughly from FileIO
-		StringBuilder output = new StringBuilder();
-		for(String line : fileContent.split("\n")){
-			line = line.trim().replace("//", "#");
-			final int cut = line.indexOf('#');
-			if(cut == -1) output.append('\n').append(line);
-			else if(cut > 0) output.append('\n').append(line.substring(0, cut).trim());
-		}
-		return output.length() == 0 ? "" : output.substring(1);
-	}
+// not currently used
+//	// Called by HeadAPI for downloaded texture files
+//	final static String stripComments(String fileContent){ // Copied roughly from FileIO
+//		StringBuilder output = new StringBuilder();
+//		for(String line : fileContent.split("\n")){
+//			line = line.trim().replace("//", "#");
+//			final int cut = line.indexOf('#');
+//			if(cut == -1) output.append('\n').append(line);
+//			else if(cut > 0) output.append('\n').append(line.substring(0, cut).trim());
+//		}
+//		return output.length() == 0 ? "" : output.substring(1);
+//	}
 
 // not currently used
 //	public interface TestFunc{boolean test(int num);}

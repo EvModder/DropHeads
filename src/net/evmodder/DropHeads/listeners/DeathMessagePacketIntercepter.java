@@ -18,7 +18,7 @@ import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.DropHeads.JunkUtils;
+import net.evmodder.EvLib.extras.PacketUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefField;
@@ -95,7 +95,7 @@ public class DeathMessagePacketIntercepter{
 	}
 
 	private void injectPlayer(Player player){
-		JunkUtils.getPlayerChannel(player).pipeline().addBefore("packet_handler", "replace_death_with_behead_msg", new ChannelDuplexHandler(){
+		PacketUtils.getPlayerChannel(player).pipeline().addBefore("packet_handler", "replace_death_with_behead_msg", new ChannelDuplexHandler(){
 			@Override public void write(ChannelHandlerContext context, Object packet, ChannelPromise promise) throws Exception {
 				if(!outboundPacketClazz.isInstance(packet)){ // Not a chat packet
 					super.write(context, packet, promise);
@@ -144,19 +144,19 @@ public class DeathMessagePacketIntercepter{
 				}
 				new BukkitRunnable(){@Override public void run(){ // server.getEntity(uuid) needs to be called synchronously
 					if(unblockedDeathBroadcasts.contains(uuid)){
-						JunkUtils.sendPacket(player, packet); // If this death msg has been unblocked
+						PacketUtils.sendPacket(player, packet); // If this death msg has been unblocked
 						return;
 					}
 					final boolean shouldReplaceDeathMsg = pl.getServer().getEntity(uuid) instanceof Player
 							? REPLACE_PLAYER_DEATH_MSG : REPLACE_PET_DEATH_MSG;
 					if(!shouldReplaceDeathMsg){
 						unblockedSpecificDeathMsgs.add(jsonMsg);
-						JunkUtils.sendPacket(player, packet);
+						PacketUtils.sendPacket(player, packet);
 						return;
 					}
 					new BukkitRunnable(){@Override public void run(){
 						// check again if unblocked 1 tick later
-						if(unblockedDeathBroadcasts.contains(uuid)) JunkUtils.sendPacket(player, packet);
+						if(unblockedDeathBroadcasts.contains(uuid)) PacketUtils.sendPacket(player, packet);
 //						else pl.getLogger().info("blocked entity death msgs for: "+entity.getName());
 					}}.runTaskLater(pl, 1);
 				}}.runTask(pl);
@@ -164,7 +164,7 @@ public class DeathMessagePacketIntercepter{
 		});
 	}
 	private void removePlayer(Player player){
-		final Channel channel = JunkUtils.getPlayerChannel(player);
+		final Channel channel = PacketUtils.getPlayerChannel(player);
 		channel.eventLoop().submit(()->{
 			channel.pipeline().remove("replace_death_with_behead_msg");
 			return null;
