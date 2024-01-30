@@ -201,6 +201,7 @@ commands:
     input-rate-invalid: "&cDrop chance must be between &b0.0&c and &b1.0"
     rate-not-changed: "&cDrop chance for &e%s&c is already set to &b%s%%"
     rate-changed: "&aDrop chance for &e%s&a updated from &b%s%% &ato &b%s%%"
+    file-updated: "&7head-drop-rates.txt file modified: %b"
     restrictions:
       header: "§7Drop restrictions:"
       victim-must-have-perm: "\n&c&l>&7 Victim must have the '&cdropheads.canlosehead&7' perm"

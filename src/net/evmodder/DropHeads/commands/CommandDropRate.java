@@ -172,7 +172,17 @@ public class CommandDropRate extends EvCommand{
 						new RawTextComponent(formatDroprate(rawChance*100D))).toString());
 			}
 		}
-		else if(args.length > 1){
+		else if(args.length == 1){
+			rawChance = dropChanceAPI.getRawDropChance(target, /*useDefault=*/false);
+			if(rawChance != null){
+				sender.sendMessage(String.format(translate("raw-drop-rate-for"), target, formatDroprate(rawChance*100D)));
+			}
+			else{
+				sender.sendMessage(String.format(translate("not-found"), target, dropChanceAPI.getRawDropChance(target, /*useDefault=*/true)));
+				return false;
+			}
+		}
+		else{
 			if(!args[1].matches("[0-9]*.?[0-9]+")) return false;
 
 			final int keyDataTagIdx = target.indexOf('|');
@@ -194,26 +204,17 @@ public class CommandDropRate extends EvCommand{
 			if(newChance > 1) sender.sendMessage(translate("input-rate-invalid"));
 			else if(newChance == oldChance) sender.sendMessage(String.format(translate("rate-not-changed"), target, formatDroprate(oldChance*100D)));
 			else{
-				if(dropChanceAPI.setRawDropChance(target, newChance, updateFile))
+				if(dropChanceAPI.setRawDropChance(target, newChance, updateFile)){
 					sender.sendMessage(String.format(translate("rate-changed"), target,
 							formatDroprate(oldChance*100D), formatDroprate(newChance*100D)));
+					sender.sendMessage(String.format(translate("file-updated"), updateFile));
+				}
 				else{
 					sender.sendMessage(ChatColor.RED+"Unknown error occurred attempting to set drop chance");
 					pl.getLogger().severe("Unknown error occurred attempting to set drop chance");
 				}
 			}
 			return true;
-		}
-		else{
-			rawChance = dropChanceAPI.getRawDropChance(target, /*useDefault=*/false);
-			if(rawChance != null){
-				sender.sendMessage(String.format(translate("raw-drop-rate-for"), target, formatDroprate(rawChance*100D)));
-			}
-			else{
-				sender.sendMessage(String.format(translate("not-found"), target));
-				//TODO: if default-chance != 0 && target is valid entity, tell them what default chance is.
-				return false;
-			}
 		}
 
 		ListComponent droprateDetails = new ListComponent();
