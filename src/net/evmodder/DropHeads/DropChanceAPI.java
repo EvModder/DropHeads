@@ -585,14 +585,14 @@ public final class DropChanceAPI{
 				message.addComponent(hasCustomName
 						? MSH_BEHEAD_BY_WITH_NAMED[rand.nextInt(MSH_BEHEAD_BY_WITH_NAMED.length)]
 						: MSH_BEHEAD_BY_WITH[rand.nextInt(MSH_BEHEAD_BY_WITH.length)]);
-				message.replaceRawDisplayTextWithComponent("${ITEM}", itemComp);
+				message.replaceRawTextWithComponent("${ITEM}", itemComp);
 			}
 			else message.addComponent(MSH_BEHEAD_BY[rand.nextInt(MSH_BEHEAD_BY.length)]);
 			//if(USE_PLAYER_DISPLAYNAMES) message.replaceRawTextWithComponent("${KILLER}", ...);
-			message.replaceRawDisplayTextWithComponent("${KILLER}", killerComp);
+			message.replaceRawTextWithComponent("${KILLER}", killerComp);
 		}
 		else message.addComponent(MSG_BEHEAD[rand.nextInt(MSG_BEHEAD.length)]);
-		message.replaceRawDisplayTextWithComponent("${VICTIM}", getVictimComponent(entity));
+		message.replaceRawTextWithComponent("${VICTIM}", getVictimComponent(entity));
 		//TODO: If(USE_TRANSLATE_FALLBACKS) return TranslateComp({key}, {with}, fallback=message)
 		return message;
 	}

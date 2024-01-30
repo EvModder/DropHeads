@@ -31,7 +31,7 @@ public class DeathMessagePacketIntercepter{
 	private final HashSet<String> unblockedSpecificDeathMsgs;
 	private final HashSet<String> blockedSpecificMsgs;
 
-	private final RefClass outboundPacketClazz = ReflectionUtils.getRefClass(
+	private final RefClass outboundChatPacketClazz = ReflectionUtils.getRefClass(
 			"{nms}.PacketPlayOutChat", "{nm}.network.protocol.game.PacketPlayOutChat", "{nm}.network.protocol.game.ClientboundSystemChatPacket");
 	private final RefClass chatBaseCompClazz = ReflectionUtils.getRefClass(
 			"{nms}.IChatBaseComponent", "{nm}.network.chat.IChatBaseComponent");
@@ -51,17 +51,17 @@ public class DeathMessagePacketIntercepter{
 		unblockedDeathBroadcasts = new HashSet<>();
 		unblockedSpecificDeathMsgs = new HashSet<>();
 		blockedSpecificMsgs = new HashSet<>();
-		
+
 		RefField field = null;
 		RefMethod method = null, kyoriMethod = null; Object kyoriObj = null;
-		try{field = outboundPacketClazz.findField(chatBaseCompClazz);}
+		try{field = outboundChatPacketClazz.findField(chatBaseCompClazz);}
 		catch(RuntimeException e1){
 			try{
-				method = outboundPacketClazz.getMethod("adventure$content");
+				method = outboundChatPacketClazz.getMethod("adventure$content");
 				kyoriObj = ReflectionUtils.getRefClass("net.kyori.adventure.text.serializer.json.JSONComponentSerializer").getMethod("json").call();
 				kyoriMethod = ReflectionUtils.getRefClass("net.kyori.adventure.text.serializer.ComponentSerializer").findMethodByName("serialize");
 			}
-			catch(RuntimeException e2){method = outboundPacketClazz.getMethod("content");}
+			catch(RuntimeException e2){method = outboundChatPacketClazz.getMethod("content");}
 		}
 		finally{
 			chatBaseCompField = field;
@@ -97,7 +97,7 @@ public class DeathMessagePacketIntercepter{
 	private void injectPlayer(Player player){
 		PacketUtils.getPlayerChannel(player).pipeline().addBefore("packet_handler", "replace_death_with_behead_msg", new ChannelDuplexHandler(){
 			@Override public void write(ChannelHandlerContext context, Object packet, ChannelPromise promise) throws Exception {
-				if(!outboundPacketClazz.isInstance(packet)){ // Not a chat packet
+				if(!outboundChatPacketClazz.isInstance(packet)){ // Not a chat packet
 					super.write(context, packet, promise);
 					return;
 				}

@@ -499,12 +499,12 @@ public class CommandSpawnHead extends EvCommand{
 
 		// TODO: This assumes the message has a default color & formats when it actually might not.
 		final Component msgColorAndFormatsPlusComma = new ListComponent(
-				TellrawUtils.getCurrentColorAndFormatProperties(messageFormatStr), new RawTextComponent(", "/*TODO: translations.yml*/));
+				TellrawUtils.getTrailingColorAndFormatProperties(messageFormatStr), new RawTextComponent(", "/*TODO: translations.yml*/));
 
 		ListComponent recipientListComp = new ListComponent();
 		ListComponent headItemListComp = new ListComponent();
 		// TODO: line below assumes [recipient-list] is the LAST "%s", which might not be a good assumption.
-		final Component recipientColorAndFormats = TellrawUtils.getCurrentColorAndFormatProperties(
+		final Component recipientColorAndFormats = TellrawUtils.getTrailingColorAndFormatProperties(
 				messageFormatStr.substring(0, messageFormatStr.lastIndexOf('%')));
 		if(recipientColorAndFormats != null) recipientListComp.addComponent(recipientColorAndFormats);
 		for(int i=0; i<recipientComps.size(); ++i){

@@ -39,6 +39,8 @@ public class CommandDropRate extends EvCommand{
 	final private boolean VANILLA_WSKELE_HANDLING;
 	final private HashSet<String> entityNames;
 	final private int JSON_LIMIT;
+	final private String LIST_SEP = "§7, ";//TODO: translations.yml
+	///tellraw EvDoc [{"text":"a","color":"green"},"§7b"]
 
 	final private Component REQUIRED_WEAPONS;
 	final private TranslationComponent LOOTING_COMP; //TODO: Use comp (instead of String) for other translations as well
@@ -64,7 +66,7 @@ public class CommandDropRate extends EvCommand{
 			ListComponent requiredWeapons = new ListComponent();
 			boolean isFirstElement = true;
 			for(Material mat : dropChanceAPI.getRequiredWeapons()){
-				if(!isFirstElement) requiredWeapons.addComponent(new RawTextComponent("§7, §f"/*TODO: translations.yml*/));
+				if(!isFirstElement) requiredWeapons.addComponent(LIST_SEP);
 				else isFirstElement = false;
 				requiredWeapons.addComponent(new TranslationComponent("item.minecraft."+mat.name().toLowerCase()));
 			}
@@ -239,61 +241,65 @@ public class CommandDropRate extends EvCommand{
 		final double permMult = dropChanceAPI.getPermsBasedMult(sender);
 		final double finalDropChance = Math.min(1D, rawChance*spawnCauseMult*timeAliveMult*weaponMult*lootingMult*permMult + lootingAdd);
 		DecimalFormat multFormatter = new DecimalFormat("0.##");
-		
+
 		if(VANILLA_WSKELE_HANDLING && target.equals("WITHER_SKELETON")){
 			if(!droprateDetails.isEmpty()) droprateDetails.addComponent("\n");
 			droprateDetails.addComponent(translate("vanilla-wither-skeleton-handling-alert"));
 		}
 		else{
 			final ListComponent droprateMultipliers = new ListComponent();
-			final String LIST_SEP = "§7, ";//TODO: translations.yml
 			if(USING_SPAWN_MULTS){
 				if(entity == null){
+					//if(!droprateMultipliers.isEmpty()) droprateMultipliers.addComponent(LIST_SEP);
 					droprateMultipliers.addComponent(translate("multipliers.spawn-reason"));
-					droprateMultipliers.addComponent(LIST_SEP);
 				}
 				else if(Math.abs(1D-spawnCauseMult) > 0.001D){
+					//if(!droprateMultipliers.isEmpty()) droprateMultipliers.addComponent(LIST_SEP);
 					droprateMultipliers.addComponent(translate("multipliers.spawn-reason"));
-					droprateMultipliers.addComponent(":§6x"+multFormatter.format(spawnCauseMult)+LIST_SEP);
+					droprateMultipliers.addComponent(":§6x"+multFormatter.format(spawnCauseMult));
 				}
 			}
 			if(USING_TIME_ALIVE_MULTS){
 				if(entity == null){
+					if(!droprateMultipliers.isEmpty()) droprateMultipliers.addComponent(LIST_SEP);
 					droprateMultipliers.addComponent(translate("multipliers.time-alive"));
-					droprateMultipliers.addComponent(LIST_SEP);
 				}
 				else if(Math.abs(1D-timeAliveMult) > 0.001D){
+					if(!droprateMultipliers.isEmpty()) droprateMultipliers.addComponent(LIST_SEP);
 					droprateMultipliers.addComponent(translate("multipliers.time-alive"));
-					droprateMultipliers.addComponent(":§6x"+multFormatter.format(timeAliveMult)+LIST_SEP);
+					droprateMultipliers.addComponent(":§6x"+multFormatter.format(timeAliveMult));
 				}
 			}
 			if(USING_WEAPON_MULTS){
 				if(entity == null){
+					if(!droprateMultipliers.isEmpty()) droprateMultipliers.addComponent(LIST_SEP);
 					droprateMultipliers.addComponent(translate("multipliers.weapon-type"));
-					droprateMultipliers.addComponent(LIST_SEP);
 				}
 				else if(weapon != null && Math.abs(1D-weaponMult) > 0.001D){
+					if(!droprateMultipliers.isEmpty()) droprateMultipliers.addComponent(LIST_SEP);
 					droprateMultipliers.addComponent(translate("multipliers.weapon-type"));
 					droprateMultipliers.addComponent(JunkUtils.getMurderItemComponent(weapon, JSON_LIMIT));
-					droprateMultipliers.addComponent(":§6x"+multFormatter.format(weaponMult)+LIST_SEP);
+					droprateMultipliers.addComponent(":§6x"+multFormatter.format(weaponMult));
 				}
 			}
 			if(Math.abs(1D-permMult) > 0.001D){
+				if(!droprateMultipliers.isEmpty()) droprateMultipliers.addComponent(LIST_SEP);
 				droprateMultipliers.addComponent(translate("multipliers.perms"));
-				droprateMultipliers.addComponent(":§6x"+multFormatter.format(permMult)+LIST_SEP);
+				droprateMultipliers.addComponent(":§6x"+multFormatter.format(permMult));
 			}
 			if(USING_LOOTING_MULTS){
 				if(entity == null){
+					if(!droprateMultipliers.isEmpty()) droprateMultipliers.addComponent(LIST_SEP);
 					droprateMultipliers.addComponent(LOOTING_COMP);
 				}
 				else if(Math.abs(1D-lootingMult) > 0.001D || Math.abs(lootingAdd) > 0.001D){
+					if(!droprateMultipliers.isEmpty()) droprateMultipliers.addComponent(LIST_SEP);
 					droprateMultipliers.addComponent(LOOTING_COMP);
 					String lootingMsg = lootingLevel+":";
 					if(Math.abs(1D-lootingMult) > 0.001D) lootingMsg += "§6x"+multFormatter.format(lootingMult);
 					if(Math.abs(lootingAdd) > 0.001D) lootingMsg += "§e"+(lootingAdd > 0 ? '+' : '-')+multFormatter.format(lootingAdd*100)+"%";
 					droprateMultipliers.addComponent(lootingMsg);
 				}
-				//else TODO: potential trailing "&7, " at end of list
 			}
 			if(!droprateMultipliers.isEmpty()){
 				if(!droprateDetails.isEmpty()) droprateDetails.addComponent("\n");

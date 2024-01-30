@@ -246,13 +246,13 @@ public class BlockClickListener implements Listener{
 		final String aOrAn = isVowel(englishName.charAt(0)) ? "an" : "a"; // Yes, an imperfect solution, I know. :/
 
 		final ListComponent blob = TellrawUtils.convertHexColorsToComponentsWithReset(HEAD_DISPLAY);
-		blob.replaceRawDisplayTextWithComponent("${TYPE}", headTypeName);//these 3 are aliases of eachother
-		blob.replaceRawDisplayTextWithComponent("${HEAD_TYPE}", headTypeName);
-		blob.replaceRawDisplayTextWithComponent("${SKULL_TYPE}", headTypeName);
+		blob.replaceRawTextWithComponent("${TYPE}", headTypeName);//these 3 are aliases of eachother
+		blob.replaceRawTextWithComponent("${HEAD_TYPE}", headTypeName);
+		blob.replaceRawTextWithComponent("${SKULL_TYPE}", headTypeName);
 
-		blob.replaceRawDisplayTextWithComponent("${A}", new RawTextComponent(aOrAn));
-		blob.replaceRawDisplayTextWithComponent("${NAME}", data.profileName);
-		blob.replaceRawDisplayTextWithComponent("${MOB_TYPE}", data.entityTypeNames[0]);
+		blob.replaceRawTextWithComponent("${A}", new RawTextComponent(aOrAn));
+		blob.replaceRawTextWithComponent("${NAME}", data.profileName);
+		blob.replaceRawTextWithComponent("${MOB_TYPE}", data.entityTypeNames[0]);
 		if(HEAD_DISPLAY.contains("${TEXTURE}") || HEAD_DISPLAY.contains("${BASE64}") || HEAD_DISPLAY.contains("${URL}")){
 			String code0 = "";
 			if(isPlayerHead){
@@ -260,13 +260,13 @@ public class BlockClickListener implements Listener{
 				Collection<Property> textures = profile.getProperties().get("textures");
 				if(textures != null && !textures.isEmpty()) code0 = JunkUtils.getPropertyValue(profile.getProperties().get("textures").iterator().next());
 			}
-			blob.replaceRawDisplayTextWithComponent("${TEXTURE}", new RawTextComponent(code0));
-			blob.replaceRawDisplayTextWithComponent("${BASE64}", new RawTextComponent(code0));
+			blob.replaceRawTextWithComponent("${TEXTURE}", new RawTextComponent(code0));
+			blob.replaceRawTextWithComponent("${BASE64}", new RawTextComponent(code0));
 			if(HEAD_DISPLAY.contains("${URL}") && !code0.isEmpty()){
 				String json = new String(Base64.getDecoder().decode(code0))
 						.replace(" ", "").replace("\n", "").replace("\r", "").replace("\t", "");
 				String url = json.substring(json.indexOf("\"url\":")+7, json.lastIndexOf('"')).trim();
-				blob.replaceRawDisplayTextWithComponent("${URL}", new RawTextComponent(url, new TextClickAction(ClickEvent.OPEN_URL, url)));
+				blob.replaceRawTextWithComponent("${URL}", new RawTextComponent(url, new TextClickAction(ClickEvent.OPEN_URL, url)));
 			}
 		}
 
@@ -276,7 +276,7 @@ public class BlockClickListener implements Listener{
 				subtypeNamesAsc.addComponent(data.entityTypeNames[i]);
 				/*if(i != data.entityTypeNames.length-1) */subtypeNamesAsc.addComponent(MOB_SUBTYPES_SEPARATOR);
 			}
-			blob.replaceRawDisplayTextWithComponent("${MOB_SUBTYPES_ASC}", subtypeNamesAsc);
+			blob.replaceRawTextWithComponent("${MOB_SUBTYPES_ASC}", subtypeNamesAsc);
 		}
 		if(HEAD_DISPLAY.contains("${MOB_SUBTYPES_DESC}")){
 			ListComponent subtypeNamesDesc = new ListComponent();
@@ -284,7 +284,7 @@ public class BlockClickListener implements Listener{
 				subtypeNamesDesc.addComponent(data.entityTypeNames[i]);
 				/*if(i != 1) */subtypeNamesDesc.addComponent(MOB_SUBTYPES_SEPARATOR);
 			}
-			blob.replaceRawDisplayTextWithComponent("${MOB_SUBTYPES_DESC}", subtypeNamesDesc);
+			blob.replaceRawTextWithComponent("${MOB_SUBTYPES_DESC}", subtypeNamesDesc);
 		}
 		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+evt.getPlayer().getName()+" "+blob.toString());
 	}
