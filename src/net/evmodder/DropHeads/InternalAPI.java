@@ -5,6 +5,7 @@ import javax.annotation.Nonnull;
 import org.bukkit.inventory.ItemStack;
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import net.evmodder.EvLib.extras.TextUtils;
+import net.evmodder.DropHeads.JunkUtils.NoteblockMode;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
 import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
 
@@ -12,8 +13,7 @@ import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
  * WARNING: Functions here are highly subject to change and should not be used by other plugins
  */
 public final class InternalAPI extends HeadAPI{
-	/** Default constructor, unused. */
-	InternalAPI(){}
+	InternalAPI(NoteblockMode m){super(m);}
 
 	// Loads config.getString(key), replacing '${abc-xyz}' with config.getString('abc-xyz')
 	/** <strong>DO NOT USE:</strong> This function will likely disappear in a future release

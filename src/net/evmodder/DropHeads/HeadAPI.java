@@ -25,6 +25,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Sound;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -40,6 +42,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import me.arcaniax.hdb.api.DatabaseLoadEvent;
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
+import net.evmodder.DropHeads.JunkUtils.NoteblockMode;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.extras.EntityUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
@@ -71,6 +74,7 @@ public class HeadAPI {
 	private final String DEFAULT_HEAD_NAME_FORMAT, MOB_SUBTYPES_SEPARATOR;
 	private final TreeMap<String, String> textures; // Key="ENTITY_NAME|DATA", Value="eyJ0ZXh0dXJl..."
 	private final HashMap<String, TranslationComponent> entitySubtypeNames;
+	private final HashMap</*textureKey=*/String, Sound> nbSounds;
 	private final HashMap<String, String> replaceHeadsFromTo; // key & value are textureKeys
 	private final Material PIGLIN_HEAD_TYPE;
 	private final static String TEXTURE_DL_URL = "https://raw.githubusercontent.com/EvModder/DropHeads/master/extra-textures/";
@@ -137,7 +141,7 @@ public class HeadAPI {
 		}
 	}
 
-	HeadAPI(){
+	HeadAPI(NoteblockMode m){
 		textures = new TreeMap<String, String>();
 		pl = DropHeads.getPlugin();
 		GRUMM_ENABLED = pl.getConfig().getBoolean("drop-grumm-heads", false);
@@ -313,6 +317,11 @@ public class HeadAPI {
 			ArrayList<String> allKeys = new ArrayList<>(textures.keySet());
 			for(String key : allKeys) if(key.indexOf('|') != -1) textures.remove(key);
 		}
+
+		if(m == NoteblockMode.ITEM_META && Bukkit.getBukkitVersion().compareTo("1.19.4") >= 0){
+			nbSounds = JunkUtils.getNoteblockSounds();
+		}
+		else nbSounds = null;
 
 		boolean hdbInstalled = true;
 		try{Class.forName("me.arcaniax.hdb.api.DatabaseLoadEvent");}
@@ -564,6 +573,14 @@ public class HeadAPI {
 		if(MAKE_UNSTACKABLE) profile.getProperties().put("random_uuid", new Property("random_uuid", UUID.randomUUID().toString()));
 
 		SkullMeta meta = (SkullMeta) head.getItemMeta();
+		if(nbSounds != null){
+			Sound sound;
+			int endIdx;
+			while((sound=nbSounds.get(textureKey)) == null && (endIdx=textureKey.lastIndexOf('|')) != -1) textureKey = textureKey.substring(0, endIdx);
+			if(sound != null) try{SkullMeta.class.getMethod("setNoteBlockSound", NamespacedKey.class)
+				.invoke(meta, Sound.class.getMethod("getKey").invoke(sound));}
+			catch(Exception e){e.printStackTrace();}
+		}
 		HeadUtils.setGameProfile(meta, profile);
 		head.setItemMeta(meta);
 		return head;

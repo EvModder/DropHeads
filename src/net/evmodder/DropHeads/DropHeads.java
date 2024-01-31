@@ -18,6 +18,7 @@
  */
 package net.evmodder.DropHeads;
 
+import net.evmodder.DropHeads.JunkUtils.NoteblockMode;
 import net.evmodder.DropHeads.commands.*;
 import net.evmodder.DropHeads.listeners.*;
 import net.evmodder.EvLib.EvPlugin;
@@ -46,6 +47,10 @@ import net.evmodder.EvLib.Updater;
 // * EvLib: https://evmodder.github.io/EvLib/
 // * HeadDatabaseAPI: https://javadoc.io/doc/com.arcaniax/HeadDatabase-API/
 // * Bukkit-1.13: https://hub.spigotmc.org/javadocs/bukkit/
+// Search > File... > containing text X > replace Y
+// * "extras.TellrawUtils." -> "extras.tellraw."
+// * "extras/TellrawUtils/" -> "extras/tellraw/"
+//* "TellrawUtils." -> ""
 
 public final class DropHeads extends EvPlugin{
 	private static DropHeads instance;
@@ -62,7 +67,8 @@ public final class DropHeads extends EvPlugin{
 		}
 		if(config.getBoolean("bstats-enabled", true) && config.getBoolean("new")) new MetricsLite(this, /*bStats id=*/20140);
 		instance = this;
-		api = new InternalAPI();
+		final NoteblockMode m = JunkUtils.parseEnumOrDefault(config.getString("noteblock-mob-sounds", "OFF"), NoteblockMode.OFF);
+		api = new InternalAPI(m);
 		final boolean GLOBAL_PLAYER_BEHEAD_MSG = config.getString("behead-announcement.player",
 				config.getString("behead-announcement.default", "GLOBAL")).toUpperCase().equals("GLOBAL");
 		final boolean WANT_TO_REPLACE_PLAYER_DEATH_MSG = config.getBoolean("behead-announcement-replaces-player-death-message",
@@ -110,7 +116,7 @@ public final class DropHeads extends EvPlugin{
 		if(!config.getStringList("endermen-camouflage-heads").isEmpty()){
 			getServer().getPluginManager().registerEvents(new EndermanProvokeListener(), this);
 		}
-		if(config.getBoolean("noteblock-mob-sounds", false)){
+		if(m == NoteblockMode.LISTENER){
 			getServer().getPluginManager().registerEvents(new NoteblockPlayListener(), this);
 		}
 

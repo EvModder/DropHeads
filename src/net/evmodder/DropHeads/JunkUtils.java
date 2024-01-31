@@ -4,11 +4,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
@@ -20,6 +23,7 @@ import org.bukkit.util.Vector;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import javax.annotation.Nonnull;
+import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.extras.NBTTagUtils;
 import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTTagString;
 import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTTagCompound;
@@ -45,6 +49,8 @@ public final class JunkUtils{
 	public final static String SPAWN_CAUSE_MULTIPLIER_KEY = "SRM";
 	public final static String TXTR_KEY_PREFIX = "dropheads:";
 
+	enum NoteblockMode{OFF, FALSE, LISTENER, ITEM_META};
+
 	public final static <E extends Enum<E>> E parseEnumOrDefault(@Nonnull String stringValue, E defaultValue){
 		Class<E> enumClass = defaultValue.getDeclaringClass();
 		stringValue = stringValue.toUpperCase();
@@ -55,6 +61,37 @@ public final class JunkUtils{
 					Arrays.asList(enumClass.getEnumConstants()).stream().map(v -> v.name()).collect(Collectors.toList())));
 			return defaultValue;
 		}
+	}
+
+	public final static HashMap<String, Sound> getNoteblockSounds(){
+		HashMap<String, Sound> nbSounds = new HashMap</*txtrKey, Sound*/>();
+
+		String sounds = FileIO.loadFile("noteblock-sounds.txt", (String)null);
+		if(sounds == null){
+			DropHeads.getPlugin().getLogger().info("Downloading noteblock sound config...");
+			sounds = WebUtils.getReadURL("https://raw.githubusercontent.com/EvModder/DropHeads/master/noteblock-sounds.txt");
+			sounds = FileIO.loadFile("noteblock-sounds.txt", sounds);
+			if(sounds == null){DropHeads.getPlugin().getLogger().severe("Request to download noteblock-sounds.txt failed"); return null;}
+		}
+		for(String line : sounds.split("\n")){
+			line = line.replace(" ", "").replace("\t", "").toUpperCase();
+			final int i = line.indexOf(":");
+			if(i == -1) continue;
+			final String key = line.substring(0, i);
+			final String sound = line.substring(i+1);
+			try{nbSounds.put(key, Sound.valueOf(sound));}
+			catch(IllegalArgumentException e1){
+				final int endIdx = key.indexOf('|');
+				try{
+					final EntityType eType = EntityType.valueOf(endIdx == -1 ? key : key.substring(endIdx));
+					DropHeads.getPlugin().getLogger().warning("Unknown sound for "+eType+" in noteblock-sounds.txt: "+sound);
+				}
+				// Don't give warning for unknown sound if EntityType is also unknown (likely future version)
+				catch(IllegalArgumentException e2){}
+				continue;
+			}
+		}
+		return nbSounds;
 	}
 
 	public final static long timeSinceLastPlayerDamage(Entity entity){

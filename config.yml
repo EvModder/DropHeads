@@ -163,8 +163,11 @@ prefer-vanilla-heads: true
 cracked-iron-golem-heads: false
 
 # Whether to replace the noteblock sound with the ambient mob sound when the
-# noteblock played has a custom mob head on top of it
-noteblock-mob-sounds: false
+# noteblock played has a custom mob head on top of it, options are:
+# OFF - no custom noteblock sounds
+# LISTENER - sounds are chosen when a noteblock event occurs (recommended)
+# ITEM_META - custom sounds are encoded into every head item's NBT
+noteblock-mob-sounds: 'OFF'
 
 # A list of mob heads a player can wear to avoid provoking endermen
 endermen-camouflage-heads: []

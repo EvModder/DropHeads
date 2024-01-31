@@ -7,63 +7,33 @@ import org.bukkit.SoundCategory;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Skull;
-import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.NotePlayEvent;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.JunkUtils;
-import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.extras.HeadUtils;
-import net.evmodder.EvLib.extras.WebUtils;
 
 public class NoteblockPlayListener implements Listener{
 	private final int DH_MOB_PROFILE_PREFIX_LENGTH;
 	private final HashMap<String, Sound> nbSounds;
 
 	public NoteblockPlayListener(){
-		final DropHeads pl = DropHeads.getPlugin();
 		DH_MOB_PROFILE_PREFIX_LENGTH = JunkUtils.TXTR_KEY_PREFIX.length();
-		nbSounds = new HashMap</*txtrKey, Sound*/>();
-
-		String sounds = FileIO.loadFile("noteblock-sounds.txt", (String)null);
-		if(sounds == null){
-			pl.getLogger().info("Downloading noteblock sound config...");
-			sounds = WebUtils.getReadURL("https://raw.githubusercontent.com/EvModder/DropHeads/master/noteblock-sounds.txt");
-			sounds = FileIO.loadFile("noteblock-sounds.txt", sounds);
-			if(sounds == null){pl.getLogger().severe("Request to download noteblock-sounds.txt failed"); return;}
-		}
-		for(String line : sounds.split("\n")){
-			line = line.replace(" ", "").replace("\t", "").toUpperCase();
-			final int i = line.indexOf(":");
-			if(i == -1) continue;
-			final String key = line.substring(0, i);
-			final String sound = line.substring(i+1);
-			try{nbSounds.put(key, Sound.valueOf(sound));}
-			catch(IllegalArgumentException e1){
-				final int endIdx = key.indexOf('|');
-				try{
-					final EntityType eType = EntityType.valueOf(endIdx == -1 ? key : key.substring(endIdx));
-					pl.getLogger().warning("Unknown sound for "+eType+" in noteblock-sounds.txt: "+sound);
-				}
-				// Don't give warning for unknown sound if EntityType is also unknown (likely future version)
-				catch(IllegalArgumentException e2){}
-				continue;
-			}
-		}
+		nbSounds = JunkUtils.getNoteblockSounds();
 	}
 
-	public Sound getAmbientSound(String eType){
+	/*public Sound getAmbientSound(String eType){
 		switch(eType){
 			case "ALLAY":
-				return  Sound.valueOf("ENTITY_ALLAY_AMBIENT_WITHOUT_ITEM"); //TODO: with item?
+				return  Sound.valueOf("ENTITY_ALLAY_AMBIENT_WITHOUT_ITEM");
 			case "ARMOR_STAND":
 				return Sound.ENTITY_ARMOR_STAND_PLACE;
 			case "LEASH_HITCH":
 				return Sound.ENTITY_LEASH_KNOT_PLACE;
 			case "GIANT":
-				return Sound.ENTITY_ZOMBIE_AMBIENT; //TODO: play at 2x volume?
+				return Sound.ENTITY_ZOMBIE_AMBIENT;
 			case "COD":
 				return Sound.ENTITY_COD_FLOP;
 			case "SALMON":
@@ -116,7 +86,7 @@ public class NoteblockPlayListener implements Listener{
 			default:
 				return Sound.valueOf("ENTITY_"+eType+"_AMBIENT");
 		}
-	}
+	}*/
 
 	@EventHandler(ignoreCancelled = true)
 	public void onNoteblockPlay(NotePlayEvent evt){
@@ -138,14 +108,19 @@ public class NoteblockPlayListener implements Listener{
 		int endIdx;
 		while((sound=nbSounds.get(textureKey)) == null && (endIdx=textureKey.lastIndexOf('|')) != -1) textureKey = textureKey.substring(0, endIdx);
 		if(sound == null){
-			try{sound = Sound.valueOf("ENTITY_"+textureKey+"_AMBIENT");}
+			try{
+				//sound = getAmbientSound(textureKey);
+				sound = Sound.valueOf("ENTITY_"+textureKey+"_AMBIENT");
+			}
 			catch(IllegalArgumentException ex){
 				DropHeads.getPlugin().getLogger().warning("Unable to find noteblock sound for entity: "+textureKey);
 				if((sound=nbSounds.get("UNKNOWN")) == null) return;
 			}
 		}
 		// Got a sound, now play it
-		nb.getWorld().playSound(nb.getLocation(), sound, SoundCategory.RECORDS, /*volume=*/1f, /*pitch=*/1f);
+		final float volume = (textureKey.equals("GIANT") && sound.name().equals("ENTITY_ZOMBIE_AMBIENT")) ? 3f : 1f;
+		nb.getWorld().playSound(nb.getLocation(), sound, SoundCategory.RECORDS, volume, /*pitch=*/1f);
+		// Cancel the sound that would have played
 		evt.setCancelled(true);
 	}
 }
