@@ -48,10 +48,7 @@ import net.evmodder.EvLib.Updater;
 // * HeadDatabaseAPI: https://javadoc.io/doc/com.arcaniax/HeadDatabase-API/1.3.1/
 // * Bukkit-1.13: https://hub.spigotmc.org/javadocs/bukkit/
 // Search > File... > containing text X > replace Y
-// * "extras.TellrawUtils." -> "extras.tellraw."
-// * "extras/TellrawUtils/" -> "extras/tellraw/"
-//* "TellrawUtils." -> ""
-
+// ` TellrawUtils.` -> ``, `(TellrawUtils.` -> ``, `>TellrawUtils.` -> ``
 public final class DropHeads extends EvPlugin{
 	private static DropHeads instance;
 	public static DropHeads getPlugin(){return instance;}
