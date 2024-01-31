@@ -45,7 +45,7 @@ import net.evmodder.EvLib.Updater;
 // * update-textures=true (head-textures.txt file overwritten when plugin is updated)
 //Export -> JAVADOC -> javadoc sources:
 // * EvLib: https://evmodder.github.io/EvLib/
-// * HeadDatabaseAPI: https://javadoc.io/doc/com.arcaniax/HeadDatabase-API/
+// * HeadDatabaseAPI: https://javadoc.io/doc/com.arcaniax/HeadDatabase-API/1.3.1/
 // * Bukkit-1.13: https://hub.spigotmc.org/javadocs/bukkit/
 // Search > File... > containing text X > replace Y
 // * "extras.TellrawUtils." -> "extras.tellraw."
