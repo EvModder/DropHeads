@@ -184,6 +184,7 @@ public class CommandDropRate extends EvCommand{
 		}
 		else{
 			if(!args[1].matches("[0-9]*.?[0-9]+")) return false;
+			if(!sender.hasPermission("dropheads.droprate.edit")) return false;
 
 			final int keyDataTagIdx = target.indexOf('|');
 			final String entityName = keyDataTagIdx == -1 ? target : target.substring(0, keyDataTagIdx);
@@ -199,7 +200,7 @@ public class CommandDropRate extends EvCommand{
 
 			final double newChance = Double.parseDouble(args[1]);
 			final Double oldChance = dropChanceAPI.getRawDropChance(target, /*useDefault=*/false);
-			final boolean updateFile = args.length == 3 && args[2].toLowerCase().equals("true");
+			final boolean updateFile = args.length == 3 && args[2].toLowerCase().equals("true") && sender.hasPermission("dropheads.droprate.edit.file");
 
 			if(newChance > 1) sender.sendMessage(translate("input-rate-invalid"));
 			else if(newChance == oldChance) sender.sendMessage(String.format(translate("rate-not-changed"), target, formatDroprate(oldChance*100D)));
@@ -207,7 +208,8 @@ public class CommandDropRate extends EvCommand{
 				if(dropChanceAPI.setRawDropChance(target, newChance, updateFile)){
 					sender.sendMessage(String.format(translate("rate-changed"), target,
 							formatDroprate(oldChance*100D), formatDroprate(newChance*100D)));
-					sender.sendMessage(String.format(translate("file-updated"), updateFile));
+					if(sender.hasPermission("dropheads.droprate.edit.file"))
+						sender.sendMessage(String.format(translate("file-updated"), updateFile));
 				}
 				else{
 					sender.sendMessage(ChatColor.RED+"Unknown error occurred attempting to set drop chance");

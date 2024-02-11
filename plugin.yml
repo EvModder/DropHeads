@@ -121,6 +121,14 @@ permissions:
     description: Permission to use /droprate
     default: op
 
+  dropheads.droprate.edit:
+    description: Permission to temporarily edit runtime rates with /droprate
+    default: op
+
+  dropheads.droprate.edit.file:
+    description: Permission to reconfigured rates with /droprate
+    default: op
+
   dropheads.debug:
     description: Permission to spawn all the heads in a big cube
     default: false

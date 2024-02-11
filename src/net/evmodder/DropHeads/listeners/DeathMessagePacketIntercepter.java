@@ -116,7 +116,7 @@ public class DeathMessagePacketIntercepter{
 					return;
 				}
 //				pl.getLogger().info("chat packet json:\n"+jsonMsg+"\n");
-				if(blockedSpecificMsgs.contains(jsonMsg)){
+				if(blockedSpecificMsgs.contains(jsonMsg)){ // Note: This is also used for plaintext death messages sent by DropChanceAPI
 					return;
 				}
 //				pl.getLogger().info("chat packet isn't blocked");
@@ -157,7 +157,7 @@ public class DeathMessagePacketIntercepter{
 					new BukkitRunnable(){@Override public void run(){
 						// check again if unblocked 1 tick later
 						if(unblockedDeathBroadcasts.contains(uuid)) PacketUtils.sendPacket(player, packet);
-//						else pl.getLogger().info("blocked entity death msgs for: "+entity.getName());
+						else pl.getLogger().fine("blocked death msg for: "+uuid);
 					}}.runTaskLater(pl, 1);
 				}}.runTask(pl);
 			}
