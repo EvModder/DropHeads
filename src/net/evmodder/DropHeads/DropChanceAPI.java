@@ -103,6 +103,8 @@ public final class DropChanceAPI{
 	private final LRUCache<ItemStack, Component> weaponCompCache;
 	private final int WEAPON_COMP_CACHE_SIZE;
 
+//	int numMobBeheads, numPlayerBeheads;
+
 	/** Get the default head drop chance for an entity when a drop chance chance is specified in the config.
 	 * @return The default drop chance [0, 1]
 	 */
@@ -715,6 +717,7 @@ public final class DropChanceAPI{
 		if(weapon != null && weapon.getType() == Material.AIR) weapon = null;
 		announceHeadDrop(beheadMessage, entity, killer, evt);
 		if(entity instanceof Player ? LOG_PLAYER_BEHEAD : LOG_MOB_BEHEAD) logHeadDrop(entity, killer, weapon);
+//		if(entity instanceof Player) ++numPlayerBeheads; else ++numMobBeheads;
 //		pl.getLogger().info("trigger head drop success");
 		return true;
 	}

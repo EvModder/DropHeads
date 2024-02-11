@@ -39,6 +39,7 @@ import net.evmodder.EvLib.Updater;
 // * use 'fallback' in TextUtils for head-type, etc.
 // * img.shields/io/bukkit/downloads/id ? other badges on GitHub?
 //TEST:
+// * head-noteblock-sound in ItemMeta
 // * Trophies/Luck attribute
 // * place-head-block, overwrite-blocks, facing-direction, place-as: KILLER/VICTIM/SERVER
 // * middle-click copy with correct item name // WORKS well enough; can still bug out if u middle-click twice
@@ -62,7 +63,21 @@ public final class DropHeads extends EvPlugin{
 		if(config.getBoolean("update-plugin", false)){
 			new Updater(/*plugin=*/this, /*id=*/274151, getFile(), Updater.UpdateType.DEFAULT, /*announce=*/true);
 		}
-		if(config.getBoolean("bstats-enabled", true) && config.getBoolean("new")) new MetricsLite(this, /*bStats id=*/20140);
+		if(config.getBoolean("bstats-enabled", true) && !config.getBoolean("new")){
+//			MetricsLite metrics =
+					new MetricsLite(this, /*bStats id=*/20140);
+//			metrics.addCustomChart(new MetricsLite.SimplePie("player_heads_only", ()->""+config.getBoolean("player-heads-only", false)));
+//			metrics.addCustomChart(new MetricsLite.SimplePie("simple_mob_heads_only", ()->""+config.getBoolean("simple-mob-heads-only", false)));
+//			metrics.addCustomChart(new MetricsLite.MultiLineChart("behead_events", new Callable<Map<String, Integer>>(){
+//				@Override public Map<String, Integer> call() throws Exception{
+//					Map<String, Integer> valueMap = new HashMap<>();
+//					valueMap.put("mobs", dropChanceAPI.numMobBeheads);
+//					valueMap.put("players", dropChanceAPI.numPlayerBeheads);
+//					dropChanceAPI.numMobBeheads = dropChanceAPI.numPlayerBeheads = 0;
+//					return valueMap;
+//				}
+//			}));
+		}
 		instance = this;
 		final NoteblockMode m = JunkUtils.parseEnumOrDefault(config.getString("noteblock-mob-sounds", "OFF"), NoteblockMode.OFF);
 		api = new InternalAPI(m);

@@ -33,9 +33,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.ServicePriority;
 import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
@@ -43,20 +41,18 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.zip.GZIPOutputStream;
 
-/**
- * bStats collects some data for plugin authors.
- */
+/** bStats collects some data for plugin authors. */
 public class MetricsLite{
 	public static final int B_STATS_VERSION = 1; // The version of this bStats class
 	private static final String URL = "https://bStats.org/submitData/bukkit"; // The url to which the data is sent
 
-	private final boolean enabled; // Is bStats enabled on this server?
+	private final boolean ENABLED; // Is bStats enabled on this server?
 	private static boolean logFailedRequests; // Should failed requests be logged?
 	private static boolean logSentData; // Should the sent data be logged?
 	private static boolean logResponseStatusText; // Should the response text be logged?
@@ -64,12 +60,21 @@ public class MetricsLite{
 	private final Plugin plugin; // The plugin
 	private final int pluginId; // The plugin id
 
-	/**
-	 * Class constructor.
-	 *
+	private ArrayList<CustomChart> charts;
+
+	/** Checks if the given class is a bStats service.
+	 * @return Whether the class matches a bStats service. */
+	private boolean isBstatsService(Class<?> service){
+		try{
+			service.getField("B_STATS_VERSION"); // Our identifier :)
+			return true;
+		}
+		catch(NoSuchFieldException ignored){return false;}
+	}
+
+	/** Class constructor.
 	 * @param plugin The plugin which stats should be submitted.
-	 * @param pluginId The id of the plugin. It can be found at <a href="https://bstats.org/what-is-my-plugin-id">What is my plugin id?</a>
-	 */
+	 * @param pluginId The id of the plugin. It can be found at <a href="https://bstats.org/what-is-my-plugin-id">What is my plugin id?</a> */
 	public MetricsLite(Plugin plugin, int pluginId){
 		if(plugin == null) throw new IllegalArgumentException("Plugin cannot be null!");
 		this.plugin = plugin;
@@ -77,95 +82,151 @@ public class MetricsLite{
 
 		// Get the config file
 		final File bStatsFolder = new File(plugin.getDataFolder().getParentFile(), "bStats");
-		if(!bStatsFolder.exists()){enabled=false; return;}
+		if(!bStatsFolder.exists()){ENABLED=false; return;}
 		final File configFile = new File(bStatsFolder, "config.yml");
-		if(!configFile.exists()){enabled=false; return;}
+		if(!configFile.exists()){
+//			final YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
+//			config.addDefault("enabled", true);
+//			config.addDefault("serverUuid", UUID.randomUUID().toString());
+//			config.addDefault("logFailedRequests", false);
+//			config.addDefault("logSentData", false);
+//			config.addDefault("logResponseStatusText", false);
+//
+//			// Inform the server owners about bStats
+//			config.options().header(
+//					"bStats (https://bStats.org) collects some basic information for plugin authors, like how\n" +
+//					"many people use their plugin and their total player count. It's recommended to keep bStats\n" +
+//					"enabled, but if you're not comfortable with this, you can turn this setting off. There is no\n" +
+//					"performance penalty associated with having metrics enabled, and data sent to bStats is fully\n" +
+//					"anonymous."
+//			).copyDefaults(true);
+//			try{config.save(configFile);} catch(IOException ignored) {}
+			ENABLED=false;
+			return;
+		}
 		final YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
 
 		// Check if the config file exists
-		enabled = config.getBoolean("enabled", false);
-		if(!enabled || !config.isSet("serverUuid")) return;
+		ENABLED = config.getBoolean("enabled", false);
+		if(!ENABLED || !config.isSet("serverUuid")) return;
 
 		// Load the data
 		serverUUID = config.getString("serverUuid");
 		logFailedRequests = config.getBoolean("logFailedRequests", false);
 		logSentData = config.getBoolean("logSentData", false);
 		logResponseStatusText = config.getBoolean("logResponseStatusText", false);
-		boolean found = false;
+
 		// Search for all other bStats Metrics classes to see if we are the first one
-		for(Class<?> service : Bukkit.getServicesManager().getKnownServices()){
-			try{
-				service.getField("B_STATS_VERSION"); // Our identifier :)
-				found = true; // We aren't the first
-				break;
-			}
-			catch(NoSuchFieldException ignored){}
-		}
+		final boolean found = Bukkit.getServicesManager().getKnownServices().parallelStream().anyMatch(this::isBstatsService);
 		// Register our service
 		Bukkit.getServicesManager().register(MetricsLite.class, this, plugin, ServicePriority.Normal);
 		if(!found) startSubmitting(); // We are the first!
 	}
 
-	/**
-	 * Checks if bStats is enabled.
-	 * 
-	 * @return Whether bStats is enabled or not.
-	 */
-	public boolean isEnabled(){return enabled;}
+	/** Checks if bStats is enabled.
+	 * @return Whether bStats is enabled or not. */
+	public boolean isEnabled(){return ENABLED;}
 
-	/**
-	 * Starts the Scheduler which submits our data every 30 minutes.
-	 */
-	private void startSubmitting(){
-		final Timer timer = new Timer(true); // We use a timer since BukkitScheduler is affected by server lag
-		timer.scheduleAtFixedRate(new TimerTask(){
-			@Override public void run(){
-				if(!plugin.isEnabled()){ // Plugin was disabled
-					timer.cancel();
-					return;
-				}
-				// Nevertheless we want our code to run in the Bukkit main thread, so we have to use BukkitScheduler
-				// Don't be afraid! The connection to the bStats server is still sync, only the stats collection is sync ;)
-				Bukkit.getScheduler().runTask(plugin, () -> submitData());
+	/** Represents a custom chart. */
+	public static abstract class CustomChart{
+		final String chartId; // The id of the chart
+
+		/** Class constructor.
+		 * @param chartId The id of the chart. */
+		CustomChart(String chartId){
+			if(chartId == null || chartId.isEmpty()) throw new IllegalArgumentException("ChartId cannot be null or empty!");
+			this.chartId = chartId;
+		}
+
+		protected abstract JsonObject getChartData() throws Exception;
+
+		private JsonObject getRequestJsonObject(){
+			try{
+				final JsonObject data = getChartData();
+				if(data == null) return null;
+				final JsonObject chart = new JsonObject();
+				chart.addProperty("chartId", chartId);
+				chart.add("data", data);
+				return chart;
 			}
-		}, 1000 * 60 * 5, 1000 * 60 * 30);
-		// Submit the data every 30 minutes, first time after 5 minutes to give other plugins enough time to start
-		// WARNING: Changing the frequency has no effect but your plugin WILL be blocked/deleted!
-		// WARNING: Just don't do it!
+			catch(Throwable t){
+				if(logFailedRequests) Bukkit.getLogger().log(Level.WARNING, "Failed to get data for custom chart with id " + chartId, t);
+				return null;
+			}
+		}
 	}
 
-	/**
-	 * Gets the plugin specific data.
+//	/** Represents a custom simple pie. */
+//	public static class SimplePie extends CustomChart{
+//		private final Callable<String> callable;
+//
+//		/** Class constructor.
+//		 * @param chartId The id of the chart.
+//		 * @param callable The callable which is used to request the chart data. */
+//		public SimplePie(String chartId, Callable<String> callable){
+//			super(chartId);
+//			this.callable = callable;
+//		}
+//
+//		@Override protected JsonObject getChartData() throws Exception{
+//			final String value = callable.call();
+//			if(value == null || value.isEmpty()) return null; // Null = skip the chart
+//			final JsonObject data = new JsonObject();
+//			data.addProperty("value", value);
+//			return data;
+//		}
+//	}
+
+//	/** Represents a custom multi line chart. */
+//	public static class MultiLineChart extends CustomChart{
+//		private final Callable<Map<String, Integer>> callable;
+//
+//		/** Class constructor.
+//		 * @param chartId The id of the chart.
+//		 * @param callable The callable which is used to request the chart data. */
+//		public MultiLineChart(String chartId, Callable<Map<String, Integer>> callable){
+//			super(chartId);
+//			this.callable = callable;
+//		}
+//
+//		@Override protected JsonObject getChartData() throws Exception {
+//			Map<String, Integer> map = callable.call();
+//			if(map == null || map.isEmpty() || map.values().stream().allMatch(v -> v == 0)) return null; // Null = skip the chart
+//			final JsonObject values = new JsonObject();
+//			map.entrySet().stream().filter(e -> e.getValue() != 0).forEach(e -> values.addProperty(e.getKey(), e.getValue()));
+//			final JsonObject data = new JsonObject();
+//			data.add("values", values);
+//			return data;
+//		}
+//	}
+
+	/** Adds a custom chart.
+	 * @param chart The chart to add. */
+	public void addCustomChart(CustomChart chart){
+		if(chart == null) throw new IllegalArgumentException("Chart cannot be null!");
+		if(charts == null) charts = new ArrayList<>();
+		charts.add(chart);
+	}
+
+	/** Gets the plugin specific data.
 	 * This method is called using Reflection.
-	 *
-	 * @return The plugin specific data.
-	 */
+	 * @return The plugin specific data. */
 	public JsonObject getPluginData(){
 		final JsonObject data = new JsonObject();
 		data.addProperty("pluginName", plugin.getDescription().getName()); // Append the name of the plugin
 		data.addProperty("id", pluginId); // Append the id of the plugin
 		data.addProperty("pluginVersion", plugin.getDescription().getVersion()); // Append the version of the plugin
-		data.add("customCharts", new JsonArray());
+		JsonArray customCharts = new JsonArray();
+		if(charts != null) charts.stream().map(CustomChart::getRequestJsonObject).filter(o -> o != null).forEach(o -> customCharts.add(o));
+		data.add("customCharts", customCharts);
 		return data;
 	}
 
-	/**
-	 * Gets the server specific data.
-	 *
-	 * @return The server specific data.
-	 */
+	/** Gets the server specific data.
+	 * @return The server specific data. */
 	private JsonObject getServerData(){
 		// Minecraft specific data
-		int playerAmount;
-		try{
-			// Around MC 1.8 the return type was changed to a collection from an array,
-			// This fixes java.lang.NoSuchMethodError: org.bukkit.Bukkit.getOnlinePlayers()Ljava/util/Collection;
-			final Method onlinePlayersMethod = Class.forName("org.bukkit.Server").getMethod("getOnlinePlayers");
-			playerAmount = onlinePlayersMethod.getReturnType().equals(Collection.class)
-					? ((Collection<?>)onlinePlayersMethod.invoke(Bukkit.getServer())).size()
-					: ((Player[])onlinePlayersMethod.invoke(Bukkit.getServer())).length;
-		}
-		catch(Exception e){playerAmount = Bukkit.getOnlinePlayers().size();} // Just use the new method if the Reflection failed
+		final int playerAmount = Bukkit.getOnlinePlayers().size();
 		final int onlineMode = Bukkit.getOnlineMode() ? 1 : 0;
 		final String bukkitVersion = Bukkit.getVersion();
 		final String bukkitName = Bukkit.getName();
@@ -195,76 +256,29 @@ public class MetricsLite{
 		return data;
 	}
 
-	/**
-	 * Collects the data and sends it afterwards.
-	 */
-	private void submitData(){
-		final JsonObject data = getServerData();
-		final JsonArray pluginData = new JsonArray();
-		// Search for all other bStats Metrics classes to get their plugin data
-		for(Class<?> service : Bukkit.getServicesManager().getKnownServices()){
-			try{
-				service.getField("B_STATS_VERSION"); // Our identifier :)
+	/** Gzips the given String.
+	 * @param str The string to gzip.
+	 * @return The gzipped String.
+	 * @throws IOException If the compression failed. */
+	private static byte[] compress(final String str) throws IOException{
+		if(str == null) return null;
 
-				for(RegisteredServiceProvider<?> provider : Bukkit.getServicesManager().getRegistrations(service)){
-					try{
-						final Object plugin = provider.getService().getMethod("getPluginData").invoke(provider.getProvider());
-						if(plugin instanceof JsonObject){
-							pluginData.add((JsonObject)plugin);
-						}
-						else{ // old bstats version compatibility
-							try{
-								final Class<?> jsonObjectJsonSimple = Class.forName("org.json.simple.JSONObject");
-								if(plugin.getClass().isAssignableFrom(jsonObjectJsonSimple)){
-									Method jsonStringGetter = jsonObjectJsonSimple.getDeclaredMethod("toJSONString");
-									jsonStringGetter.setAccessible(true);
-									String jsonString = (String)jsonStringGetter.invoke(plugin);
-									JsonObject object = new JsonParser().parse(jsonString).getAsJsonObject();
-									pluginData.add(object);
-								}
-							}
-							catch(ClassNotFoundException e){
-								// minecraft version 1.14+
-								if(logFailedRequests){
-									this.plugin.getLogger().log(Level.SEVERE, "Encountered unexpected exception ", e);
-								}
-							}
-						}
-					}catch(NullPointerException | NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored){}
-				}
-			}catch(NoSuchFieldException ignored){}
+		final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		try(GZIPOutputStream gzip = new GZIPOutputStream(outputStream)){
+			gzip.write(str.getBytes(StandardCharsets.UTF_8));
 		}
-
-		data.add("plugins", pluginData);
-
-		// Create a new thread for the connection to the bStats server
-		new Thread(() -> {
-			try{sendData(plugin, data);}
-			catch(Exception e){
-				if(logFailedRequests){
-					plugin.getLogger().log(Level.WARNING, "Could not submit plugin stats of " + plugin.getName(), e);
-				}
-			}
-		}).start();
+		return outputStream.toByteArray();
 	}
 
-	/**
-	 * Sends the data to the bStats server.
-	 *
+	/** Sends the data to the bStats server.
 	 * @param plugin Any plugin. It's just used to get a logger instance.
 	 * @param data The data to send.
-	 * @throws Exception If the request failed.
-	 */
+	 * @throws Exception If the request failed. */
 	private static void sendData(Plugin plugin, JsonObject data) throws Exception{
-		if(data == null){
-			throw new IllegalArgumentException("Data cannot be null!");
-		}
-		if(Bukkit.isPrimaryThread()){
-			throw new IllegalAccessException("This method must not be called from the main thread!");
-		}
-		if(logSentData){
-			plugin.getLogger().info("Sending data to bStats: " + data);
-		}
+		if(data == null) throw new IllegalArgumentException("Data cannot be null!");
+		if(Bukkit.isPrimaryThread()) throw new IllegalAccessException("This method must not be called from the main thread!");
+		if(logSentData) plugin.getLogger().info("Sending data to bStats: " + data);
+
 		final HttpsURLConnection connection = (HttpsURLConnection)new URL(URL).openConnection();
 
 		// Compress the data to save bandwidth
@@ -288,30 +302,72 @@ public class MetricsLite{
 		final StringBuilder builder = new StringBuilder();
 		try(BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream()))){
 			String line;
-			while((line = bufferedReader.readLine()) != null){
-				builder.append(line);
-			}
+			while((line = bufferedReader.readLine()) != null) builder.append(line);
 		}
 
-		if(logResponseStatusText){
-			plugin.getLogger().info("Sent data to bStats and received response: " + builder);
-		}
+		if(logResponseStatusText) plugin.getLogger().info("Sent data to bStats and received response: " + builder);
 	}
 
-	/**
-	 * Gzips the given String.
-	 *
-	 * @param str The string to gzip.
-	 * @return The gzipped String.
-	 * @throws IOException If the compression failed.
-	 */
-	private static byte[] compress(final String str) throws IOException{
-		if(str == null) return null;
+	/** Collects the data and sends it afterwards. */
+	private void submitData(){
+		final JsonObject data = getServerData();
 
-		final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		try(GZIPOutputStream gzip = new GZIPOutputStream(outputStream)){
-			gzip.write(str.getBytes(StandardCharsets.UTF_8));
-		}
-		return outputStream.toByteArray();
+		// Search for all other bStats Metrics classes to get their plugin data
+		final JsonArray pluginData = new JsonArray();
+		Bukkit.getServicesManager().getKnownServices().stream().filter(this::isBstatsService)
+		.flatMap(service -> Bukkit.getServicesManager().getRegistrations(service).stream()).forEach(provider -> {
+			try{
+				final Object plugin = provider.getService().getMethod("getPluginData").invoke(provider.getProvider());
+				if(plugin instanceof JsonObject){
+					pluginData.add((JsonObject)plugin);
+				}
+				else{ // TODO: old bstats version compatibility, delete eventually
+					try{
+						final Class<?> jsonObjectJsonSimple = Class.forName("org.json.simple.JSONObject");
+						if(plugin.getClass().isAssignableFrom(jsonObjectJsonSimple)){
+							final Method jsonStringGetter = jsonObjectJsonSimple.getDeclaredMethod("toJSONString");
+							jsonStringGetter.setAccessible(true);
+							pluginData.add(new JsonParser().parse((String)jsonStringGetter.invoke(plugin)).getAsJsonObject());
+						}
+					}
+					catch(ClassNotFoundException e){
+						// minecraft version 1.14+
+						if(logFailedRequests){
+							this.plugin.getLogger().log(Level.SEVERE, "Encountered unexpected exception ", e);
+						}
+					}
+				}
+			}
+			catch(NullPointerException | NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored){}
+			//return (JsonObject)null;
+		});
+		data.add("plugins", pluginData);
+
+		// Create a new thread for the connection to the bStats server
+		new Thread(() -> {
+			try{sendData(plugin, data);}
+			catch(Exception e){
+				if(logFailedRequests) plugin.getLogger().log(Level.WARNING, "Could not submit plugin stats of " + plugin.getName(), e);
+			}
+		}).start();
+	}
+
+	/** Starts the Scheduler which submits our data every 30 minutes. */
+	private void startSubmitting(){
+		final Timer timer = new Timer(true); // We use a timer since BukkitScheduler is affected by server lag
+		timer.scheduleAtFixedRate(new TimerTask(){
+			@Override public void run(){
+				if(!plugin.isEnabled()){ // Plugin was disabled
+					timer.cancel();
+					return;
+				}
+				// Nevertheless we want our code to run in the Bukkit main thread, so we have to use BukkitScheduler
+				// Don't be afraid! The connection to the bStats server is still async, only the stats collection is sync ;)
+				Bukkit.getScheduler().runTask(plugin, () -> submitData());
+			}
+		}, 1000 * 60 * 5, 1000 * 60 * 30);
+		// Submit the data every 30 minutes, first time after 5 minutes to give other plugins enough time to start
+		// WARNING: Changing the frequency has no effect but your plugin WILL be blocked/deleted!
+		// WARNING: Just don't do it!
 	}
 }
