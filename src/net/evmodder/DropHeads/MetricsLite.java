@@ -41,7 +41,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
@@ -60,7 +59,7 @@ public class MetricsLite{
 	private final Plugin plugin; // The plugin
 	private final int pluginId; // The plugin id
 
-	private ArrayList<CustomChart> charts;
+//	private ArrayList<CustomChart> charts;
 
 	/** Checks if the given class is a bStats service.
 	 * @return Whether the class matches a bStats service. */
@@ -127,34 +126,34 @@ public class MetricsLite{
 	 * @return Whether bStats is enabled or not. */
 	public boolean isEnabled(){return ENABLED;}
 
-	/** Represents a custom chart. */
-	public static abstract class CustomChart{
-		final String chartId; // The id of the chart
-
-		/** Class constructor.
-		 * @param chartId The id of the chart. */
-		CustomChart(String chartId){
-			if(chartId == null || chartId.isEmpty()) throw new IllegalArgumentException("ChartId cannot be null or empty!");
-			this.chartId = chartId;
-		}
-
-		protected abstract JsonObject getChartData() throws Exception;
-
-		private JsonObject getRequestJsonObject(){
-			try{
-				final JsonObject data = getChartData();
-				if(data == null) return null;
-				final JsonObject chart = new JsonObject();
-				chart.addProperty("chartId", chartId);
-				chart.add("data", data);
-				return chart;
-			}
-			catch(Throwable t){
-				if(logFailedRequests) Bukkit.getLogger().log(Level.WARNING, "Failed to get data for custom chart with id " + chartId, t);
-				return null;
-			}
-		}
-	}
+//	/** Represents a custom chart. */
+//	public static abstract class CustomChart{
+//		final String chartId; // The id of the chart
+//
+//		/** Class constructor.
+//		 * @param chartId The id of the chart. */
+//		CustomChart(String chartId){
+//			if(chartId == null || chartId.isEmpty()) throw new IllegalArgumentException("ChartId cannot be null or empty!");
+//			this.chartId = chartId;
+//		}
+//
+//		protected abstract JsonObject getChartData() throws Exception;
+//
+//		private JsonObject getRequestJsonObject(){
+//			try{
+//				final JsonObject data = getChartData();
+//				if(data == null) return null;
+//				final JsonObject chart = new JsonObject();
+//				chart.addProperty("chartId", chartId);
+//				chart.add("data", data);
+//				return chart;
+//			}
+//			catch(Throwable t){
+//				if(logFailedRequests) Bukkit.getLogger().log(Level.WARNING, "Failed to get data for custom chart with id " + chartId, t);
+//				return null;
+//			}
+//		}
+//	}
 
 //	/** Represents a custom simple pie. */
 //	public static class SimplePie extends CustomChart{
@@ -200,13 +199,13 @@ public class MetricsLite{
 //		}
 //	}
 
-	/** Adds a custom chart.
-	 * @param chart The chart to add. */
-	public void addCustomChart(CustomChart chart){
-		if(chart == null) throw new IllegalArgumentException("Chart cannot be null!");
-		if(charts == null) charts = new ArrayList<>();
-		charts.add(chart);
-	}
+//	/** Adds a custom chart.
+//	 * @param chart The chart to add. */
+//	public void addCustomChart(CustomChart chart){
+//		if(chart == null) throw new IllegalArgumentException("Chart cannot be null!");
+//		if(charts == null) charts = new ArrayList<>();
+//		charts.add(chart);
+//	}
 
 	/** Gets the plugin specific data.
 	 * This method is called using Reflection.
@@ -217,7 +216,7 @@ public class MetricsLite{
 		data.addProperty("id", pluginId); // Append the id of the plugin
 		data.addProperty("pluginVersion", plugin.getDescription().getVersion()); // Append the version of the plugin
 		JsonArray customCharts = new JsonArray();
-		if(charts != null) charts.stream().map(CustomChart::getRequestJsonObject).filter(o -> o != null).forEach(o -> customCharts.add(o));
+//		if(charts != null) charts.stream().map(CustomChart::getRequestJsonObject).filter(o -> o != null).forEach(o -> customCharts.add(o));
 		data.add("customCharts", customCharts);
 		return data;
 	}
