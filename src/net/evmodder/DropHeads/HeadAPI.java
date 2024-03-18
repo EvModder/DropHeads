@@ -377,10 +377,11 @@ public class HeadAPI {
 		switch(/*entity != null ? entity.name() : */dataFlags[0]){
 			case "TROPICAL_FISH":
 				if(dataFlags.length == 2 && !dataFlags[1].equals("GRUMM")){
-					int pccInt = EntityUtils.getPCCInt(/*common_name=*/dataFlags[1]);
+					pl.getLogger().info("pccInt for red lipped blenny: "+
+				EntityUtils.intFromPCC(org.bukkit.entity.TropicalFish.Pattern.SNOOPER, DyeColor.GRAY, DyeColor.RED));
 //					String name = TextUtils.capitalizeAndSpacify(dataFlags[1], '_');
 					return new Component[]{new TranslationComponent(
-							"entity.minecraft.tropical_fish.predefined."+EntityUtils.getCommonTropicalFishId(pccInt))};
+							"entity.minecraft.tropical_fish.predefined."+EntityUtils.getTropicalFishId(/*common_name=*/dataFlags[1]))};
 				}
 				else if(dataFlags.length > 2) try{
 					DyeColor bodyColor = DyeColor.valueOf(dataFlags[1]);
