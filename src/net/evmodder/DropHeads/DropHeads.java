@@ -38,6 +38,7 @@ import net.evmodder.EvLib.Updater;
 // * full /minecraft:give command support (namespaced custom heads in /give)
 // * use 'fallback' in TextUtils for head-type, etc.
 // * img.shields/io/bukkit/downloads/id ? other badges on GitHub?
+// * mob: prefix for /droprate
 //TEST:
 // * head-noteblock-sound in ItemMeta
 // * Trophies/Luck attribute

@@ -5,8 +5,8 @@ description: Heads for every mob and player.
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
 #9=Reorganized texture file downloads, global click-info cooldown
-#1=droprate edit cmd, EvLib updates, option to encode NBS in NBT
-version: 3.9.1
+#2=minor bkw compat fix, library (tellraw) fix, /droprate from console
+version: 3.9.2
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 

@@ -147,7 +147,7 @@ public class CommandDropRate extends EvCommand{
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args){
 		//DecimalFormat df = new DecimalFormat("0.0####");
 		ItemStack weapon = sender instanceof Player ? ((Player)sender).getInventory().getItemInMainHand() : null;
-		if(weapon.getType() == Material.AIR) weapon = null;
+		if(weapon != null && weapon.getType() == Material.AIR) weapon = null;
 		Entity entity = null;
 		Double rawChance = 0D;
 		if(args.length == 0){
@@ -212,6 +212,7 @@ public class CommandDropRate extends EvCommand{
 						sender.sendMessage(String.format(translate("file-updated"), updateFile));
 				}
 				else{
+					// Should be unreachable, barring FileIO errors
 					sender.sendMessage(ChatColor.RED+"Unknown error occurred attempting to set drop chance");
 					pl.getLogger().severe("Unknown error occurred attempting to set drop chance");
 				}
@@ -314,7 +315,10 @@ public class CommandDropRate extends EvCommand{
 				droprateDetails.addComponent(String.format(translate("final-drop-rate"), formatDroprate(finalDropChance*100D)));
 			}
 		} // end else (not a wither_skeleton)
-		if(!droprateDetails.isEmpty()) sendTellraw(sender.getName(), droprateDetails.toString());
+		if(!droprateDetails.isEmpty()){
+			if(sender instanceof Player) sendTellraw(sender.getName(), droprateDetails.toString());
+			else sender.sendMessage(droprateDetails.toPlainText());
+		}
 		return true;
 	}
 }
