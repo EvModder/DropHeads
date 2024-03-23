@@ -79,7 +79,9 @@ public final class DropHeads extends EvPlugin{
 //			}));
 		}
 		instance = this;
-		final NoteblockMode m = JunkUtils.parseEnumOrDefault(config.getString("noteblock-mob-sounds", "OFF"), NoteblockMode.OFF);
+		final NoteblockMode m = config.isBoolean("noteblock-mob-sounds")
+				? (config.getBoolean("noteblock-mob-sounds") ? NoteblockMode.LISTENER : NoteblockMode.OFF)
+				: JunkUtils.parseEnumOrDefault(config.getString("noteblock-mob-sounds", "OFF"), NoteblockMode.OFF);
 		api = new InternalAPI(m);
 		final boolean GLOBAL_PLAYER_BEHEAD_MSG = config.getString("behead-announcement.player",
 				config.getString("behead-announcement.default", "GLOBAL")).toUpperCase().equals("GLOBAL");
