@@ -126,11 +126,11 @@ public class DeathMessagePacketIntercepter{
 				}
 //				pl.getLogger().info("detected death msg:\n"+jsonMsg);
 				final UUID uuid; // uuid of entity that died
-				final Matcher matcher1 = uuidPattern1.matcher(jsonMsg);
-				if(matcher1.find()) uuid = UUID.fromString(matcher1.group());
+				final Matcher matcher2 = uuidPattern2.matcher(jsonMsg);
+				if(matcher2.find()) uuid = parseUUIDFromFourIntStrings(matcher2.group(1), matcher2.group(2), matcher2.group(3), matcher2.group(4));
 				else{
-					final Matcher matcher2 = uuidPattern2.matcher(jsonMsg);
-					if(matcher2.find()) uuid = parseUUIDFromFourIntStrings(matcher2.group(1), matcher2.group(2), matcher2.group(3), matcher2.group(4));
+					final Matcher matcher1 = uuidPattern1.matcher(jsonMsg);
+					if(matcher1.find()) uuid = UUID.fromString(matcher1.group());
 					else{
 						pl.getLogger().warning("Unable to find UUID from death message: "+jsonMsg);
 						pl.getLogger().warning("This is probably caused by another plugin destructively modifying the selector");
@@ -147,8 +147,15 @@ public class DeathMessagePacketIntercepter{
 						PacketUtils.sendPacket(player, packet); // If this death msg has been unblocked
 						return;
 					}
-					final boolean shouldReplaceDeathMsg = pl.getServer().getEntity(uuid) instanceof Player
-							? REPLACE_PLAYER_DEATH_MSG : REPLACE_PET_DEATH_MSG;
+					final Entity victim = pl.getServer().getEntity(uuid);
+					if(victim == null){
+						pl.getLogger().warning("Unable to find death-message entity by UUID: "+uuid);
+						PacketUtils.sendPacket(player, packet);
+						return;
+					}
+					if(!hasDeathMessage(victim)) pl.getLogger().warning("Detected abnormal death message for non-player entity: "+jsonMsg);
+
+					final boolean shouldReplaceDeathMsg = victim instanceof Player ? REPLACE_PLAYER_DEATH_MSG : REPLACE_PET_DEATH_MSG;
 					if(!shouldReplaceDeathMsg){
 						unblockedSpecificDeathMsgs.add(jsonMsg);
 						PacketUtils.sendPacket(player, packet);
