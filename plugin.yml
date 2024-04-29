@@ -5,9 +5,8 @@ description: Heads for every mob and player.
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
 #9=Reorganized texture file downloads, global click-info cooldown
-#2=minor bkw compat fix, library (tellraw) fix, /droprate from console
-#2=fix serialized profile error
-version: 3.9.2.2
+#3=new wolves
+version: 3.9.3
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 

@@ -118,10 +118,9 @@ public final class TextureKeyLookup{
 	private static RefMethod mBeeHasNectar, mBeeGetAnger, mBeeHasStung;
 	private static RefMethod mCatGetType, mCatGetCollarColor;
 	private static RefMethod mFoxGetType, mFoxIsSleeping;
-	private static RefMethod mMushroomCowGetVariant;
 	private static RefMethod mPandaGetMainGene, mPandaGetHiddenGene;
 	private static RefMethod mTraderLlamaGetColor;
-	private static RefMethod mAxolotlGetVariant, mFrogGetVariant;
+	private static RefMethod mAxolotlGetVariant, mFrogGetVariant, mWolfGetVariant, mMushroomCowGetVariant;
 	private static RefMethod mVexIsCharging;
 	private static RefMethod mChestBoatGetType;
 	private static RefMethod mGoatIsScreaming, mGoatHasLeftHorn, mGoatHasRightHorn;
@@ -140,10 +139,6 @@ public final class TextureKeyLookup{
 		switch(entity.getType().name()){
 			case "CREEPER":
 				return ((Creeper)entity).isPowered() ? "CREEPER|CHARGED" : "CREEPER";
-			case "WOLF":
-				if(((Wolf)entity).isTamed()) return "WOLF|"+((Wolf)entity).getCollarColor().name()+"_COLLARED";
-				if(((Wolf)entity).isAngry()) return "WOLF|ANGRY";
-				return "WOLF";
 			case "HORSE":
 				//TODO: isSaddled
 				return "HORSE|"+((Horse)entity).getColor().name();
@@ -183,6 +178,14 @@ public final class TextureKeyLookup{
 				final String angry = ((int)mBeeGetAnger.of(entity).call()) > 0 ? "|ANGRY" : "";
 				final String usedSting = mBeeHasStung.of(entity).call().equals(true) ? "|STUNG" : "";
 				return "BEE" + pollinated + angry + usedSting;
+			}
+			case "WOLF": {
+				final String tameAndCollarOrAngry =
+						((Wolf)entity).isTamed() ? "|TAME|"+((Wolf)entity).getCollarColor().name()+"_COLLARED" :
+						((Wolf)entity).isAngry() ? "|ANGRY" : "";
+				if(ReflectionUtils.getServerVersionString().compareTo("v1_20_R4") < 0) return "WOLF"+tameAndCollarOrAngry;
+				if(mWolfGetVariant == null) mWolfGetVariant = ReflectionUtils.getRefClass("org.bukkit.entity.Wolf").getMethod("getVariant");
+				return "WOLF|"+((Enum)mWolfGetVariant.of(entity).call()).name()+tameAndCollarOrAngry;
 			}
 			case "CHEST_BOAT":
 				if(mChestBoatGetType == null) mChestBoatGetType = ReflectionUtils.getRefClass("org.bukkit.entity.ChestBoat").getMethod("getBoatType");

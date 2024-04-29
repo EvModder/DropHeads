@@ -82,8 +82,8 @@ public class HeadAPI {
 	private final String PLAYER_PREFIX, MOB_PREFIX, MHF_PREFIX, HDB_PREFIX, CODE_PREFIX;
 
 	void loadTextures(String headsList, boolean logMissingEntities, boolean logUnknownEntities){
-		HashSet<EntityType> missingHeads = new HashSet<EntityType>();
-		HashSet<String> unknownHeads = new HashSet<String>();
+		final HashSet<EntityType> missingHeads = new HashSet<EntityType>();
+		final HashSet<String> unknownHeads = new HashSet<String>();
 		if(logMissingEntities) missingHeads.addAll(Arrays.asList(EntityType.values()).stream()
 				.filter(x -> x.isAlive()/* && x.isMeow() */).collect(Collectors.toList()));
 		missingHeads.remove(EntityType.PLAYER);
@@ -264,7 +264,7 @@ public class HeadAPI {
 		UNKNOWN_TEXTURE_CODE = textures.getOrDefault(EntityType.UNKNOWN.name(), "5c90ca5073c49b898a6f8cdbc72e6aca0a425ec83bc4355e3b834fd859282bdd");
 
 		boolean writeTextureFile = false, updateTextures = false;
-		if(pl.getConfig().getBoolean("update-textures", false) && hardcodedList.length() > localList.length()){
+		if(pl.getConfig().getBoolean("update-textures", false)){
 			long oldTextureTime = new File(FileIO.DIR+"/head-textures.txt").lastModified();
 			long newTextureTime = 0;
 			try{
