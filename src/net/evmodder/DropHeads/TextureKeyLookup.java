@@ -137,6 +137,9 @@ public final class TextureKeyLookup{
 	@SuppressWarnings("rawtypes")
 	public static String getTextureKey(Entity entity){
 		switch(entity.getType().name()){
+//			case "BOGGED":
+//				if(mBoggedIsSheared == null) mBoggedIsSheared = ReflectionUtils.getRefClass("org.bukkit.entity.Bogged").getMethod("isSheared");
+//				return mBoggedIsSheared.of(entity).call().equals(true) ? "BOGGED|SHEARED" : "BOGGED";
 			case "CREEPER":
 				return ((Creeper)entity).isPowered() ? "CREEPER|CHARGED" : "CREEPER";
 			case "HORSE":
