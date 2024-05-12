@@ -11,7 +11,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
 
 public class EndermanProvokeListener implements Listener{
@@ -36,13 +35,11 @@ public class EndermanProvokeListener implements Listener{
 		if(head == null || !HeadUtils.isHead(head.getType())) return null;
 		if(!HeadUtils.isPlayerHead(head.getType())) return HeadUtils.getEntityFromHead(head.getType());
 		final GameProfile profile = HeadUtils.getGameProfile((SkullMeta)head.getItemMeta());
-		if(profile != null && profile.getName() != null){
-			String profileName = profile.getName().startsWith(JunkUtils.TXTR_KEY_PREFIX) ? profile.getName().substring(10) : profile.getName();
-			if(pl.getAPI().textureExists(profileName)){
-				int idx = profileName.indexOf('|');
-				String eTypeName = (idx == -1 ? profileName : profileName.substring(0, idx)).toUpperCase();
-				try{return EntityType.valueOf(eTypeName);} catch(IllegalArgumentException ex){}
-			}
+		if(profile != null){
+			final String textureKey = pl.getAPI().getTextureKey(profile);
+			final int idx = textureKey.indexOf('|');
+			final String eTypeName = (idx == -1 ? textureKey : textureKey.substring(0, idx)).toUpperCase();
+			try{return EntityType.valueOf(eTypeName);} catch(IllegalArgumentException ex){}
 		}
 		return null;
 	}

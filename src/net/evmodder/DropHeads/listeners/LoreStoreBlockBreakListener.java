@@ -1,6 +1,7 @@
 package net.evmodder.DropHeads.listeners;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
@@ -12,6 +13,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
 import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
@@ -28,15 +30,28 @@ public class LoreStoreBlockBreakListener implements Listener{
 
 		final Skull skull = (Skull)block.getState();
 		final GameProfile profile = HeadUtils.getGameProfile(skull);
-		if(profile == null || profile.getName() == null) return null;
+		if(profile == null) return null;
 
-		final int loreStart = profile.getName().indexOf('>');
-		if(loreStart == -1) return null;
-
-		final List<String> lore = Arrays.asList(profile.getName().substring(loreStart + 1).split("\\n", -1));
-		final String preLoreProfileName = profile.getName().substring(0, loreStart);
-
-		final GameProfile profileWithoutLore = new GameProfile(profile.getId(), preLoreProfileName);
+		List<String> lore = null;
+		GameProfile profileWithoutLore = null;
+		if(profile.getProperties() != null && profile.getProperties().containsKey(JunkUtils.DH_LORE_KEY)){
+			final Collection<Property> props = profile.getProperties().get(JunkUtils.DH_LORE_KEY);
+			if(props != null && !props.isEmpty()){
+				if(props.size() != 1) DropHeads.getPlugin().getLogger().warning("Multiple lore keys on a single head profile in getItemWithLore()");
+				lore = Arrays.asList(props.iterator().next().getValue().split("\\n"));
+				profileWithoutLore = new GameProfile(profile.getId(), profile.getName());
+				profileWithoutLore.getProperties().putAll(profile.getProperties());
+				profileWithoutLore.getProperties().removeAll(JunkUtils.DH_LORE_KEY);
+			}
+		}
+		if(lore == null){
+			if(profile.getName() == null) return null;
+			final int loreStart = profile.getName().indexOf('>');
+			if(loreStart == -1) return null;
+			lore = Arrays.asList(profile.getName().substring(loreStart + 1).split("\\n", -1));
+			profileWithoutLore = new GameProfile(profile.getId(), profile.getName().substring(0, loreStart));
+			profileWithoutLore.getProperties().putAll(profile.getProperties());
+		}
 		ItemStack headItem = DropHeads.getPlugin().getAPI().getHead(profileWithoutLore);
 		if(lore.size() > 1 || (lore.size() == 1 && !lore.get(0).isEmpty())){
 			final Component[] loreComps = new Component[lore.size()];

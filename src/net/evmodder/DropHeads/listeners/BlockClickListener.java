@@ -72,12 +72,12 @@ public class BlockClickListener implements Listener{
 		}
 	}
 
-	GameProfile stripCustomLoreAndNamespace(GameProfile profile){
+	private GameProfile stripCustomLoreAndNamespace(GameProfile profile){//TODO: delete soon(tm) since lore isn't stored in profile name since v3.9.4
 		if(profile != null && profile.getName() != null){
 			String name = profile.getName();
-			int idx = name.indexOf('>'); if(idx != -1) name = name.substring(0, idx);
-			if(name.startsWith(JunkUtils.TXTR_KEY_PREFIX)) name = name.substring(10);
-
+			int startIdx = name.startsWith(JunkUtils.TXT_KEY_PROFILE_NAME_PREFIX) ? JunkUtils.TXT_KEY_PROFILE_NAME_PREFIX.length() : 0;
+			int endIdx = name.indexOf('>');
+			name = name.substring(startIdx, endIdx == -1 ? name.length() : endIdx);
 			if(!name.equals(profile.getName())) return new GameProfile(profile.getId(), name);
 		}
 		return profile;
@@ -113,14 +113,13 @@ public class BlockClickListener implements Listener{
 			data.profileName = new RawTextComponent(idx == -1 ? hdbHeadName : hdbHeadName.substring(0, idx));
 		}
 		//mob
-		else if(profile.getName() != null && pl.getAPI().textureExists(profile.getName())){
-			data.textureKey = profile.getName();
+		else if((data.textureKey=pl.getAPI().getTextureKey(profile)) != null){
 			final int idx = data.textureKey.indexOf('|');
 			final String eTypeName = (idx == -1 ? data.textureKey : data.textureKey.substring(0, idx)).toUpperCase();
 			try{data.headType = HeadUtils.getDroppedHeadType(EntityType.valueOf(eTypeName));}
 			catch(IllegalArgumentException ex){data.headType = HeadUtils.getDroppedHeadType(EntityType.UNKNOWN);}  // "Head"
 			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(data.textureKey);
-			data.profileName = new RawTextComponent(profile.getName());
+			data.profileName = profile.getName() != null ? new RawTextComponent(profile.getName()) : null;//data.entityTypeNames[0];
 		}
 		//player
 		else if(profile.getId() != null && (data.player=pl.getServer().getOfflinePlayer(profile.getId())) != null
@@ -137,7 +136,7 @@ public class BlockClickListener implements Listener{
 		else{
 			data.headType = HeadUtils.getDroppedHeadType(EntityType.UNKNOWN);  // "Head"
 			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(EntityType.UNKNOWN.name());  // "Unknown"
-			data.profileName = profile.getName() != null ? new RawTextComponent(profile.getName()) : data.entityTypeNames[0];
+			data.profileName = profile.getName() != null ? new RawTextComponent(profile.getName()) : null;//data.entityTypeNames[0];
 		}
 		if(data.hdbId != null && !hdbAPI.isHead(data.hdbId)) data.hdbId = null;
 		if(data.player != null && data.player.getName() == null) data.player = null;
@@ -155,7 +154,7 @@ public class BlockClickListener implements Listener{
 					if(player.getName() != null) headData.profileName = new RawTextComponent(player.getName());
 					else if(profile != null && profile.getName() != null) headData.profileName = new RawTextComponent(profile.getName());
 					else if(((Skull)skull).getOwner() != null) headData.profileName = new RawTextComponent(((Skull)skull).getOwner());
-					else headData.profileName = new RawTextComponent(EntityType.UNKNOWN.name());
+					//else headData.profileName = new RawTextComponent(EntityType.UNKNOWN.name());
 				}
 			}
 			return headData;
@@ -166,7 +165,7 @@ public class BlockClickListener implements Listener{
 		data.textureKey = entityType.name();
 		data.headType = HeadUtils.getDroppedHeadType(entityType);
 		data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(entityType.name());
-		data.profileName = data.entityTypeNames[0];
+		data.profileName = null;//data.entityTypeNames[0];
 		return data;
 	}
 
@@ -193,18 +192,18 @@ public class BlockClickListener implements Listener{
 		if(REPAIR_IRON_GOLEM_HEADS && isPlayerHead
 				&& evt.getPlayer().getInventory().getItemInMainHand() != null
 				&& evt.getPlayer().getInventory().getItemInMainHand().getType() == Material.IRON_INGOT){
-			Skull skull = (Skull) evt.getClickedBlock().getState();
-			GameProfile profile = stripCustomLoreAndNamespace(HeadUtils.getGameProfile(skull));
-			if(profile != null && profile.getName() != null && profile.getName().startsWith("IRON_GOLEM|")){
+			final Skull skull = (Skull) evt.getClickedBlock().getState();
+			final String textureKey = pl.getAPI().getTextureKey(HeadUtils.getGameProfile(skull));
+			if(textureKey != null && textureKey.startsWith("IRON_GOLEM|")){
 				ItemStack newHeadItem = null;
-				if(profile.getName().contains("|HIGH_CRACKINESS")){
-					newHeadItem = pl.getAPI().getHead(EntityType.IRON_GOLEM, profile.getName().replace("|HIGH_CRACKINESS", "|MEDIUM_CRACKINESS"));
+				if(textureKey.contains("|HIGH_CRACKINESS")){
+					newHeadItem = pl.getAPI().getHead(EntityType.IRON_GOLEM, textureKey.replace("|HIGH_CRACKINESS", "|MEDIUM_CRACKINESS"));
 				}
-				else if(profile.getName().contains("|MEDIUM_CRACKINESS")){
-					newHeadItem = pl.getAPI().getHead(EntityType.IRON_GOLEM, profile.getName().replace("|MEDIUM_CRACKINESS", "|LOW_CRACKINESS"));
+				else if(textureKey.contains("|MEDIUM_CRACKINESS")){
+					newHeadItem = pl.getAPI().getHead(EntityType.IRON_GOLEM, textureKey.replace("|MEDIUM_CRACKINESS", "|LOW_CRACKINESS"));
 				}
-				else if(profile.getName().contains("|LOW_CRACKINESS")){
-					newHeadItem = pl.getAPI().getHead(EntityType.IRON_GOLEM, profile.getName().replace("|LOW_CRACKINESS", "|FULL_HEALTH"));
+				else if(textureKey.contains("|LOW_CRACKINESS")){
+					newHeadItem = pl.getAPI().getHead(EntityType.IRON_GOLEM, textureKey.replace("|LOW_CRACKINESS", "|FULL_HEALTH"));
 				}
 				if(newHeadItem != null){
 					HeadUtils.setGameProfile(skull, HeadUtils.getGameProfile((SkullMeta)newHeadItem.getItemMeta()));
@@ -241,7 +240,7 @@ public class BlockClickListener implements Listener{
 		final String englishName = ChatColor.stripColor(
 				data.textureKey != null ? pl.getInternalAPI().getFullHeadNameFromKey(data.textureKey, /*customName=*/"").toPlainText() :
 					data.player != null && data.player.getName() != null ? data.player.getName() :
-					data.profileName.toPlainText()
+					data.profileName != null ? data.profileName.toPlainText() : "<n/a>"
 				);
 		final String aOrAn = isVowel(englishName.charAt(0)) ? "an" : "a"; // Yes, an imperfect solution, I know. :/
 

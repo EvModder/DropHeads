@@ -51,7 +51,8 @@ import net.evmodder.EvLib.extras.TellrawUtils.TextHoverAction;
 // A trashy place to dump stuff that I should probably move to EvLib after ensure cross-version safety
 public final class JunkUtils{
 	public final static String SPAWN_CAUSE_MULTIPLIER_KEY = "SRM";
-	public final static String TXTR_KEY_PREFIX = "dropheads:";
+	public final static String TXT_KEY_PROFILE_NAME_PREFIX = "dropheads:";//TODO: delete
+	public final static String DH_LORE_KEY = "dh_lore";
 
 	enum NoteblockMode{OFF, FALSE, LISTENER, ITEM_META};
 
@@ -115,7 +116,8 @@ public final class JunkUtils{
 	private final static RefMethod fromJsonMethod, toJsonMethod;
 	private final static Object registryAccessObj;//class: IRegistryCustom.Dimension
 	static{
-		if(ReflectionUtils.getServerVersionString().compareTo("v1_20_5") >= 0){
+		if(ReflectionUtils.getServerVersionString().compareTo("v1_20_R4") >= 0){
+			Bukkit.getLogger().info("ReflectionUtils.getServerVersionString():"+ReflectionUtils.getServerVersionString());
 			final RefClass iChatBaseComponentClass = ReflectionUtils.getRefClass("{nm}.network.chat.IChatBaseComponent");
 			final RefClass chatSerializerClass = ReflectionUtils.getRefClass("{nm}.network.chat.IChatBaseComponent$ChatSerializer");
 			final RefClass holderLookupProviderClass = ReflectionUtils.getRefClass("{nm}.core.HolderLookup$Provider");

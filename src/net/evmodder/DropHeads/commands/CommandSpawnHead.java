@@ -297,9 +297,7 @@ public class CommandSpawnHead extends EvCommand{
 			}
 		}
 		else if(prefix.equals(PLAYER_PREFIX) || (prefix.isEmpty()/* && ... */)){
-			pl.getLogger().info("AA");
 			final GameProfile profile = searchForPlayer(target);
-			pl.getLogger().info("BB");
 			if(profile != null){
 				if(!sender.hasPermission("dropheads.spawn.players")
 						&& (!profile.getName().equals(sender.getName()) || !sender.hasPermission("dropheads.spawn.self"))){
@@ -309,7 +307,6 @@ public class CommandSpawnHead extends EvCommand{
 				target = profile.getName();
 				head = pl.getAPI().getHead(profile);
 			}
-			pl.getLogger().info("CC");
 		}
 		if(head == null) sender.sendMessage(String.format(translate("errors.head-not-found"), prefix, target));
 		return new HeadFromString(head, true, target);

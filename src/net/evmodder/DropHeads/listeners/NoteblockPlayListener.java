@@ -16,11 +16,9 @@ import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
 
 public class NoteblockPlayListener implements Listener{
-	private final int DH_MOB_PROFILE_PREFIX_LENGTH;
 	private final HashMap<String, Sound> nbSounds;
 
 	public NoteblockPlayListener(){
-		DH_MOB_PROFILE_PREFIX_LENGTH = JunkUtils.TXTR_KEY_PREFIX.length();
 		nbSounds = JunkUtils.getNoteblockSounds();
 	}
 
@@ -99,9 +97,8 @@ public class NoteblockPlayListener implements Listener{
 		String textureKey;
 		if(skull.getType() == Material.PLAYER_HEAD){
 			final GameProfile profile = HeadUtils.getGameProfile(skull);
-			if(!profile.getName().startsWith(JunkUtils.TXTR_KEY_PREFIX)) return;
-			final int endIdx = profile.getName().indexOf('>');
-			textureKey = profile.getName().substring(DH_MOB_PROFILE_PREFIX_LENGTH, endIdx != -1 ? endIdx : profile.getName().length());
+			textureKey = DropHeads.getPlugin().getAPI().getTextureKey(profile);
+			if(textureKey == null) return;
 		}
 		else textureKey = HeadUtils.getEntityFromHead(skull.getType()).name();
 		Sound sound;
