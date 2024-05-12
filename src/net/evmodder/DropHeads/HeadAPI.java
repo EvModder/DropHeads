@@ -365,7 +365,7 @@ public class HeadAPI {
 			final Collection<Property> props = profile.getProperties().get(DH_TEXTURE_KEY);
 			if(props != null && !props.isEmpty()){
 				if(props.size() != 1) pl.getLogger().warning("Multiple texture keys on a single head profile in getTextureKey()");
-				return props.iterator().next().getValue();
+				return JunkUtils.getPropertyValue(props.iterator().next());
 			}
 		}
 		if(profile.getName() != null){

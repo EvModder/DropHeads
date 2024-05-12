@@ -38,7 +38,7 @@ public class LoreStoreBlockBreakListener implements Listener{
 			final Collection<Property> props = profile.getProperties().get(JunkUtils.DH_LORE_KEY);
 			if(props != null && !props.isEmpty()){
 				if(props.size() != 1) DropHeads.getPlugin().getLogger().warning("Multiple lore keys on a single head profile in getItemWithLore()");
-				lore = Arrays.asList(props.iterator().next().getValue().split("\\n"));
+				lore = Arrays.asList(JunkUtils.getPropertyValue(props.iterator().next()).split("\\n"));
 				profileWithoutLore = new GameProfile(profile.getId(), profile.getName());
 				profileWithoutLore.getProperties().putAll(profile.getProperties());
 				profileWithoutLore.getProperties().removeAll(JunkUtils.DH_LORE_KEY);

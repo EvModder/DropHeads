@@ -116,8 +116,7 @@ public final class JunkUtils{
 	private final static RefMethod fromJsonMethod, toJsonMethod;
 	private final static Object registryAccessObj;//class: IRegistryCustom.Dimension
 	static{
-		if(ReflectionUtils.getServerVersionString().compareTo("v1_20_R4") >= 0){
-			Bukkit.getLogger().info("ReflectionUtils.getServerVersionString():"+ReflectionUtils.getServerVersionString());
+		if(ReflectionUtils.getServerVersionString().compareTo("v1_20_5") >= 0){
 			final RefClass iChatBaseComponentClass = ReflectionUtils.getRefClass("{nm}.network.chat.IChatBaseComponent");
 			final RefClass chatSerializerClass = ReflectionUtils.getRefClass("{nm}.network.chat.IChatBaseComponent$ChatSerializer");
 			final RefClass holderLookupProviderClass = ReflectionUtils.getRefClass("{nm}.core.HolderLookup$Provider");
