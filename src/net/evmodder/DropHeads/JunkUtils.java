@@ -5,8 +5,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.block.BlockFace;
@@ -18,6 +20,7 @@ import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 import com.mojang.authlib.GameProfile;
@@ -33,6 +36,7 @@ import net.evmodder.EvLib.extras.TellrawUtils;
 import net.evmodder.EvLib.extras.TextUtils;
 import net.evmodder.EvLib.extras.WebUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
+import net.evmodder.EvLib.extras.ReflectionUtils.RefField;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
 import net.evmodder.EvLib.extras.TellrawUtils.ClickEvent;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
@@ -106,47 +110,94 @@ public final class JunkUtils{
 		return 1D;
 	}
 
-	public final static ItemStack setDisplayName(@Nonnull ItemStack item, @Nonnull Component name){
-		RefNBTTagCompound tag = NBTTagUtils.getTag(item);
-		RefNBTTagCompound display = tag.hasKey("display") ? (RefNBTTagCompound)tag.get("display") : new RefNBTTagCompound();
-		display.setString("Name", name.toString());
-		tag.set("display", display);
-		return NBTTagUtils.setTag(item, tag);
-	}
+	private final static RefField displayNameField = ReflectionUtils.getRefClass("{cb}.inventory.CraftMetaItem").getField("displayName");
+	private final static RefField loreField = ReflectionUtils.getRefClass("{cb}.inventory.CraftMetaItem").getField("lore");
+	private final static RefMethod fromJsonMethod, toJsonMethod;
+	private final static Object registryAccessObj;//class: IRegistryCustom.Dimension
+	static{
+		if(ReflectionUtils.getServerVersionString().compareTo("v1_20_5") >= 0){
+			final RefClass iChatBaseComponentClass = ReflectionUtils.getRefClass("{nm}.network.chat.IChatBaseComponent");
+			final RefClass chatSerializerClass = ReflectionUtils.getRefClass("{nm}.network.chat.IChatBaseComponent$ChatSerializer");
+			final RefClass holderLookupProviderClass = ReflectionUtils.getRefClass("{nm}.core.HolderLookup$Provider");
+			fromJsonMethod = chatSerializerClass.getMethod("fromJson", String.class, holderLookupProviderClass);
+			toJsonMethod = chatSerializerClass.getMethod("toJson", iChatBaseComponentClass, holderLookupProviderClass);
 
+			final Object nmsServerObj = ReflectionUtils.getRefClass("{cb}.CraftServer").getMethod("getServer").of(Bukkit.getServer()).call();
+			registryAccessObj = ReflectionUtils.getRefClass("{nm}.server.MinecraftServer").getMethod("registryAccess").of(nmsServerObj).call();
+		}
+		else registryAccessObj = fromJsonMethod = toJsonMethod = null;
+	}
+	public final static ItemStack setDisplayName(@Nonnull ItemStack item, @Nonnull Component name){
+		if(fromJsonMethod != null){
+			final ItemMeta meta = item.getItemMeta();
+			displayNameField.of(meta).set(fromJsonMethod.call(name.toString(), registryAccessObj));
+			item.setItemMeta(meta);
+			return item;
+		}
+		else{
+			RefNBTTagCompound tag = NBTTagUtils.getTag(item);
+			RefNBTTagCompound display = tag.hasKey("display") ? (RefNBTTagCompound)tag.get("display") : new RefNBTTagCompound();
+			display.setString("Name", name.toString());
+			tag.set("display", display);
+			return NBTTagUtils.setTag(item, tag);
+		}
+	}
 	public final static String getDisplayName(@Nonnull ItemStack item){
-		RefNBTTagCompound tag = NBTTagUtils.getTag(item);
-		RefNBTTagCompound display = tag.hasKey("display") ? (RefNBTTagCompound)tag.get("display") : new RefNBTTagCompound();
-		return display.hasKey("Name") ? display.getString("Name") : null;
+		if(toJsonMethod != null){
+			if(!item.hasItemMeta()) return null;
+			return (String)toJsonMethod.call(displayNameField.of(item.getItemMeta()).get(), registryAccessObj);
+		}
+		else{
+			RefNBTTagCompound tag = NBTTagUtils.getTag(item);
+			RefNBTTagCompound display = tag.hasKey("display") ? (RefNBTTagCompound)tag.get("display") : new RefNBTTagCompound();
+			return display.hasKey("Name") ? display.getString("Name") : null;
+		}
 	}
 
 	public final static ItemStack setLore(@Nonnull ItemStack item, @Nonnull Component... lore){
-		RefNBTTagCompound tag = NBTTagUtils.getTag(item);
-		RefNBTTagCompound display = tag.hasKey("display") ? (RefNBTTagCompound)tag.get("display") : new RefNBTTagCompound();
-		RefNBTTagList loreList = new RefNBTTagList();
-		for(Component loreLine : lore) loreList.add(new RefNBTTagString(loreLine.toString()));
-		display.set("Lore", loreList);
-		tag.set("display", display);
-		return NBTTagUtils.setTag(item, tag);
+		if(fromJsonMethod != null){
+			Object lines = Stream.of(lore).map(line -> fromJsonMethod.call(line.toString(), registryAccessObj)).collect(Collectors.toList());
+			ItemMeta meta = item.getItemMeta();
+			loreField.of(meta).set(lines);
+			item.setItemMeta(meta);
+			return item;
+		}
+		else{
+			RefNBTTagCompound tag = NBTTagUtils.getTag(item);
+			RefNBTTagCompound display = tag.hasKey("display") ? (RefNBTTagCompound)tag.get("display") : new RefNBTTagCompound();
+			RefNBTTagList loreList = new RefNBTTagList();
+			for(Component loreLine : lore) loreList.add(new RefNBTTagString(loreLine.toString()));
+			display.set("Lore", loreList);
+			tag.set("display", display);
+			return NBTTagUtils.setTag(item, tag);
+		}
 	}
 
-	public final static ArrayList<String> getLore(@Nonnull ItemStack item){
-		RefNBTTagCompound tag = NBTTagUtils.getTag(item);
-		RefNBTTagCompound display = tag.hasKey("display") ? (RefNBTTagCompound)tag.get("display") : new RefNBTTagCompound();
-		if(!display.hasKey("Lore")) return null;
-		RefNBTTagList loreTag = (RefNBTTagList)display.get("Lore");
-		RefNBTTagString loreLine = (RefNBTTagString)loreTag.get(0);
-		ArrayList<String> loreCompStrs = new ArrayList<>();
-		try{for(int i=0; loreLine!=null; loreLine=(RefNBTTagString)loreTag.get(++i)){
-			String loreStr = loreLine.toString();
-			if(loreStr.startsWith("\"'") && loreStr.endsWith("'\"")){
-				if(loreStr.startsWith("\"'{") && loreStr.endsWith("}'\"")) loreStr = TextUtils.unescapeString(loreStr.substring(2, loreStr.length()-2));
-				else loreStr = TextUtils.unescapeString(loreStr.substring(2, loreStr.length()-2));
-			}
-			loreCompStrs.add(loreStr);
-		}}
-		catch(RuntimeException e){/*caused by IndexOutOfBoundsException*/}
-		return loreCompStrs;
+	public final static List<String> getLore(@Nonnull ItemStack item){
+		if(toJsonMethod != null){
+			if(!item.hasItemMeta()) return null;
+			//TODO: do we need to unescape anything?
+			return ((List<?>)loreField.of(item.getItemMeta()).get()).stream().map(l -> (String)toJsonMethod.call(l, registryAccessObj))
+					.collect(Collectors.toList());
+		}
+		else{
+			RefNBTTagCompound tag = NBTTagUtils.getTag(item);
+			RefNBTTagCompound display = tag.hasKey("display") ? (RefNBTTagCompound)tag.get("display") : new RefNBTTagCompound();
+			if(!display.hasKey("Lore")) return null;
+			RefNBTTagList loreTag = (RefNBTTagList)display.get("Lore");
+			RefNBTTagString loreLine = (RefNBTTagString)loreTag.get(0);
+			ArrayList<String> loreCompStrs = new ArrayList<>();
+			try{for(int i=0; loreLine!=null; loreLine=(RefNBTTagString)loreTag.get(++i)){
+				String loreStr = loreLine.toString();
+				if(loreStr.startsWith("\"'") && loreStr.endsWith("'\"")){
+					if(loreStr.startsWith("\"'{") && loreStr.endsWith("}'\"")) loreStr = TextUtils.unescapeString(loreStr.substring(2, loreStr.length()-2));
+					else loreStr = TextUtils.unescapeString(loreStr.substring(2, loreStr.length()-2));
+				}
+				loreCompStrs.add(loreStr);
+			}}
+			catch(RuntimeException e){/*caused by IndexOutOfBoundsException*/}
+			return loreCompStrs;
+		}
 	}
 
 	// ItemStack methods to get a net.minecraft.server.ItemStack object for serialization
@@ -156,7 +207,20 @@ public final class JunkUtils{
 	// NMS Method to serialize a net.minecraft.server.vX_X.ItemStack to a valid JSON string
 	private final static RefClass nmsItemStackClazz = ReflectionUtils.getRefClass("{nms}.ItemStack", "{nm}.world.item.ItemStack");
 	private final static RefClass nbtTagCompoundClazz = ReflectionUtils.getRefClass("{nms}.NBTTagCompound", "{nm}.nbt.NBTTagCompound");
-	private final static RefMethod saveNmsItemStackMethod = nmsItemStackClazz.findMethod(/*isStatic=*/false, nbtTagCompoundClazz, nbtTagCompoundClazz);
+	private final static RefMethod saveNmsItemStackMethod;
+	static{
+		final RefClass nbtTagCompoundClazz = ReflectionUtils.getRefClass("{nms}.NBTTagCompound", "{nm}.nbt.NBTTagCompound");
+		RefMethod saveNmsItemStackMethodTemp;
+		try{
+			RefClass classHolderLookupProvider = ReflectionUtils.getRefClass("{nm}.core.HolderLookup$Provider");//1.20.5+
+			RefClass classNBTBase = ReflectionUtils.getRefClass("{nm}.nbt.NBTBase");
+			saveNmsItemStackMethodTemp = nmsItemStackClazz.findMethod(/*isStatic=*/false, classNBTBase, classHolderLookupProvider);
+		}
+		catch(RuntimeException ex){
+			saveNmsItemStackMethodTemp = nmsItemStackClazz.findMethod(/*isStatic=*/false, nbtTagCompoundClazz, nbtTagCompoundClazz);
+		}
+		saveNmsItemStackMethod = saveNmsItemStackMethodTemp;
+	}
 
 	// https://www.spigotmc.org/threads/tut-item-tooltips-with-the-chatcomponent-api.65964/
 	/**
@@ -167,16 +231,16 @@ public final class JunkUtils{
 	 * @return the JSON string representation of the item
 	 */
 	public final static String convertItemStackToJson(ItemStack item, int JSON_LIMIT){
-		Object nmsNbtTagCompoundObj = nbtTagCompoundClazz.getConstructor().create();
-		Object nmsItemStackObj = asNMSCopyMethod.of(null).call(item);
-		Object itemAsJsonObject = saveNmsItemStackMethod.of(nmsItemStackObj).call(nmsNbtTagCompoundObj);
+		Object nmsItemStackObj = asNMSCopyMethod.call(item);
+		Object newTagOrRegistryAccess = registryAccessObj != null ? registryAccessObj : nbtTagCompoundClazz.getConstructor().create();
+		Object itemAsJsonObject = saveNmsItemStackMethod.of(nmsItemStackObj).call(newTagOrRegistryAccess);
 		String jsonString = itemAsJsonObject.toString();
 		if(jsonString.length() > JSON_LIMIT){
 			item = new ItemStack(item.getType(), item.getAmount());//TODO: Reduce item json data in a less destructive way-
 			//reduceItemData() -> clear book pages, clear hidden NBT, call recursively for containers
-			nmsNbtTagCompoundObj = nbtTagCompoundClazz.getConstructor().create();
-			nmsItemStackObj = asNMSCopyMethod.of(null).call(item);
-			itemAsJsonObject = saveNmsItemStackMethod.of(nmsItemStackObj).call(nmsNbtTagCompoundObj);
+			nmsItemStackObj = asNMSCopyMethod.call(item);
+			newTagOrRegistryAccess = registryAccessObj != null ? registryAccessObj : nbtTagCompoundClazz.getConstructor().create();
+			itemAsJsonObject = saveNmsItemStackMethod.of(nmsItemStackObj).call(newTagOrRegistryAccess);
 			jsonString = itemAsJsonObject.toString();
 		}
 		return itemAsJsonObject.toString();

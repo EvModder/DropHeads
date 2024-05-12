@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
@@ -40,7 +41,7 @@ public class DeathMessagePacketIntercepter{
 	private final RefField chatBaseCompField;
 	private final RefMethod getChatBaseComp;
 	private final RefMethod getJsonKyori; private final Object jsonSerializerKyori;
-	private final RefMethod toJsonMethod = chatSerializerClazz.findMethod(/*isStatic=*/true, String.class, chatBaseCompClazz);
+	private final RefMethod toJsonMethod; private final Object registryAccessObj;//class: IRegistryCustom.Dimension
 	private final Pattern uuidPattern1 = Pattern.compile("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}");
 	private final Pattern uuidPattern2 = Pattern.compile("\\[I?;?\\s*(-?[0-9]+),\\s*(-?[0-9]+),\\s*(-?[0-9]+),\\s*(-?[0-9]+)\\s*\\]");
 
@@ -69,6 +70,22 @@ public class DeathMessagePacketIntercepter{
 			getJsonKyori = kyoriMethod;
 			jsonSerializerKyori = kyoriObj;
 		}
+		RefMethod toJsonMethodTemp; Object registryAccessObjTemp = null;
+		try{//1.20.5+
+			toJsonMethodTemp = chatSerializerClazz.findMethod(/*isStatic=*/true, String.class, chatBaseCompClazz,
+					ReflectionUtils.getRefClass("{nm}.core.HolderLookup$Provider"));
+			// If above succeeds:
+			try{
+				Object nmsServerObj = ReflectionUtils.getRefClass("{cb}.CraftServer").getMethod("getServer").of(Bukkit.getServer()).call();
+				registryAccessObjTemp = ReflectionUtils.getRefClass("{nm}.server.MinecraftServer").getMethod("registryAccess").of(nmsServerObj).call();
+			}
+			catch(RuntimeException ex){ex.printStackTrace();}
+		}
+		catch(RuntimeException e){
+			toJsonMethodTemp = chatSerializerClazz.findMethod(/*isStatic=*/true, String.class, chatBaseCompClazz);
+		}
+		toJsonMethod = toJsonMethodTemp;
+		registryAccessObj = registryAccessObjTemp;
 
 		pl.getServer().getPluginManager().registerEvents(new Listener(){
 			@EventHandler public void onJoin(PlayerJoinEvent evt){
@@ -108,7 +125,8 @@ public class DeathMessagePacketIntercepter{
 					return;
 				}
 //				if(chatBaseCompField != null) pl.getLogger().info("chat packet base comp:\n"+chatBaseComp+"\n");
-				final String jsonMsg = (String)(chatBaseCompField != null ? toJsonMethod.call(chatBaseComp) :
+				final String jsonMsg = (String)(chatBaseCompField != null ?
+					(registryAccessObj != null ? toJsonMethod.call(chatBaseComp, registryAccessObj) : toJsonMethod.call(chatBaseComp)) :
 					getJsonKyori == null ? getChatBaseComp.of(packet).call() : getJsonKyori.of(jsonSerializerKyori).call(getChatBaseComp.of(packet).call())
 				);
 				if(jsonMsg == null){ // Chat comp is not a json object
