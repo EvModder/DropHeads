@@ -58,7 +58,7 @@ import net.evmodder.EvLib.extras.WebUtils;
 /** Public API for general DropHeads features.
  * Warning: Functions may change or disappear in future releases
  */
-public class HeadAPI {
+public class HeadAPI{
 	private final DropHeads pl;
 	protected HeadDatabaseAPI hdbAPI = null;
 	protected final Configuration translationsFile;

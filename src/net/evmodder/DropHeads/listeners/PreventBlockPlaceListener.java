@@ -15,8 +15,10 @@ public class PreventBlockPlaceListener implements Listener{
 	private final String PREVENT_PLACE_MSG;
 
 	public PreventBlockPlaceListener(){
-		PREVENT_PLACE_MSG = TextUtils.translateAlternateColorCodes('&', DropHeads.getPlugin().getConfig()
-				.getString("prevent-head-placement-message", "&7[&6DropHeads&7]&c No permission to place head blocks"));
+		final DropHeads pl = DropHeads.getPlugin();
+		String msg = pl.getInternalAPI().loadTranslationStr("prevent-head-placement-message", "");
+		if(msg.isEmpty()) msg = pl.getConfig().getString("prevent-head-placement-message", "&7[&6DropHeads&7]&c No permission to place head blocks");
+		PREVENT_PLACE_MSG = TextUtils.translateAlternateColorCodes('&', msg);
 	}
 
 	// This listener is only registered when 'prevent-head-placement' = true
