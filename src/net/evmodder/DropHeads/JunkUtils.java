@@ -146,7 +146,12 @@ public final class JunkUtils{
 	public final static String getDisplayName(@Nonnull ItemStack item){
 		if(toJsonMethod != null){
 			if(!item.hasItemMeta()) return null;
-			return (String)toJsonMethod.call(displayNameField.of(item.getItemMeta()).get(), registryAccessObj);
+			try{return (String)toJsonMethod.call(displayNameField.of(item.getItemMeta()).get(), registryAccessObj);}
+			catch(RuntimeException ex){
+				//Caused by: java.lang.reflect.InvocationTargetException
+				//Caused by: java.lang.NullPointerException: Cannot invoke "net.minecraft.network.chat.Component.tryCollapseToString()" because "text" is null
+				return null;
+			}
 		}
 		else{
 			RefNBTTagCompound tag = NBTTagUtils.getTag(item);
