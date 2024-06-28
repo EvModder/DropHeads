@@ -206,26 +206,44 @@ public final class JunkUtils{
 		}
 	}
 
-	// ItemStack methods to get a net.minecraft.server.ItemStack object for serialization
-	private final static RefClass craftItemStackClazz = ReflectionUtils.getRefClass("{cb}.inventory.CraftItemStack");
-	private final static RefMethod asNMSCopyMethod = craftItemStackClazz.getMethod("asNMSCopy", ItemStack.class);
-
-	// NMS Method to serialize a net.minecraft.server.vX_X.ItemStack to a valid JSON string
-	private final static RefClass nmsItemStackClazz = ReflectionUtils.getRefClass("{nms}.ItemStack", "{nm}.world.item.ItemStack");
-	private final static RefClass nbtTagCompoundClazz = ReflectionUtils.getRefClass("{nms}.NBTTagCompound", "{nm}.nbt.NBTTagCompound");
+	// New non-NMS way (1.20.6+?)
+	private final static RefMethod mItemMetaGetAsString;
+	// Old NMS way
+	private final static RefMethod asNMSCopyMethod;
 	private final static RefMethod saveNmsItemStackMethod;
+	private final static RefClass nbtTagCompoundClazz;
 	static{
-		final RefClass nbtTagCompoundClazz = ReflectionUtils.getRefClass("{nms}.NBTTagCompound", "{nm}.nbt.NBTTagCompound");
-		RefMethod saveNmsItemStackMethodTemp;
-		try{
-			RefClass classHolderLookupProvider = ReflectionUtils.getRefClass("{nm}.core.HolderLookup$Provider");//1.20.5+
-			RefClass classNBTBase = ReflectionUtils.getRefClass("{nm}.nbt.NBTBase");
-			saveNmsItemStackMethodTemp = nmsItemStackClazz.findMethod(/*isStatic=*/false, classNBTBase, classHolderLookupProvider);
+		RefMethod mItemMetaGetAsStringTemp;
+		try{mItemMetaGetAsStringTemp = ReflectionUtils.getRefClass(ItemMeta.class).getMethod("getAsString");}
+		catch(RuntimeException e1){mItemMetaGetAsStringTemp = null;}
+		if(mItemMetaGetAsStringTemp != null){
+			// Non-NMS method
+			mItemMetaGetAsString = mItemMetaGetAsStringTemp;
+			asNMSCopyMethod = null;
+			saveNmsItemStackMethod = null;
+			nbtTagCompoundClazz = null;
 		}
-		catch(RuntimeException ex){
-			saveNmsItemStackMethodTemp = nmsItemStackClazz.findMethod(/*isStatic=*/false, nbtTagCompoundClazz, nbtTagCompoundClazz);
+		else{
+			mItemMetaGetAsString = null;
+
+			// NMS to convert a net.minecraft.server.vX_X.ItemStack to a valid JSON string
+			final RefClass craftItemStackClazz = ReflectionUtils.getRefClass("{cb}.inventory.CraftItemStack");
+			asNMSCopyMethod = craftItemStackClazz.getMethod("asNMSCopy", ItemStack.class);
+			final RefClass nmsItemStackClazz = ReflectionUtils.getRefClass("{nms}.ItemStack", "{nm}.world.item.ItemStack");
+
+			nbtTagCompoundClazz = ReflectionUtils.getRefClass("{nms}.NBTTagCompound", "{nm}.nbt.NBTTagCompound");
+			RefMethod saveNmsItemStackMethodTemp;
+			try{
+				RefClass classHolderLookupProvider = ReflectionUtils.getRefClass("{nm}.core.HolderLookup$Provider");//1.20.5+
+				RefClass classNBTBase = ReflectionUtils.getRefClass("{nm}.nbt.NBTBase");
+				saveNmsItemStackMethodTemp = nmsItemStackClazz.findMethod(/*isStatic=*/false, classNBTBase, classHolderLookupProvider);
+			}
+			catch(RuntimeException e2){
+				// TODO: seems we can still get a 3rd RuntimeException here in 1.20.6
+				saveNmsItemStackMethodTemp = nmsItemStackClazz.findMethod(/*isStatic=*/false, nbtTagCompoundClazz, nbtTagCompoundClazz);
+			}
+			saveNmsItemStackMethod = saveNmsItemStackMethodTemp;
 		}
-		saveNmsItemStackMethod = saveNmsItemStackMethodTemp;
 	}
 
 	// https://www.spigotmc.org/threads/tut-item-tooltips-with-the-chatcomponent-api.65964/
@@ -237,6 +255,11 @@ public final class JunkUtils{
 	 * @return the JSON string representation of the item
 	 */
 	public final static String convertItemStackToJson(ItemStack item, int JSON_LIMIT){
+		if(mItemMetaGetAsString != null){
+			if(!item.hasItemMeta()) return "{id:\""+item.getType().getKey().getKey()+"\",count:"+item.getAmount()+"}";
+			else return "{id:\""+item.getType().getKey().getKey()+"\",count:"+item.getAmount()
+				+",components:"+mItemMetaGetAsString.of(item.getItemMeta()).call(null)+"}";
+		}
 		Object nmsItemStackObj = asNMSCopyMethod.call(item);
 		Object newTagOrRegistryAccess = registryAccessObj != null ? registryAccessObj : nbtTagCompoundClazz.getConstructor().create();
 		Object itemAsJsonObject = saveNmsItemStackMethod.of(nmsItemStackObj).call(newTagOrRegistryAccess);
@@ -251,6 +274,7 @@ public final class JunkUtils{
 		}
 		return itemAsJsonObject.toString();
 	}
+	//tellraw @p {"text":"Test","hoverEvent":{"action":"show_item","value":"{\"id\":\"bow\",\"count\":1,\"components\":{\"Unbreakable\":\"1\"}}"}}
 
 	public final static Component getItemDisplayNameComponent(@Nonnull ItemStack item){
 		String rarityColor = TextUtils.getRarityColor(item).name().toLowerCase();
