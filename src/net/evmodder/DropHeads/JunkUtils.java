@@ -121,12 +121,15 @@ public final class JunkUtils{
 			final RefClass chatSerializerClass = ReflectionUtils.getRefClass("{nm}.network.chat.IChatBaseComponent$ChatSerializer");
 			final RefClass holderLookupProviderClass = ReflectionUtils.getRefClass("{nm}.core.HolderLookup$Provider", "{nm}.core.HolderLookup$a");
 //			fromJsonMethod = chatSerializerClass.getMethod("fromJson", String.class, holderLookupProviderClass);
-			fromJsonMethod = chatSerializerClass.findMethod(/*isStatic=*/true, iChatBaseComponentClass, String.class, holderLookupProviderClass);
+			fromJsonMethod = chatSerializerClass.findMethod(/*isStatic=*/true,
+					ReflectionUtils.getRefClass("{nm}.network.chat.IChatMutableComponent"), String.class, holderLookupProviderClass);
 //			toJsonMethod = chatSerializerClass.getMethod("toJson", iChatBaseComponentClass, holderLookupProviderClass);
 			toJsonMethod = chatSerializerClass.findMethod(/*isStatic=*/true, String.class, iChatBaseComponentClass, holderLookupProviderClass);
 
 			final Object nmsServerObj = ReflectionUtils.getRefClass("{cb}.CraftServer").getMethod("getServer").of(Bukkit.getServer()).call();
-			registryAccessObj = ReflectionUtils.getRefClass("{nm}.server.MinecraftServer").getMethod("registryAccess").of(nmsServerObj).call();
+			//registryAccessObj = ReflectionUtils.getRefClass("{nm}.server.MinecraftServer").getMethod("registryAccess").of(nmsServerObj).call();
+			registryAccessObj = ReflectionUtils.getRefClass("{nm}.server.MinecraftServer").findMethod(/*isStatic=*/false,
+					ReflectionUtils.getRefClass("net.minecraft.core.IRegistryCustom$Dimension")).of(nmsServerObj).call();
 		}
 		else registryAccessObj = fromJsonMethod = toJsonMethod = null;
 	}
