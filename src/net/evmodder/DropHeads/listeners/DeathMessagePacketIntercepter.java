@@ -73,11 +73,13 @@ public class DeathMessagePacketIntercepter{
 		RefMethod toJsonMethodTemp; Object registryAccessObjTemp = null;
 		try{//1.20.5+
 			toJsonMethodTemp = chatSerializerClazz.findMethod(/*isStatic=*/true, String.class, chatBaseCompClazz,
-					ReflectionUtils.getRefClass("{nm}.core.HolderLookup$Provider"));
+					ReflectionUtils.getRefClass("{nm}.core.HolderLookup$Provider", "{nm}.core.HolderLookup$a"));
 			// If above succeeds:
 			try{
 				Object nmsServerObj = ReflectionUtils.getRefClass("{cb}.CraftServer").getMethod("getServer").of(Bukkit.getServer()).call();
-				registryAccessObjTemp = ReflectionUtils.getRefClass("{nm}.server.MinecraftServer").getMethod("registryAccess").of(nmsServerObj).call();
+				//registryAccessObjTemp = ReflectionUtils.getRefClass("{nm}.server.MinecraftServer").getMethod("registryAccess").of(nmsServerObj).call();
+				RefClass registryAccessClazz = ReflectionUtils.getRefClass("net.minecraft.core.IRegistryCustom$Dimension");
+				ReflectionUtils.getRefClass("{nm}.server.MinecraftServer").findMethod(/*isStatic=*/false, registryAccessClazz).of(nmsServerObj).call();
 			}
 			catch(RuntimeException ex){ex.printStackTrace();}
 		}
