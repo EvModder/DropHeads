@@ -79,7 +79,8 @@ public class DeathMessagePacketIntercepter{
 				Object nmsServerObj = ReflectionUtils.getRefClass("{cb}.CraftServer").getMethod("getServer").of(Bukkit.getServer()).call();
 				//registryAccessObjTemp = ReflectionUtils.getRefClass("{nm}.server.MinecraftServer").getMethod("registryAccess").of(nmsServerObj).call();
 				RefClass registryAccessClazz = ReflectionUtils.getRefClass("net.minecraft.core.IRegistryCustom$Dimension");
-				ReflectionUtils.getRefClass("{nm}.server.MinecraftServer").findMethod(/*isStatic=*/false, registryAccessClazz).of(nmsServerObj).call();
+				registryAccessObjTemp = ReflectionUtils.getRefClass("{nm}.server.MinecraftServer")
+						.findMethod(/*isStatic=*/false, registryAccessClazz).of(nmsServerObj).call();
 			}
 			catch(RuntimeException ex){ex.printStackTrace();}
 		}
