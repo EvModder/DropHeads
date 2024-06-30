@@ -39,7 +39,7 @@ import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.URL;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -278,7 +278,7 @@ public class MetricsLite{
 		if(Bukkit.isPrimaryThread()) throw new IllegalAccessException("This method must not be called from the main thread!");
 		if(logSentData) plugin.getLogger().info("Sending data to bStats: " + data);
 
-		final HttpsURLConnection connection = (HttpsURLConnection)new URL(URL).openConnection();
+		final HttpsURLConnection connection = (HttpsURLConnection)URI.create(URL).toURL().openConnection();
 
 		// Compress the data to save bandwidth
 		final byte[] compressedData = compress(data.toString());
