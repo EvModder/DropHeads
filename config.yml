@@ -154,6 +154,10 @@ update-zombie-pigman-heads: true
 # Requires 'refresh-textures' to also be set to true.
 update-piglin-heads: true
 
+# Updates internal texture keys for mob heads when refreshed
+# Can improve stacking for legacy heads (from older versions of the plugin)
+replace-redirected-texture-keys: false
+
 # Whether to use material types for zombie, creeper, skeleton & wither skulls
 # If this is false, all heads will be forced to use the player_head type
 prefer-vanilla-heads: true

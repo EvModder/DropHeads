@@ -2,7 +2,6 @@ package net.evmodder.DropHeads;
 
 import java.io.File;
 import java.io.InputStreamReader;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,7 +36,6 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.plugin.java.JavaPlugin;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import me.arcaniax.hdb.api.DatabaseLoadEvent;
@@ -80,6 +78,7 @@ public class HeadAPI{
 	private final static String TEXTURE_DL_URL = "https://raw.githubusercontent.com/EvModder/DropHeads/master/extra-textures/";
 	private final static String DH_TEXTURE_KEY = "dh_key";
 	private final static String DH_RANDOM_UUID = "random_uuid";
+	private final static int MAX_NAME_LENGTH = 16;
 
 	private final String PLAYER_PREFIX, MOB_PREFIX, MHF_PREFIX, HDB_PREFIX, CODE_PREFIX;
 
@@ -105,8 +104,10 @@ public class HeadAPI{
 				}
 
 				final String key = head.substring(0, i).toUpperCase();
-				//TODO: duplicate texture warning?
-				if(textures.put(key, texture) != null) continue; // Don't bother checking EntityType if this head has already been added
+				if(textures.put(key, texture) != null){
+					//pl.getLogger().warning("Head already added for key: "+key); // TODO: duplicate (in same file) texture warning?
+					continue; // Don't bother checking EntityType if this head has already been added
+				}
 
 				final int j = key.indexOf('|');
 				final String eTypeName = (j == -1 ? key : key.substring(0, j)).toUpperCase();
@@ -135,11 +136,22 @@ public class HeadAPI{
 			}
 		}
 		// Sometimes a texture value is just a reference to a different texture key
+		final boolean REPLACE_REDIRECTS = pl.getConfig().getBoolean("replace-redirected-texture-keys", true);
 		Iterator<Entry<String, String>> it = textures.entrySet().iterator();
 		while(it.hasNext()){
 			Entry<String, String> e = it.next();
-			String redirect = e.getValue();
-			for(int i=0; i<5 && (redirect=textures.get(redirect)) != null; ++i) e.setValue(redirect);
+			String value = e.getValue();
+			String redirect = null;
+			int depth=0;
+			while(textures.containsKey(value)){
+				redirect = value;
+				value = textures.get(value);
+				if(++depth > 5) pl.getLogger().severe("Likely infinite-loop: Redirects in head-textures.txt for "+e.getKey());
+			}
+			if(redirect != null){
+				e.setValue(value);
+				if(REPLACE_REDIRECTS) replaceHeadsFromTo.put(e.getKey(), redirect);
+			}
 		}
 	}
 
@@ -268,49 +280,52 @@ public class HeadAPI{
 
 		boolean writeTextureFile = false, updateTextures = false;
 		if(pl.getConfig().getBoolean("update-textures", false)){
-			long oldTextureTime = new File(FileIO.DIR+"/head-textures.txt").lastModified();
-			long newTextureTime = 0;
-			try{
-				java.lang.reflect.Method getFileMethod = JavaPlugin.class.getDeclaredMethod("getFile");
-				getFileMethod.setAccessible(true);
-				newTextureTime = ((File)getFileMethod.invoke(pl)).lastModified();
-			}
-			catch(NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e1){}
-			if(newTextureTime > oldTextureTime){
-				localList=hardcodedList;
-				writeTextureFile = true;
-				updateTextures = true;
-			}
+			final long oldTextureTime = new File(FileIO.DIR+"/head-textures.txt").lastModified();
+			final long newTextureTime = JunkUtils.getJarCreationTime(pl);
+			if(newTextureTime > oldTextureTime) writeTextureFile = updateTextures = true;
 		}
+		String downloadedList = "";
 		if(SIDEWAYS_SHULKERS_ENABLED && (!localList.contains("SHULKER|SIDE_LEFT") || updateTextures)){
 			pl.getLogger().info("Downloading sideways-shulker head textures...");
 			final String shulkers = WebUtils.getReadURL(TEXTURE_DL_URL+"sideways-shulker-head-textures.txt");
-			localList += "\n" + shulkers;//JunkUtils.stripComments(shulkers);
+			downloadedList += "\n" + shulkers;//JunkUtils.stripComments(shulkers);
 			writeTextureFile = true;
 			pl.getLogger().info("Finished downloading sideways-shulker head textures");
 		}
 		if(COLORED_COLLARS_ENABLED && (!localList.contains("|RED_COLLARED:") || updateTextures)){
 			pl.getLogger().info("Downloading colored-collar head textures...");
 			final String collared = WebUtils.getReadURL(TEXTURE_DL_URL+"colored-collar-head-textures.txt");
-			localList += "\n" + collared;//JunkUtils.stripComments(collared);
+			downloadedList += "\n" + collared;//JunkUtils.stripComments(collared);
 			writeTextureFile = true;
 			pl.getLogger().info("Finished downloading colored-collar head textures");
 		}
 		if(USE_PRE_JAPPA && (!localList.contains("|PRE_JAPPA:") || updateTextures)){
 			pl.getLogger().info("Downloading pre-JAPPA head textures...");
 			final String preJappas = WebUtils.getReadURL(TEXTURE_DL_URL+"pre-jappa-head-textures.txt");
-			localList += "\n" + preJappas;//JunkUtils.stripComments(preJappas);
+			downloadedList += "\n" + preJappas;//JunkUtils.stripComments(preJappas);
 			writeTextureFile = true;
 			pl.getLogger().info("Finished downloading pre-JAPPA head textures");
 		}
 		if(GRUMM_ENABLED && (!localList.contains("|GRUMM:") || updateTextures)){
 			pl.getLogger().info("Downloading Grumm head textures...");
 			final String grumms = WebUtils.getReadURL(TEXTURE_DL_URL+"grumm-head-textures.txt");
-			localList += "\n" + grumms;//JunkUtils.stripComments(grumms);
+			downloadedList += "\n" + grumms;//JunkUtils.stripComments(grumms);
 			writeTextureFile = true;
 			pl.getLogger().info("Finished downloading Grumm head textures");
 		}
-		if(writeTextureFile) FileIO.saveFile("head-textures.txt", localList);
+		if(GRUMM_ENABLED && COLORED_COLLARS_ENABLED && (!localList.contains("|BLACK_COLLARED|GRUMM:") || updateTextures)){
+			pl.getLogger().info("Downloading [Grumm with colored-collar] head textures...");
+			final String collaredGrumms = WebUtils.getReadURL(TEXTURE_DL_URL+"grumm-colored-collar-head-textures.txt");
+			downloadedList += "\n" + collaredGrumms;//JunkUtils.stripComments(collaredGrumms);
+			writeTextureFile = true;
+			pl.getLogger().info("Finished downloading [Grumm with colored-collar] head textures");
+		}
+		if(writeTextureFile){
+			FileIO.deleteFile("head-textures.txt");
+			FileIO.loadFile("head-textures.txt", getClass().getResourceAsStream("/head-textures.txt")); // Copy with comments
+			if(!downloadedList.isEmpty()) FileIO.saveFile("head-textures.txt", downloadedList, /*append=*/true); // Append downloads
+			localList = FileIO.loadFile("head-textures.txt", hardcodedList); // Reload (without comments)
+		}
 		if(!hardcodedList.isEmpty()) loadTextures(hardcodedList, /*logMissingEntities=*/true, /*logUnknownEntities=*/false);
 		loadTextures(localList, /*logMissingEntities=*/hardcodedList.isEmpty(), /*logUnknownEntities=*/true);
 		//---------- </Load Textures> ---------------------------------------------------------------------
@@ -610,8 +625,8 @@ public class HeadAPI{
 					/*color=*/"dark_gray", /*formats=*/Collections.singletonMap(Format.ITALIC, false)));
 		}
 		UUID uuid = UUID.nameUUIDFromBytes(textureKey.getBytes());// Stable UUID for this textureKey
-		if(eTypeName.length() > 16) eTypeName = eTypeName.substring(0, 16);
-		GameProfile profile = new GameProfile(uuid, /*name=*/eTypeName);// Initialized with UUID and name
+		// Initialize GameProfile with UUID and name
+		GameProfile profile = new GameProfile(uuid, /*name=*/eTypeName.substring(0, Math.min(eTypeName.length(), MAX_NAME_LENGTH)));
 		profile.getProperties().put("textures", new Property("textures", code));
 		profile.getProperties().put(DH_TEXTURE_KEY, new Property(DH_TEXTURE_KEY, textureKey));
 		if(MAKE_UNSTACKABLE) profile.getProperties().put(DH_RANDOM_UUID, new Property(DH_RANDOM_UUID, UUID.randomUUID().toString()));
@@ -675,7 +690,7 @@ public class HeadAPI{
 		String strCode = new String(code);
 		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 		head = JunkUtils.setDisplayName(head, pl.getAPI().getFullHeadNameFromKey(/*textureKey=*/"UNKNOWN|CUSTOM", /*customName=*/strCode));
-		GameProfile profile = new GameProfile(/*uuid=*/UUID.nameUUIDFromBytes(code), /*name=*/null/*strCode*/);
+		GameProfile profile = new GameProfile(UUID.nameUUIDFromBytes(code), /*name=*/strCode.substring(0, Math.min(strCode.length(), MAX_NAME_LENGTH)));
 		profile.getProperties().put("textures", new Property("textures", strCode));
 		if(MAKE_UNSTACKABLE) profile.getProperties().put(DH_RANDOM_UUID, new Property(DH_RANDOM_UUID, UUID.randomUUID().toString()));
 		if(SAVE_TYPE_IN_LORE){

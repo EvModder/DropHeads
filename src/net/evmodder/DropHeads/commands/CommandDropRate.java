@@ -12,7 +12,6 @@ import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -236,7 +235,7 @@ public class CommandDropRate extends EvCommand{
 
 		// Multipliers:
 		final double weaponMult = weapon == null ? 1D : dropChanceAPI.getWeaponMult(weapon.getType());
-		final int lootingLevel = weapon == null ? 0 : weapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
+		final int lootingLevel = JunkUtils.getLootingLevel(weapon);
 		final double lootingMult = lootingLevel == 0 ? 1D
 				: Math.min(Math.pow(dropChanceAPI.getLootingMult(), lootingLevel), dropChanceAPI.getLootingMult()*lootingLevel);
 		final double lootingAdd = dropChanceAPI.getLootingAdd()*lootingLevel;
