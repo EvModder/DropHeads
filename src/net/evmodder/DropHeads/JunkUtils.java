@@ -1,7 +1,5 @@
 package net.evmodder.DropHeads;
 
-import java.io.File;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -14,7 +12,6 @@ import java.util.stream.Stream;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.block.BlockFace;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -25,7 +22,6 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
@@ -72,17 +68,6 @@ public final class JunkUtils{
 		}
 	}
 
-	public final static long getJarCreationTime(Plugin pl){
-		try{
-			java.lang.reflect.Method getFileMethod = JavaPlugin.class.getDeclaredMethod("getFile");
-			getFileMethod.setAccessible(true);
-			return ((File)getFileMethod.invoke(pl)).lastModified();
-		}
-		catch(NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e1){
-			return 0;
-		}
-	}
-
 	public final static HashMap<String, Sound> getNoteblockSounds(){
 		HashMap<String, Sound> nbSounds = new HashMap</*txtrKey, Sound*/>();
 
@@ -124,13 +109,6 @@ public final class JunkUtils{
 		for(String tag : e.getScoreboardTags()) if(tag.startsWith(SPAWN_CAUSE_MULTIPLIER_KEY)) return Float.parseFloat(
 				tag.substring(SPAWN_CAUSE_MULTIPLIER_KEY.length()+1/*+1 because of '_'*/));
 		return 1D;
-	}
-
-	@SuppressWarnings("deprecation")
-	public final static int getLootingLevel(ItemStack item){
-		Enchantment ench = Enchantment.getByName("LOOTING");
-		if(ench == null) ench = Enchantment.getByName("LOOT_BONUS_MOBS");
-		return item.getEnchantmentLevel(ench);
 	}
 
 	private final static RefField displayNameField = ReflectionUtils.getRefClass("{cb}.inventory.CraftMetaItem").getField("displayName");

@@ -76,7 +76,7 @@ public final class TextureKeyLookup{
 		final String shulkerAndColorKey = color == null ? "SHULKER" : "SHULKER|"+color.name();
 		//org.bukkit.Bukkit.getLogger().info("shulker facing: "+shulker.getFacing());
 
-		if(ReflectionUtils.getServerVersionString().compareTo("v1_16_4") < 0) return shulkerAndColorKey;
+		if(ReflectionUtils.getServerVersionString().compareTo("v1_16_R3") < 0) return shulkerAndColorKey;
 		if(mShulkerGetAttachedFace == null){
 			try{
 				final RefClass classShulker = ReflectionUtils.getRefClass("org.bukkit.entity.Shulker");
@@ -186,7 +186,7 @@ public final class TextureKeyLookup{
 				final String tameAndCollarOrAngry =
 						((Wolf)entity).isTamed() ? "|TAME|"+((Wolf)entity).getCollarColor().name()+"_COLLARED" :
 						((Wolf)entity).isAngry() ? "|ANGRY" : "";
-				if(ReflectionUtils.getServerVersionString().compareTo("v1_20_5") < 0) return "WOLF"+tameAndCollarOrAngry;
+				if(ReflectionUtils.getServerVersionString().compareTo("v1_20_R4") < 0) return "WOLF"+tameAndCollarOrAngry;
 				if(mWolfGetVariant == null) mWolfGetVariant = ReflectionUtils.getRefClass("org.bukkit.entity.Wolf").getMethod("getVariant");
 				return "WOLF|"+((Enum)mWolfGetVariant.of(entity).call()).name()+tameAndCollarOrAngry;
 			}
@@ -194,7 +194,7 @@ public final class TextureKeyLookup{
 				if(mChestBoatGetType == null) mChestBoatGetType = ReflectionUtils.getRefClass("org.bukkit.entity.ChestBoat").getMethod("getBoatType");
 				return "CHEST_BOAT|"+((Enum)mChestBoatGetType.of(entity).call()).name();
 			case "VEX":
-				if(ReflectionUtils.getServerVersionString().compareTo("v1_13_2") < 0) return "VEX";
+				if(ReflectionUtils.getServerVersionString().compareTo("v1_13_R3") < 0) return "VEX";
 				if(mVexIsCharging == null) mVexIsCharging = ReflectionUtils.getRefClass("org.bukkit.entity.Vex").getMethod("isCharging");
 				if(mVexIsCharging.of(entity).call().equals(true)) return "VEX|CHARGING";
 				else return "VEX";
@@ -235,7 +235,7 @@ public final class TextureKeyLookup{
 //				// DONE:TEST (in HeadAPI): Drop varying-crackiness iron golem heads
 //				return "IRON_GOLEM";
 			case "MUSHROOM_COW":
-				if(ReflectionUtils.getServerVersionString().compareTo("v1_14") < 0) return "MUSHROOM_COW";
+				if(ReflectionUtils.getServerVersionString().compareTo("v1_14_R0") < 0) return "MUSHROOM_COW";
 				if(mMushroomCowGetVariant == null) mMushroomCowGetVariant =
 					ReflectionUtils.getRefClass("org.bukkit.entity.MushroomCow").getMethod("getVariant");
 				return "MUSHROOM_COW|"+((Enum)mMushroomCowGetVariant.of(entity).call()).name();
@@ -306,7 +306,7 @@ public final class TextureKeyLookup{
 				if(isScreaming) return "GHAST|SCREAMING";
 				else return "GHAST";
 			case "GOAT":
-				if(ReflectionUtils.getServerVersionString().compareTo("v1_17") < 0) return "GOAT";
+				if(ReflectionUtils.getServerVersionString().compareTo("v1_17_??") < 0) return "GOAT";
 				if(mGoatHasLeftHorn == null){
 					mGoatHasLeftHorn = ReflectionUtils.getRefClass("org.bukkit.entity.Goat").getMethod("hasLeftHorn");
 					mGoatHasRightHorn = ReflectionUtils.getRefClass("org.bukkit.entity.Goat").getMethod("hasRightHorn");

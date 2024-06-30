@@ -11,6 +11,7 @@ import javax.annotation.Nonnull;
 import org.bukkit.Material;
 import org.bukkit.Nameable;
 import org.bukkit.command.CommandSender;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -173,7 +174,7 @@ public class EntityDeathListener implements Listener{
 
 		if(!pl.getDropChanceAPI().getRequiredWeapons().isEmpty() && !pl.getDropChanceAPI().getRequiredWeapons().contains(murdetWeaponType)) return false;
 
-		final int lootingLevel = JunkUtils.getLootingLevel(murderWeapon);
+		final int lootingLevel = murderWeapon == null ? 0 : murderWeapon.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS);
 		final double lootingMod = lootingLevel == 0 ? 1D : Math.pow(pl.getDropChanceAPI().getLootingMult(), lootingLevel);
 		final double lootingAdd = pl.getDropChanceAPI().getLootingAdd()*lootingLevel;
 		final double weaponMod = pl.getDropChanceAPI().getWeaponMult(murdetWeaponType);
