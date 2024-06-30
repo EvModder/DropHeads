@@ -9,6 +9,7 @@ ARMADILLO:          0.009
 AXOLOTL:            0.007
 BAT:                0.010
 BEE:                0.006
+BOGGED:             0.005
 BREEZE:             0.030
 BLAZE:              0.005
 CAMEL:              0.006
@@ -40,8 +41,8 @@ ILLUSIONER:         0.050
 IRON_GOLEM:         0.007
 LLAMA:              0.007
 MAGMA_CUBE:         0.007
+MOOSHROOM:          0.004
 MULE:               0.008
-MUSHROOM_COW:       0.004
 OCELOT:             0.007
 PANDA:              0.004
 PARROT:             0.008
@@ -64,7 +65,7 @@ SKELETON:           0.003
 SKELETON_HORSE:     0.009
 SLIME:              0.004
 SNIFFER:            0.009
-SNOWMAN:            0.008
+SNOW_GOLEM:         0.008
 SPIDER:             0.004
 SQUID:              0.005
 STRAY:              0.004
@@ -90,19 +91,19 @@ ZOMBIFIED_PIGLIN:   0.002
 
 # Hanging Entities
 ARMOR_STAND: 0
-LEASH_HITCH: 0
+LEASH_KNOT: 0
 PAINTING: 0
 ITEM_FRAME: 0
 GLOW_ITEM_FRAME: 0
 
 # Vehicles
 MINECART: 0
-MINECART_CHEST: 0
-MINECART_COMMAND: 0
-MINECART_FURNACE: 0
-MINECART_HOPPER: 0
-MINECART_MOB_SPAWNER: 0
-MINECART_TNT: 0
+CHEST_MINECART: 0
+COMMAND_BLOCK_MINECART: 0
+FURNACE_MINECART: 0
+HOPPER_MINECART: 0
+SPAWNER_MINECART: 0
+TNT_MINECART: 0
 BOAT: 0
 CHEST_BOAT: 0
 
