@@ -186,13 +186,14 @@ commands:
       too-many-matching-entities: "&cToo many entities selected (&6%s&c)"
     success:
       has-data-value: "&7Getting entity head with data value: %s"
-      item-with-amount-format: "%s&fx%s"
       spawned-head: "&aSpawned Head: &e%s"
       spawned-heads: "&aSpawned Heads: [&e%s&a]"
       gave-head: "&aGave &e%s&a to &7%s"
       gave-heads: "&aGave: [&e%s&a] to &7%s"
       multi-gave-head: "&aGave &e%s&a to [&7%s&a]"
       multi-gave-heads: "&aGave: [&e%s&a] to [&7%s&a]"
+      list-sep: ", "
+      item-with-amount-format: "%s&fx%s"
 
   droprate:
     not-found: "&6Drop chance for \"&c%s&6\" not found! &7(defaults to &b0%%&7)"

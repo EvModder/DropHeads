@@ -52,13 +52,17 @@ public class CommandSpawnHead extends EvCommand{
 //	final private int MAX_HDB_IDS_SHOWN = 200;
 	final private int MAX_ENTITIES_SELECTED;
 
-	// TODO: Maybe add aliases (eg, ['url:','value:'] -> 'code:')
 	final private String MOB_PREFIX, PLAYER_PREFIX, HDB_PREFIX, SELF_PREFIX, CODE_PREFIX, AMT_PREFIX, GIVETO_PREFIX, SLOT_PREFIX;
 
 	private final HashMap<String, String> translations;
 	private String translate(String key){
 		String value = translations.get(key);
 		if(value == null) translations.put(key, value = pl.getInternalAPI().loadTranslationStr(CMD_TRANSLATE_PATH + key));
+		return value;
+	}
+	private String translate(String key, String defaultValue){
+		String value = translations.get(key);
+		if(value == null) translations.put(key, value = pl.getInternalAPI().loadTranslationStr(CMD_TRANSLATE_PATH + key, defaultValue));
 		return value;
 	}
 
@@ -217,7 +221,7 @@ public class CommandSpawnHead extends EvCommand{
 	private HeadFromString getHeadFromTargetString(String fullTarget, CommandSender sender){
 		int prefixEnd = fullTarget.indexOf(':');
 		String prefix = prefixEnd == -1 ? "" : fullTarget.substring(0, prefixEnd + 1).toLowerCase();
-		if(prefix.equals("http:") || prefix.equals("https:")){prefix = CODE_PREFIX; prefixEnd = -1;}
+		if(prefix.equals("http:") || prefix.equals("https:") || prefix.equals("url:") || prefix.equals("base64:")){prefix = CODE_PREFIX; prefixEnd = -1;}
 		String textureKey = fullTarget.substring(prefixEnd + 1);
 
 		String target, extraData;
@@ -338,25 +342,29 @@ public class CommandSpawnHead extends EvCommand{
 				.replaceAll("(?i)\\$\\{RECIPIENT\\}", recipients));
 	}
 
-	@Override public boolean onCommand(CommandSender sender, Command command, String label, String[] args){
-		// Parse arguments
+	private static class ParsedArgs{
 		int amount = -1;
+		String slot;
+		String fullTarget;
+		List<Entity> giveTargets = new ArrayList<>();
+	}
+	private ParsedArgs parseArgs(CommandSender sender, String[] args){
+		ParsedArgs parsed = new ParsedArgs();
 		for(int i=0; i<args.length; ++i){
 			if(args[i].matches("(?i:"+AMT_PREFIX+")[0-9]+")){
-				amount = Integer.parseInt(args[i].substring(AMT_PREFIX.length()));
+				parsed.amount = Integer.parseInt(args[i].substring(AMT_PREFIX.length()));
 				args = (String[])ArrayUtils.remove(args, i);
 				break;
 			}
 		}
-		String slot = null;
 		for(int i=0; i<args.length; ++i){
 			if(args[i].matches("(?i:"+SLOT_PREFIX+").*")){
-				slot = args[i].substring(SLOT_PREFIX.length());
-				if(!slot.matches("[1-2]?[0-9]|3[0-5]")){ // Valid number slots are 0 to 35
-					try{EquipmentSlot.valueOf(slot.toUpperCase());}
+				parsed.slot = args[i].substring(SLOT_PREFIX.length());
+				if(!parsed.slot.matches("[1-2]?[0-9]|3[0-5]")){ // Valid number slots are 0 to 35
+					try{EquipmentSlot.valueOf(parsed.slot.toUpperCase());}
 					catch(IllegalArgumentException ex){
-						sender.sendMessage(String.format(translate("errors.invalid-slot"), slot));
-						return true;
+						sender.sendMessage(String.format(translate("errors.invalid-slot"), parsed.slot));
+						return null;
 					}
 				}
 				args = (String[])ArrayUtils.remove(args, i);
@@ -376,43 +384,53 @@ public class CommandSpawnHead extends EvCommand{
 			giveTo = args[0];
 			args = Arrays.copyOfRange(args, 1, args.length);
 		}
-		final String fullTarget = args.length == 0 ? PLAYER_PREFIX + sender.getName() : String.join("_", args);
+		parsed.fullTarget = args.length == 0 ? PLAYER_PREFIX + sender.getName() : String.join("_", args);
 
 		// Get head receipient(s)
-		ArrayList<Entity> giveTargets = new ArrayList<>();
 		if(giveTo != null && permGive){
 			try{
 				Collection<Entity> selected = Selector.fromString(sender, giveTo).resolve();
 				if(selected != null){
 					if(selected.size() > MAX_ENTITIES_SELECTED){
 						sender.sendMessage(String.format(translate("errors.too-many-matching-entities"), selected.size()));
-						return true;
+						return null;
 					}
 					if(selected.size() == 0){
 						sender.sendMessage(String.format(translate("errors.no-matching-entities"), giveTo));
-						return true;
+						return null;
 					}
-					final boolean isEquipmentSlot = slot != null && !slot.matches("[0-9]+");
+					final boolean isEquipmentSlot = parsed.slot != null && !parsed.slot.matches("[0-9]+");
 					for(Entity e : selected){
-						if(!isEquipmentSlot && e instanceof InventoryHolder) giveTargets.add(e);
-						else if(isEquipmentSlot && e instanceof LivingEntity) giveTargets.add(e);
+						if(!isEquipmentSlot && e instanceof InventoryHolder) parsed.giveTargets.add(e);
+						else if(isEquipmentSlot && e instanceof LivingEntity) parsed.giveTargets.add(e);
 					}
 					args = Arrays.copyOfRange(args, 1, args.length);
 				}
 			}
 			catch(IllegalArgumentException ex){}
 		}
-		if(giveTargets.isEmpty()){
+		if(parsed.giveTargets.isEmpty()){
 			if(giveTo != null){
 				sender.sendMessage(String.format(translate("errors.giveto-not-found"), giveTo));
-				return true;
+				return null;
 			}
-			if(sender instanceof Player) giveTargets.add((Player)sender);
+			if(sender instanceof Player) parsed.giveTargets.add((Player)sender);
 			else{
 				sender.sendMessage(translate("errors.run-by-player"));
-				return true;
+				return null;
 			}
 		}
+		return parsed;
+	}
+
+	@Override public boolean onCommand(CommandSender sender, Command command, String label, String[] args){
+		// Parse arguments
+		final ParsedArgs parsed = parseArgs(sender, args);
+		if(parsed == null) return true;
+		final int amount = parsed.amount;
+		final String slot = parsed.slot;
+		final String fullTarget = parsed.fullTarget;
+		final List<Entity> giveTargets = parsed.giveTargets;
 
 		// Get head item(s)
 		ArrayList<ItemStack> headItems = new ArrayList<>();
@@ -458,7 +476,7 @@ public class CommandSpawnHead extends EvCommand{
 		HashMap<String, Integer> amtOfEachHead = new HashMap<>();
 		HashSet<UUID> notEnoughInvSpaceWarned = new HashSet<>();
 		ArrayList<Component> headNameComps = new ArrayList<>();
-		ArrayList<Component> recipientComps = new ArrayList<>();
+		ArrayList<SelectorComponent> recipientComps = new ArrayList<>();
 		boolean firstHeadSoAddRecipients = true;
 		for(ItemStack head : headItems){
 			Component headNameComp = JunkUtils.getItemDisplayNameComponent(head);
@@ -494,50 +512,34 @@ public class CommandSpawnHead extends EvCommand{
 				: (amtOfEachHead.size() > 1 ? translate("success.multi-gave-heads") : translate("success.multi-gave-head"));
 		if(!messageFormatStr.contains("%s")) messageFormatStr += "%s";
 
-		// TODO: This assumes the message has a default color & formats when it actually might not.
-		final Component msgColorAndFormatsPlusComma = new ListComponent(
-				TellrawUtils.getTrailingColorAndFormatProperties(messageFormatStr), new RawTextComponent(", "/*TODO: translations.yml*/));
+		final Component successMessageListSep = new ListComponent(
+				TellrawUtils.getTrailingColorAndFormatProperties(messageFormatStr), new RawTextComponent(translate("success.list-sep", ", ")));
 
-		ListComponent recipientListComp = new ListComponent();
-		ListComponent headItemListComp = new ListComponent();
-		// TODO: line below assumes [recipient-list] is the LAST "%s", which might not be a good assumption.
-		final Component recipientColorAndFormats = TellrawUtils.getTrailingColorAndFormatProperties(
-				messageFormatStr.substring(0, messageFormatStr.lastIndexOf('%')));
-		if(recipientColorAndFormats != null) recipientListComp.addComponent(recipientColorAndFormats);
-		for(int i=0; i<recipientComps.size(); ++i){
-			recipientListComp.addComponent(recipientComps.get(i));
-			if(i != recipientComps.size()-1) recipientListComp.addComponent(msgColorAndFormatsPlusComma);
-		}
-		if(amtOfEachHead.size() == 1){
-			final Integer amt = amtOfEachHead.values().iterator().next();
-			headItemListComp.addComponent(amt == 1 ? headNameComps.get(0) : new TranslationComponent(
-					translate("success.item-with-amount-format"), headNameComps.get(0), new RawTextComponent(amt.toString())));
-		}
-		else{
-			// TODO: line below assumes [head-list] is the FIRST "%", which might not be a good assumption.
-//			final Component headColorAndFormats = TellrawUtils.getCurrentColorAndFormatProperties(
-//					messageFormatStr.substring(0, messageFormatStr.indexOf('%')));
-//			final Component amtColorAndFormats = TellrawUtils.getCurrentColorAndFormatProperties(translate("success.item-with-amount-format");
-			//TODO: uncomment line below once TranslationComponent supports properly applying color codes from "jsonKey" to "with"/children
-			headItemListComp.addComponent("");
-//			if(headColorAndFormats != null) headItemListComp.addComponent(headColorAndFormats);
-			for(int i=0; i<headNameComps.size(); ++i){
-				Integer amt = amtOfEachHead.get(headNameComps.get(i).toString());
-				if(amt > 1){
-					headItemListComp.addComponent(new TranslationComponent(translate("success.item-with-amount-format"),
-							headNameComps.get(i), new RawTextComponent(amt.toString())));
-					if(i != headNameComps.size()-1){
-						headItemListComp.addComponent(msgColorAndFormatsPlusComma);
-					}
-				}
-				else{
-					headItemListComp.addComponent(headNameComps.get(i));
-					if(i != headNameComps.size()-1){
-						headItemListComp.addComponent(msgColorAndFormatsPlusComma);
-					}
-				}
+		// Currently assumes [recipient-list] is the FIRST "%s", which might not be a good assumption.
+		final ListComponent headItemListComp = new ListComponent();
+		final Component headColor = TellrawUtils.getTrailingColorAndFormatProperties(messageFormatStr.substring(0, messageFormatStr.indexOf('%')));
+		headItemListComp.addComponent(headColor);//Default color for all head comps (technically unnecessary because they are already yellow)
+		for(int i=0; i<headNameComps.size(); ++i){
+			Integer amt = amtOfEachHead.get(headNameComps.get(i).toString());
+			if(amt > 1){
+				headItemListComp.addComponent(new TranslationComponent(translate("success.item-with-amount-format"),
+						headNameComps.get(i), new RawTextComponent(amt.toString())));
+				if(i != headNameComps.size()-1) headItemListComp.addComponent(successMessageListSep);
+			}
+			else{
+				headItemListComp.addComponent(headNameComps.get(i));
+				if(i != headNameComps.size()-1) headItemListComp.addComponent(successMessageListSep);
 			}
 		}
+		// Currently assumes [recipient-list] is the LAST "%s", which might not be a good assumption.
+		final ListComponent recipientListComp = new ListComponent();
+		final Component recipColor = TellrawUtils.getTrailingColorAndFormatProperties(messageFormatStr.substring(0, messageFormatStr.lastIndexOf('%')));
+		recipientListComp.addComponent(recipColor);
+		for(int i=0; i<recipientComps.size(); ++i){
+			recipientListComp.addComponent(recipientComps.get(i));
+			if(i != recipientComps.size()-1) recipientListComp.addComponent(successMessageListSep);
+		}
+		// Currently assumes [head-list] is before [recipient-list]
 		final TranslationComponent successMessage = recipientListComp.isEmpty()
 				? new TranslationComponent(messageFormatStr, headItemListComp)
 				: new TranslationComponent(messageFormatStr, headItemListComp, recipientListComp);

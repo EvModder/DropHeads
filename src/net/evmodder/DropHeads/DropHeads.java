@@ -27,8 +27,6 @@ import net.evmodder.EvLib.Updater;
 
 //TODO:
 // * /dropheads reload
-// * /droprate edit
-// * refactor CommandSpawnHead (split it up!)
 // * improve textures listed at the bottom of head-textures.txt
 // * move textures to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."?
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
@@ -39,6 +37,7 @@ import net.evmodder.EvLib.Updater;
 // * img.shields/io/bukkit/downloads/id ? other badges on GitHub?
 // * mob: prefix for /droprate
 //TEST:
+// * /droprate edit
 // * head-noteblock-sound in ItemMeta
 // * Trophies/Luck attribute
 // * place-head-block, overwrite-blocks, facing-direction, place-as: KILLER/VICTIM/SERVER
