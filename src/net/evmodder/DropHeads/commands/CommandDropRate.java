@@ -38,8 +38,9 @@ public class CommandDropRate extends EvCommand{
 	final private boolean VANILLA_WSKELE_HANDLING;
 	final private HashSet<String> entityNames;
 	final private int JSON_LIMIT;
-	final private String LIST_SEP = "§7, ";//TODO: translations.yml
-	///tellraw EvDoc [{"text":"a","color":"green"},"§7b"]
+	final private String LIST_SEP;
+	private final String MOB_PREFIX;
+	///tellraw EvDoc [{"text":"a","color":"green"},"§7b","c"]
 
 	final private Component REQUIRED_WEAPONS;
 	final private TranslationComponent LOOTING_COMP; //TODO: Use comp (instead of String) for other translations as well
@@ -60,6 +61,8 @@ public class CommandDropRate extends EvCommand{
 		translations = new HashMap<>();
 		final InternalAPI api = pl.getInternalAPI();
 		LOOTING_COMP = api.loadTranslationComp(CMD_TRANSLATE_PATH+"multipliers.looting");
+		MOB_PREFIX = api.loadTranslationStr("commands.spawnhead.prefixes.mob");
+		LIST_SEP = api.loadTranslationStr(CMD_TRANSLATE_PATH+"list-sep");
 
 		if(NEED_CERTAIN_WEAPONS = !dropChanceAPI.getRequiredWeapons().isEmpty()){
 			ListComponent requiredWeapons = new ListComponent();
@@ -155,6 +158,7 @@ public class CommandDropRate extends EvCommand{
 			}
 			if(entity == null) return false;
 		}
+		else if(args[0].startsWith(MOB_PREFIX)) args[0] = args[0].substring(MOB_PREFIX.length());
 		final String target = entity == null ? args[0].toUpperCase() : entity.getType().name().toUpperCase();
 
 		if(entity == null) entity = pl.getServer().getPlayer(target);

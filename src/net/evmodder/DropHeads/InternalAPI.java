@@ -69,7 +69,7 @@ public final class InternalAPI extends HeadAPI{
 	public TranslationComponent loadTranslationComp(String key, String defaultValue){
 //		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in 'translations.yml': "+key);
 		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key, defaultValue));
-		int i = msg.indexOf('$');
+		int i = msg.indexOf('$');//${sub}
 		if(i == -1){
 			return new TranslationComponent(msg);
 		}

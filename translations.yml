@@ -204,7 +204,7 @@ commands:
     rate-changed: "&aDrop chance for &e%s&a updated from &b%s%% &ato &b%s%%"
     file-updated: "&7head-drop-rates.txt file modified: %b"
     restrictions:
-      header: "§7Drop restrictions:"
+      header: "&7Drop restrictions:"
       victim-must-have-perm: "\n&c&l>&7 Victim must have the '&cdropheads.canlosehead&7' perm"
       killer-must-have-perm: "\n&c&l>&7 You must have the '&cdropheads.canbehead&7' perm"
       always-behead-perm: "\n&c&l>&7 You have '&cdropheads.alwaysbehead&7' so droprate is &b100%"
@@ -216,6 +216,7 @@ commands:
       weapon-type: "&fWeapon"
       perms: "&fPerms"
       looting: "${enchantment.minecraft.looting}"
+    list-sep: "&7, "
     vanilla-wither-skeleton-handling-alert: "&7Vanilla wither_skeleton handling is enabled"
     final-drop-rate: "&6Final drop chance: &b%s%%"
 
