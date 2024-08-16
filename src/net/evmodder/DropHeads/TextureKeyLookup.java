@@ -115,6 +115,7 @@ public final class TextureKeyLookup{
 	}
 
 	private static RefMethod mGetVillagerType, mGetZombieVillagerType;
+	private static RefMethod mBoggedIsSheared;
 	private static RefMethod mBeeHasNectar, mBeeGetAnger, mBeeHasStung;
 	private static RefMethod mCatGetType, mCatGetCollarColor;
 	private static RefMethod mFoxGetType, mFoxIsSleeping;
@@ -137,9 +138,9 @@ public final class TextureKeyLookup{
 	@SuppressWarnings("rawtypes")
 	public static String getTextureKey(Entity entity){
 		switch(entity.getType().name()){
-//			case "BOGGED":
-//				if(mBoggedIsSheared == null) mBoggedIsSheared = ReflectionUtils.getRefClass("org.bukkit.entity.Bogged").getMethod("isSheared");
-//				return mBoggedIsSheared.of(entity).call().equals(true) ? "BOGGED|SHEARED" : "BOGGED";
+			case "BOGGED":
+				if(mBoggedIsSheared == null) mBoggedIsSheared = ReflectionUtils.getRefClass("org.bukkit.entity.Bogged").getMethod("isSheared");
+				return mBoggedIsSheared.of(entity).call().equals(true) ? "BOGGED|SHEARED" : "BOGGED";
 			case "CREEPER":
 				return ((Creeper)entity).isPowered() ? "CREEPER|CHARGED" : "CREEPER";
 			case "HORSE":
@@ -231,9 +232,6 @@ public final class TextureKeyLookup{
 				}
 				return "CAT|"+catType;
 			}
-//			case "IRON_GOLEM":
-//				// DONE:TEST (in HeadAPI): Drop varying-crackiness iron golem heads
-//				return "IRON_GOLEM";
 			case "MUSHROOM_COW":
 				if(ReflectionUtils.getServerVersionString().compareTo("v1_14") < 0) return "MUSHROOM_COW";
 				if(mMushroomCowGetVariant == null) mMushroomCowGetVariant =

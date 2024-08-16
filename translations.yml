@@ -226,3 +226,8 @@ commands:
     disabled: "${addServer.resourcePack.disabled}" #Alternative: gui.no
     errors:
       run-by-player: "&cOnly ingame players can run this command"
+
+
+# Translation-fallback keys (1.19.4+):
+# entity_subtype.X, head_type.head, head_type.skull, head_type.toe
+# WIP: death.attack.behead, death.attack.behead.player, death.attack.behead.player.item

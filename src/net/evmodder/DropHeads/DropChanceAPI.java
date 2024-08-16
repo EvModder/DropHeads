@@ -583,6 +583,8 @@ public final class DropChanceAPI{
 		final Component itemComp = getWeaponComponent(killer, weapon);
 		if(killerComp != null){
 			if(itemComp != null){
+				//TODO: if(pl.getAPI().USE_TRANSLATE_FALLBACKS)
+				//death.attack.behead, death.attack.behead.player, death.attack.behead.player.item
 				final boolean hasCustomName = weapon != null && weapon.hasItemMeta() && weapon.getItemMeta().hasDisplayName();
 				message.addComponent(hasCustomName
 						? MSH_BEHEAD_BY_WITH_NAMED[rand.nextInt(MSH_BEHEAD_BY_WITH_NAMED.length)]

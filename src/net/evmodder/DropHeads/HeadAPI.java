@@ -421,7 +421,7 @@ public class HeadAPI{
 		}
 	}
 
-	//only used by BlockClickListener
+	//Only used by BlockClickListener and getFullHeadNameFromKey() below
 	/** Returns a localized Component[] where the first element is the entity's type and subsequent elements describe the sub-types.
 	 * The ordering of sub-types is the same as their corresponding names in <code>textureKey.split("|")</code>.
 	 * @param textureKey a texture key describing the entity

@@ -116,6 +116,7 @@ public final class InternalAPI extends HeadAPI{
 		return id != null && hdbAPI.isHead(id);
 	}
 
+	// Called by BlockClickListener and ItemDropListener
 	/** <strong>DO NOT USE:</strong> This function will likely disappear in a future release
 	 * @param textureKey the key (from <a href="https://github.com/EvModder/DropHeads/blob/master/head-textures.txt">head-textures.txt"</a>)
 	 * @param customName the custom name of the entity, usually null for non-players
