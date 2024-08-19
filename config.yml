@@ -241,7 +241,8 @@ death-listener-priority: LOW
 # The head on the left is replaced with the one on the right when updated
 replace-heads:
   'PIG_ZOMBIE': 'ZOMBIFIED_PIGLIN'
-#  'ILLUSIONER': 'VILLAGER|FLETCHER|SWAMP'
+#  'WOLF': 'WOLF|PALE'
+#  'WOLF|GRUMM': 'WOLF|PALE|GRUMM'
 
 # Whether to send usage statistics to bStats
 bstats-enabled: true

@@ -1,6 +1,7 @@
 package net.evmodder.DropHeads;
 
 import java.io.File;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -202,11 +203,11 @@ public class HeadAPI{
 		PREFER_VANILLA_HEADS = pl.getConfig().getBoolean("prefer-vanilla-heads", true);
 
 		//---------- <Load translations> ----------------------------------------------------------------------
-		translationsFile = FileIO.loadConfig(pl, "translations.yml",
-				getClass().getResourceAsStream("/translations.yml"), /*notifyIfNew=*/false);
-		Configuration embeddedTranslationsFile = YamlConfiguration.loadConfiguration(
-				new InputStreamReader(getClass().getResourceAsStream("/translations.yml")));
-		translationsFile.setDefaults(embeddedTranslationsFile);
+		translationsFile = FileIO.loadConfig(pl, "translations.yml", getClass().getResourceAsStream("/translations.yml"), /*notifyIfNew=*/false);
+		final InputStream translationsIS = getClass().getResourceAsStream("/translations.yml");  // Can't reuse InputStreams
+		if(translationsIS != null){  // getResourceAsStream() returns null after a plugin reload
+			translationsFile.setDefaults(YamlConfiguration.loadConfiguration(new InputStreamReader(translationsIS)));
+		}
 		// See if we can use the 1.19.4+ "fallback" feature
 		USE_TRANSLATE_FALLBACKS = translationsFile.getBoolean("use-translation-fallbacks", false) && Bukkit.getBukkitVersion().compareTo("1.19.4") >= 0;
 

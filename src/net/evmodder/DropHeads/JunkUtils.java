@@ -128,6 +128,7 @@ public final class JunkUtils{
 
 	@SuppressWarnings("deprecation")
 	public final static int getLootingLevel(ItemStack item){
+		if(item == null) return 0;
 		Enchantment ench = Enchantment.getByName("LOOTING");
 		if(ench == null) ench = Enchantment.getByName("LOOT_BONUS_MOBS");
 		return item.getEnchantmentLevel(ench);

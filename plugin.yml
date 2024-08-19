@@ -5,8 +5,8 @@ description: Heads for every mob and player.
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
 #9=Reorganized texture file downloads, global click-info cooldown
-#6=1.21 EntityType name changes, added grumms, collared-wolf-variants, fixed looting, better texture-file downloading, legacy head stacking fix config option
-version: 3.9.6
+#7=fixed wolf heads not dropping
+version: 3.9.7
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 

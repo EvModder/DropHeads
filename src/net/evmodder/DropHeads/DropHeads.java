@@ -25,7 +25,7 @@ import net.evmodder.EvLib.EvPlugin;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.Updater;
 
-//TODO:
+//TODO:MurilinHN
 // * /dropheads reload
 // * improve textures listed at the bottom of head-textures.txt
 // * move textures to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."?

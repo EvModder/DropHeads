@@ -1,6 +1,7 @@
 package net.evmodder.DropHeads;
 
 import org.bukkit.DyeColor;
+import org.bukkit.Keyed;
 import org.bukkit.Location;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Creeper;
@@ -189,7 +190,7 @@ public final class TextureKeyLookup{
 						((Wolf)entity).isAngry() ? "|ANGRY" : "";
 				if(ReflectionUtils.getServerVersionString().compareTo("v1_20_5") < 0) return "WOLF"+tameAndCollarOrAngry;
 				if(mWolfGetVariant == null) mWolfGetVariant = ReflectionUtils.getRefClass("org.bukkit.entity.Wolf").getMethod("getVariant");
-				return "WOLF|"+((Enum)mWolfGetVariant.of(entity).call()).name()+tameAndCollarOrAngry;
+				return "WOLF|"+((Keyed)mWolfGetVariant.of(entity).call()).getKey().getKey().toUpperCase()+tameAndCollarOrAngry;
 			}
 			case "CHEST_BOAT":
 				if(mChestBoatGetType == null) mChestBoatGetType = ReflectionUtils.getRefClass("org.bukkit.entity.ChestBoat").getMethod("getBoatType");
