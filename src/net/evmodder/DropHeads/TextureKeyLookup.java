@@ -115,6 +115,12 @@ public final class TextureKeyLookup{
 		return shulkerAndColorKey + peekState + rotation;
 	}
 
+	@SuppressWarnings("rawtypes")
+	private static String getEnumNameOrKeyedName(Entity entity, RefMethod mGetType){
+		try{return ((Keyed)mGetType.of(entity).call()).getKey().getKey().toUpperCase();}//1.21+
+		catch(ClassCastException e){return ((Enum)mGetType.of(entity).call()).name();}//pre 1.21
+	}
+
 	private static RefMethod mGetVillagerType, mGetZombieVillagerType;
 	private static RefMethod mBoggedIsSheared;
 	private static RefMethod mBeeHasNectar, mBeeGetAnger, mBeeHasStung;
@@ -206,7 +212,7 @@ public final class TextureKeyLookup{
 					try{mGetVillagerType = ReflectionUtils.getRefClass("org.bukkit.entity.Villager").getMethod("getVillagerType");}
 					catch(RuntimeException ex){return "VILLAGER|"+villagerProfession;}
 				}
-				return "VILLAGER|"+villagerProfession+"|"+((Enum)mGetVillagerType.of(entity).call()).name();
+				return "VILLAGER|"+villagerProfession+"|"+getEnumNameOrKeyedName(entity, mGetVillagerType);
 			}
 			case "ZOMBIE_VILLAGER": {
 				final String zombieVillagerProfession = ((ZombieVillager)entity).getVillagerProfession().name();
@@ -214,7 +220,7 @@ public final class TextureKeyLookup{
 					try{mGetZombieVillagerType = ReflectionUtils.getRefClass("org.bukkit.entity.ZombieVillager").getMethod("getVillagerType");}
 					catch(RuntimeException ex){return "ZOMBIE_VILLAGER|"+zombieVillagerProfession;}
 				}
-				return "ZOMBIE_VILLAGER|"+zombieVillagerProfession+"|"+((Enum)mGetZombieVillagerType.of(entity).call()).name();
+				return "ZOMBIE_VILLAGER|"+zombieVillagerProfession+"|"+getEnumNameOrKeyedName(entity, mGetZombieVillagerType);
 			}
 			case "OCELOT": {
 				final String catType = ((Ocelot)entity).getCatType().name();
@@ -222,7 +228,7 @@ public final class TextureKeyLookup{
 			}
 			case "CAT": {
 				if(mCatGetType == null) mCatGetType = ReflectionUtils.getRefClass("org.bukkit.entity.Cat").getMethod("getCatType");
-				String catType = ((Enum)mCatGetType.of(entity).call()).name();
+				String catType = getEnumNameOrKeyedName(entity, mCatGetType);
 				if(catType.equals("RED")) catType = "GINGER";
 				if(catType.equals("BLACK")) catType = "TUXEDO";
 				if(catType.equals("ALL_BLACK")) catType = "BLACK";
@@ -251,7 +257,7 @@ public final class TextureKeyLookup{
 			case "FROG":
 				if(mFrogGetVariant == null) mFrogGetVariant =
 					ReflectionUtils.getRefClass("org.bukkit.entity.Frog").getMethod("getVariant");
-				return "FROG|"+((Enum)mFrogGetVariant.of(entity).call()).name();
+				return "FROG|"+getEnumNameOrKeyedName(entity, mFrogGetVariant);
 			case "PANDA": {
 				if(mPandaGetMainGene == null){
 					final RefClass classPanda = ReflectionUtils.getRefClass("org.bukkit.entity.Panda");

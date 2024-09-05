@@ -25,7 +25,7 @@ import net.evmodder.EvLib.EvPlugin;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.Updater;
 
-//TODO:MurilinHN
+//TODO:
 // * /dropheads reload
 // * improve textures listed at the bottom of head-textures.txt
 // * move textures to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."?
@@ -36,6 +36,7 @@ import net.evmodder.EvLib.Updater;
 // * use 'fallback' in TextUtils for head-type, etc.
 // * img.shields/io/bukkit/downloads/id ? other badges on GitHub?
 // * mob: prefix for /droprate
+// * create tester tool to call `getHead(entity)` for every supported variant
 //TEST:
 // * /droprate edit
 // * head-noteblock-sound in ItemMeta
