@@ -5,7 +5,7 @@ description: Heads for every mob and player.
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
 #9=Reorganized texture file downloads, global click-info cooldown
-#8=fixed villager, zombie_villager, cat, and frog variants not dropping in 1.21+
+#8=fixed villager, zombie_villager, cat, and frog variants not dropping in 1.21+, fixed everything breaking in 1.21.1
 version: 3.9.8
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
