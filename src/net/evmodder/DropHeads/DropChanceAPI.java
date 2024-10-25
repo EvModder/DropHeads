@@ -487,6 +487,7 @@ public final class DropChanceAPI{
 	 * @param killer The entity responsible for causing the head item to drop
 	 * @param evt The <code>Entity*Event</code> from which this function is being called
 	 */
+	@SuppressWarnings("deprecation")
 	public void dropHeadItem(ItemStack headItem, Entity entity, Entity killer, Event evt){
 		for(DropMode mode : DROP_MODES){
 			if(headItem == null) break;
@@ -498,14 +499,20 @@ public final class DropChanceAPI{
 					break;
 				case PLACE_BY_KILLER:
 				case PLACE_BY_VICTIM:
-				case PLACE:
+				case PLACE: {
 					Block headBlock = EvUtils.getClosestBlock(entity.getLocation(), 5, b -> headOverwriteBlocks.contains(b.getType())).getBlock();
 					BlockState state = headBlock.getState();
 					state.setType(headItem.getType());
 					Vector facingVector = entity.getLocation().getDirection(); facingVector.setY(0);  // loc.setPitch(0F)
-					Rotatable data = (Rotatable)headBlock.getBlockData();
-					data.setRotation(JunkUtils.getClosestBlockFace(facingVector, possibleHeadRotations).getOppositeFace());
-					state.setBlockData(data);
+					BlockFace blockRotation = JunkUtils.getClosestBlockFace(facingVector, possibleHeadRotations).getOppositeFace();
+					try{
+						Rotatable data = (Rotatable)headBlock.getBlockData();
+						data.setRotation(blockRotation);
+						state.setBlockData(data);
+					}
+					catch(ClassCastException ex){ // Work-around for really dumb Spigot 1.21 change (BlockData for skulls no longer Rotatable)
+						((Skull)state).setRotation(blockRotation);
+					}
 					if(headItem.getType() == Material.PLAYER_HEAD){
 						HeadUtils.setGameProfile((Skull)state, HeadUtils.getGameProfile((SkullMeta)headItem.getItemMeta()));
 					}
@@ -530,6 +537,7 @@ public final class DropChanceAPI{
 					state.update(/*force=*/true);
 					headItem = null;
 					break;
+				}
 				case GIVE:
 					headItem = JunkUtils.giveItemToEntity(killer, headItem);
 					break;
