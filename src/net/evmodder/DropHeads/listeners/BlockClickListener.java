@@ -6,6 +6,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Skull;
 import org.bukkit.configuration.Configuration;
@@ -14,7 +15,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.Event.Result;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -206,6 +209,16 @@ public class BlockClickListener implements Listener{
 					newHeadItem = pl.getAPI().getHead(EntityType.IRON_GOLEM, textureKey.replace("|LOW_CRACKINESS", "|FULL_HEALTH"));
 				}
 				if(newHeadItem != null){
+					// Check build perms
+					BlockPlaceEvent testPermsEvent = new BlockPlaceEvent(evt.getClickedBlock(), skull,
+							evt.getClickedBlock().getRelative(BlockFace.DOWN), evt.getPlayer().getInventory().getItemInMainHand(),
+							evt.getPlayer(), /*canBuild=*/true, EquipmentSlot.HAND);
+					pl.getServer().getPluginManager().callEvent(testPermsEvent);
+					if(testPermsEvent.isCancelled()){
+						pl.getLogger().fine("Iron golem head repair failed due to block place permissions for player: "+evt.getPlayer().getName());
+						return;
+					}
+
 					HeadUtils.setGameProfile(skull, HeadUtils.getGameProfile((SkullMeta)newHeadItem.getItemMeta()));
 					skull.update(/*force=*/true);
 					if(evt.getPlayer().getGameMode() != GameMode.CREATIVE){
