@@ -63,7 +63,7 @@ public final class DropHeads extends EvPlugin{
 		if(config.getBoolean("update-plugin", false)){
 			new Updater(/*plugin=*/this, /*id=*/274151, getFile(), Updater.UpdateType.DEFAULT, /*announce=*/true);
 		}
-		if(config.getBoolean("bstats-enabled", true) && !config.getBoolean("new")){
+		if(config.getBoolean("bstats-enabled", false) && !config.getBoolean("new")){
 //			MetricsLite metrics =
 					new MetricsLite(this, /*bStats id=*/20140);
 //			metrics.addCustomChart(new MetricsLite.SimplePie("player_heads_only", ()->""+config.getBoolean("player-heads-only", false)));
@@ -82,7 +82,8 @@ public final class DropHeads extends EvPlugin{
 		final NoteblockMode m = config.isBoolean("noteblock-mob-sounds")
 				? (config.getBoolean("noteblock-mob-sounds") ? NoteblockMode.LISTENER : NoteblockMode.OFF)
 				: JunkUtils.parseEnumOrDefault(config.getString("noteblock-mob-sounds", "OFF"), NoteblockMode.OFF);
-		api = new InternalAPI(m);
+		final boolean CRACKED_IRON_GOLEMS_ENABLED = config.getBoolean("cracked-iron-golem-heads", false);;
+		api = new InternalAPI(m, CRACKED_IRON_GOLEMS_ENABLED);
 		final boolean GLOBAL_PLAYER_BEHEAD_MSG = config.getString("behead-announcement.player",
 				config.getString("behead-announcement.default", "GLOBAL")).toUpperCase().equals("GLOBAL");
 		final boolean WANT_TO_REPLACE_PLAYER_DEATH_MSG = config.getBoolean("behead-announcement-replaces-player-death-message",
@@ -110,7 +111,7 @@ public final class DropHeads extends EvPlugin{
 		if(config.getBoolean("refresh-textures", false)){
 			getServer().getPluginManager().registerEvents(new ItemDropListener(), this);
 		}
-		if(config.getBoolean("head-click-listener", true) || config.getBoolean("cracked-iron-golem-heads", false)){
+		if(config.getBoolean("head-click-listener", true) || CRACKED_IRON_GOLEMS_ENABLED){
 			getServer().getPluginManager().registerEvents(new BlockClickListener(api.translationsFile), this);
 		}
 		if(config.getBoolean("save-custom-lore", true)){

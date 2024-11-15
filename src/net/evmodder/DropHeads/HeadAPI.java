@@ -156,7 +156,7 @@ public class HeadAPI{
 		}
 	}
 
-	HeadAPI(NoteblockMode m){
+	HeadAPI(final NoteblockMode m, final boolean CRACKED_IRON_GOLEMS_ENABLED){
 		textures = new TreeMap<String, String>();
 		pl = DropHeads.getPlugin();
 		GRUMM_ENABLED = pl.getConfig().getBoolean("drop-grumm-heads", false);
@@ -165,7 +165,7 @@ public class HeadAPI{
 		SADDLES_ENABLED = pl.getConfig().getBoolean("drop-saddled-heads", true);
 		HOLLOW_SKULLS_ENABLED = pl.getConfig().getBoolean("hollow-skeletal-skulls", false);
 		TRANSPARENT_SLIME_ENABLED = pl.getConfig().getBoolean("transparent-slime-heads", false);
-		CRACKED_IRON_GOLEMS_ENABLED = pl.getConfig().getBoolean("cracked-iron-golem-heads", false);
+		this.CRACKED_IRON_GOLEMS_ENABLED = CRACKED_IRON_GOLEMS_ENABLED;
 		USE_PRE_JAPPA = pl.getConfig().getBoolean("use-legacy-head-textures", false) || Bukkit.getBukkitVersion().compareTo("1.14") < 0; // v<1.14
 		USE_OLD_VEX = pl.getConfig().getBoolean("use-1.19.2-vex-head-textures", false) || Bukkit.getBukkitVersion().compareTo("1.19.3") < 0; // v<1.19.3
 		USE_OLD_BAT = pl.getConfig().getBoolean("use-1.20.2-bat-head-textures", false) || Bukkit.getBukkitVersion().compareTo("1.20.3") < 0; // v<1.20.3

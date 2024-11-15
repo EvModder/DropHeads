@@ -255,7 +255,7 @@ public class BlockClickListener implements Listener{
 					data.player != null && data.player.getName() != null ? data.player.getName() :
 					data.profileName != null ? data.profileName.toPlainText() : "<n/a>"
 				);
-		final String aOrAn = isVowel(englishName.charAt(0)) ? "an" : "a"; // Yes, an imperfect solution, I know. :/
+		final String aOrAn = !englishName.isEmpty() && isVowel(englishName.charAt(0)) ? "an" : "a"; // Yes, an imperfect solution, I know. :/
 
 		final ListComponent blob = TellrawUtils.convertHexColorsToComponentsWithReset(HEAD_DISPLAY);
 		blob.replaceRawTextWithComponent("${TYPE}", headTypeName);//these 3 are aliases of eachother

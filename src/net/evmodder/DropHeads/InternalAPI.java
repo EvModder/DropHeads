@@ -13,7 +13,7 @@ import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
  * WARNING: Functions here are highly subject to change and should not be used by other plugins
  */
 public final class InternalAPI extends HeadAPI{
-	InternalAPI(NoteblockMode m){super(m);}
+	InternalAPI(NoteblockMode m, boolean crackedIronGolemHeads){super(m, crackedIronGolemHeads);}
 
 	// Loads config.getString(key), replacing '${abc-xyz}' with config.getString('abc-xyz')
 	/** <strong>DO NOT USE:</strong> This function will likely disappear in a future release
