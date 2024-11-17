@@ -244,6 +244,9 @@ replace-heads:
 #  'WOLF': 'WOLF|PALE'
 #  'WOLF|GRUMM': 'WOLF|PALE|GRUMM'
 
+# Forcibly assign a DropHeads mob type (id) for heads with a matching texture
+assign-dropheads-keys-to-recognized-textures: false
+
 # Whether to send usage statistics to bStats
 bstats-enabled: true
 

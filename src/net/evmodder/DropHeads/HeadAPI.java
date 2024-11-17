@@ -19,6 +19,7 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
@@ -66,6 +67,7 @@ public class HeadAPI{
 	private final boolean HOLLOW_SKULLS_ENABLED, TRANSPARENT_SLIME_ENABLED, CRACKED_IRON_GOLEMS_ENABLED, USE_PRE_JAPPA, USE_OLD_VEX, USE_OLD_BAT;
 	private final boolean LOCK_PLAYER_SKINS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_VANILLA_HEADS, USE_TRANSLATE_FALLBACKS;
 	private final boolean ASYNC_PROFILE_REQUESTS;
+	private final boolean ASSIGN_KEY_TO_MATCHING_HEADS;
 	private final String UNKNOWN_TEXTURE_CODE;
 	private final TranslationComponent LOCAL_HEAD, LOCAL_SKULL, LOCAL_TOE;
 	private final HashMap<EntityType, /*headNameFormat=*/String> headNameFormats;
@@ -74,7 +76,8 @@ public class HeadAPI{
 	private final TreeMap<String, String> textures; // Key="ENTITY_NAME|DATA", Value="eyJ0ZXh0dXJl..."
 	private final HashMap<String, TranslationComponent> entitySubtypeNames;
 	private final HashMap</*textureKey=*/String, Sound> nbSounds;
-	private final HashMap<String, String> replaceHeadsFromTo; // key & value are textureKeys
+	// Key & value are textureKeys, EXCEPT when ASSIGN_KEY_TO_MATCHING_HEADS=true, in which case key can be either textureKey or Base64 code
+	private final HashMap<String, String> replaceHeadsFromTo;
 	private final Material PIGLIN_HEAD_TYPE;
 	private final static String TEXTURE_DL_URL = "https://raw.githubusercontent.com/EvModder/DropHeads/master/extra-textures/";
 	private final static String DH_TEXTURE_KEY = "dh_key";
@@ -335,11 +338,22 @@ public class HeadAPI{
 		if(pl.getConfig().getBoolean("simple-mob-heads-only", false)){
 			ArrayList<String> allKeys = new ArrayList<>(textures.keySet());
 			for(String key : allKeys) if(key.indexOf('|') != -1) textures.remove(key);
+			if(GRUMM_ENABLED || SIDEWAYS_SHULKERS_ENABLED || COLORED_COLLARS_ENABLED || SADDLES_ENABLED || CRACKED_IRON_GOLEMS_ENABLED){
+				pl.getLogger().warning("The following config settings were enabled but will be overriden by 'simple-mob-heads-only': ["
+						+Stream.of("drop-grumm-heads", "drop-sideways-shulker-heads", "drop-collared-heads", "drop-saddled-heads",
+								"hollow-skeletal-skulls", "transparent-slime-heads", "cracked-iron-golem-heads",
+								"use-legacy-head-textures", "use-1.19.2-vex-head-textures", "use-1.20.2-bat-head-textures")
+						.filter(setting -> pl.getConfig().getBoolean(setting, false)).collect(Collectors.joining(", "))+"]"
+				);
+			}
 		}
 
-		if(m == NoteblockMode.ITEM_META && Bukkit.getBukkitVersion().compareTo("1.19.4") >= 0){
-			nbSounds = JunkUtils.getNoteblockSounds();
+		if(ASSIGN_KEY_TO_MATCHING_HEADS = pl.getConfig().getBoolean("assign-dropheads-keys-to-recognized-textures", false)){
+			// Create a map from every texture code (Base64) to every texture Key. Skip Key->Key mappings
+			textures.forEach((k,v)->{if(!textures.containsKey(v)) replaceHeadsFromTo.put(v, k);});
 		}
+
+		if(m == NoteblockMode.ITEM_META && Bukkit.getBukkitVersion().compareTo("1.19.4") >= 0) nbSounds = JunkUtils.getNoteblockSounds();
 		else nbSounds = null;
 
 		boolean hdbInstalled = true;
@@ -371,6 +385,23 @@ public class HeadAPI{
 	 */
 	public Map<String, String> getTextures(){return Collections.unmodifiableMap(textures);}
 
+	private String trimTextureKeyUntilFoundOrNull(String textureKey){
+		textureKey = replaceHeadsFromTo.getOrDefault(textureKey, textureKey);
+
+		// Try successively smaller texture keys until we find one that exists
+		int keyDataTagIdx=textureKey.lastIndexOf('|');
+		final boolean wasGrumm = textureKey.endsWith("|GRUMM");//TODO: remove this hacky workaround once the 3,584 trop fish are added
+		while(keyDataTagIdx != -1 && !textures.containsKey(textureKey)){
+			/*if(DEBUG_MODE) */pl.getLogger().warning("Unable to find key in 'head-textures.txt': "+textureKey);
+			textureKey = textureKey.substring(0, keyDataTagIdx);
+			textureKey = replaceHeadsFromTo.getOrDefault(textureKey, textureKey);
+			keyDataTagIdx=textureKey.lastIndexOf('|');
+		}
+		if(wasGrumm && textures.containsKey(textureKey+"|GRUMM")) textureKey += "|GRUMM"; else//TODO: remove once the 3,584 trop fish are added
+		if(!textures.containsKey(textureKey)) return null;
+		return textureKey;
+	}
+
 	/** Extract the textureKey from a DropHeads mob head.
 	 * @param profile the GameProfile of a head
 	 * @return a String representing the textureKey or <code>null</code> if not a DH mob head
@@ -381,32 +412,25 @@ public class HeadAPI{
 			final Collection<Property> props = profile.getProperties().get(DH_TEXTURE_KEY);
 			if(props != null && !props.isEmpty()){
 				if(props.size() != 1) pl.getLogger().warning("Multiple texture keys on a single head profile in getTextureKey()");
-				return JunkUtils.getPropertyValue(props.iterator().next());
+				return trimTextureKeyUntilFoundOrNull(JunkUtils.getPropertyValue(props.iterator().next()));
 			}
 		}
-		if(profile.getName() != null){
+		if(profile.getName() != null && !profile.getName().isEmpty()){
 			String name = profile.getName();
 			int startIdx = name.startsWith(JunkUtils.TXT_KEY_PROFILE_NAME_PREFIX) ? JunkUtils.TXT_KEY_PROFILE_NAME_PREFIX.length() : 0;
 			int endIdx = name.indexOf('>');
 			name = name.substring(startIdx, endIdx == -1 ? name.length() : endIdx);
-			if(textureExists(name)) return name;
+			return trimTextureKeyUntilFoundOrNull(name);
+		}
+		if(ASSIGN_KEY_TO_MATCHING_HEADS && profile.getProperties().containsKey("textures")){
+			final Collection<Property> textures = profile.getProperties().get("textures");
+			if(textures != null && textures.size() == 1){
+				final String code = JunkUtils.getPropertyValue(textures.iterator().next());
+				// Will return the associated textureKey if `code` is a known texture value
+				return replaceHeadsFromTo.get(code);
+			}
 		}
 		return null;
-	}
-
-	private String trimTextureKeyUntilFound(String textureKey){
-		textureKey = replaceHeadsFromTo.getOrDefault(textureKey, textureKey);
-
-		// Try successively smaller texture keys until we find one that exists
-		int keyDataTagIdx=textureKey.lastIndexOf('|');
-		final boolean wasGrumm = textureKey.endsWith("|GRUMM");//TODO: remove this hacky workaround once the 3,584 trop fish are added
-		while(keyDataTagIdx != -1 && !textures.containsKey(textureKey)){
-			/*if(DEBUG_MODE) */pl.getLogger().warning("Unable to find key in 'head-textures.txt': "+textureKey);
-			textureKey = textureKey.substring(0, keyDataTagIdx);
-			keyDataTagIdx=textureKey.lastIndexOf('|');
-		}
-		if(wasGrumm && textures.containsKey(textureKey+"|GRUMM")) textureKey += "|GRUMM";//TODO: remove once the 3,584 trop fish are added
-		return textureKey;
 	}
 
 	/** Returns a localized TranslationComponent name for a given HeadType.
@@ -714,12 +738,12 @@ public class HeadAPI{
 	public ItemStack getHead(EntityType type, String textureKey/*, boolean saveTypeInLore, boolean unstackable*/){
 		// If there is extra "texture metadata" (aka '|') we should return the custom skull
 		if(textureKey != null){
-			textureKey = trimTextureKeyUntilFound(textureKey);
-
-			// If this is a custom data head (still contains a '|') or eType is null AND the key exists, use it
-			final boolean hasCustomData = textureKey.replace("|HOLLOW", "").indexOf('|') != -1;
-			if((hasCustomData || type == null || type == EntityType.UNKNOWN || !PREFER_VANILLA_HEADS) && textures.containsKey(textureKey)){
-				return makeHeadFromTexture(textureKey/*, saveTypeInLore*/);
+			textureKey = trimTextureKeyUntilFoundOrNull(textureKey);
+			if(textureKey != null){
+				final boolean hasCustomData = textureKey.replace("|HOLLOW", "").indexOf('|') != -1;
+				if(hasCustomData || type == null || type == EntityType.UNKNOWN || !PREFER_VANILLA_HEADS){
+					return makeHeadFromTexture(textureKey);
+				}
 			}
 		}
 		if(type == null) return null;
@@ -749,26 +773,36 @@ public class HeadAPI{
 	public ItemStack getHead(GameProfile profile/*, boolean saveTypeInLore, boolean unstackable*/){
 		if(profile == null) return null;
 		//-------------------- Handle Entities with textureKey
-		String textureKey = getTextureKey(profile);
+		final String textureKey = getTextureKey(profile);
 		if(textureKey != null){
-			textureKey = trimTextureKeyUntilFound(textureKey);
-			if(textures.containsKey(textureKey)){
-				if(textureKey.equals("PIGLIN") && PIGLIN_HEAD_TYPE != null && PREFER_VANILLA_HEADS) return new ItemStack(PIGLIN_HEAD_TYPE);
-				return makeHeadFromTexture(textureKey);
-			}
+			if(textureKey.equals("PIGLIN") && PIGLIN_HEAD_TYPE != null && PREFER_VANILLA_HEADS) return new ItemStack(PIGLIN_HEAD_TYPE);
+			return makeHeadFromTexture(textureKey);
 		}
-		//-------------------- Handle HeadDatabase
+
+		// Create dummy item for HDB and players section
+		if(MAKE_UNSTACKABLE && !profile.getProperties().containsKey(DH_RANDOM_UUID)){
+			profile.getProperties().put(DH_RANDOM_UUID, new Property(DH_RANDOM_UUID, UUID.randomUUID().toString()));
+		}
 		ItemStack head = HeadUtils.makeCustomHead(profile, /*setOwner=*/!LOCK_PLAYER_SKINS);
+
+		//-------------------- Handle HeadDatabase
 		if(hdbAPI != null){
 			String id = hdbAPI.getItemID(head);
 			if(id != null && hdbAPI.isHead(id)) return hdb_getItemHead_wrapper(id);
 		}
 		//-------------------- Handle players
 		final boolean updateSkin = !profile.getProperties().containsKey("textures") || !LOCK_PLAYER_SKINS;
-		if(profile.getId() != null){
+		final boolean hasProfileID = profile.getId() != null;
+		final boolean hasPlayedBefore, realGameProfile;
+		if(!hasProfileID) hasPlayedBefore = realGameProfile = false;
+		else{
+			hasPlayedBefore = pl.getServer().getOfflinePlayer(profile.getId()).hasPlayedBefore();
 			final String profileName;
 			final GameProfile freshProfile = JunkUtils.getGameProfile(profile.getId().toString(), updateSkin, ASYNC_PROFILE_REQUESTS ? pl : null);
-			if(freshProfile != null){
+			if(freshProfile == null){profileName = profile.getName(); realGameProfile = false;}
+			else{
+				// If we've reached this point, we have confirmed this is a REAL player head
+				realGameProfile = true;
 				if(updateSkin) profile = freshProfile;
 				profileName = freshProfile.getName();
 
@@ -784,42 +818,43 @@ public class HeadAPI{
 					}
 					else{
 						final String minCode0 = minimizeTextureCode(JunkUtils.getPropertyValue(textures.iterator().next()));
+						//TODO: Decide which properties to clear and which to keep
 						profile.getProperties().clear();
+//						profile.getProperties().get("textures").clear();
 						profile.getProperties().put("textures", new Property("textures", minCode0));
-						head = HeadUtils.makeCustomHead(profile, /*setOwner=*/!LOCK_PLAYER_SKINS);
+						head = HeadUtils.makeCustomHead(profile, /*setOwner=*/false);
 					}
 				}
 			}
-			else profileName = profile.getName();
-			final boolean isMHF = profileName != null && profileName.startsWith("MHF_");
-			if(profileName != null){
+			if(profileName != null && !profileName.isEmpty()){
+				final boolean isMHF = profileName.startsWith("MHF_");
 				head = JunkUtils.setDisplayName(head, isMHF
 					? new RawTextComponent(ChatColor.YELLOW+profileName, /*insert=*/null, /*click=*/null, /*hover=*/null,
 							/*color=*/null, /*formats=*/Collections.singletonMap(Format.ITALIC, false))
 					: getFullHeadNameFromKey("PLAYER", /*customName=*/profileName));
+				if(SAVE_TYPE_IN_LORE){
+					head = JunkUtils.setLore(head, new RawTextComponent(
+							(isMHF ? MHF_PREFIX : PLAYER_PREFIX) + profileName,
+							/*insert=*/null, /*click=*/null, /*hover=*/null,
+							/*color=*/"dark_gray", /*formats=*/Collections.singletonMap(Format.ITALIC, false)));
+				}
 			}
-			if(SAVE_TYPE_IN_LORE){
-				head = JunkUtils.setLore(head/*TODO: need to clone for hasPlayedBefore???*/, new RawTextComponent(
-						(isMHF ? MHF_PREFIX : PLAYER_PREFIX) + profileName,
-						/*insert=*/null, /*click=*/null, /*hover=*/null,
-						/*color=*/"dark_gray", /*formats=*/Collections.singletonMap(Format.ITALIC, false)));
-			}
+			if(hasPlayedBefore || realGameProfile) return head;
 		}
 		//-------------------- Handle raw textures
-		else if(profile.getProperties().containsKey("textures")){
+		if(/*!hasPlayedBefore && !realGameProfile && */profile.getProperties().containsKey("textures")){
 			final Collection<Property> textures = profile.getProperties().get("textures");
 			if(textures != null && !textures.isEmpty()){
 				if(textures.size() > 1) pl.getLogger().warning("Multiple textures in getHead() request: "+profile.getName());
 				final String code0 = JunkUtils.getPropertyValue(textures.iterator().next());
-				return getHead(code0.getBytes());
+				// Confirm (as best we can) that this is a DropHeads Custom Texture Head
+				if(UUID.nameUUIDFromBytes(code0.getBytes()).equals(profile.getId()) || profile.getProperties().containsKey(JunkUtils.DH_LORE_KEY)){
+					return getHead(code0.getBytes());
+				}
 			}
 		}
-		if(MAKE_UNSTACKABLE){
-			profile.getProperties().put(DH_RANDOM_UUID, new Property(DH_RANDOM_UUID, UUID.randomUUID().toString()));
-			final SkullMeta meta = (SkullMeta)head.getItemMeta();
-			HeadUtils.setGameProfile(meta, profile);
-			head.setItemMeta(meta);
-		}
+		// Reachable for custom heads created outside DropHeads (and HeadDatabase), or occasionally Player heads when async lookup is enabled
+		/*if(DEBUG_MODE)*/pl.getLogger().fine("Unrecognized head profile [name:"+profile.getName()+",id:"+profile.getId()+"]");
 		return head;
 	}
 
