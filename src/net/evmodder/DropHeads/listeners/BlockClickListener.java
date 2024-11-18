@@ -284,7 +284,10 @@ public class BlockClickListener implements Listener{
 					String url = json.substring(json.indexOf("\"url\":")+7, json.lastIndexOf('"')).trim();
 					blob.replaceRawTextWithComponent("${URL}", new RawTextComponent(url, new TextClickAction(ClickEvent.OPEN_URL, url)));
 				}
-				else pl.getLogger().warning("Invalid Base64 texture on clicked head: "+code0);
+				else{
+					pl.getLogger().warning("Invalid Base64 texture on clicked head: "+code0);
+					blob.replaceRawTextWithComponent("${URL}", new RawTextComponent(code0));
+				}
 			}
 		}
 
