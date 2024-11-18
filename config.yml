@@ -247,6 +247,9 @@ replace-heads:
 # Forcibly assign a DropHeads mob type (id) for heads with a matching texture
 assign-dropheads-keys-to-recognized-textures: false
 
+# Similar to the above setting, but more effect (much higher performance cost)
+assign-dropheads-keys-to-recognized-uuids: false
+
 # Whether to send usage statistics to bStats
 bstats-enabled: true
 

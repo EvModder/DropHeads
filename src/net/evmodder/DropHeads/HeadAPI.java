@@ -67,7 +67,7 @@ public class HeadAPI{
 	private final boolean HOLLOW_SKULLS_ENABLED, TRANSPARENT_SLIME_ENABLED, CRACKED_IRON_GOLEMS_ENABLED, USE_PRE_JAPPA, USE_OLD_VEX, USE_OLD_BAT;
 	private final boolean LOCK_PLAYER_SKINS/*, SAVE_CUSTOM_LORE*/, SAVE_TYPE_IN_LORE, MAKE_UNSTACKABLE, PREFER_VANILLA_HEADS, USE_TRANSLATE_FALLBACKS;
 	private final boolean ASYNC_PROFILE_REQUESTS;
-	private final boolean ASSIGN_KEY_TO_MATCHING_HEADS;
+	private final boolean ASSIGN_KEY_FROM_TEXTURE, ASSIGN_KEY_FROM_NAMED_UUID;
 	private final String UNKNOWN_TEXTURE_CODE;
 	private final TranslationComponent LOCAL_HEAD, LOCAL_SKULL, LOCAL_TOE;
 	private final HashMap<EntityType, /*headNameFormat=*/String> headNameFormats;
@@ -348,10 +348,11 @@ public class HeadAPI{
 			}
 		}
 
-		if(ASSIGN_KEY_TO_MATCHING_HEADS = pl.getConfig().getBoolean("assign-dropheads-keys-to-recognized-textures", false)){
+		if(ASSIGN_KEY_FROM_TEXTURE = pl.getConfig().getBoolean("assign-dropheads-keys-to-recognized-textures", false)){
 			// Create a map from every texture code (Base64) to every texture Key. Skip Key->Key mappings
 			textures.forEach((k,v)->{if(!textures.containsKey(v)) replaceHeadsFromTo.put(v, k);});
 		}
+		ASSIGN_KEY_FROM_NAMED_UUID = ASSIGN_KEY_FROM_TEXTURE && pl.getConfig().getBoolean("assign-dropheads-keys-to-recognized-uuids", false);
 
 		if(m == NoteblockMode.ITEM_META && Bukkit.getBukkitVersion().compareTo("1.19.4") >= 0) nbSounds = JunkUtils.getNoteblockSounds();
 		else nbSounds = null;
@@ -422,12 +423,16 @@ public class HeadAPI{
 			name = name.substring(startIdx, endIdx == -1 ? name.length() : endIdx);
 			return trimTextureKeyUntilFoundOrNull(name);
 		}
-		if(ASSIGN_KEY_TO_MATCHING_HEADS && profile.getProperties().containsKey("textures")){
+		if(ASSIGN_KEY_FROM_TEXTURE && profile.getProperties().containsKey("textures")){
 			final Collection<Property> textures = profile.getProperties().get("textures");
 			if(textures != null && textures.size() == 1){
 				final String code = JunkUtils.getPropertyValue(textures.iterator().next());
 				// Will return the associated textureKey if `code` is a known texture value
 				return replaceHeadsFromTo.get(code);
+			}
+			if(ASSIGN_KEY_FROM_NAMED_UUID && profile.getId() != null){
+				return this.textures.keySet().stream().filter(k -> UUID.nameUUIDFromBytes(k.getBytes()).equals(profile.getId()))
+						.findAny().orElse(null);
 			}
 		}
 		return null;
@@ -458,8 +463,6 @@ public class HeadAPI{
 		switch(/*entity != null ? entity.name() : */dataFlags[0]){
 			case "TROPICAL_FISH":
 				if(dataFlags.length == 2 && !dataFlags[1].equals("GRUMM")){
-					pl.getLogger().info("pccInt for red lipped blenny: "+
-				EntityUtils.intFromPCC(org.bukkit.entity.TropicalFish.Pattern.SNOOPER, DyeColor.GRAY, DyeColor.RED));
 //					String name = TextUtils.capitalizeAndSpacify(dataFlags[1], '_');
 					return new Component[]{new TranslationComponent(
 							"entity.minecraft.tropical_fish.predefined."+EntityUtils.getTropicalFishId(/*common_name=*/dataFlags[1]))};
