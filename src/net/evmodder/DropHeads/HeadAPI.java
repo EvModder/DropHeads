@@ -352,7 +352,9 @@ public class HeadAPI{
 			// Create a map from every texture code (Base64) to every texture Key. Skip Key->Key mappings
 			textures.forEach((k,v)->{if(!textures.containsKey(v)) replaceHeadsFromTo.put(v, k);});
 		}
-		ASSIGN_KEY_FROM_NAMED_UUID = ASSIGN_KEY_FROM_TEXTURE && pl.getConfig().getBoolean("assign-dropheads-keys-to-recognized-uuids", false);
+		if(ASSIGN_KEY_FROM_NAMED_UUID = pl.getConfig().getBoolean("assign-dropheads-keys-to-recognized-uuids", false)){
+			textures.keySet().forEach(k->replaceHeadsFromTo.put(UUID.nameUUIDFromBytes(k.getBytes()).toString(), k));
+		}
 
 		if(m == NoteblockMode.ITEM_META && Bukkit.getBukkitVersion().compareTo("1.19.4") >= 0) nbSounds = JunkUtils.getNoteblockSounds();
 		else nbSounds = null;
@@ -430,10 +432,10 @@ public class HeadAPI{
 				// Will return the associated textureKey if `code` is a known texture value
 				return replaceHeadsFromTo.get(code);
 			}
-			if(ASSIGN_KEY_FROM_NAMED_UUID && profile.getId() != null){
-				return this.textures.keySet().stream().filter(k -> UUID.nameUUIDFromBytes(k.getBytes()).equals(profile.getId()))
-						.findAny().orElse(null);
-			}
+		}
+		if(ASSIGN_KEY_FROM_NAMED_UUID && profile.getId() != null){
+			final String key = replaceHeadsFromTo.get(profile.getId().toString());
+			if(key != null) return key;
 		}
 		return null;
 	}
