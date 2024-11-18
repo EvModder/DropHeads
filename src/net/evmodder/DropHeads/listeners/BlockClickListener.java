@@ -52,17 +52,17 @@ public class BlockClickListener implements Listener{
 			// That's <a> <Swamp Amorsmith Zombie Villager> <Head>
 			// That's <EvDoc>'s Head
 			HEAD_DISPLAY_PLAYERS = TextUtils.translateAlternateColorCodes('&',
-					translations.getString("head-click-format-players",
-							pl.getConfig().getString("head-click-format-players", "&7[&6DropHeads&7]&f That's ${NAME}'s Head")));
+					translations.getString("head-click-format-players", pl.getConfig().getString("head-click-format-players",
+							"&7[&6DropHeads&7]&f That's ${NAME}'s Head")));
 			HEAD_DISPLAY_MOBS = TextUtils.translateAlternateColorCodes('&',
-					translations.getString("head-click-format-mobs",
-							pl.getConfig().getString("head-click-format-mobs", "&7[&6DropHeads&7]&f That's ${A} ${MOB_TYPE} ${HEAD_TYPE}")));
+					translations.getString("head-click-format-mobs", pl.getConfig().getString("head-click-format-mobs",
+							"&7[&6DropHeads&7]&f That's ${A} ${MOB_SUBTYPES_DESC}${MOB_TYPE}&f ${HEAD_TYPE}")));
 			HEAD_DISPLAY_HDB = TextUtils.translateAlternateColorCodes('&',
-					translations.getString("head-click-format-hdb",
-							pl.getConfig().getString("head-click-format-hdb", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head")));
+					translations.getString("head-click-format-hdb", pl.getConfig().getString("head-click-format-hdb",
+							"&7[&6DropHeads&7]&f That's ${A} ${NAME} Head")));
 			HEAD_DISPLAY_UNKNOWN = TextUtils.translateAlternateColorCodes('&',
-					translations.getString("head-click-format-unknown",
-							pl.getConfig().getString("head-click-format-unknown", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head")));
+					translations.getString("head-click-format-unknown", pl.getConfig().getString("head-click-format-unknown",
+							"&7[&6DropHeads&7]&f Custom Head Texture: ${URL}")));
 			MOB_SUBTYPES_SEPARATOR = translations.getString("mob-subtype-separator", " ");
 			UPDATE_PLAYER_HEADS = pl.getConfig().getBoolean("update-on-skin-change", true);
 			ASYNC_PROFILE_REQUESTS = pl.getConfig().getBoolean("async-offline-profile-requests", true) ||
@@ -154,10 +154,12 @@ public class BlockClickListener implements Listener{
 				GameProfile profile = JunkUtils.getGameProfile(player.getUniqueId().toString(), /*fetchSkin=*/false, ASYNC_PROFILE_REQUESTS ? pl : null);
 				if(player.hasPlayedBefore() || profile != null){
 					headData.player = player;
-					if(player.getName() != null) headData.profileName = new RawTextComponent(player.getName());
-					else if(profile != null && profile.getName() != null) headData.profileName = new RawTextComponent(profile.getName());
-					else if(((Skull)skull).getOwner() != null) headData.profileName = new RawTextComponent(((Skull)skull).getOwner());
-					//else headData.profileName = new RawTextComponent(EntityType.UNKNOWN.name());
+					final String headName;
+					if(player.getName() != null) headName = player.getName();
+					else if(profile != null && profile.getName() != null && !profile.getName().isEmpty()) headName = profile.getName();
+					else if(((Skull)skull).getOwner() != null) headName = ((Skull)skull).getOwner();
+					else headName = null;// = EntityType.UNKNOWN.name();
+					if(headName != null) headData.profileName = new RawTextComponent(headName);
 				}
 			}
 			return headData;
@@ -275,10 +277,14 @@ public class BlockClickListener implements Listener{
 			blob.replaceRawTextWithComponent("${TEXTURE}", new RawTextComponent(code0));
 			blob.replaceRawTextWithComponent("${BASE64}", new RawTextComponent(code0));
 			if(HEAD_DISPLAY.contains("${URL}") && !code0.isEmpty()){
-				String json = new String(Base64.getDecoder().decode(code0))
-						.replace(" ", "").replace("\n", "").replace("\r", "").replace("\t", "");
-				String url = json.substring(json.indexOf("\"url\":")+7, json.lastIndexOf('"')).trim();
-				blob.replaceRawTextWithComponent("${URL}", new RawTextComponent(url, new TextClickAction(ClickEvent.OPEN_URL, url)));
+				String json = null;
+				try{json = new String(Base64.getDecoder().decode(code0));} catch(IllegalArgumentException e){}
+				if(json != null){
+					json = json.replace(" ", "").replace("\n", "").replace("\r", "").replace("\t", "");
+					String url = json.substring(json.indexOf("\"url\":")+7, json.lastIndexOf('"')).trim();
+					blob.replaceRawTextWithComponent("${URL}", new RawTextComponent(url, new TextClickAction(ClickEvent.OPEN_URL, url)));
+				}
+				else pl.getLogger().warning("Invalid Base64 texture on clicked head: "+code0);
 			}
 		}
 
