@@ -4,8 +4,9 @@ author: EvModder
 description: Heads for every mob and player.
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
-#10=otatable cast fallback, check build perms before repairing iron golem heads, 1.20->1.21 head fix, major internal refactoring, legacy migration legacy settings from pre DH 3.9.4, wolf variant fix
-version: 3.10.0
+#9=Reorganized texture file downloads, global click-info cooldown
+#9=Rotatable cast fallback, check build perms before repairing iron golem heads, 1.20->1.21 head fix, major internal refactoring, legacy migration legacy settings from pre DH 3.9.4, wolf variant fix
+version: 3.9.9
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 
