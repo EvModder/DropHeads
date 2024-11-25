@@ -89,7 +89,7 @@ drop-saddled-heads: false
 hollow-skeletal-skulls: false
 
 # Should slimes drop semi-transparent heads, similar to their ingame model?
-# Note: This relies on HD textures, which Mojang might patch
+# Note: This relies on HD textures, which Mojang doesn't always permit
 transparent-slime-heads: false
 
 # Enable plugin auto-updates (checks for new versions and head textures)
@@ -102,11 +102,6 @@ update-textures: true
 
 # Run in debug mode (prints extra information to console)
 debug-messages: false
-
-# Whether players will be able allowed to place heads as blocks
-# unless they are given the 'dropheads.canplacehead' permission
-prevent-head-placement: false
-prevent-head-placement-message: '&7[&6DropHeads&7]&c No permission to place head blocks'
 
 # Shows information about a head when right-clicked by a player
 # Note: The output head-click-info can be configured in translate.yml
