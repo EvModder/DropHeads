@@ -96,7 +96,7 @@ entity-subtype-names:
   toolsmith: "entity.minecraft.villager.toolsmith"          #Villager/ZombieVillager
   weaponsmith: "entity.minecraft.villager.weaponsmith"      #Villager/ZombieVillager
   blue: "color.minecraft.blue"                              #Axolotl/Shulker/Sheep/Parrot
-  cyan: color.minecraft.cyan"                               #Axolotl/Shulker/Sheep/Parrot
+  cyan: "color.minecraft.cyan"                              #Axolotl/Shulker/Sheep/Parrot
   gold: "color.minecraft.yellow"                            #Axolotl
   lucy: "color.minecraft.pink"                              #Axolotl
   wild: "color.minecraft.brown"                             #Axolotl
@@ -175,6 +175,7 @@ commands:
       head-not-found: "&cHead \"%s%s\" not found"
       giveto-not-found: "&cCould not find head recipient: %s"
       invalid-slot: "&cInvalid inventory slot: %s"
+      invalid-amount: "&cInvalid amount: %s"
       slot-unavailable:
         self: "&cYou do not have ${commands.spawnhead.prefixes.slot}%s available"
         target: "&c%s does not have ${commands.spawnhead.prefixes.slot}%s available"
