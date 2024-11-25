@@ -443,6 +443,23 @@ public final class JunkUtils{
 		return item;
 	}
 
+	public final static Entity getTargetEntity(Player looker, int range){
+		Entity closestEntity = null;
+		double closestDistSq = Double.MAX_VALUE;
+		for(Entity entity : looker.getNearbyEntities(range, range, range)){
+			double distSq = entity.getLocation().distanceSquared(looker.getLocation());
+			if(distSq > closestDistSq) continue;
+			Vector toEntity = entity.getBoundingBox().getCenter().subtract(looker.getEyeLocation().toVector());
+			double dot = toEntity.normalize().dot(looker.getEyeLocation().getDirection());
+			if(dot < 0.7D) continue;
+			distSq /= Math.pow(dot, 10); // Makes distSq bigger if player is looking less directly at entity
+			if(distSq > closestDistSq) continue;
+			closestDistSq = distSq;
+			closestEntity = entity;
+		}
+		return closestEntity;
+	}
+
 	public final static BlockFace getClosestBlockFace(Vector vec, BlockFace... blockFaces){
 		if(!vec.isNormalized()) vec = vec.normalize();
 		BlockFace nearestFace = blockFaces[0];

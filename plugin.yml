@@ -5,8 +5,8 @@ description: Heads for every mob and player.
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
 #9=Reorganized texture file downloads, global click-info cooldown
-#9=Rotatable cast fallback, check build perms before repairing iron golem heads, 1.20->1.21 head fix, major internal refactoring, legacy migration legacy settings from pre DH 3.9.4, wolf variant fix
-version: 3.9.9
+#10=creaking, remove prevent-head-placement (now available as addon), /gethead looking at an entity
+version: 3.9.10
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 
@@ -52,10 +52,6 @@ permissions:
     children:
       dropheads.canbehead: true
       # dropheads.alwaysbehead.<entity>: true
-
-  dropheads.canplacehead:
-    description: Permission to place down a head block, if disabled by default in the config
-    default: op
 
   dropheads.clickinfo:
     description: Permission to see info about a head by clicking it

@@ -27,8 +27,9 @@ import net.evmodder.EvLib.Updater;
 
 //TODO:
 // * /dropheads reload
+// * rotate painting heads ('face' = painting)
+// * creaking head obt
 // * improve textures listed at the bottom of head-textures.txt
-// * move textures to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."?
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
 // * un-dye heads (sheep,shulker) with cauldron (gimmick). Note that washing banners only removes pattern, not color
 // * jeb_ sheep head animated phase through colors (gimmick)
@@ -37,6 +38,7 @@ import net.evmodder.EvLib.Updater;
 // * img.shields/io/bukkit/downloads/id ? other badges on GitHub?
 // * mob: prefix for /droprate
 // * create tester tool to call `getHead(entity)` for every supported variant
+// * maybe add another 0 to the threshold for final drop chance vs raw drop chance for deciding to print it in /droprate
 //TEST:
 // * /droprate edit
 // * head-noteblock-sound in ItemMeta
@@ -120,9 +122,6 @@ public final class DropHeads extends EvPlugin{
 		}
 		if(config.getBoolean("fix-creative-nbt-copy", true)){
 			getServer().getPluginManager().registerEvents(new CreativeMiddleClickListener(), this);
-		}
-		if(config.getBoolean("prevent-head-placement", false)){
-			getServer().getPluginManager().registerEvents(new PreventBlockPlaceListener(), this);
 		}
 		//TODO: Wait for Minecraft to support custom-namespaced items in /give
 //		if(config.getBoolean("substitute-dropheads-in-give-command", false)){

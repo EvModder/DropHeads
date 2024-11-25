@@ -16,7 +16,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.util.Vector;
 import net.evmodder.DropHeads.DropChanceAPI;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.InternalAPI;
@@ -116,24 +115,6 @@ public class CommandDropRate extends EvCommand{
 		return null;
 	}
 
-	Entity getTargetEntity(Entity looker, int range){
-		Entity closestEntity = null;
-		double closestDistSq = Double.MAX_VALUE;
-		final double threshold = 10;
-		for(Entity entity : looker.getNearbyEntities(range, range, range)){
-			Vector n = entity.getLocation().toVector().subtract(looker.getLocation().toVector());
-			if(entity.getLocation().getDirection().normalize().crossProduct(n).lengthSquared() < threshold
-					&& n.normalize().dot(looker.getLocation().getDirection().normalize()) >= 0){
-				double distSq = entity.getLocation().distanceSquared(looker.getLocation());
-				if(distSq < closestDistSq){
-					closestDistSq = distSq;
-					closestEntity = entity;
-				}
-			}
-		}
-		return closestEntity;
-	}
-
 	private void sendTellraw(String target, String message){
 		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+target+" "+message);
 	}
@@ -154,7 +135,7 @@ public class CommandDropRate extends EvCommand{
 		Double rawChance = 0D;
 		if(args.length == 0){
 			if(sender instanceof Player){
-				entity = getTargetEntity((Player)sender, /*range=*/10);
+				entity = JunkUtils.getTargetEntity((Player)sender, /*range=*/10);
 			}
 			if(entity == null) return false;
 		}
@@ -313,7 +294,7 @@ public class CommandDropRate extends EvCommand{
 				droprateDetails.addComponent(translate("multipliers.header"));
 				droprateDetails.addComponent(droprateMultipliers);
 			}
-			if(entity != null && rawChance > 0D && Math.abs(finalDropChance-rawChance) > 0.001D){
+			if(entity != null && rawChance > 0D && Math.abs(finalDropChance-rawChance) > 0.0001D){//.01%
 				if(!droprateDetails.isEmpty()) droprateDetails.addComponent("\n");
 				droprateDetails.addComponent(String.format(translate("final-drop-rate"), formatDroprate(finalDropChance*100D)));
 			}

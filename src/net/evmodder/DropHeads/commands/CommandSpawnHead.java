@@ -188,11 +188,13 @@ public class CommandSpawnHead extends EvCommand{
 					.map(s -> prefix+s).collect(Collectors.toList());
 		}
 		else if(GIVETO_PREFIX.equals(prefix)){
-			return Selector.getTabComplete(sender, target).stream().map(s -> prefix+s).collect(Collectors.toList());
+			tabCompletes = Selector.getTabComplete(sender, target);
+			return tabCompletes == null ? Arrays.asList() : tabCompletes.stream().map(s -> prefix+s).collect(Collectors.toList());
 		}
 		else if("@".equals(prefix)){
 			if(!permMobs && !permPlayers) return permSelf ? Arrays.asList("@s") : null;
 			tabCompletes = Selector.getTabComplete(sender, target);
+			if(tabCompletes == null) return Arrays.asList();
 			if(!permMobs) tabCompletes.removeIf(s -> s.startsWith("@e"));
 			if(!permPlayers) tabCompletes.removeIf(s -> s.startsWith("@a") || s.startsWith("@p") || s.startsWith("@r"));
 			if(!permSelf) tabCompletes.removeIf(s -> s.startsWith("@s"));
@@ -350,7 +352,11 @@ public class CommandSpawnHead extends EvCommand{
 	private ParsedArgs parseArgs(CommandSender sender, String[] args){
 		ParsedArgs parsed = new ParsedArgs();
 		for(int i=0; i<args.length; ++i){
-			if(args[i].matches("(?i:"+AMT_PREFIX+")[0-9]+")){
+			if(args[i].matches("(?i:"+AMT_PREFIX+").*")){
+				if(!args[i].matches("(?i:"+AMT_PREFIX+")[0-9]+")){
+					sender.sendMessage(String.format(translate("errors.invalid-amount"), args[i].substring(AMT_PREFIX.length())));
+					return null;
+				}
 				parsed.amount = Integer.parseInt(args[i].substring(AMT_PREFIX.length()));
 				args = (String[])ArrayUtils.remove(args, i);
 				break;
@@ -380,10 +386,20 @@ public class CommandSpawnHead extends EvCommand{
 		}
 		final boolean permGive = sender.hasPermission("dropheads.spawn.give");
 		if(permGive && giveTo == null && args.length > 1){
-			giveTo = args[0];
-			args = Arrays.copyOfRange(args, 1, args.length);
+			// If there are multiple args at this point, likely either the first or the last is a give recipient, and the other 1+ arg(s) is the target
+			if(args[0].indexOf(':') == -1){giveTo = args[0]; args = Arrays.copyOfRange(args, 1, args.length);}
+			else if(args[args.length].indexOf(':') == -1){giveTo = args[args.length-1]; args = Arrays.copyOfRange(args, 0, args.length-1);}
 		}
-		parsed.fullTarget = args.length == 0 ? PLAYER_PREFIX + sender.getName() : String.join("_", args);
+		if(args.length > 0) parsed.fullTarget = String.join("_", args);
+		else{
+			Entity entity = JunkUtils.getTargetEntity((Player)sender, /*range=*/10);
+			if(entity == null && sender instanceof Player) entity = (Player)sender;
+			if(entity == null){
+				sender.sendMessage(String.format(translate("errors.head-not-found"), "", ""));//Only reachable by server console
+				return null;
+			}
+			parsed.fullTarget = entity.getUniqueId().toString();
+		}
 
 		// Get head receipient(s)
 		if(giveTo != null && permGive){

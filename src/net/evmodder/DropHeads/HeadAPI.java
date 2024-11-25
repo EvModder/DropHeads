@@ -141,7 +141,7 @@ public class HeadAPI{
 		}
 		// Sometimes a texture value is just a reference to a different texture key
 		final boolean REPLACE_REDIRECTS = pl.getConfig().getBoolean("replace-redirected-texture-keys", true);
-		Iterator<Entry<String, String>> it = textures.entrySet().iterator();
+		final Iterator<Entry<String, String>> it = textures.entrySet().iterator();
 		while(it.hasNext()){
 			Entry<String, String> e = it.next();
 			String value = e.getValue();
