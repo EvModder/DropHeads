@@ -13,7 +13,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -25,7 +24,7 @@ import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefField;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
 
-public class DeathMessagePacketIntercepter{
+public class DeathMessagePacketIntercepter implements Listener{
 	private final Plugin pl;
 	private final boolean REPLACE_PLAYER_DEATH_MSG, REPLACE_PET_DEATH_MSG;
 	private final HashSet<UUID> unblockedDeathBroadcasts;
@@ -90,13 +89,7 @@ public class DeathMessagePacketIntercepter{
 		toJsonMethod = toJsonMethodTemp;
 		registryAccessObj = registryAccessObjTemp;
 
-		pl.getServer().getPluginManager().registerEvents(new Listener(){
-			@EventHandler public void onJoin(PlayerJoinEvent evt){
-				try{injectPlayer(evt.getPlayer());}
-				catch(Exception e){/*NoSuchElementException (wrapped) happens if they disconnect before login is complete*/}
-			}
-			@EventHandler public void onQuit(PlayerQuitEvent evt){removePlayer(evt.getPlayer());}
-		}, pl);
+		pl.getServer().getPluginManager().registerEvents(this, pl);
 		for(Player p : pl.getServer().getOnlinePlayers()) injectPlayer(p);
 	}
 
@@ -109,87 +102,92 @@ public class DeathMessagePacketIntercepter{
 		);
 	}
 
-	private UUID parseUUIDFromFourIntStrings(String s1, String s2, String s3, String s4){
-		final Integer i1 = Integer.parseInt(s1), i2 = Integer.parseInt(s2), i3 = Integer.parseInt(s3), i4 = Integer.parseInt(s4); 
-		return new UUID((long)i1 << 32 | i2 & 0xFFFFFFFFL, (long)i3 << 32 | i4 & 0xFFFFFFFFL);
-	}
+	private final class CustomPacketHandler extends ChannelDuplexHandler{
+		private final Player player;
+		CustomPacketHandler(Player p){player=p;}
 
-	private void injectPlayer(Player player){
-		PacketUtils.getPlayerChannel(player).pipeline().addBefore("packet_handler", "replace_death_with_behead_msg", new ChannelDuplexHandler(){
-			@Override public void write(ChannelHandlerContext context, Object packet, ChannelPromise promise) throws Exception {
-				if(!outboundChatPacketClazz.isInstance(packet)){ // Not a chat packet
-					super.write(context, packet, promise);
-					return;
-				}
-//				pl.getLogger().info("chat packet:\n"+packet+"\n");
-				final Object chatBaseComp = chatBaseCompField == null ? packet : chatBaseCompField.of(packet).get();
-				if(chatBaseComp == null){ // Chat packet does not have a comp field/method (pre-1.19)
-					super.write(context, packet, promise);
-					return;
-				}
-//				if(chatBaseCompField != null) pl.getLogger().info("chat packet base comp:\n"+chatBaseComp+"\n");
-				final String jsonMsg = (String)(chatBaseCompField != null ?
-					(registryAccessObj != null ? toJsonMethod.call(chatBaseComp, registryAccessObj) : toJsonMethod.call(chatBaseComp)) :
-					getJsonKyori == null ? getChatBaseComp.of(packet).call() : getJsonKyori.of(jsonSerializerKyori).call(getChatBaseComp.of(packet).call())
-				);
-				if(jsonMsg == null){ // Chat comp is not a json object
-					super.write(context, packet, promise);
-					return;
-				}
-//				pl.getLogger().info("chat packet json:\n"+jsonMsg+"\n");
-				if(blockedSpecificMsgs.contains(jsonMsg)){ // Note: This is also used for plaintext death messages sent by DropChanceAPI
-					return;
-				}
-//				pl.getLogger().info("chat packet isn't blocked");
-				if(!jsonMsg.startsWith("{\"translate\":\"death.") || unblockedSpecificDeathMsgs.remove(jsonMsg)){
-					super.write(context, packet, promise);
-					return;
-				}
-//				pl.getLogger().info("detected death msg:\n"+jsonMsg);
-				final UUID uuid; // uuid of entity that died
-				final Matcher matcher2 = uuidPattern2.matcher(jsonMsg);
-				if(matcher2.find()) uuid = parseUUIDFromFourIntStrings(matcher2.group(1), matcher2.group(2), matcher2.group(3), matcher2.group(4));
-				else{
-					final Matcher matcher1 = uuidPattern1.matcher(jsonMsg);
-					if(matcher1.find()) uuid = UUID.fromString(matcher1.group());
-					else{
-						pl.getLogger().warning("Unable to find UUID from death message: "+jsonMsg);
-						pl.getLogger().warning("This is probably caused by another plugin destructively modifying the selector");
-						super.write(context, packet, promise);
-						return;
-					}
-				}
-				if(unblockedDeathBroadcasts.contains(uuid)){
-					super.write(context, packet, promise);
-					return;
-				}
-				new BukkitRunnable(){@Override public void run(){ // server.getEntity(uuid) needs to be called synchronously
-					if(unblockedDeathBroadcasts.contains(uuid)){
-						PacketUtils.sendPacket(player, packet); // If this death msg has been unblocked
-						return;
-					}
-					final Entity victim = pl.getServer().getEntity(uuid);
-					if(victim == null){
-						pl.getLogger().warning("Unable to find death-message entity by UUID: "+uuid);
-						PacketUtils.sendPacket(player, packet);
-						return;
-					}
-					if(!hasDeathMessage(victim)) pl.getLogger().warning("Detected abnormal death message for non-player entity: "+jsonMsg);
+		private UUID parseUUIDFromFourIntStrings(String s1, String s2, String s3, String s4){
+			final Integer i1 = Integer.parseInt(s1), i2 = Integer.parseInt(s2), i3 = Integer.parseInt(s3), i4 = Integer.parseInt(s4);
+			return new UUID((long)i1 << 32 | i2 & 0xFFFFFFFFL, (long)i3 << 32 | i4 & 0xFFFFFFFFL);
+		}
 
-					final boolean shouldReplaceDeathMsg = victim instanceof Player ? REPLACE_PLAYER_DEATH_MSG : REPLACE_PET_DEATH_MSG;
-					if(!shouldReplaceDeathMsg){
-						unblockedSpecificDeathMsgs.add(jsonMsg);
-						PacketUtils.sendPacket(player, packet);
-						return;
-					}
-					new BukkitRunnable(){@Override public void run(){
-						// check again if unblocked 1 tick later
-						if(unblockedDeathBroadcasts.contains(uuid)) PacketUtils.sendPacket(player, packet);
-						else pl.getLogger().fine("blocked death msg for: "+uuid);
-					}}.runTaskLater(pl, 1);
-				}}.runTask(pl);
+		@Override public void write(ChannelHandlerContext context, Object packet, ChannelPromise promise) throws Exception {
+			if(!outboundChatPacketClazz.isInstance(packet)){ // Not a chat packet
+				super.write(context, packet, promise);
+				return;
 			}
-		});
+//			pl.getLogger().info("chat packet:\n"+packet+"\n");
+			final Object chatBaseComp = chatBaseCompField == null ? packet : chatBaseCompField.of(packet).get();
+			if(chatBaseComp == null){ // Chat packet does not have a comp field/method (pre-1.19)
+				super.write(context, packet, promise);
+				return;
+			}
+//			if(chatBaseCompField != null) pl.getLogger().info("chat packet base comp:\n"+chatBaseComp+"\n");
+			final String jsonMsg = (String)(chatBaseCompField != null ?
+				(registryAccessObj != null ? toJsonMethod.call(chatBaseComp, registryAccessObj) : toJsonMethod.call(chatBaseComp)) :
+				getJsonKyori == null ? getChatBaseComp.of(packet).call() : getJsonKyori.of(jsonSerializerKyori).call(getChatBaseComp.of(packet).call())
+			);
+			if(jsonMsg == null){ // Chat comp is not a json object
+				super.write(context, packet, promise);
+				return;
+			}
+//			pl.getLogger().info("chat packet json:\n"+jsonMsg+"\n");
+			if(blockedSpecificMsgs.contains(jsonMsg)){ // Note: This is also used for plaintext death messages sent by DropChanceAPI
+				return;
+			}
+//			pl.getLogger().info("chat packet isn't blocked");
+			if(!jsonMsg.startsWith("{\"translate\":\"death.") || unblockedSpecificDeathMsgs.remove(jsonMsg)){
+				super.write(context, packet, promise);
+				return;
+			}
+//			pl.getLogger().info("detected death msg:\n"+jsonMsg);
+			final UUID uuid; // uuid of entity that died
+			final Matcher matcher2 = uuidPattern2.matcher(jsonMsg);
+			if(matcher2.find()) uuid = parseUUIDFromFourIntStrings(matcher2.group(1), matcher2.group(2), matcher2.group(3), matcher2.group(4));
+			else{
+				final Matcher matcher1 = uuidPattern1.matcher(jsonMsg);
+				if(matcher1.find()) uuid = UUID.fromString(matcher1.group());
+				else{
+					pl.getLogger().warning("Unable to find UUID from death message: "+jsonMsg);
+					pl.getLogger().warning("This is probably caused by another plugin destructively modifying the selector");
+					super.write(context, packet, promise);
+					return;
+				}
+			}
+			if(unblockedDeathBroadcasts.contains(uuid)){
+				super.write(context, packet, promise);
+				return;
+			}
+			// server.getEntity(uuid) needs to be called synchronously
+			pl.getServer().getScheduler().runTask(pl, ()->{
+				if(unblockedDeathBroadcasts.contains(uuid)){
+					PacketUtils.sendPacket(player, packet); // If this death msg has been unblocked
+					return;
+				}
+				final Entity victim = pl.getServer().getEntity(uuid);
+				if(victim == null){
+					pl.getLogger().warning("Unable to find death-message entity by UUID: "+uuid);
+					PacketUtils.sendPacket(player, packet);
+					return;
+				}
+				if(!hasDeathMessage(victim)) pl.getLogger().warning("Detected abnormal death message for non-player entity: "+jsonMsg);
+
+				final boolean shouldReplaceDeathMsg = victim instanceof Player ? REPLACE_PLAYER_DEATH_MSG : REPLACE_PET_DEATH_MSG;
+				if(!shouldReplaceDeathMsg){
+					unblockedSpecificDeathMsgs.add(jsonMsg);
+					PacketUtils.sendPacket(player, packet);
+					return;
+				}
+				pl.getServer().getScheduler().runTaskLater(pl, ()->{
+					// Check again 1gt later to double-ensure not unblocked
+					if(unblockedDeathBroadcasts.contains(uuid)) PacketUtils.sendPacket(player, packet);
+					else pl.getLogger().fine("blocked death msg for: "+uuid);
+				}, 1);
+			});
+		}
+	}
+	private void injectPlayer(Player player){
+		PacketUtils.getPlayerChannel(player).pipeline().addBefore("packet_handler", "replace_death_with_behead_msg", new CustomPacketHandler(player));
 	}
 	private void removePlayer(Player player){
 		final Channel channel = PacketUtils.getPlayerChannel(player);
@@ -199,17 +197,23 @@ public class DeathMessagePacketIntercepter{
 		});
 	}
 
+	@EventHandler private void onJoin(PlayerJoinEvent evt){
+		try{injectPlayer(evt.getPlayer());}
+		catch(Exception e){/*NoSuchElementException (wrapped) happens if they disconnect before login is complete*/}
+	}
+	@EventHandler private void onQuit(PlayerQuitEvent evt){removePlayer(evt.getPlayer());}
+
 	public void unblockDeathMessage(Entity entity){
 		if(hasDeathMessage(entity)){
 //			pl.getLogger().info("unblocked death msg called");
 			unblockedDeathBroadcasts.add(entity.getUniqueId());
-			new BukkitRunnable(){@Override public void run(){unblockedDeathBroadcasts.remove(entity.getUniqueId());}}.runTaskLater(pl, 5);
+			pl.getServer().getScheduler().runTaskLater(pl, ()->unblockedDeathBroadcasts.remove(entity.getUniqueId()), 5);
 		}
 	}
 
 	public void blockSpeficicMessage(String message, long ticksBlockedFor){
 		blockedSpecificMsgs.add(message);
-		new BukkitRunnable(){@Override public void run(){blockedSpecificMsgs.remove(message);}}.runTaskLater(pl, ticksBlockedFor);
+		pl.getServer().getScheduler().runTaskLater(pl, ()->blockedSpecificMsgs.remove(message), ticksBlockedFor);
 	}
 
 	public void unregisterAll(){

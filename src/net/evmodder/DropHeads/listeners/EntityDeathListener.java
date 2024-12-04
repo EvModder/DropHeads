@@ -30,7 +30,6 @@ import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.permissions.Permissible;
 import org.bukkit.plugin.EventExecutor;
-import org.bukkit.scheduler.BukkitRunnable;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.DropHeads.TextureKeyLookup;
@@ -116,7 +115,13 @@ public class EntityDeathListener implements Listener{
 		return killer.getClass().getSimpleName();
 	}
 
-	// Returns true if behead occurred
+	/**
+	 * Determine whether a head should drop in the given conditions, and if so, drop it.
+	 * @param victim The entity that was killed
+	 * @param killer The entity that did the killing
+	 * @param evt The parent EntityDeathEvent that was triggered
+	 * @return True if a behead event occurs
+	 */
 	boolean onEntityDeath(@Nonnull final Entity victim, final Entity killer, final Event evt){
 		Permissible killerPermCheck = killer;
 		if(killer != null){
@@ -138,7 +143,7 @@ public class EntityDeathListener implements Listener{
 					if(explodingChargedCreepers.add(creeperUUID)){
 						if(DEBUG_MODE) pl.getLogger().info("Killed by charged creeper: "+victim.getType());
 						// Free up memory after a tick (optional)
-						new BukkitRunnable(){@Override public void run(){explodingChargedCreepers.remove(creeperUUID);}}.runTaskLater(pl, 1);
+						pl.getServer().getScheduler().runTaskLater(pl, ()->explodingChargedCreepers.remove(creeperUUID), 1);
 						// Do the head drop
 						return pl.getDropChanceAPI().triggerHeadDropEvent(victim, killer, evt, /*weapon=*/null);
 					}

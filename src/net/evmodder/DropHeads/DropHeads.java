@@ -28,6 +28,7 @@ import net.evmodder.EvLib.Updater;
 //TODO:
 // * /dropheads reload
 // * rotate painting heads ('face' = painting)
+// pkillonly,ranged-kills,indirect-kill-threshold,+ config per-mob?
 // * creaking head obt
 // * improve textures listed at the bottom of head-textures.txt
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)

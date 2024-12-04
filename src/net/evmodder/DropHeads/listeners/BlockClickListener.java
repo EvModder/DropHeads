@@ -20,7 +20,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.scheduler.BukkitRunnable;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
@@ -239,7 +238,7 @@ public class BlockClickListener implements Listener{
 			// Note: Unfortunately we need to cancel the click before knowing if they have perms to see the click msg
 			if(infoClickInCooldown){evt.setCancelled(true); return;}
 			infoClickInCooldown = true;
-			new BukkitRunnable(){@Override public void run(){infoClickInCooldown = false;}}.runTaskLater(pl, CLICK_MSG_DELAY_TICKS);
+			pl.getServer().getScheduler().runTaskLater(pl, ()->infoClickInCooldown = false, CLICK_MSG_DELAY_TICKS);
 		}
 
 		final HeadNameData data = getHeadNameData(evt.getClickedBlock().getState());
