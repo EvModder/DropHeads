@@ -80,6 +80,7 @@ public final class DropChanceAPI{
 	private final boolean CROSS_DIMENSIONAL_BROADCAST;
 	private final int LOCAL_RANGE;
 	private final int JSON_LIMIT;
+	private final String TELLRAW_CMD;
 	private final BlockFace[] possibleHeadRotations = new BlockFace[]{
 			BlockFace.NORTH, BlockFace.NORTH_EAST, BlockFace.NORTH_WEST,
 			BlockFace.SOUTH, BlockFace.SOUTH_EAST, BlockFace.SOUTH_WEST,
@@ -158,6 +159,7 @@ public final class DropChanceAPI{
 		weaponCompCache = WEAPON_COMP_CACHE_SIZE > 0 ? new LRUCache<>(WEAPON_COMP_CACHE_SIZE) : null;
 
 		JSON_LIMIT = pl.getConfig().getInt("message-json-limit", 15000);
+		TELLRAW_CMD = pl.getConfig().getString("tellraw-command", "minecraft:tellraw");
 		MSG_BEHEAD = parseStringOrStringList("message-beheaded", "&6${VICTIM}&r was decapitated",
 				pl.getConfig(), pl.getAPI().translationsFile);
 		MSH_BEHEAD_BY = parseStringOrStringList("message-beheaded-by-entity", "${VICTIM} was beheaded by ${KILLER}",
@@ -610,7 +612,7 @@ public final class DropChanceAPI{
 	}
 
 	private void sendTellraw(String target, String message){
-		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+target+" "+message);
+		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), TELLRAW_CMD+" "+target+" "+message);
 	}
 	private void sendBeheadMessage(Player target, Entity victim, Entity killer, Component message, boolean isGlobal, boolean isPet){
 		BeheadMessageEvent event = new BeheadMessageEvent(target, victim, killer, message, isGlobal, isPet);
