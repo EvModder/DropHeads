@@ -18,7 +18,6 @@
  */
 package net.evmodder.DropHeads;
 
-import net.evmodder.DropHeads.JunkUtils.NoteblockMode;
 import net.evmodder.DropHeads.commands.*;
 import net.evmodder.DropHeads.listeners.*;
 import net.evmodder.EvLib.EvPlugin;

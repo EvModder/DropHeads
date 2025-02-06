@@ -59,8 +59,6 @@ public final class JunkUtils{
 	public final static String TXT_KEY_PROFILE_NAME_PREFIX = "dropheads:";//TODO: delete
 	public final static String DH_LORE_KEY = "dh_lore";
 
-	enum NoteblockMode{OFF, FALSE, LISTENER, ITEM_META};
-
 	public final static <E extends Enum<E>> E parseEnumOrDefault(@Nonnull String stringValue, E defaultValue){
 		Class<E> enumClass = defaultValue.getDeclaringClass();
 		stringValue = stringValue.toUpperCase();
@@ -357,9 +355,7 @@ public final class JunkUtils{
 
 	public final static Component getDisplayNameSelectorComponent(Entity entity, boolean fakeSelector){
 		if(fakeSelector || (entity instanceof Player && !((Player)entity).getDisplayName().equals(entity.getName()))){
-			//final String selectorHover = entity.getName()+"\n{gui.entity_tooltip.type}: {entity.minecraft.player}\n"+entity.getUniqueId();
-//			final String selectorClickSuggestText = "/tell "+entity.getName()+" ";
-			final TextClickAction clickAction = entity instanceof Player ? new TextClickAction(ClickEvent.SUGGEST_COMMAND, "/tell "+entity.getName()+" ") : null;
+			TextClickAction clickAction = entity instanceof Player ? new TextClickAction(ClickEvent.SUGGEST_COMMAND, "/tell "+entity.getName()+" ") : null;
 			Component entityName = TellrawUtils.getLocalizedDisplayName(entity, true);
 			ListComponent hoverTextComp = new ListComponent();
 			hoverTextComp.addComponent(entityName);

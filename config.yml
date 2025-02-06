@@ -222,7 +222,7 @@ time-alive-multipliers:
     1w: 3.0
     30w6d11h55m33s: 10.0
 
-# Set drop chance multipliers for custom permission groups
+# Set drop chance multipliers with custom permissions
 custom-droprate-multiplier-permissions:
 #  dropheads.group.droprate2x: 2.0
 #  dropheads.group.droprate150percent: 1.5

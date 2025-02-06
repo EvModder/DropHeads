@@ -42,7 +42,6 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import me.arcaniax.hdb.api.DatabaseLoadEvent;
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
-import net.evmodder.DropHeads.JunkUtils.NoteblockMode;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.extras.EntityUtils;
 import net.evmodder.EvLib.extras.HeadUtils;

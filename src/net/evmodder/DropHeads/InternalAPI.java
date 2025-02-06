@@ -5,7 +5,6 @@ import javax.annotation.Nonnull;
 import org.bukkit.inventory.ItemStack;
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import net.evmodder.EvLib.extras.TextUtils;
-import net.evmodder.DropHeads.JunkUtils.NoteblockMode;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
 import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
 

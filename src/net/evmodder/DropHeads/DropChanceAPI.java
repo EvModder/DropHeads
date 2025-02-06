@@ -5,7 +5,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,11 +14,11 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Statistic;
 import org.bukkit.block.Block;
@@ -66,8 +65,6 @@ import net.evmodder.EvLib.extras.TellrawUtils;
 import net.evmodder.EvLib.extras.TextUtils;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
 import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
-import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
-import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
 
 /** Public API for head drop chance logic loaded from DropHeads configs.
  * Warning: Functions may change or disappear in future releases
@@ -580,12 +577,7 @@ public final class DropChanceAPI{
 	}
 
 	private Component getVictimComponent(Entity entity){
-		//pl.getLogger().info("in getVictimComponent()");
-		if(org.bukkit.Bukkit.getEntity(entity.getUniqueId()) == null){
-			//pl.getLogger().info("getEntity(UUID) is null, using display instead of Selector");
-			Collection<String> names = Arrays.asList(TellrawUtils.getLocalizedDisplayName(entity, /*useDisplayNameInToPlaintext=*/true).toPlainText());
-			return new RawTextComponent(String.join(ChatColor.GRAY+", "+ChatColor.RESET, names));
-		}
+		//Arrays.stream(entities).map(e -> JunkUtils.getDisplayNameSelectorComponent(entity)).collect(Collectors.joining(ChatColor.GRAY+", "+ChatColor.RESET));
 		return JunkUtils.getDisplayNameSelectorComponent(entity, true);
 	}
 	private Component getKillerComponent(Entity killer){
@@ -611,7 +603,7 @@ public final class DropChanceAPI{
 			}
 			return weaponComp;
 		}
-		if(killer != null && killer instanceof Projectile) return new SelectorComponent(killer.getUniqueId());
+		if(killer != null && killer instanceof Projectile) return JunkUtils.getDisplayNameSelectorComponent(killer, true);
 		return null;
 	}
 
@@ -636,7 +628,6 @@ public final class DropChanceAPI{
 				message.replaceRawTextWithComponent("${ITEM}", itemComp);
 			}
 			else message.addComponent(MSH_BEHEAD_BY[rand.nextInt(MSH_BEHEAD_BY.length)]);
-			//if(USE_PLAYER_DISPLAYNAMES) message.replaceRawTextWithComponent("${KILLER}", ...);
 			message.replaceRawTextWithComponent("${KILLER}", killerComp);
 		}
 		else message.addComponent(MSG_BEHEAD[rand.nextInt(MSG_BEHEAD.length)]);
@@ -752,10 +743,10 @@ public final class DropChanceAPI{
 	 * @param killer The entity which did the killing, or null
 	 * @param evt The <code>Entity*Event</code> from which this function is being called
 	 * @param weapon The weapon used to kill, or null
-	 * @param beheadMessage A custom behead message that will get broadcasted
-	 * @return Whether the head drop was completed successfully
+	 * @param getBeheadMessage A supplier for a the behead message that will be broadcasted
+	 * @return Whether the head drop was successful
 	 */
-	public boolean triggerHeadDropEvent(Entity entity, Entity killer, Event evt, ItemStack weapon, Component beheadMessage){
+	public boolean triggerHeadDropEvent(Entity entity, Entity killer, Event evt, ItemStack weapon, Supplier<Component> getBeheadMessage){
 //		pl.getLogger().info("trigger head drop called");
 		ItemStack headItem = pl.getAPI().getHead(entity);
 		EntityBeheadEvent beheadEvent = new EntityBeheadEvent(entity, killer, evt, headItem);
@@ -767,10 +758,8 @@ public final class DropChanceAPI{
 
 		dropHeadItem(headItem, entity, killer, evt);
 		if(weapon != null && weapon.getType() == Material.AIR) weapon = null;
-		announceHeadDrop(beheadMessage, entity, killer, evt);
+		announceHeadDrop(getBeheadMessage.get(), entity, killer, evt);
 		if(entity instanceof Player ? LOG_PLAYER_BEHEAD : LOG_MOB_BEHEAD) logHeadDrop(entity, killer, weapon);
-//		if(entity instanceof Player) ++numPlayerBeheads; else ++numMobBeheads;
-//		pl.getLogger().info("trigger head drop success");
 		return true;
 	}
 	/** Attempt to drop a head item for an Entity with the regular behead message.
@@ -781,6 +770,6 @@ public final class DropChanceAPI{
 	 * @return Whether the head drop was completed successfully
 	 */
 	public boolean triggerHeadDropEvent(Entity entity, Entity killer, Event evt, ItemStack weapon){
-		return triggerHeadDropEvent(entity, killer, evt, weapon, /*TODO: lazy eval of getBeheadMessage?*/getBeheadMessage(entity, killer, weapon));
+		return triggerHeadDropEvent(entity, killer, evt, weapon, ()->getBeheadMessage(entity, killer, weapon));
 	}
 }
