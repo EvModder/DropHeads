@@ -51,6 +51,7 @@ import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.TextClickAction;
 import net.evmodder.EvLib.extras.TellrawUtils.TextHoverAction;
+import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
 
 // A trashy place to dump stuff that I should probably move to EvLib after ensure cross-version safety
 public final class JunkUtils{
@@ -342,27 +343,7 @@ public final class JunkUtils{
 		}
 	}
 
-	public final static Component getDisplayNameSelectorComponent(Entity entity){
-		if(entity instanceof Player && !((Player)entity).getDisplayName().equals(entity.getName())){
-			final String selectorHoverText = entity.getName()+"\nType: Player\n"+entity.getUniqueId();
-			final String selectorClickSuggestText = "/tell "+entity.getName()+" ";
-			return new ListComponent(
-					new RawTextComponent(
-						/*text=*/"", /*insert=*/null,
-						new TextClickAction(ClickEvent.SUGGEST_COMMAND, selectorClickSuggestText),
-						new TextHoverAction(HoverEvent.SHOW_TEXT, selectorHoverText),
-						/*color=*/null, /*formats=*/null
-					),
-					TellrawUtils.convertHexColorsToComponentsWithReset(((Player)entity).getDisplayName())
-			);
-		}
-		else{
-			return new SelectorComponent(entity.getUniqueId());
-		}
-	}
-
-// not currently used
-//	// Similar as above, but for Entity instead of ItemStack
+	// Similar as above, but for Entity instead of ItemStack
 //	final static RefClass craftEntityClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftEntity");
 //	final static RefMethod entityGetHandleMethod = craftEntityClazz.getMethod("getHandle");
 //	final static RefClass nmsEntityClazz = ReflectionUtils.getRefClass("{nms}.Entity", "{nm}.world.entity.Entity");
@@ -373,6 +354,34 @@ public final class JunkUtils{
 //		Object entityAsJsonObject = saveNmsEntityMethod.of(nmsEntityObj).call(nmsNbtTagCompoundObj);
 //		return entityAsJsonObject.toString();
 //	}
+
+	public final static Component getDisplayNameSelectorComponent(Entity entity, boolean fakeSelector){
+		if(fakeSelector || (entity instanceof Player && !((Player)entity).getDisplayName().equals(entity.getName()))){
+			//final String selectorHover = entity.getName()+"\n{gui.entity_tooltip.type}: {entity.minecraft.player}\n"+entity.getUniqueId();
+//			final String selectorClickSuggestText = "/tell "+entity.getName()+" ";
+			final TextClickAction clickAction = entity instanceof Player ? new TextClickAction(ClickEvent.SUGGEST_COMMAND, "/tell "+entity.getName()+" ") : null;
+			Component entityName = TellrawUtils.getLocalizedDisplayName(entity, true);
+			ListComponent hoverTextComp = new ListComponent();
+			hoverTextComp.addComponent(entityName);
+			hoverTextComp.addComponent("\n");
+			hoverTextComp.addComponent(new TranslationComponent("gui.entity_tooltip.type", new Component[]{TellrawUtils.getTypeName(entity.getType())}));
+			hoverTextComp.addComponent("\n");
+			hoverTextComp.addComponent(entity.getUniqueId().toString());
+			return new ListComponent(
+					new RawTextComponent(
+						/*text=*/"", /*insert=*/null,
+						clickAction,
+						new TextHoverAction(HoverEvent.SHOW_TEXT, hoverTextComp),
+//						new TextHoverAction(HoverEvent.SHOW_ENTITY, convertEntityToJson(entity),
+						/*color=*/null, /*formats=*/null
+					),
+					entity instanceof Player ? TellrawUtils.convertHexColorsToComponentsWithReset(((Player)entity).getDisplayName()) : entityName
+			);
+		}
+		else{
+			return new SelectorComponent(entity.getUniqueId());
+		}
+	}
 
 	public final static boolean setIfEmpty(@Nonnull EntityEquipment equipment, @Nonnull ItemStack item, @Nonnull EquipmentSlot slot){
 		switch(slot){

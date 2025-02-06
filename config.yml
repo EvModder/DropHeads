@@ -266,4 +266,3 @@ weapon-tellraw-component-cache-size: 5
 async-offline-profile-requests: false
 head-click-enable-profile-requests: true
 spawnhead-command-entity-select-limit: 100
-tellraw-command: 'minecraft:tellraw'

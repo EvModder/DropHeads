@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,6 +19,7 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Statistic;
 import org.bukkit.block.Block;
@@ -49,16 +51,22 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.BlockProjectileSource;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import net.evmodder.DropHeads.events.BeheadMessageEvent;
 import net.evmodder.DropHeads.events.EntityBeheadEvent;
 import net.evmodder.DropHeads.listeners.DeathMessagePacketIntercepter;
 import net.evmodder.EvLib.EvUtils;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.extras.HeadUtils;
+import net.evmodder.EvLib.extras.ReflectionUtils;
+import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
+import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
 import net.evmodder.EvLib.extras.TellrawUtils;
 import net.evmodder.EvLib.extras.TextUtils;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
 import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
+import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
 
 /** Public API for head drop chance logic loaded from DropHeads configs.
@@ -80,7 +88,6 @@ public final class DropChanceAPI{
 	private final boolean CROSS_DIMENSIONAL_BROADCAST;
 	private final int LOCAL_RANGE;
 	private final int JSON_LIMIT;
-	private final String TELLRAW_CMD;
 	private final BlockFace[] possibleHeadRotations = new BlockFace[]{
 			BlockFace.NORTH, BlockFace.NORTH_EAST, BlockFace.NORTH_WEST,
 			BlockFace.SOUTH, BlockFace.SOUTH_EAST, BlockFace.SOUTH_WEST,
@@ -103,6 +110,10 @@ public final class DropChanceAPI{
 	private final HashMap<EntityType, TreeMap<Integer, Double>> timeAliveMults;// Note: Bukkit's e.getTicksLived() returns an int.
 	private final LRUCache<ItemStack, Component> weaponCompCache;
 	private final int WEAPON_COMP_CACHE_SIZE;
+
+//	private final Class<?> classJSONComponentSerializer, classAudience;
+//	private final Method methodDeserialize, methodGson, methodSendMessage;
+	private final RefMethod methodDeserialize, methodGson, methodSendMessage;
 
 //	int numMobBeheads, numPlayerBeheads;
 
@@ -159,7 +170,6 @@ public final class DropChanceAPI{
 		weaponCompCache = WEAPON_COMP_CACHE_SIZE > 0 ? new LRUCache<>(WEAPON_COMP_CACHE_SIZE) : null;
 
 		JSON_LIMIT = pl.getConfig().getInt("message-json-limit", 15000);
-		TELLRAW_CMD = pl.getConfig().getString("tellraw-command", "minecraft:tellraw");
 		MSG_BEHEAD = parseStringOrStringList("message-beheaded", "&6${VICTIM}&r was decapitated",
 				pl.getConfig(), pl.getAPI().translationsFile);
 		MSH_BEHEAD_BY = parseStringOrStringList("message-beheaded-by-entity", "${VICTIM} was beheaded by ${KILLER}",
@@ -361,6 +371,24 @@ public final class DropChanceAPI{
 			//canBeheadPerm.recalculatePermissibles();
 		}
 		catch(IllegalArgumentException ex){/*The permissions are already defined; perhaps this is just a plugin or server reload*/}
+
+		RefMethod tempGson, tempDeserialize, tempSendMessage;
+		try{
+			RefClass classGson = ReflectionUtils.getRefClass("net.kyori.adventure.text.serializer.gson.GsonComponentSerializer");
+			RefClass classAudience = ReflectionUtils.getRefClass("net.kyori.adventure.audience.Audience");
+			RefClass classComponent = ReflectionUtils.getRefClass("net.kyori.adventure.text.Component");
+			tempGson = classGson.findMethodByName("gson");
+			tempDeserialize = classGson.findMethodByReturnType(classComponent);
+//			tempDeserialize = classGson.getMethod("deserializeFromTree​", JsonElement.class);
+			tempSendMessage = classAudience.getMethod("sendMessage", classComponent);
+		}
+		catch(RuntimeException e){
+			e.printStackTrace();
+			tempGson = tempDeserialize = tempSendMessage = null;
+		}
+		methodGson = tempGson;
+		methodDeserialize = tempDeserialize;
+		methodSendMessage = tempSendMessage;
 	}
 
 	/** Get the set of weapons that are allowed to cause a head drop; will be <code>null</code> if no specific weapon(s) are required.
@@ -552,20 +580,26 @@ public final class DropChanceAPI{
 	}
 
 	private Component getVictimComponent(Entity entity){
-		return JunkUtils.getDisplayNameSelectorComponent(entity);
+		//pl.getLogger().info("in getVictimComponent()");
+		if(org.bukkit.Bukkit.getEntity(entity.getUniqueId()) == null){
+			//pl.getLogger().info("getEntity(UUID) is null, using display instead of Selector");
+			Collection<String> names = Arrays.asList(TellrawUtils.getLocalizedDisplayName(entity, /*useDisplayNameInToPlaintext=*/true).toPlainText());
+			return new RawTextComponent(String.join(ChatColor.GRAY+", "+ChatColor.RESET, names));
+		}
+		return JunkUtils.getDisplayNameSelectorComponent(entity, true);
 	}
 	private Component getKillerComponent(Entity killer){
 		if(killer == null) return null;
 		if(killer instanceof Projectile){
 			ProjectileSource shooter = ((Projectile)killer).getShooter();
-			if(shooter instanceof Entity) return JunkUtils.getDisplayNameSelectorComponent((Entity)shooter);
+			if(shooter instanceof Entity) return JunkUtils.getDisplayNameSelectorComponent((Entity)shooter, false);
 			else if(shooter instanceof BlockProjectileSource){
 				return TellrawUtils.getLocalizedDisplayName(((BlockProjectileSource)shooter).getBlock().getState());
 			}
 			// In theory should never happen:
 			else pl.getLogger().warning("Unrecognized projectile source: "+shooter.getClass().getName());
 		}
-		return JunkUtils.getDisplayNameSelectorComponent(killer);
+		return JunkUtils.getDisplayNameSelectorComponent(killer, false);
 	}
 	private Component getWeaponComponent(Entity killer, ItemStack weapon){
 		if(weapon != null && weapon.getType() != Material.AIR){
@@ -611,13 +645,19 @@ public final class DropChanceAPI{
 		return message;
 	}
 
-	private void sendTellraw(String target, String message){
-		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), TELLRAW_CMD+" "+target+" "+message);
+	private void sendComponent(Player target, Component component){
+		if(methodSendMessage == null){
+			pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+target+" "+component.toString());
+		}
+		else try{
+			methodSendMessage.of(target).call(methodDeserialize.of(methodGson.call()).call(new JsonParser().parse(component.toString())));
+		}
+		catch(JsonSyntaxException e){e.printStackTrace();}
 	}
 	private void sendBeheadMessage(Player target, Entity victim, Entity killer, Component message, boolean isGlobal, boolean isPet){
 		BeheadMessageEvent event = new BeheadMessageEvent(target, victim, killer, message, isGlobal, isPet);
 		pl.getServer().getPluginManager().callEvent(event);
-		if(!event.isCancelled()) sendTellraw(target.getName(), event.getMessage().toString());
+		if(!event.isCancelled()) sendComponent(target, event.getMessage());
 		else if(DEBUG_MODE) pl.getLogger().info("BeheadMessageEvent was cancelled");
 	}
 	/** Send a head drop announcement message for an entity with recipients are based on:<br>

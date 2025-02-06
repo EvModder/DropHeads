@@ -563,7 +563,7 @@ public class HeadAPI{
 		}
 		ArrayList<Component> components = new ArrayList<>();//[dataFlags.length];
 		try{
-			components.add(TellrawUtils.getBestGuessLocalizedDisplayName(EntityType.valueOf(dataFlags[0])));
+			components.add(TellrawUtils.getTypeName(EntityType.valueOf(dataFlags[0])));
 		}
 		catch(IllegalArgumentException ex){ // Unable to parse EntityType
 			if(dataFlags[0].indexOf('.') != -1) components.add(new TranslationComponent(dataFlags[0]));
