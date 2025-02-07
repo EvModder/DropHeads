@@ -69,6 +69,7 @@ public class EntityDeathListener implements Listener{
 			pl.getServer().getPluginManager().registerEvent(PlayerDeathEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
 		}
 		else{
+			@SuppressWarnings("deprecation")
 			final Map<EntityType, Double> mobChances = pl.getDropChanceAPI().getRawDropChances();
 			final double DEFAULT_CHANCE = pl.getDropChanceAPI().getDefaultDropChance();
 

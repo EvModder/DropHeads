@@ -14,6 +14,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
@@ -52,6 +53,9 @@ import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import net.evmodder.DropHeads.datatypes.AnnounceMode;
+import net.evmodder.DropHeads.datatypes.DropMode;
+import net.evmodder.DropHeads.datatypes.EntitySettings;
 import net.evmodder.DropHeads.events.BeheadMessageEvent;
 import net.evmodder.DropHeads.events.EntityBeheadEvent;
 import net.evmodder.DropHeads.listeners.DeathMessagePacketIntercepter;
@@ -70,9 +74,7 @@ import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
  * Warning: Functions may change or disappear in future releases
  */
 public final class DropChanceAPI{
-	private enum AnnounceMode {GLOBAL, LOCAL, DIRECT, OFF};
 	private final AnnounceMode DEFAULT_ANNOUNCE, SILENT_ANNOUNCE;
-	private enum DropMode {EVENT, SPAWN, PLACE, PLACE_BY_KILLER, PLACE_BY_VICTIM, GIVE};
 	private final ArrayList<DropMode> DROP_MODES; // TODO: per-mob drop mode?
 
 	private final boolean PLAYER_HEADS_ONLY;
@@ -97,14 +99,11 @@ public final class DropChanceAPI{
 	private final Random rand;
 	private final HashSet<Material> headOverwriteBlocks;
 	private final Set<Material> mustUseTools; // TODO: per-mob must-use-tools?
-	private final Map<EntityType, Double> mobChances;
-	private final double DEFAULT_CHANCE;
-	private final HashMap<EntityType, HashMap<String, Double>> subtypeMobChances;
+	private final EntitySettings<Double> dropChances;
 	private final HashMap<EntityType, AnnounceMode> mobAnnounceModes;
 	private final HashMap<String, Double> permissionBasedMults; // TODO: per-mob perm mults?
 	private final HashMap<Material, Double> weaponMults; // TODO: per-mob weapon mults?
-	private final TreeMap<Integer, Double> DEFAULT_TIME_ALIVE_MULTS;
-	private final HashMap<EntityType, TreeMap<Integer, Double>> timeAliveMults;// Note: Bukkit's e.getTicksLived() returns an int.
+	private final EntitySettings<TreeMap<Integer, Double>> timeAliveMults;// Note: Bukkit's e.getTicksLived() returns an int.
 	private final LRUCache<ItemStack, Component> weaponCompCache;
 	private final int WEAPON_COMP_CACHE_SIZE;
 
@@ -117,7 +116,7 @@ public final class DropChanceAPI{
 	/** Get the default head drop chance for an entity when a drop chance chance is specified in the config.
 	 * @return The default drop chance [0, 1]
 	 */
-	public double getDefaultDropChance(){return DEFAULT_CHANCE;}
+	public double getDefaultDropChance(){return dropChances.globalDefault();}
 
 	private static AnnounceMode parseAnnounceMode(@Nonnull String value, AnnounceMode defaultMode){
 		value = value.toUpperCase();
@@ -227,9 +226,6 @@ public final class DropChanceAPI{
 		this.mustUseTools = Collections.unmodifiableSet(mustUseTools);
 
 		weaponMults = new HashMap<Material, Double>();
-		timeAliveMults = new HashMap<EntityType, TreeMap<Integer, Double>>();
-		// Ensure there is always a lower entry, and it defaults to 1
-		final TreeMap<Integer, Double> defaultTimeAliveMults = new TreeMap<>(); defaultTimeAliveMults.put(Integer.MIN_VALUE, 1D);
 
 		ConfigurationSection specificToolMults = pl.getConfig().getConfigurationSection("specific-tool-multipliers");
 		if(specificToolMults != null) for(String toolName : specificToolMults.getKeys(false)){
@@ -237,29 +233,27 @@ public final class DropChanceAPI{
 			if(mat != null) weaponMults.put(mat, specificToolMults.getDouble(toolName));
 		}
 
-		ConfigurationSection specificTimeAliveMults = pl.getConfig().getConfigurationSection("time-alive-multipliers");
-		if(specificTimeAliveMults != null){
-			for(String entityName : specificTimeAliveMults.getKeys(false)){
-				try{
-					final EntityType eType = EntityType.valueOf(entityName.toUpperCase().replace("DEFAULT", "UNKNOWN"));
-					final ConfigurationSection entityTimeAliveMults = specificTimeAliveMults.getConfigurationSection(entityName);
-					@SuppressWarnings("unchecked")
-					final TreeMap<Integer, Double> timeAliveMultsForEntity = (TreeMap<Integer, Double>)defaultTimeAliveMults.clone();
-					for(String formattedTime : entityTimeAliveMults.getKeys(false)){
-						try{
-							final int timeInTicks = (int)(TextUtils.parseTimeInMillis(formattedTime, /*default unit=millis-per-tick=*/50)/50L);
-							timeAliveMultsForEntity.put(timeInTicks, entityTimeAliveMults.getDouble(formattedTime));
-						}
-						catch(NumberFormatException ex){
-							pl.getLogger().severe("Error parsing time string for time-alive-multipliers of "+entityName+": \""+formattedTime+'"');
-						}
+		final TreeMap<Integer, Double> defaultTimeAliveMults = new TreeMap<>(); defaultTimeAliveMults.put(Integer.MIN_VALUE, 1d);
+		final ConfigurationSection timeAliveMultsSection = pl.getConfig().getConfigurationSection("time-alive-multipliers");
+		final BiFunction<String, Object, TreeMap<Integer, Double>> parseTimeAliveMults = (k,v) -> {
+			if(v instanceof ConfigurationSection cs){
+				@SuppressWarnings("unchecked")
+				final TreeMap<Integer, Double> timeAliveMults = (TreeMap<Integer, Double>)defaultTimeAliveMults.clone();
+				for(String formattedTime : cs.getKeys(/*deep=*/false)){
+					try{
+						final int timeInTicks = (int)(TextUtils.parseTimeInMillis(formattedTime, /*default unit=millis-per-tick=*/50)/50L);
+						timeAliveMults.put(timeInTicks, cs.getDouble(formattedTime));
 					}
-					timeAliveMults.put(eType, timeAliveMultsForEntity);
+					catch(NumberFormatException ex){
+						pl.getLogger().severe("Error parsing time string for 'time-alive-multipliers' of "+k+": \""+formattedTime+'"');
+					}
 				}
-				catch(IllegalArgumentException ex){pl.getLogger().severe("Unknown EntityType in 'time-alive-multipliers': "+entityName);}
+				if(timeAliveMults.size() > 1) return timeAliveMults;
 			}
-		}
-		DEFAULT_TIME_ALIVE_MULTS = timeAliveMults.getOrDefault(EntityType.UNKNOWN, defaultTimeAliveMults);
+			pl.getLogger().severe("time-alive-multipliers for "+k+" is incorrectly defined");
+			return null;
+		};
+		timeAliveMults = EntitySettings.fromConfigSection(pl, timeAliveMultsSection, /*recursive=*/false, defaultTimeAliveMults, parseTimeAliveMults);
 
 		permissionBasedMults = new HashMap<String, Double>();
 		ConfigurationSection customDropratePerms = pl.getConfig().getConfigurationSection("custom-droprate-multiplier-permissions");
@@ -269,80 +263,31 @@ public final class DropChanceAPI{
 			catch(NumberFormatException ex){pl.getLogger().severe("Error parsing droprate multiplier for perm: \""+perm+'"');}
 		}
 
+		final BiFunction<String, String, Double> parseDropChance = (k,v) -> {
+			if(!PLAYER_HEADS_ONLY && !k.equals("PLAYER")) return null;
+			try{
+				final double dropChance = Double.parseDouble(v);
+				if(dropChance < 0d || dropChance > 1d){
+					pl.getLogger().severe("Invalid value for "+k+" in 'head-drop-rates.txt': "+v);
+					pl.getLogger().warning("Drop chance should be a decimal between 0 and 1");
+					return (dropChance > 1d && dropChance <= 100d) ? dropChance/100d : null;
+				}
+				return dropChance;
+			}
+			catch(NumberFormatException e){
+				pl.getLogger().severe("Invalid value for "+k+" in 'head-drop-rates.txt': "+v);
+				return null;
+			}
+		};
 		//Load individual mobs' drop chances
-		mobChances = new HashMap<>();
-		subtypeMobChances = new HashMap<EntityType, HashMap<String, Double>>();
-//		noLootingEffectMobs = new HashSet<EntityType>();
-		if(PLAYER_HEADS_ONLY){
-			DEFAULT_CHANCE = 0D;
-			final String defaultChances = FileIO.loadResource(pl, "head-drop-rates.txt", /*defaultContent=*/"");
-			final String chances = FileIO.loadFile("head-drop-rates.txt", defaultChances);
-			for(final String line : chances.split("\n")){
-				final String[] parts = line.split(":");
-				if(parts.length < 2 || !parts[0].trim().toUpperCase().equals("PLAYER")) continue;
-				final String value = parts[1].trim();
-				try{
-					double dropChance = Double.parseDouble(value);
-					if(dropChance < 0D || dropChance > 1D){
-						pl.getLogger().warning("Invalid value in 'head-drop-rates.txt': "+value);
-						pl.getLogger().warning("Drop chance should be a decimal between 0 and 1");
-						if(dropChance > 1D && dropChance <= 100D) dropChance /= 100D;
-						else continue;
-					}
-					mobChances.put(EntityType.PLAYER, dropChance);
-				}
-				catch(NumberFormatException ex){pl.getLogger().severe("Invalid value in 'head-drop-rates.txt': "+value);}
-			}
-		}
-		else{
-			final String defaultChances = FileIO.loadResource(pl, "head-drop-rates.txt", /*defaultContent=*/"PIG_ZOMBIE: 0");
-			HashSet<String> defaultConfigMobs = new HashSet<>();
-			for(String line2 : defaultChances.split("\n")){
-				String[] parts2 = line2.replace(" ", "").replace("\t", "").toUpperCase().split(":");
-				if(parts2.length < 2) continue;
-				defaultConfigMobs.add(parts2[0]);
-			}
-			String chances = FileIO.loadFile("head-drop-rates.txt", defaultChances);
-			for(String line : chances.split("\n")){
-				String[] parts = line.replace(" ", "").replace("\t", "").toUpperCase().split(":");
-				if(parts.length < 2) continue;
-				int dataTagSep = parts[0].indexOf('|');
-				String eName = dataTagSep == -1 ? parts[0] : parts[0].substring(0, dataTagSep);
-				try{
-					double dropChance = Double.parseDouble(parts[1]);
-					if(dropChance < 0D || dropChance > 1D){
-						pl.getLogger().warning("Invalid value: "+parts[1]);
-						pl.getLogger().warning("Drop chance should be a decimal between 0 and 1");
-						if(dropChance > 1D && dropChance <= 100D) dropChance /= 100D;
-						else continue;
-					}
-					EntityType eType = EntityType.valueOf(eName.replace("DEFAULT", "UNKNOWN"));
-//					if(parts.length > 2 && parts[2].equals("NOLOOTING")) noLootingEffectMobs.add(eType);
-					if(dataTagSep == -1) mobChances.put(eType, dropChance);
-					else if(pl.getAPI().textureExists(parts[0])){
-						HashMap<String, Double> eTypeChances = subtypeMobChances.getOrDefault(eType, new HashMap<String, Double>());
-						eTypeChances.put(parts[0], dropChance);
-						subtypeMobChances.put(eType, eTypeChances);
-					}
-					else{
-						pl.getLogger().severe("Unknown entity sub-type in 'head-drop-rates.txt': "+parts[0]);
-					}
-				}
-				catch(NumberFormatException ex){pl.getLogger().severe("Invalid value in 'head-drop-rates.txt': "+parts[1]);}
-				catch(IllegalArgumentException ex){
-					// Only throw an error for mobs that aren't defined in the default config (which may be from future/past versions)
-					if(!defaultConfigMobs.contains(eName)) pl.getLogger().severe("Unknown EntityType in 'head-drop-rates.txt': "+eName);
-				}
-			}//for(line : dropRatesFile)
-			DEFAULT_CHANCE = mobChances.getOrDefault(EntityType.UNKNOWN, 0D);
-
-			if(VANILLA_WSKELE_HANDLING && mobChances.getOrDefault(EntityType.WITHER_SKELETON, 0.025D) != 0.025D){
+		dropChances = EntitySettings.fromConfigFile(pl, "head-drop-rates.txt", 0d, parseDropChance);
+		if(!PLAYER_HEADS_ONLY){
+			if(VANILLA_WSKELE_HANDLING && dropChances.get(EntityType.WITHER_SKELETON, 0.025d) != 0.025d){
 				pl.getLogger().warning("Wither Skeleton Skull drop chance has been modified in 'head-drop-rates.txt', "
 						+ "but this value will be ignored because 'vanilla-wither-skeleton-skulls' is set to true.");
 			}
-//			// No need storing chance-per-mob if it is the default
-//			mobChances.entrySet().removeIf(entry -> entry.getValue() == DEFAULT_CHANCE);
-		}  // if(!PLAYER_HEADS_ONLY)
+//			dropChances.entrySet().removeIf(entry -> entry.getValue() == DEFAULT_CHANCE);
+		}
 
 		// Dynamically add all the children perms of "dropheads.alwaysbehead.<entity>" and "dropheads.canbehead.<entity>"
 		final Permission alwaysBeheadPerm = pl.getServer().getPluginManager().getPermission("dropheads.alwaysbehead");
@@ -397,46 +342,18 @@ public final class DropChanceAPI{
 	 * @param useDefault Whether to return the default-chance if key is not found, otherwise will return null
 	 * @return The drop chance [0, 1] or null
 	 */
-	public Double getRawDropChance(String textureKey, boolean useDefault){
-		int keyDataTagIdx = textureKey.indexOf('|');
-		final String entityName = keyDataTagIdx == -1 ? textureKey : textureKey.substring(0, keyDataTagIdx);
-		EntityType eType;
-		try{eType = EntityType.valueOf(entityName.toUpperCase());}
-		catch(IllegalArgumentException ex){return useDefault ? DEFAULT_CHANCE : null;}
-		final HashMap<String, Double> eSubtypeChances = subtypeMobChances.get(eType);
-		if(eSubtypeChances != null){
-			keyDataTagIdx = textureKey.lastIndexOf('|');
-			Double subtypeChance = null;
-			while(keyDataTagIdx != -1 && (subtypeChance=eSubtypeChances.get(textureKey)) == null){
-				textureKey = textureKey.substring(0, keyDataTagIdx);
-				keyDataTagIdx = textureKey.lastIndexOf('|');
-			}
-			if(subtypeChance != null) return subtypeChance;
-		}
-		return useDefault ? mobChances.getOrDefault(eType, DEFAULT_CHANCE) : mobChances.get(eType);
-	}
+	@Deprecated
+	public Double getRawDropChance(String textureKey, boolean useDefault){return dropChances.get(textureKey, useDefault ? dropChances.globalDefault() : null);}
 	/** Get the raw drop chance (ignore all multipliers) of a head for a specific entity.
 	 * @param entity The target entity
 	 * @return The drop chance [0, 1]
 	 */
-	public double getRawDropChance(Entity entity){
-		HashMap<String, Double> eSubtypeChances = subtypeMobChances.get(entity.getType());
-		if(eSubtypeChances != null){
-			String textureKey = TextureKeyLookup.getTextureKey(entity);
-			int keyDataTagIdx = textureKey.lastIndexOf('|');
-			Double subtypeChance = null;
-			while(keyDataTagIdx != -1 && (subtypeChance=eSubtypeChances.get(textureKey)) == null){
-				textureKey = textureKey.substring(0, keyDataTagIdx);
-				keyDataTagIdx = textureKey.lastIndexOf('|');
-			}
-			if(subtypeChance != null) return subtypeChance;
-		}
-		return mobChances.getOrDefault(entity.getType(), DEFAULT_CHANCE);
-	}
+	public double getRawDropChance(Entity entity){return dropChances.get(entity);}
 	/** Get a map of all configured drop chances.
 	 * @return An unmodifiable map (EntityType => drop chance)
 	 */
-	public Map<EntityType, Double> getRawDropChances(){return Collections.unmodifiableMap(mobChances);}
+	@Deprecated
+	public Map<EntityType, Double> getRawDropChances(){return Collections.unmodifiableMap(dropChances.typeSettings());}
 	/** Get the percent chance added to the drop chance (per looting level).
 	 * @return The drop chance increase amount
 	 */
@@ -455,7 +372,7 @@ public final class DropChanceAPI{
 	 * @return The time-alive multiplier
 	 */
 	public double getTimeAliveMult(Entity entity){
-		return timeAliveMults.getOrDefault(entity.getType(), DEFAULT_TIME_ALIVE_MULTS).floorEntry(
+		return timeAliveMults.get(entity).floorEntry(
 				entity.getType() == EntityType.PLAYER
 					? ((Player)entity).getStatistic(Statistic.TIME_SINCE_DEATH)
 					: entity.getTicksLived()
@@ -480,19 +397,17 @@ public final class DropChanceAPI{
 	 * @return Whether the change took place
 	 */
 	public boolean setRawDropChance(String textureKey, double newChance, boolean updateFile){
-		if(getRawDropChance(textureKey, /*useDefault=*/false) == newChance) return false;
-		final int keyDataTagIdx = textureKey.indexOf('|');
-		final String entityName = keyDataTagIdx == -1 ? textureKey : textureKey.substring(0, keyDataTagIdx);
-		EntityType eType;
-		try{eType = EntityType.valueOf(entityName);}
+		if(dropChances.get(textureKey, null) == newChance) return false;
+		final int firstSep = textureKey.indexOf('|');
+		final String eName = firstSep == -1 ? textureKey : textureKey.substring(0, firstSep);
+		final EntityType eType;
+		try{eType = EntityType.valueOf(eName);}
 		catch(IllegalArgumentException ex){return false;}
-		if(keyDataTagIdx != -1){
+		if(firstSep != -1){
 			if(!pl.getAPI().textureExists(textureKey)) return false;
-			final HashMap<String, Double> eSubtypeChances = subtypeMobChances.getOrDefault(eType, new HashMap<>());
-			eSubtypeChances.put(textureKey, newChance);
-			subtypeMobChances.put(eType, eSubtypeChances);
+			dropChances.subtypeSettings().put(textureKey, newChance);
 		}
-		else mobChances.put(eType, newChance);
+		else dropChances.typeSettings().put(eType, newChance);
 		if(!updateFile) return true;
 
 		String spaces = StringUtils.repeat(' ', 19-textureKey.length()); // TODO: alternative to this hacky spacing nonsense?
@@ -503,7 +418,7 @@ public final class DropChanceAPI{
 
 		String updated = content.replaceAll(
 				"(?m)^"+textureKey.replace("|", "\\|")+":\\s*\\d*\\.?\\d+(\n?)",
-				(newChance == DEFAULT_CHANCE) ? "" : insertLine+"$1");
+				(newChance == dropChances.globalDefault()) ? "" : insertLine+"$1");
 		if(updated.equals(content)) updated += "\n"+insertLine;
 		return FileIO.saveFile("head-drop-rates.txt", updated);
 	}
