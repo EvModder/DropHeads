@@ -1,0 +1,47 @@
+# Drop-chance modifiers based on how an entity was spawned
+# If the value is 0, heads of mobs spawned this way will never drop.
+# If the value is 1, heads will drop at the same chance as normal
+# The new drop-chance is [modifier] * [the old drop-chance]
+
+BEEHIVE: 1          # When a bee is released from a beehive/bee nest
+BREEDING: 0.05      # When an animal breeds to create a baby (includes shulker and allay duplication)
+BUILD_IRONGOLEM: 1  # When an iron golem is spawned by being built
+BUILD_SNOWMAN: 1    # When a snowman is spawned by being built
+BUILD_WITHER: 1     # When a wither boss is spawned by being built
+CHUNK_GEN: 1.5      # When a creature spawns due to chunk generation
+COMMAND: 1.0        # When a creature is spawned by the "/summon" command
+CURED: 4            # When a villager is cured from infection
+CUSTOM: 0           # When a creature is spawned by plugins
+DEFAULT: 1          # When an entity is missing a SpawnReason
+DISPENSE_EGG: 0.05  # When a creature is spawned by a dispenser dispensing an egg
+DROWNED: 0.5        # When an entity is spawned by another entity drowning
+DUPLICATION: 0.05   # When an Allay duplicates itself
+EGG: 0.05           # When a creature spawns from an egg
+ENCHANTMENT: 0.05   # When a creature is spawned by an enchantment
+ENDER_PEARL: 1      # When a endermite is spawned as a result of enderpearl usage
+EXPLOSION: 1        # When an effect cloud is spawned as a result of a creeper exploding
+FROZEN: 1           # When an entity is spawned by another entity freezing in powder snow
+INFECTION: 1        # When a zombie infects a villager
+JOCKEY: 1           # When an entity spawns as a jockey of another entity (spider jockeys)
+LIGHTNING: 1        # When a creature spawns because of a lightning strike
+METAMORPHOSIS: 1    # When a tadpole converts to a frog
+MOUNT: 1            # When an entity spawns as a mount of another entity (chicken jockeys)
+NATURAL: 1          # When something spawns from natural means
+NETHER_PORTAL: 0.05 # When a creature is spawned by nether portal
+OCELOT_BABY: 1      # When an ocelot has a baby spawned along with them
+PATROL: 1           # When an entity is spawned as part of a patrol
+PIGLIN_ZOMBIFIED: 1 # When a piglin is converted to a zombified piglin
+POTION_EFFECT: 0.05 # When a creature is spawned by a potion effect
+RAID: 1             # When an entity is spawned as part of a raid
+REINFORCEMENTS: 0.5 # When an entity calls for reinforcements
+SHEARED: 1          # When a cow is spawned by shearing a mushroom cow
+SHOULDER_ENTITY: 1  # When a parrot disconnects from the shoulder of another entity
+SILVERFISH_BLOCK: 1 # When a silverfish spawns from a block
+SLIME_SPLIT: 0.5    # When a slime splits
+SPAWNER: 0.05       # When a creature spawns from a spawner
+SPAWNER_EGG: 1.0    # When a creature spawns from a spawn egg
+SPELL: 1            # When an entity is created by a cast spell.
+TRAP: 2             # When an entity spawns as a trap for players approaching
+TRIAL_SPAWNER: 1    # When a creature spawns from a trial spawner
+VILLAGE_DEFENSE: 1  # When an iron golem is spawned to defend a village
+VILLAGE_INVASION: 1 # When a zombie is spawned to invade a village

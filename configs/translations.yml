@@ -26,7 +26,6 @@ head-type-in-lore:
 # You can add other entity types here if you want
 head-name-format:
   player: "block.minecraft.player_head.named" # Translates to "PlayerName's Head"
-  #player: "${NAME} Head"
   default: "${MOB_SUBTYPES_DESC}${MOB_TYPE} ${HEAD_TYPE}"
   giant: "${MOB_TYPE}'s Toe"
 

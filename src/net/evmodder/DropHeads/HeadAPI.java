@@ -205,8 +205,8 @@ public class HeadAPI{
 		PREFER_VANILLA_HEADS = pl.getConfig().getBoolean("prefer-vanilla-heads", true);
 
 		//---------- <Load translations> ----------------------------------------------------------------------
-		translationsFile = FileIO.loadConfig(pl, "translations.yml", getClass().getResourceAsStream("/translations.yml"), /*notifyIfNew=*/false);
-		final InputStream translationsIS = getClass().getResourceAsStream("/translations.yml");  // Can't reuse InputStreams
+		translationsFile = FileIO.loadConfig(pl, "translations.yml", getClass().getResourceAsStream("/configs/translations.yml"), /*notifyIfNew=*/false);
+		final InputStream translationsIS = getClass().getResourceAsStream("/configs/translations.yml");  // Can't reuse InputStreams
 		if(translationsIS != null){  // getResourceAsStream() returns null after a plugin reload
 			translationsFile.setDefaults(YamlConfiguration.loadConfiguration(new InputStreamReader(translationsIS)));
 		}
@@ -276,9 +276,9 @@ public class HeadAPI{
 		//---------- </Load translations> ---------------------------------------------------------------------
 
 		//---------- <Load Textures> ----------------------------------------------------------------------
-		final String hardcodedList = FileIO.loadResource(pl, "head-textures.txt", /*defaultContent=*/"");
+		final String hardcodedList = FileIO.loadResource(pl, "/configs/head-textures.txt", /*defaultContent=*/"");
 //		String localList = FileIO.loadFile("head-textures.txt", hardcodedList);  // This does not preserve comments
-		String localList = FileIO.loadFile("head-textures.txt", getClass().getResourceAsStream("/head-textures.txt"));
+		String localList = FileIO.loadFile("head-textures.txt", getClass().getResourceAsStream("/configs/head-textures.txt"));
 		UNKNOWN_TEXTURE_CODE = textures.getOrDefault(EntityType.UNKNOWN.name(), "5c90ca5073c49b898a6f8cdbc72e6aca0a425ec83bc4355e3b834fd859282bdd");
 
 		boolean writeTextureFile = false, updateTextures = false;
@@ -325,7 +325,7 @@ public class HeadAPI{
 		}
 		if(writeTextureFile){
 			FileIO.deleteFile("head-textures.txt");
-			FileIO.loadFile("head-textures.txt", getClass().getResourceAsStream("/head-textures.txt")); // Copy with comments
+			FileIO.loadFile("head-textures.txt", getClass().getResourceAsStream("/configs/head-textures.txt")); // Copy with comments
 			if(!downloadedList.isEmpty()) FileIO.saveFile("head-textures.txt", downloadedList, /*append=*/true); // Append downloads
 			localList = FileIO.loadFile("head-textures.txt", hardcodedList); // Reload (without comments)
 		}

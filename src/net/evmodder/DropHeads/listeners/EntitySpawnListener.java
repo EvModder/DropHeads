@@ -23,7 +23,7 @@ public class EntitySpawnListener implements Listener{
 		pl = DropHeads.getPlugin();
 		spawnMultipliers = new HashMap<>();
 
-		final InputStream defaultSpawnMults = pl.getClass().getResourceAsStream("/spawn-cause-multipliers.txt");
+		final InputStream defaultSpawnMults = pl.getClass().getResourceAsStream("/configs/spawn-cause-multipliers.txt");
 		final String multipliers = FileIO.loadFile("spawn-cause-multipliers.txt", defaultSpawnMults);
 		for(String line : multipliers.split("\n")){
 			line = line.replace(" ", "").replace("\t", "").toUpperCase();
