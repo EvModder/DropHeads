@@ -24,7 +24,6 @@ public class EntitySpawnListener implements Listener{
 		spawnMultipliers = new HashMap<>();
 
 		final InputStream defaultSpawnMults = pl.getClass().getResourceAsStream("/spawn-cause-multipliers.txt");
-		FileIO.moveFile("spawn-cause-modifiers.txt", "spawn-cause-multipliers.txt");//TODO: delete, someday
 		final String multipliers = FileIO.loadFile("spawn-cause-multipliers.txt", defaultSpawnMults);
 		for(String line : multipliers.split("\n")){
 			line = line.replace(" ", "").replace("\t", "").toUpperCase();
