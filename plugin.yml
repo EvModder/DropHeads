@@ -6,7 +6,7 @@ website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
 #10=Java8->Java21, entity-settings grouping, config file reorg
 #0=
-version: 4.0.0
+version: 3.10.0
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 
