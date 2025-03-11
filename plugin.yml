@@ -4,9 +4,9 @@ author: EvModder
 description: Heads for every mob and player.
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
-#9=Reorganized texture file downloads, global click-info cooldown
-#11=removed tellraw,
-version: 3.9.11
+#10=Java8->Java21, entity-settings grouping, config file reorg
+#0=
+version: 4.0.0
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 

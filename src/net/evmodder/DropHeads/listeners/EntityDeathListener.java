@@ -46,7 +46,7 @@ public class EntityDeathListener implements Listener{
 	private final EventPriority PRIORITY;
 	private final boolean ALLOW_NON_PLAYER_KILLS, ALLOW_INDIRECT_KILLS, ALLOW_PROJECTILE_KILLS, USE_RANGED_WEAPON_FOR_LOOTING;
 	//TODO: pkillonly config per-mob?
-	private final boolean PLAYER_HEADS_ONLY, CHARGED_CREEPER_DROPS, VANILLA_WSKELE_HANDLING;
+	private final boolean CHARGED_CREEPER_DROPS, VANILLA_WSKELE_HANDLING;
 	private final long INDIRECT_KILL_THRESHOLD_MILLIS;
 	private final boolean DEBUG_MODE;
 
@@ -54,66 +54,59 @@ public class EntityDeathListener implements Listener{
 		pl = DropHeads.getPlugin();
 		this.deathMessageBlocker = deathMessageBlocker;
 		rand = new Random();
-		ALLOW_NON_PLAYER_KILLS = pl.getConfig().getBoolean("drop-for-nonplayer-kills", !pl.getConfig().getBoolean("player-kills-only", true));
+		ALLOW_NON_PLAYER_KILLS = pl.getConfig().getBoolean("drop-for-nonplayer-kills", false);
 		ALLOW_INDIRECT_KILLS = pl.getConfig().getBoolean("drop-for-indirect-kills", false);
 		ALLOW_PROJECTILE_KILLS = pl.getConfig().getBoolean("drop-for-ranged-kills", false);
 		USE_RANGED_WEAPON_FOR_LOOTING = pl.getConfig().getBoolean("use-ranged-weapon-for-looting", true);
-		PLAYER_HEADS_ONLY = pl.getConfig().getBoolean("player-heads-only", false);
 		CHARGED_CREEPER_DROPS = pl.getConfig().getBoolean("charged-creeper-drops", true);
 		VANILLA_WSKELE_HANDLING = pl.getConfig().getBoolean("vanilla-wither-skeleton-skulls", false);
 		PRIORITY = JunkUtils.parseEnumOrDefault(pl.getConfig().getString("death-listener-priority", "LOW"), EventPriority.LOW);
 		INDIRECT_KILL_THRESHOLD_MILLIS = TextUtils.parseTimeInMillis(pl.getConfig().getString("indirect-kill-threshold", "30s"));
 		DEBUG_MODE = pl.getConfig().getBoolean("debug-messages", true);
 
-		if(PLAYER_HEADS_ONLY){
-			pl.getServer().getPluginManager().registerEvent(PlayerDeathEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
-		}
-		else{
-			@SuppressWarnings("deprecation")
+		@SuppressWarnings("deprecation")
 			final Map<EntityType, Double> mobChances = pl.getDropChanceAPI().getRawDropChances();
 			final double DEFAULT_CHANCE = pl.getDropChanceAPI().getDefaultDropChance();
 
-			final boolean entityHeads = DEFAULT_CHANCE > 0D || mobChances.entrySet().stream().anyMatch(  // All non-Player living entities
-					entry -> entry.getKey().isAlive() && entry.getKey() != EntityType.PLAYER && entry.getValue() > 0D);
-			if(entityHeads){
-				pl.getServer().getPluginManager().registerEvent(EntityDeathEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
-			}
-			else if(mobChances.getOrDefault(EntityType.PLAYER, 0D) > 0D){
-				pl.getServer().getPluginManager().registerEvent(PlayerDeathEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
-			}
-			final boolean nonLivingVehicleHeads = DEFAULT_CHANCE > 0D || mobChances.entrySet().stream().anyMatch(  // Boat, Minecart
-					entry -> !entry.getKey().isAlive() && entry.getValue() > 0D &&
-					entry.getKey().getEntityClass() != null && Vehicle.class.isAssignableFrom(entry.getKey().getEntityClass()));
-			if(nonLivingVehicleHeads){
-				pl.getServer().getPluginManager().registerEvent(VehicleDestroyEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
-			}
-			final boolean nonLivingHangingHeads = DEFAULT_CHANCE > 0D || mobChances.entrySet().stream().anyMatch(  // Painting, LeashHitch, ItemFrame
-					entry -> !entry.getKey().isAlive() && entry.getValue() > 0D &&
-					entry.getKey().getEntityClass() != null && Hanging.class.isAssignableFrom(entry.getKey().getEntityClass()));
-			if(nonLivingHangingHeads){
-				pl.getServer().getPluginManager().registerEvent(HangingBreakByEntityEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
-			}
-		}  // if(!PLAYER_HEADS_ONLY)
-		explodingChargedCreepers = new HashSet<UUID>();
+		final boolean entityHeads = DEFAULT_CHANCE > 0D || mobChances.entrySet().stream().anyMatch(  // All non-Player living entities
+				entry -> entry.getKey().isAlive() && entry.getKey() != EntityType.PLAYER && entry.getValue() > 0D);
+		if(entityHeads){
+			pl.getServer().getPluginManager().registerEvent(EntityDeathEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
+		}
+		else if(mobChances.getOrDefault(EntityType.PLAYER, 0D) > 0D){
+			pl.getServer().getPluginManager().registerEvent(PlayerDeathEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
+		}
+		final boolean nonLivingVehicleHeads = DEFAULT_CHANCE > 0D || mobChances.entrySet().stream().anyMatch(  // Boat, Minecart
+				entry -> !entry.getKey().isAlive() && entry.getValue() > 0D &&
+				entry.getKey().getEntityClass() != null && Vehicle.class.isAssignableFrom(entry.getKey().getEntityClass()));
+		if(nonLivingVehicleHeads){
+			pl.getServer().getPluginManager().registerEvent(VehicleDestroyEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
+		}
+		final boolean nonLivingHangingHeads = DEFAULT_CHANCE > 0D || mobChances.entrySet().stream().anyMatch(  // Painting, LeashHitch, ItemFrame
+				entry -> !entry.getKey().isAlive() && entry.getValue() > 0D &&
+				entry.getKey().getEntityClass() != null && Hanging.class.isAssignableFrom(entry.getKey().getEntityClass()));
+		if(nonLivingHangingHeads){
+			pl.getServer().getPluginManager().registerEvent(HangingBreakByEntityEvent.class, this, PRIORITY, new DeathEventExecutor(), pl);
+		}
+		explodingChargedCreepers = CHARGED_CREEPER_DROPS ? new HashSet<UUID>() : null;
 	}
 
 	private ItemStack getWeaponFromKiller(Entity killer){
-		return killer != null ?
-					killer instanceof LivingEntity ?
-						((LivingEntity)killer).getEquipment().getItemInMainHand() :
-						killer instanceof Projectile ?
-							USE_RANGED_WEAPON_FOR_LOOTING ?
-								killer.hasMetadata("ShotUsing") ? (ItemStack)killer.getMetadata("ShotUsing").get(0).value() : null
-								: ((Projectile)killer).getShooter() instanceof LivingEntity ?
-									((LivingEntity)((Projectile)killer).getShooter()).getEquipment().getItemInMainHand() : null
-						: null
-				: null;
+		return
+			killer == null ? null :
+			killer instanceof LivingEntity le ? le.getEquipment().getItemInMainHand() :
+			!USE_RANGED_WEAPON_FOR_LOOTING ? null :
+			killer instanceof Projectile == false ? null :
+			killer.hasMetadata("ShotUsing") ? (ItemStack)killer.getMetadata("ShotUsing").get(0).value() :
+			((Projectile)killer).getShooter() instanceof LivingEntity le ? le.getEquipment().getItemInMainHand() :
+			null;
 	}
 
 	private String getName(Permissible killer){
-		if(killer instanceof Nameable && ((Nameable)killer).getCustomName() != null) return ((Nameable)killer).getCustomName();
-		if(killer instanceof CommandSender) return ((CommandSender)killer).getName();
-		return killer.getClass().getSimpleName();
+		return
+			killer instanceof Nameable n && n.getCustomName() != null ? n.getCustomName() :
+			killer instanceof CommandSender cs ? cs.getName() :
+			killer.getClass().getSimpleName();
 	}
 
 	/**
@@ -175,17 +168,17 @@ public class EntityDeathListener implements Listener{
 		) return false;
 
 		final ItemStack murderWeapon = getWeaponFromKiller(killer);
-		final Material murdetWeaponType = murderWeapon == null ? Material.AIR : murderWeapon.getType();
+		final Material murderWeaponType = murderWeapon == null ? Material.AIR : murderWeapon.getType();
 
-		if(!pl.getDropChanceAPI().getRequiredWeapons().isEmpty() && !pl.getDropChanceAPI().getRequiredWeapons().contains(murdetWeaponType)) return false;
+		if(!pl.getDropChanceAPI().isWeaponAbleToBehead(victim, murderWeaponType)) return false;
 
 		final int lootingLevel = JunkUtils.getLootingLevel(murderWeapon);
-		final double lootingMod = lootingLevel == 0 ? 1D : Math.pow(pl.getDropChanceAPI().getLootingMult(), lootingLevel);
-		final double lootingAdd = pl.getDropChanceAPI().getLootingAdd()*lootingLevel;
-		final double weaponMod = pl.getDropChanceAPI().getWeaponMult(murdetWeaponType);
+		final double lootingMod = lootingLevel == 0 ? 1D : Math.pow(pl.getDropChanceAPI().getLootingMult(victim), lootingLevel);
+		final double lootingAdd = pl.getDropChanceAPI().getLootingAdd(victim)*lootingLevel;
+		final double weaponMod = pl.getDropChanceAPI().getWeaponMult(victim, murderWeaponType);
 		final double timeAliveMod = pl.getDropChanceAPI().getTimeAliveMult(victim);
 		final double rawDropChance = pl.getDropChanceAPI().getRawDropChance(victim);
-		final double permsMod = pl.getDropChanceAPI().getPermsBasedMult(killerPermCheck);
+		final double permsMod = pl.getDropChanceAPI().getPermissionsMult(victim, killerPermCheck);
 		final double spawnCauseMod = JunkUtils.getSpawnCauseMult(victim);
 		final double dropChance = rawDropChance*lootingMod*weaponMod*timeAliveMod*permsMod*spawnCauseMod + lootingAdd;
 
@@ -203,7 +196,7 @@ public class EntityDeathListener implements Listener{
 					DecimalFormat df = new DecimalFormat("0.0###");
 					pl.getLogger().info("Dropping Head: "+TextureKeyLookup.getTextureKey(victim)
 						+"\nKiller: "+(killer != null ? killer.getType() : "none")
-						+", Weapon: "+murdetWeaponType
+						+", Weapon: "+murderWeaponType
 						+"\nRaw chance: "+df.format(rawDropChance*100D)+"%\nMultipliers >> "+
 						(spawnCauseMod != 1 ? "SpawnReason: "+df.format((spawnCauseMod-1D)*100D)+"%, " : "") +
 						(timeAliveMod != 1 ? "TimeAlive: "+df.format((timeAliveMod-1D)*100D)+"%, " : "") +

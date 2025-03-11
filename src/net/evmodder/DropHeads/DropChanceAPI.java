@@ -27,7 +27,6 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Skull;
 import org.bukkit.block.data.Rotatable;
-import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -55,7 +54,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import net.evmodder.DropHeads.datatypes.AnnounceMode;
 import net.evmodder.DropHeads.datatypes.DropMode;
-import net.evmodder.DropHeads.datatypes.EntitySettings;
+import net.evmodder.DropHeads.datatypes.EntitySetting;
 import net.evmodder.DropHeads.events.BeheadMessageEvent;
 import net.evmodder.DropHeads.events.EntityBeheadEvent;
 import net.evmodder.DropHeads.listeners.DeathMessagePacketIntercepter;
@@ -77,35 +76,30 @@ public final class DropChanceAPI{
 	private final AnnounceMode DEFAULT_ANNOUNCE, SILENT_ANNOUNCE;
 	private final ArrayList<DropMode> DROP_MODES; // TODO: per-mob drop mode?
 
-	private final boolean PLAYER_HEADS_ONLY;
 	private final boolean REPLACE_PLAYER_DEATH_EVT_MESSAGE, REPLACE_PET_DEATH_MESSAGE, REPLACE_PLAYER_DEATH_MESSAGE/*, USE_TRANSLATE_FALLBACKS*/;
 	private final boolean VANILLA_WSKELE_HANDLING;
-	private final double LOOTING_ADD, LOOTING_MULT;
 	private final boolean DEBUG_MODE, LOG_PLAYER_BEHEAD, LOG_MOB_BEHEAD;
 	private final String LOG_MOB_FORMAT, LOG_PLAYER_FORMAT;
 	private final String[] MSG_BEHEAD, MSH_BEHEAD_BY, MSH_BEHEAD_BY_WITH, MSH_BEHEAD_BY_WITH_NAMED;
 	private final boolean CROSS_DIMENSIONAL_BROADCAST;
 	private final int LOCAL_RANGE;
 	private final int JSON_LIMIT;
-	private final BlockFace[] possibleHeadRotations = new BlockFace[]{
-			BlockFace.NORTH, BlockFace.NORTH_EAST, BlockFace.NORTH_WEST,
-			BlockFace.SOUTH, BlockFace.SOUTH_EAST, BlockFace.SOUTH_WEST,
-			BlockFace.NORTH_NORTH_EAST, BlockFace.NORTH_NORTH_WEST,
-			BlockFace.SOUTH_SOUTH_EAST, BlockFace.SOUTH_SOUTH_WEST
-	};
 
 	private final DropHeads pl;
 	private final DeathMessagePacketIntercepter deathMessageBlocker;
 	private final Random rand;
 	private final HashSet<Material> headOverwriteBlocks;
-	private final Set<Material> mustUseTools; // TODO: per-mob must-use-tools?
-	private final EntitySettings<Double> dropChances;
-	private final HashMap<EntityType, AnnounceMode> mobAnnounceModes;
-	private final HashMap<String, Double> permissionBasedMults; // TODO: per-mob perm mults?
-	private final HashMap<Material, Double> weaponMults; // TODO: per-mob weapon mults?
-	private final EntitySettings<TreeMap<Integer, Double>> timeAliveMults;// Note: Bukkit's e.getTicksLived() returns an int.
 	private final LRUCache<ItemStack, Component> weaponCompCache;
 	private final int WEAPON_COMP_CACHE_SIZE;
+
+	public final EntitySetting<Double> lootingLevelMult, lootingLevelAdd; // TODO: public (not private) due to CommandDropRate
+	public final EntitySetting<Set<Material>> requiredWeapons; // TODO: public (not private) due to CommandDropRate
+	private final EntitySetting<Double> dropChances;
+	private final HashMap<EntityType, AnnounceMode> mobAnnounceModes;
+	private final EntitySetting<Map<String, Double>> permissionMults;
+	public final EntitySetting<Map<Material, Double>> weaponMults;//TODO: public for CommandDropRate
+	//TODO: public for CommandDropRate
+	public final EntitySetting<TreeMap</*timeAlive=*/Integer, Double>> timeAliveMults;// Note: Bukkit's e.getTicksLived() returns an int.
 
 //	private final Class<?> classJSONComponentSerializer, classAudience;
 //	private final Method methodDeserialize, methodGson, methodSendMessage;
@@ -118,7 +112,7 @@ public final class DropChanceAPI{
 	 */
 	public double getDefaultDropChance(){return dropChances.globalDefault();}
 
-	private static AnnounceMode parseAnnounceMode(@Nonnull String value, AnnounceMode defaultMode){
+	private AnnounceMode parseAnnounceMode(@Nonnull String value, AnnounceMode defaultMode){
 		value = value.toUpperCase();
 		if(value.equals("FALSE")) return AnnounceMode.OFF;
 		if(value.equals("TRUE")) return AnnounceMode.GLOBAL;
@@ -130,14 +124,22 @@ public final class DropChanceAPI{
 		}
 	}
 
-	private static String[] parseStringOrStringList(String key, String defaultMsg, Configuration... configs){
-		for(Configuration config : configs){
-			List<String> strList = null;
-			if(config.isList(key) && (strList=config.getStringList(key)) != null && !strList.isEmpty())
-				return strList.stream().map(msg -> TextUtils.translateAlternateColorCodes('&', msg)).toArray(size -> new String[size]);
-			if(config.isString(key) && !defaultMsg.equals(config.getString(key)))
-				return new String[]{TextUtils.translateAlternateColorCodes('&', config.getString(key))};
-		}
+//	private static String[] parseStringOrStringList(String key, String defaultMsg, Configuration... configs){
+//		for(Configuration config : configs){
+//			List<String> strList = null;
+//			if(config.isList(key) && (strList=config.getStringList(key)) != null && !strList.isEmpty())
+//				return strList.stream().map(msg -> TextUtils.translateAlternateColorCodes('&', msg)).toArray(size -> new String[size]);
+//			if(config.isString(key) && !defaultMsg.equals(config.getString(key)))
+//				return new String[]{TextUtils.translateAlternateColorCodes('&', config.getString(key))};
+//		}
+//		return new String[]{TextUtils.translateAlternateColorCodes('&', defaultMsg)};
+//	}
+	private String[] parseStringOrStringList(String key, String defaultMsg){
+		List<String> strList = null;
+		if(pl.getConfig().isList(key) && (strList=pl.getConfig().getStringList(key)) != null && !strList.isEmpty())
+			return strList.stream().map(msg -> TextUtils.translateAlternateColorCodes('&', msg)).toArray(size -> new String[size]);
+		if(pl.getConfig().isString(key) && !defaultMsg.equals(pl.getConfig().getString(key)))
+			return new String[]{TextUtils.translateAlternateColorCodes('&', pl.getConfig().getString(key))};
 		return new String[]{TextUtils.translateAlternateColorCodes('&', defaultMsg)};
 	}
 
@@ -145,12 +147,7 @@ public final class DropChanceAPI{
 		pl = DropHeads.getPlugin();
 		this.deathMessageBlocker = deathMessageBlocker;
 		rand = new Random();
-		PLAYER_HEADS_ONLY = pl.getConfig().getBoolean("player-heads-only", false);
 		VANILLA_WSKELE_HANDLING = pl.getConfig().getBoolean("vanilla-wither-skeleton-skulls", false);
-		LOOTING_ADD = pl.getConfig().getDouble("looting-addition", 0D);
-		LOOTING_MULT = pl.getConfig().getDouble("looting-multiplier", pl.getConfig().getDouble("looting-mutliplier", 1.01D));
-		if(LOOTING_ADD >= 1) pl.getLogger().warning("looting-addition is set to 1.0 or greater, this means heads will ALWAYS drop when looting is used!");
-		if(LOOTING_MULT < 1) pl.getLogger().warning("looting-multiplier is set below 1.0, this means looting will DECREASE the chance of head drops!");
 		REPLACE_PLAYER_DEATH_MESSAGE = replacePlayerDeathMsg;
 		REPLACE_PLAYER_DEATH_EVT_MESSAGE = pl.getConfig().getBoolean("behead-announcement-replaces-player-death-event-message", false);
 		REPLACE_PET_DEATH_MESSAGE = replacePetDeathMsg;
@@ -166,14 +163,10 @@ public final class DropChanceAPI{
 		weaponCompCache = WEAPON_COMP_CACHE_SIZE > 0 ? new LRUCache<>(WEAPON_COMP_CACHE_SIZE) : null;
 
 		JSON_LIMIT = pl.getConfig().getInt("message-json-limit", 15000);
-		MSG_BEHEAD = parseStringOrStringList("message-beheaded", "&6${VICTIM}&r was decapitated",
-				pl.getConfig(), pl.getAPI().translationsFile);
-		MSH_BEHEAD_BY = parseStringOrStringList("message-beheaded-by-entity", "${VICTIM} was beheaded by ${KILLER}",
-				pl.getConfig(), pl.getAPI().translationsFile);
-		MSH_BEHEAD_BY_WITH = parseStringOrStringList("message-beheaded-by-entity-with-item", "${VICTIM} was beheaded by ${KILLER}",
-				pl.getConfig(), pl.getAPI().translationsFile);
-		MSH_BEHEAD_BY_WITH_NAMED = parseStringOrStringList("message-beheaded-by-entity-with-item-named", "${KILLER} beheaded ${VICTIM} using ${ITEM}",
-				pl.getConfig(), pl.getAPI().translationsFile);
+		MSG_BEHEAD = parseStringOrStringList("message-beheaded", "&6${VICTIM}&r was decapitated");
+		MSH_BEHEAD_BY = parseStringOrStringList("message-beheaded-by-entity", "${VICTIM} was beheaded by ${KILLER}");
+		MSH_BEHEAD_BY_WITH = parseStringOrStringList("message-beheaded-by-entity-with-item", "${VICTIM} was beheaded by ${KILLER}");
+		MSH_BEHEAD_BY_WITH_NAMED = parseStringOrStringList("message-beheaded-by-entity-with-item-named", "${KILLER} beheaded ${VICTIM} using ${ITEM}");
 //		USE_TRANSLATE_FALLBACKS = pl.getAPI().translationsFile.getBoolean("use-translation-fallbacks", false)
 //				&& Bukkit.getBukkitVersion().compareTo("1.19.4") >= 0;
 
@@ -211,31 +204,54 @@ public final class DropChanceAPI{
 		LOCAL_RANGE = pl.getConfig().getInt("local-broadcast-distance", 200);
 		CROSS_DIMENSIONAL_BROADCAST = pl.getConfig().getBoolean("local-broadcast-cross-dimension", true);
 
-		Set<Material> mustUseTools;
-		if(pl.getConfig().getBoolean("must-use-axe")){
-			mustUseTools = Arrays.stream(Material.values()).filter(mat -> mat.name().endsWith("_AXE")).collect(Collectors.toSet());
-		}
-		else{
-			(mustUseTools = pl.getConfig().getStringList("must-use").stream().map(toolName -> {
-				if(toolName.isEmpty()) return null;
-				Material mat = Material.getMaterial(toolName.toUpperCase());
-				if(mat == null) pl.getLogger().warning("Unknown Tool \""+toolName+"\"!");
-				return mat;
-			}).collect(Collectors.toSet())).remove(null);
-		}
-		this.mustUseTools = Collections.unmodifiableSet(mustUseTools);
+		lootingLevelMult = EntitySetting.fromYamlConfig(pl, pl.getConfig(), "looting-multiplier", 1.01d, (k,v)->{
+			double d = v instanceof Number n ? n.doubleValue() : Double.parseDouble(v.toString());
+			if(d < 1) pl.getLogger().warning("looting-multiplier is set below 1.0, this means looting will DECREASE the chance of head drops!");
+			return d;
+		});
+		lootingLevelAdd = EntitySetting.fromYamlConfig(pl, pl.getConfig(), "looting-addition", 0d, (k,v)->{
+			double d = v instanceof Number n ? n.doubleValue() : Double.parseDouble(v.toString());
+			if(d >= 1) pl.getLogger().warning("looting-addition is set to 1.0 or greater, this means heads will ALWAYS drop when looting is used!");
+			return d;
+		});
 
-		weaponMults = new HashMap<Material, Double>();
+		requiredWeapons = EntitySetting.fromYamlConfig(pl, pl.getConfig(), "require-weapon", Set.of(), (k,v)->{
+			// Parse String[] -> Set<Material>
+			if(v instanceof String[] list){
+				return Collections.unmodifiableSet(Arrays.stream(list).map(matName -> {
+					if(matName.isEmpty()){
+						pl.getLogger().warning("Empty weapon name! (should be unreachable, please report this to the developer)");
+						return (Material)null;
+					}
+					final Material mat = Material.getMaterial(matName.toUpperCase());
+					if(mat == null) pl.getLogger().warning("Unknown weapon: \""+matName+"\"!");
+					return mat;
+				})
+				.filter(mat -> mat != null)
+				.collect(Collectors.toSet()));
+			}
+			pl.getLogger().warning("Invalid configuration (expected weapon list): "+k);
+			return null;
+		});
 
-		ConfigurationSection specificToolMults = pl.getConfig().getConfigurationSection("specific-tool-multipliers");
-		if(specificToolMults != null) for(String toolName : specificToolMults.getKeys(false)){
-			final Material mat = Material.getMaterial(toolName.toUpperCase());
-			if(mat != null) weaponMults.put(mat, specificToolMults.getDouble(toolName));
-		}
+		//weaponMults = new HashMap<Material, Double>();
+		weaponMults = EntitySetting.fromYamlConfig(pl, pl.getConfig(), "weapon-multipliers", Map.of(), (k,v)->{
+			if(v instanceof ConfigurationSection cs){
+				HashMap<Material, Double> specificWeaponMults = new HashMap<>();
+				for(String matName : cs.getKeys(/*deep=*/false)){
+					final Material mat = Material.getMaterial(matName.toUpperCase());
+					if(mat != null) specificWeaponMults.put(mat, cs.getDouble(matName));
+					else pl.getLogger().warning("Invalid weapon: \""+matName+"\"!");
+				}
+				return specificWeaponMults;
+			}
+			pl.getLogger().warning("Invalid configuration section (expected weapon:number list): "+k);
+			return null;
+		});
 
-		final TreeMap<Integer, Double> defaultTimeAliveMults = new TreeMap<>(); defaultTimeAliveMults.put(Integer.MIN_VALUE, 1d);
-		final ConfigurationSection timeAliveMultsSection = pl.getConfig().getConfigurationSection("time-alive-multipliers");
-		final BiFunction<String, Object, TreeMap<Integer, Double>> parseTimeAliveMults = (k,v) -> {
+		final TreeMap<Integer, Double> defaultTimeAliveMults = new TreeMap<>();
+		defaultTimeAliveMults.put(Integer.MIN_VALUE, 1d);
+		timeAliveMults = EntitySetting.fromYamlConfig(pl, pl.getConfig(), "time-alive-multipliers", defaultTimeAliveMults, (k,v) -> {
 			if(v instanceof ConfigurationSection cs){
 				@SuppressWarnings("unchecked")
 				final TreeMap<Integer, Double> timeAliveMults = (TreeMap<Integer, Double>)defaultTimeAliveMults.clone();
@@ -252,19 +268,23 @@ public final class DropChanceAPI{
 			}
 			pl.getLogger().severe("time-alive-multipliers for "+k+" is incorrectly defined");
 			return null;
-		};
-		timeAliveMults = EntitySettings.fromConfigSection(pl, timeAliveMultsSection, /*recursive=*/false, defaultTimeAliveMults, parseTimeAliveMults);
+		});
 
-		permissionBasedMults = new HashMap<String, Double>();
-		ConfigurationSection customDropratePerms = pl.getConfig().getConfigurationSection("custom-droprate-multiplier-permissions");
-		if(customDropratePerms != null) for(String perm : customDropratePerms.getKeys(/*recursive=*/true)){
-			if(customDropratePerms.isConfigurationSection(perm)) continue; //ignore ['dropheads', 'dropheads.group'] for 'dropheads.group.2x'
-			try{permissionBasedMults.put(perm, customDropratePerms.getDouble(perm, 1D));}
-			catch(NumberFormatException ex){pl.getLogger().severe("Error parsing droprate multiplier for perm: \""+perm+'"');}
-		}
+		permissionMults = EntitySetting.fromYamlConfig(pl, pl.getConfig(), "permission-multipliers", Map.of(), (k,v) -> {
+			if(v instanceof ConfigurationSection cs){
+				HashMap<String, Double> specificPermMults = new HashMap<>();
+				for(String perm : cs.getKeys(/*deep=*/true)){
+					if(cs.isConfigurationSection(perm)) continue; //ignore ['dropheads', 'dropheads.group'] for 'dropheads.group.2x'
+					try{specificPermMults.put(perm, cs.getDouble(perm, 1D));}
+					catch(NumberFormatException ex){pl.getLogger().severe("Error parsing droprate multiplier for permission: \""+perm+'"');}
+				}
+				return specificPermMults;
+			}
+			pl.getLogger().severe("permission-multipliers for "+k+" is incorrectly defined");
+			return null;
+		});
 
 		final BiFunction<String, String, Double> parseDropChance = (k,v) -> {
-			if(!PLAYER_HEADS_ONLY && !k.equals("PLAYER")) return null;
 			try{
 				final double dropChance = Double.parseDouble(v);
 				if(dropChance < 0d || dropChance > 1d){
@@ -280,16 +300,15 @@ public final class DropChanceAPI{
 			}
 		};
 		//Load individual mobs' drop chances
-		dropChances = EntitySettings.fromConfigFile(pl, "head-drop-rates.txt", 0d, parseDropChance);
-		if(!PLAYER_HEADS_ONLY){
-			if(VANILLA_WSKELE_HANDLING && dropChances.get(EntityType.WITHER_SKELETON, 0.025d) != 0.025d){
-				pl.getLogger().warning("Wither Skeleton Skull drop chance has been modified in 'head-drop-rates.txt', "
-						+ "but this value will be ignored because 'vanilla-wither-skeleton-skulls' is set to true.");
-			}
-//			dropChances.entrySet().removeIf(entry -> entry.getValue() == DEFAULT_CHANCE);
+		dropChances = EntitySetting.fromTextFile(pl, "head-drop-rates.txt", "/configs/head-drop-rates.txt", 0d, parseDropChance);
+		if(VANILLA_WSKELE_HANDLING && dropChances.get(EntityType.WITHER_SKELETON, 0.025d) != 0.025d){
+			pl.getLogger().warning("Wither Skeleton Skull drop chance has been modified in 'head-drop-rates.txt'"
+					+ " (0.025->"+dropChances.get(EntityType.WITHER_SKELETON)+"), "
+					+ "but this value will be ignored because 'vanilla-wither-skeleton-skulls' is set to true.");
 		}
+//		dropChances.entrySet().removeIf(entry -> entry.getValue() == DEFAULT_CHANCE);
 
-		// Dynamically add all the children perms of "dropheads.alwaysbehead.<entity>" and "dropheads.canbehead.<entity>"
+		// Dynamically generate all the children perms of "dropheads.alwaysbehead.<entity>" and "dropheads.canbehead.<entity>"
 		final Permission alwaysBeheadPerm = pl.getServer().getPluginManager().getPermission("dropheads.alwaysbehead");
 		final Permission canBeheadPerm = pl.getServer().getPluginManager().getPermission("dropheads.canbehead");
 		if(alwaysBeheadPerm != null) try{
@@ -333,17 +352,27 @@ public final class DropChanceAPI{
 		methodSendMessage = tempSendMessage;
 	}
 
-	/** Get the set of weapons that are allowed to cause a head drop; will be <code>null</code> if no specific weapon(s) are required.
-	 * @return An unmodifiable set of Material types, or <code>null</code>
+//	/** Get the set of weapons that are allowed to cause a head drop; will be <code>null</code> if no specific weapon(s) are required.
+//	 * @return An unmodifiable set of Material types, or <code>null</code>
+//	 */
+//	public Set<Material> getRequiredWeapons(Entity entity){return requiredWeapons.get(entity);}
+	/** Check whether the given weapon is allowed to cause a head drop; will always be <code>true</code> if no specific weapon(s) are required.
+	 * @param entity The entity that was killed
+	 * @param weapon The weapon <code>Material</code> that was used
+	 * @return Boolean value
 	 */
-	public Set<Material> getRequiredWeapons(){return mustUseTools;}
-	/** Get the raw drop chance (ignore all multipliers) of a head for a specific texture key.
+	public boolean isWeaponAbleToBehead(Entity entity, Material weapon){
+		final Set<Material> weapons = requiredWeapons.get(entity);
+		return weapons.isEmpty() || weapons.contains(weapon);
+	}
+	/** Get the raw drop chance (ignore all multipliers) of a head for a specific texture key. Only called by CommandDropRate currently.
 	 * @param textureKey The target texture key
 	 * @param useDefault Whether to return the default-chance if key is not found, otherwise will return null
 	 * @return The drop chance [0, 1] or null
 	 */
-	@Deprecated
-	public Double getRawDropChance(String textureKey, boolean useDefault){return dropChances.get(textureKey, useDefault ? dropChances.globalDefault() : null);}
+	public Double getRawDropChanceOrDefaultFromTextureKey(String textureKey, boolean useDefault){
+		return dropChances.get(textureKey, useDefault ? dropChances.globalDefault() : null);
+	}
 	/** Get the raw drop chance (ignore all multipliers) of a head for a specific entity.
 	 * @param entity The target entity
 	 * @return The drop chance [0, 1]
@@ -357,16 +386,16 @@ public final class DropChanceAPI{
 	/** Get the percent chance added to the drop chance (per looting level).
 	 * @return The drop chance increase amount
 	 */
-	public double getLootingAdd(){return LOOTING_ADD;}
+	public double getLootingAdd(Entity entity){return lootingLevelAdd.get(entity);}
 	/** Get the drop chance multiplier applied (per looting level).
 	 * @return The drop chance multiplier
 	 */
-	public double getLootingMult(){return LOOTING_MULT;}
+	public double getLootingMult(Entity entity){return lootingLevelMult.get(entity);}
 	/** Get the drop chance multiplier applied based on Material of the weapon used.
 	 * @param weapon The type of weapon used
 	 * @return The weapon-type multiplier
 	 */
-	public double getWeaponMult(Material weapon){return weaponMults.getOrDefault(weapon, 1D);}
+	public double getWeaponMult(Entity entity, Material weapon){return weaponMults.get(entity).getOrDefault(weapon, 1D);}
 	/** Get the drop chance multiplier applied based on how many ticks an entity has been alive.
 	 * @param entity The entity to check the lifetime of
 	 * @return The time-alive multiplier
@@ -382,9 +411,9 @@ public final class DropChanceAPI{
 	 * @param killer The entity to check for drop chance multiplier permissions
 	 * @return The aggregate multiplier from any relevent permission nodes
 	 */
-	public double getPermsBasedMult(Permissible killer){
+	public double getPermissionsMult(Entity victim, Permissible killer){
 		if(killer == null) return 1D;
-		return permissionBasedMults.entrySet().stream().parallel()
+		return permissionMults.get(victim).entrySet().stream().parallel() //TOOD: parallel worth it?
 				.filter(e -> killer.hasPermission(e.getKey()))
 				.map(e -> e.getValue())
 				.reduce(1D, (a, b) -> a * b);
@@ -446,7 +475,7 @@ public final class DropChanceAPI{
 					BlockState state = headBlock.getState();
 					state.setType(headItem.getType());
 					Vector facingVector = entity.getLocation().getDirection(); facingVector.setY(0);  // loc.setPitch(0F)
-					BlockFace blockRotation = JunkUtils.getClosestBlockFace(facingVector, possibleHeadRotations).getOppositeFace();
+					BlockFace blockRotation = JunkUtils.getHeadPlacementDirection(facingVector);
 					try{
 						Rotatable data = (Rotatable)headBlock.getBlockData();
 						data.setRotation(blockRotation);

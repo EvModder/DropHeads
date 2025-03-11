@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.function.BiFunction;
 import javax.annotation.Nonnull;
+import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -52,6 +53,7 @@ public record EntitySetting<T>(T globalDefault, Map<EntityType, T> typeSettings,
 		return get(entity.getType(), orDefault);
 	}
 	public T get(Entity entity){return get(entity, globalDefault);}
+	public boolean hasAnyValue(){return (typeSettings != null && !typeSettings.isEmpty()) || (subtypeSettings != null && !subtypeSettings.isEmpty());}
 
 	private static boolean isEntityType(String key){
 		final int dataTagSep = key.indexOf('|');
@@ -146,11 +148,11 @@ public record EntitySetting<T>(T globalDefault, Map<EntityType, T> typeSettings,
 	 * @return EntitySetting<T>
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> EntitySetting<T> fromYamlConfig(@Nonnull final DropHeads pl, @Nonnull final ConfigurationSection cs,
+	public static <T> EntitySetting<T> fromYamlConfig(@Nonnull final DropHeads pl, @Nonnull final Configuration config, @Nonnull final String path,
 			//boolean deep,
 			@Nonnull final T defaultValue, final BiFunction<String, Object, T> valueParser)
 	{
-		if(cs == null) return new EntitySetting<T>(defaultValue, null, null);
+		if(!config.contains(path)) return new EntitySetting<T>(defaultValue, null, null);
 
 		final HashMap<EntityType, T> typeSettings = new HashMap<>();
 		final HashMap<String, T> subtypeSettings = new HashMap<>();
@@ -160,11 +162,18 @@ public record EntitySetting<T>(T globalDefault, Map<EntityType, T> typeSettings,
 //		else internalValueParser = (k,v)->defaultValue.getClass().isInstance(v) ? (T)v : null;
 		else internalValueParser = (k,v)->{
 			if(defaultValue.getClass().isInstance(v)) return (T)v;
-			pl.getLogger().severe("Invalid value for "+k+" in '"+cs.getCurrentPath()+"': "+v);
+			pl.getLogger().severe("Invalid value for "+k+" in '"+path+"': "+v);
 			return null;
 		};
+		ConfigurationSection cs = config.isConfigurationSection(path) ? config.getConfigurationSection(path) : null;
+		// No ConfigurationSection indicates no per-EntityType details, so just attempt to parse as default (for all entities)
+		if(cs == null){
+			final T t = internalValueParser.apply("DEFAULT", config.get(path));
+			return t == null ? null : new EntitySetting<T>(t, /*typeSettings=*/null, /*subtypeSettings=*/null);
+		}
 		Map<String, Object> values = cs.getValues(/*deep=*/false);
-		if(valueParser != null && !values.isEmpty() && values.keySet().stream().noneMatch(EntitySetting::isEntityType)){
+		// ConfigurationSection detected, but the keys are not EntityTypes/textureKeys, so again just attempt to parse as a single default value
+		if(!values.isEmpty() && values.keySet().stream().noneMatch(EntitySetting::isEntityType)){
 			final T t = valueParser.apply("DEFAULT", cs);
 			return t == null ? null : new EntitySetting<T>(t, /*typeSettings=*/null, /*subtypeSettings=*/null);
 		}

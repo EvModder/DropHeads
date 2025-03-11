@@ -465,7 +465,13 @@ public final class JunkUtils{
 		return closestEntity;
 	}
 
-	public final static BlockFace getClosestBlockFace(Vector vec, BlockFace... blockFaces){
+	private static final BlockFace[] possibleHeadRotations = new BlockFace[]{
+			BlockFace.NORTH, BlockFace.NORTH_EAST, BlockFace.NORTH_WEST,
+			BlockFace.SOUTH, BlockFace.SOUTH_EAST, BlockFace.SOUTH_WEST,
+			BlockFace.NORTH_NORTH_EAST, BlockFace.NORTH_NORTH_WEST,
+			BlockFace.SOUTH_SOUTH_EAST, BlockFace.SOUTH_SOUTH_WEST
+	};
+	private static final BlockFace getClosestBlockFace(Vector vec, BlockFace... blockFaces){
 		if(!vec.isNormalized()) vec = vec.normalize();
 		BlockFace nearestFace = blockFaces[0];
 		double minAngle = Double.MAX_VALUE;
@@ -474,6 +480,9 @@ public final class JunkUtils{
 			if(angle < minAngle){minAngle = angle; nearestFace = face;}
 		}
 		return nearestFace;
+	}
+	public static final BlockFace getHeadPlacementDirection(Vector vec){
+		return getClosestBlockFace(vec, possibleHeadRotations).getOppositeFace();//TODO: why is it opposite?
 	}
 
 	private final static RefClass craftPlayerClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftPlayer");

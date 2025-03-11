@@ -9,7 +9,6 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Skull;
-import org.bukkit.configuration.Configuration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -43,7 +42,7 @@ public class BlockClickListener implements Listener{
 	private final int CLICK_MSG_DELAY_TICKS; // So they dont spam themselves
 	private boolean infoClickInCooldown = false;
 
-	public BlockClickListener(Configuration translations){
+	public BlockClickListener(){
 		pl = DropHeads.getPlugin();
 		REPAIR_IRON_GOLEM_HEADS = pl.getConfig().getBoolean("cracked-iron-golem-heads", false);
 		if(SHOW_CLICK_INFO = pl.getConfig().getBoolean("head-click-listener", true)){
@@ -51,18 +50,14 @@ public class BlockClickListener implements Listener{
 			// That's <a> <Swamp Amorsmith Zombie Villager> <Head>
 			// That's <EvDoc>'s Head
 			HEAD_DISPLAY_PLAYERS = TextUtils.translateAlternateColorCodes('&',
-					translations.getString("head-click-format-players", pl.getConfig().getString("head-click-format-players",
-							"&7[&6DropHeads&7]&f That's ${NAME}'s Head")));
+					pl.getConfig().getString("head-click-format-players", "&7[&6DropHeads&7]&f That's ${NAME}'s Head"));
 			HEAD_DISPLAY_MOBS = TextUtils.translateAlternateColorCodes('&',
-					translations.getString("head-click-format-mobs", pl.getConfig().getString("head-click-format-mobs",
-							"&7[&6DropHeads&7]&f That's ${A} ${MOB_SUBTYPES_DESC}${MOB_TYPE}&f ${HEAD_TYPE}")));
+					pl.getConfig().getString("head-click-format-mobs", "&7[&6DropHeads&7]&f That's ${A} ${MOB_SUBTYPES_DESC}${MOB_TYPE}&f ${HEAD_TYPE}"));
 			HEAD_DISPLAY_HDB = TextUtils.translateAlternateColorCodes('&',
-					translations.getString("head-click-format-hdb", pl.getConfig().getString("head-click-format-hdb",
-							"&7[&6DropHeads&7]&f That's ${A} ${NAME} Head")));
+					pl.getConfig().getString("head-click-format-hdb", "&7[&6DropHeads&7]&f That's ${A} ${NAME} Head"));
 			HEAD_DISPLAY_UNKNOWN = TextUtils.translateAlternateColorCodes('&',
-					translations.getString("head-click-format-unknown", pl.getConfig().getString("head-click-format-unknown",
-							"&7[&6DropHeads&7]&f Custom Head Texture: ${URL}")));
-			MOB_SUBTYPES_SEPARATOR = translations.getString("mob-subtype-separator", " ");
+					pl.getConfig().getString("head-click-format-unknown", "&7[&6DropHeads&7]&f Custom Head Texture: ${URL}"));
+			MOB_SUBTYPES_SEPARATOR = pl.getConfig().getString("mob-subtype-separator", " ");
 			UPDATE_PLAYER_HEADS = pl.getConfig().getBoolean("update-on-skin-change", true);
 			ASYNC_PROFILE_REQUESTS = pl.getConfig().getBoolean("async-offline-profile-requests", true) ||
 					!pl.getConfig().getBoolean("head-click-enable-profile-requests", true);

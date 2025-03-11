@@ -214,12 +214,7 @@ public class CommandSpawnHead extends EvCommand{
 		return JunkUtils.getGameProfile(target, /*fetchSkin=*/false, /*nullForSync=*/null);
 	}
 
-	private static class HeadFromString{
-		public final ItemStack head;
-		public final boolean noFurtherError;
-		public final String targetHead;
-		public HeadFromString(ItemStack h, boolean u, String t){head=h; noFurtherError=u; targetHead=t;}
-	}
+	private record HeadFromString(ItemStack head, boolean noFurtherError, String targetHead){}
 	private HeadFromString getHeadFromTargetString(String fullTarget, CommandSender sender){
 		int prefixEnd = fullTarget.indexOf(':');
 		String prefix = prefixEnd == -1 ? "" : fullTarget.substring(0, prefixEnd + 1).toLowerCase();
@@ -343,32 +338,29 @@ public class CommandSpawnHead extends EvCommand{
 				.replaceAll("(?i)\\$\\{RECIPIENT\\}", recipients));
 	}
 
-	private static class ParsedArgs{
+	private record SpawnHeadArgs(Integer amount, String slot, String fullTarget, List<Entity> giveTargets){}
+	private SpawnHeadArgs parseArgs(CommandSender sender, String[] args){
 		int amount = -1;
-		String slot;
-		String fullTarget;
+		String slot = null, fullTarget;
 		List<Entity> giveTargets = new ArrayList<>();
-	}
-	private ParsedArgs parseArgs(CommandSender sender, String[] args){
-		ParsedArgs parsed = new ParsedArgs();
 		for(int i=0; i<args.length; ++i){
 			if(args[i].matches("(?i:"+AMT_PREFIX+").*")){
 				if(!args[i].matches("(?i:"+AMT_PREFIX+")[0-9]+")){
 					sender.sendMessage(String.format(translate("errors.invalid-amount"), args[i].substring(AMT_PREFIX.length())));
 					return null;
 				}
-				parsed.amount = Integer.parseInt(args[i].substring(AMT_PREFIX.length()));
+				amount = Integer.parseInt(args[i].substring(AMT_PREFIX.length()));
 				args = (String[])ArrayUtils.remove(args, i);
 				break;
 			}
 		}
 		for(int i=0; i<args.length; ++i){
 			if(args[i].matches("(?i:"+SLOT_PREFIX+").*")){
-				parsed.slot = args[i].substring(SLOT_PREFIX.length());
-				if(!parsed.slot.matches("[1-2]?[0-9]|3[0-5]")){ // Valid number slots are 0 to 35
-					try{EquipmentSlot.valueOf(parsed.slot.toUpperCase());}
+				slot = args[i].substring(SLOT_PREFIX.length());
+				if(!slot.matches("[1-2]?[0-9]|3[0-5]")){ // Valid number slots are 0 to 35
+					try{EquipmentSlot.valueOf(slot.toUpperCase());}
 					catch(IllegalArgumentException ex){
-						sender.sendMessage(String.format(translate("errors.invalid-slot"), parsed.slot));
+						sender.sendMessage(String.format(translate("errors.invalid-slot"), slot));
 						return null;
 					}
 				}
@@ -390,7 +382,7 @@ public class CommandSpawnHead extends EvCommand{
 			if(args[0].indexOf(':') == -1){giveTo = args[0]; args = Arrays.copyOfRange(args, 1, args.length);}
 			else if(args[args.length].indexOf(':') == -1){giveTo = args[args.length-1]; args = Arrays.copyOfRange(args, 0, args.length-1);}
 		}
-		if(args.length > 0) parsed.fullTarget = String.join("_", args);
+		if(args.length > 0) fullTarget = String.join("_", args);
 		else{
 			Entity entity = JunkUtils.getTargetEntity((Player)sender, /*range=*/10);
 			if(entity == null && sender instanceof Player) entity = (Player)sender;
@@ -398,7 +390,7 @@ public class CommandSpawnHead extends EvCommand{
 				sender.sendMessage(String.format(translate("errors.head-not-found"), "", ""));//Only reachable by server console
 				return null;
 			}
-			parsed.fullTarget = entity.getUniqueId().toString();
+			fullTarget = entity.getUniqueId().toString();
 		}
 
 		// Get head receipient(s)
@@ -414,33 +406,33 @@ public class CommandSpawnHead extends EvCommand{
 						sender.sendMessage(String.format(translate("errors.no-matching-entities"), giveTo));
 						return null;
 					}
-					final boolean isEquipmentSlot = parsed.slot != null && !parsed.slot.matches("[0-9]+");
+					final boolean isEquipmentSlot = slot != null && !slot.matches("[0-9]+");
 					for(Entity e : selected){
-						if(!isEquipmentSlot && e instanceof InventoryHolder) parsed.giveTargets.add(e);
-						else if(isEquipmentSlot && e instanceof LivingEntity) parsed.giveTargets.add(e);
+						if(!isEquipmentSlot && e instanceof InventoryHolder) giveTargets.add(e);
+						else if(isEquipmentSlot && e instanceof LivingEntity) giveTargets.add(e);
 					}
 					args = Arrays.copyOfRange(args, 1, args.length);
 				}
 			}
 			catch(IllegalArgumentException ex){}
 		}
-		if(parsed.giveTargets.isEmpty()){
+		if(giveTargets.isEmpty()){
 			if(giveTo != null){
 				sender.sendMessage(String.format(translate("errors.giveto-not-found"), giveTo));
 				return null;
 			}
-			if(sender instanceof Player) parsed.giveTargets.add((Player)sender);
+			if(sender instanceof Player) giveTargets.add((Player)sender);
 			else{
 				sender.sendMessage(translate("errors.run-by-player"));
 				return null;
 			}
 		}
-		return parsed;
+		return new SpawnHeadArgs(amount, slot, fullTarget, giveTargets);
 	}
 
 	@Override public boolean onCommand(CommandSender sender, Command command, String label, String[] args){
 		// Parse arguments
-		final ParsedArgs parsed = parseArgs(sender, args);
+		final SpawnHeadArgs parsed = parseArgs(sender, args);
 		if(parsed == null) return true;
 		final int amount = parsed.amount;
 		final String slot = parsed.slot;

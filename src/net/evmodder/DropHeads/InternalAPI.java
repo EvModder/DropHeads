@@ -27,8 +27,8 @@ public final class InternalAPI extends HeadAPI{
 	 * @return the value at that path, or the value of <code>defaultValue</code> if not found
 	 */
 	public String loadTranslationStr(String key, String defaultValue){
-		if(!translationsFile.isString(key)) DropHeads.getPlugin().getLogger().severe("Undefined key in 'translations.yml': "+key);
-		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key, defaultValue));
+		if(!pl.getConfig().isString(key)) DropHeads.getPlugin().getLogger().severe("Undefined key in 'translations.yml': "+key);
+		final String msg = TextUtils.translateAlternateColorCodes('&', pl.getConfig().getString(key, defaultValue));
 		int i = msg.indexOf('$');
 		if(i == -1) return msg;
 		StringBuilder builder = new StringBuilder();
@@ -67,7 +67,7 @@ public final class InternalAPI extends HeadAPI{
 	 */
 	public TranslationComponent loadTranslationComp(String key, String defaultValue){
 //		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in 'translations.yml': "+key);
-		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key, defaultValue));
+		final String msg = TextUtils.translateAlternateColorCodes('&', pl.getConfig().getString(key, defaultValue));
 		int i = msg.indexOf('$');//${sub}
 		if(i == -1){
 			return new TranslationComponent(msg);

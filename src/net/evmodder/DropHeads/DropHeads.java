@@ -18,6 +18,10 @@
  */
 package net.evmodder.DropHeads;
 
+import org.bukkit.configuration.Configuration;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import org.bukkit.configuration.file.YamlConfiguration;
 import net.evmodder.DropHeads.commands.*;
 import net.evmodder.DropHeads.listeners.*;
 import net.evmodder.EvLib.EvPlugin;
@@ -52,6 +56,7 @@ import net.evmodder.EvLib.Updater;
 // * Bukkit-1.13: https://hub.spigotmc.org/javadocs/bukkit/
 // Search > File... > containing text X > replace Y
 // ` TellrawUtils.` -> ` `, `(TellrawUtils.` -> `(`, `>TellrawUtils.` -> `>`, `(HeadUtils.` -> `(`
+
 public final class DropHeads extends EvPlugin{
 	private static DropHeads instance;
 	public static DropHeads getPlugin(){return instance;}
@@ -81,15 +86,23 @@ public final class DropHeads extends EvPlugin{
 //			}));
 		}
 		instance = this;
-		final NoteblockMode m = config.isBoolean("noteblock-mob-sounds")
-				? (config.getBoolean("noteblock-mob-sounds") ? NoteblockMode.LISTENER : NoteblockMode.OFF)
-				: JunkUtils.parseEnumOrDefault(config.getString("noteblock-mob-sounds", "OFF"), NoteblockMode.OFF);
-		final boolean CRACKED_IRON_GOLEMS_ENABLED = config.getBoolean("cracked-iron-golem-heads", false);;
+		final NoteblockMode m = JunkUtils.parseEnumOrDefault(config.getString("noteblock-mob-sounds", "OFF"), NoteblockMode.OFF);
+		final boolean CRACKED_IRON_GOLEMS_ENABLED = config.getBoolean("cracked-iron-golem-heads", false);
+
+		// Load translations
+		final InputStream translationsIS = getClass().getResourceAsStream("/configs/translations.yml");
+		final Configuration translations = FileIO.loadConfig(this, "translations.yml", translationsIS, /*notifyIfNew=*/false);
+		if(!translations.getBoolean("new")) translations.setDefaults(YamlConfiguration.loadConfiguration(new InputStreamReader(translationsIS)));
+		config.setDefaults(translations);
+
+		// Load entity-settings
+		config.setDefaults(FileIO.loadConfig(this, "entity-settings.yml",
+				getClass().getResourceAsStream("/configs/entity-settings.yml"), /*notifyIfNew=*/false));
+
 		api = new InternalAPI(m, CRACKED_IRON_GOLEMS_ENABLED);
+		final boolean WANT_TO_REPLACE_PLAYER_DEATH_MSG = config.getBoolean("behead-announcement-replaces-player-death-message", true);
 		final boolean GLOBAL_PLAYER_BEHEAD_MSG = config.getString("behead-announcement.player",
 				config.getString("behead-announcement.default", "GLOBAL")).toUpperCase().equals("GLOBAL");
-		final boolean WANT_TO_REPLACE_PLAYER_DEATH_MSG = config.getBoolean("behead-announcement-replaces-player-death-message",
-				config.getBoolean("behead-announcement-replaces-death-message", true));
 		if(WANT_TO_REPLACE_PLAYER_DEATH_MSG && !GLOBAL_PLAYER_BEHEAD_MSG){
 			getLogger().warning("behead-announcement-replaces-player-death-message is true, but behead-announcement.player is not GLOBAL");
 		}
@@ -114,7 +127,7 @@ public final class DropHeads extends EvPlugin{
 			getServer().getPluginManager().registerEvents(new ItemDropListener(), this);
 		}
 		if(config.getBoolean("head-click-listener", true) || CRACKED_IRON_GOLEMS_ENABLED){
-			getServer().getPluginManager().registerEvents(new BlockClickListener(api.translationsFile), this);
+			getServer().getPluginManager().registerEvents(new BlockClickListener(), this);
 		}
 		if(config.getBoolean("save-custom-lore", true)){
 			getServer().getPluginManager().registerEvents(new LoreStoreBlockPlaceListener(), this);

@@ -1,8 +1,6 @@
 package net.evmodder.DropHeads;
 
 import java.io.File;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,9 +26,7 @@ import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
-import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
@@ -58,9 +54,9 @@ import net.evmodder.EvLib.extras.WebUtils;
  * Warning: Functions may change or disappear in future releases
  */
 public class HeadAPI{
-	private final DropHeads pl;
+	protected final DropHeads pl;
 	protected HeadDatabaseAPI hdbAPI = null;
-	protected final Configuration translationsFile;
+	//protected final Configuration translationsFile;
 //	private final int MAX_HDB_ID = -1;
 	private final boolean GRUMM_ENABLED, SIDEWAYS_SHULKERS_ENABLED, COLORED_COLLARS_ENABLED, SADDLES_ENABLED; // may trigger additional file downloads.
 	private final boolean HOLLOW_SKULLS_ENABLED, TRANSPARENT_SLIME_ENABLED, CRACKED_IRON_GOLEMS_ENABLED, USE_PRE_JAPPA, USE_OLD_VEX, USE_OLD_BAT;
@@ -204,30 +200,24 @@ public class HeadAPI{
 		MAKE_UNSTACKABLE = pl.getConfig().getBoolean("make-heads-unstackable", false);
 		PREFER_VANILLA_HEADS = pl.getConfig().getBoolean("prefer-vanilla-heads", true);
 
-		//---------- <Load translations> ----------------------------------------------------------------------
-		translationsFile = FileIO.loadConfig(pl, "translations.yml", getClass().getResourceAsStream("/configs/translations.yml"), /*notifyIfNew=*/false);
-		final InputStream translationsIS = getClass().getResourceAsStream("/configs/translations.yml");  // Can't reuse InputStreams
-		if(translationsIS != null){  // getResourceAsStream() returns null after a plugin reload
-			translationsFile.setDefaults(YamlConfiguration.loadConfiguration(new InputStreamReader(translationsIS)));
-		}
 		// See if we can use the 1.19.4+ "fallback" feature
-		USE_TRANSLATE_FALLBACKS = translationsFile.getBoolean("use-translation-fallbacks", false) && Bukkit.getBukkitVersion().compareTo("1.19.4") >= 0;
+		USE_TRANSLATE_FALLBACKS = pl.getConfig().getBoolean("use-translation-fallbacks", false) && Bukkit.getBukkitVersion().compareTo("1.19.4") >= 0;
 
 		if(USE_TRANSLATE_FALLBACKS){
-			LOCAL_HEAD = new TranslationComponent("head_type.head", translationsFile.getString("head-type-names.head"));
-			LOCAL_SKULL = new TranslationComponent("head_type.skull", translationsFile.getString("head-type-names.skull", "Skull"));
-			LOCAL_TOE = new TranslationComponent("head_type.toe", translationsFile.getString("head-type-names.toe", "Toe"));
+			LOCAL_HEAD = new TranslationComponent("head_type.head", pl.getConfig().getString("head-type-names.head"));
+			LOCAL_SKULL = new TranslationComponent("head_type.skull", pl.getConfig().getString("head-type-names.skull", "Skull"));
+			LOCAL_TOE = new TranslationComponent("head_type.toe", pl.getConfig().getString("head-type-names.toe", "Toe"));
 		}
 		else{
 			//RawText?
-			LOCAL_HEAD = new TranslationComponent(translationsFile.getString("head-type-names.head"));
-			LOCAL_SKULL = new TranslationComponent(translationsFile.getString("head-type-names.skull", "Skull"));
-			LOCAL_TOE = new TranslationComponent(translationsFile.getString("head-type-names.toe", "Toe"));
+			LOCAL_HEAD = new TranslationComponent(pl.getConfig().getString("head-type-names.head"));
+			LOCAL_SKULL = new TranslationComponent(pl.getConfig().getString("head-type-names.skull", "Skull"));
+			LOCAL_TOE = new TranslationComponent(pl.getConfig().getString("head-type-names.toe", "Toe"));
 		}
 
-		MOB_SUBTYPES_SEPARATOR = translationsFile.getString("mob-subtype-separator", " ");
+		MOB_SUBTYPES_SEPARATOR = pl.getConfig().getString("mob-subtype-separator", " ");
 		exactTextureKeyHeadNameFormats = new HashMap<String, String>();
-		ConfigurationSection textureKeyHeadFormatsConfig = translationsFile.getConfigurationSection("texturekey-head-name-format");
+		ConfigurationSection textureKeyHeadFormatsConfig = pl.getConfig().getConfigurationSection("texturekey-head-name-format");
 		if(textureKeyHeadFormatsConfig != null) textureKeyHeadFormatsConfig.getValues(/*deep=*/false)
 			.forEach((textureKey, textureKeyHeadNameFormat) -> {
 				if(textureKeyHeadNameFormat instanceof String == false){
@@ -238,7 +228,7 @@ public class HeadAPI{
 		headNameFormats = new HashMap<EntityType, String>();
 		headNameFormats.put(EntityType.UNKNOWN, "${MOB_SUBTYPES_DESC}${MOB_TYPE} ${HEAD_TYPE}"); // Default for mobs
 		headNameFormats.put(EntityType.PLAYER, "block.minecraft.player_head.named"); // Default for players
-		ConfigurationSection entityHeadFormatsConfig = translationsFile.getConfigurationSection("head-name-format");
+		ConfigurationSection entityHeadFormatsConfig = pl.getConfig().getConfigurationSection("head-name-format");
 		if(entityHeadFormatsConfig != null) entityHeadFormatsConfig.getValues(/*deep=*/false)
 			.forEach((entityName, entityHeadNameFormat) -> {
 				if(entityHeadNameFormat instanceof String == false){
@@ -253,7 +243,7 @@ public class HeadAPI{
 		DEFAULT_HEAD_NAME_FORMAT = headNameFormats.get(EntityType.UNKNOWN);
 
 		entitySubtypeNames = new HashMap<String, TranslationComponent>();
-		ConfigurationSection entitySubtypeNamesConfig = translationsFile.getConfigurationSection("entity-subtype-names");
+		ConfigurationSection entitySubtypeNamesConfig = pl.getConfig().getConfigurationSection("entity-subtype-names");
 		if(entitySubtypeNamesConfig != null) entitySubtypeNamesConfig.getValues(/*deep=*/false)
 			.forEach((subtypeName, localSubtypeName) -> {
 			if(localSubtypeName instanceof String == false){
@@ -266,11 +256,11 @@ public class HeadAPI{
 			entitySubtypeNames.put(subtypeName.toUpperCase(), comp);
 		});
 		if(SAVE_TYPE_IN_LORE){
-			PLAYER_PREFIX = translationsFile.getString("head-type-in-lore.player");
-			MOB_PREFIX = translationsFile.getString("head-type-in-lore.mob");
-			MHF_PREFIX = translationsFile.getString("head-type-in-lore.mhf");
-			HDB_PREFIX = translationsFile.getString("head-type-in-lore.hdb");
-			CODE_PREFIX = translationsFile.getString("head-type-in-lore.code");
+			PLAYER_PREFIX = pl.getConfig().getString("head-type-in-lore.player");
+			MOB_PREFIX = pl.getConfig().getString("head-type-in-lore.mob");
+			MHF_PREFIX = pl.getConfig().getString("head-type-in-lore.mhf");
+			HDB_PREFIX = pl.getConfig().getString("head-type-in-lore.hdb");
+			CODE_PREFIX = pl.getConfig().getString("head-type-in-lore.code");
 		}
 		else PLAYER_PREFIX = MOB_PREFIX = MHF_PREFIX = HDB_PREFIX = CODE_PREFIX = null;
 		//---------- </Load translations> ---------------------------------------------------------------------
