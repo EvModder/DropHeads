@@ -1,12 +1,6 @@
-# How to announce beheadings, options are GLOBAL, LOCAL, DIRECT, or OFF
-# To customize per killed entity type, use `entity_type: 'MODE'`
-behead-announcement:
-  default: 'LOCAL'
-  player: 'GLOBAL'
-#  wither_skeleton: 'OFF'
-
 # Announcement mode for players with the 'dropheads.silentbehead' permission
-# Overrides the above setting; it is recommended to use 'DIRECT' or 'OFF'
+# Overrides behead-announcement in entity-settings.yml
+# it is recommended to use 'DIRECT' or 'OFF' here
 silentbehead-announcement: OFF
 
 # How far 'LOCAL' broadcasts can be heard
@@ -23,23 +17,6 @@ behead-announcement-replaces-player-death-event-message: false
 
 # Replace death message sent to the owner of a pet when it is beheaded
 behead-message-replaces-pet-death-message: true
-
-# Whether to drop heads if not killed by a player
-drop-for-nonplayer-kills: false
-
-# Whether to drop heads if killed by a projectile weapon
-drop-for-ranged-kills: false
-
-# In vanilla, the main-hand item is used for looting even if shot from offhand
-use-ranged-weapon-for-looting: true
-
-# Whether to drop heads if last-damage-cause is not a valid entity
-drop-for-indirect-kills: false
-indirect-kill-threshold: '30s'
-
-# Only drop player heads (you can also do this in 'head-drop-rates.txt'
-# by making all mobs except players have a 0% chance of dropping heads)
-player-heads-only: false
 
 # Only drop "simple" mob heads (one per EntityType), without any unique
 # texture features based on mob traits or subtype
@@ -127,15 +104,6 @@ show-head-type-in-lore: true
 # WARNING: This feature is in EARLY-BETA and may not end up being supported
 substitute-dropheads-in-give-command: true
 
-# Only drop heads if the killer used an axe; overrides 'must-use'
-must-use-axe: false
-
-# Drop chances are multiplied by this number for each level of looting
-looting-multiplier: 1.1
-
-# This number is added to the drop chance for each level of looting
-looting-addition: 0.0
-
 # Defer wither skeleton skull handling to vanilla Minecraft
 # This bypasses 'head-drop-rates.txt', custom looting multiplier/addition,
 # 'must-use-axe', 'drop-for-nonplayer-kills', and other DropHeads settings
@@ -183,49 +151,6 @@ endermen-camouflage-heads: []
 head-item-drop-mode: 'EVENT'
 
 head-place-overwrite-blocks: ['AIR', 'WATER', 'SHORT_GRASS']
-
-# (Optional) Require using listed hand-held items in order to get head drops
-# If this list is empty, any weapon can be used to get heads
-must-use:
-#  - IRON_SWORD
-#  - DIAMOND_AXE
-#  - WOODEN_HOE
-
-# (Optional) Give listed hand-held items a different chance of beheading
-# The number is multiplier in drop chance when using the given tool
-# Eg: 2.0 = twice as likely, 1.5 = 50% more likely, 0.1 = 10% as likely, etc.
-specific-tool-multipliers:
-  AIR: 2
-  SHEARS: 2
-  GOLDEN_AXE: 2
-  NETHERITE_AXE: 1.6
-  DIAMOND_AXE: 1.5
-  IRON_AXE: 1.4
-  STONE_AXE: 1.3
-  WOODEN_AXE: 1.2
-  DIAMOND_SWORD: 1.2
-  IRON_SWORD: 1.1
-
-# (Optional) Modify behead chance based on how long a mob type has been alive
-# Format is `X: V`, where if the mob has been alive for X or more time, then
-# the drop rate is multiplied by V similar to specific-tool-multipliers)
-# Default unit is ticks; other units: s[ec], m[in], h[r], d[ay], w[eek], y[r]
-time-alive-multipliers:
-  # Example: this will prevent player beheads if they have been alive < 1min
-  player:
-    0s: 0.0
-    1m: 1.0
-  # Example: for all other mobs, this will make heads more common as they age
-  default:
-    3h: 1.1
-    2d: 2.0
-    1w: 3.0
-    30w6d11h55m33s: 10.0
-
-# Set drop chance multipliers with custom permissions
-custom-droprate-multiplier-permissions:
-#  dropheads.group.droprate2x: 2.0
-#  dropheads.group.droprate150percent: 1.5
 
 # Changes the death `Event Priority` that DropHeads registers at
 # Low values => DropHeads runs BEFORE other plugins; high values => runs AFTER

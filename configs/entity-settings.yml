@@ -1,9 +1,25 @@
+# All settings in this file can be applied per-EntityType (or subtype)
+# Use 'default' or 'unknown' to modify a setting for all entities which
+# do not have it specifically overriden
+
 # How to announce beheadings, options are GLOBAL, LOCAL, DIRECT, or OFF
-# To customize per killed entity type, use `entity_type: 'MODE'`
 behead-announcement:
   default: 'LOCAL'
   player: 'GLOBAL'
 #  wither_skeleton: 'OFF'
+
+# Whether to drop heads if not killed by a player
+drop-for-nonplayer-kills: false
+
+# Whether to drop heads if killed by a projectile weapon
+drop-for-ranged-kills: false
+
+# In vanilla, the main-hand item is used for looting even if shot from offhand
+use-ranged-weapon-for-looting: true
+
+# Whether to drop heads if last-damage-cause is not a valid entity
+drop-for-indirect-kills: false
+indirect-kill-threshold: '30s'
 
 # Drop chances are multiplied by this number for each level of looting
 looting-multiplier: 1.1
@@ -19,16 +35,17 @@ require-weapon: []
 # The number seen is a multiplier for the drop chance when using that weapon
 # Eg: 2 = twice as likely, 1.5 = 50% more likely, 0.1 = 10% as likely
 weapon-multipliers:
-  AIR: 2
-  SHEARS: 2
-  GOLDEN_AXE: 2
-  NETHERITE_AXE: 1.6
-  DIAMOND_AXE: 1.5
-  IRON_AXE: 1.4
-  STONE_AXE: 1.3
-  WOODEN_AXE: 1.2
-  DIAMOND_SWORD: 1.2
-  IRON_SWORD: 1.1
+  default:
+    AIR: 2
+    SHEARS: 2
+    GOLDEN_AXE: 2
+    NETHERITE_AXE: 1.6
+    DIAMOND_AXE: 1.5
+    IRON_AXE: 1.4
+    STONE_AXE: 1.3
+    WOODEN_AXE: 1.2
+    DIAMOND_SWORD: 1.2
+    IRON_SWORD: 1.1
 
 # Modify behead chance based on how long a mob has been alive
 # Format is `X: V`, where if the mob has been alive for X or more time, then
@@ -49,7 +66,7 @@ time-alive-multipliers:
 
 # Modify drop chance with custom permissions
 # Any player(s) with these permission will have the modified droprate
-custom-droprate-multiplier-permissions:
+#permission-multipliers:
 #  default:
 #    dropheads.reallybadluck: 0.1
 #  'sheep|pink':
