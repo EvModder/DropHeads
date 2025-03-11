@@ -33,6 +33,7 @@ import org.bukkit.plugin.EventExecutor;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.DropHeads.TextureKeyLookup;
+import net.evmodder.DropHeads.datatypes.EntitySetting;
 import net.evmodder.DropHeads.events.HeadRollEvent;
 import net.evmodder.EvLib.EvUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
@@ -44,7 +45,9 @@ public class EntityDeathListener implements Listener{
 	private final Random rand;
 	private final HashSet<UUID> explodingChargedCreepers;
 	private final EventPriority PRIORITY;
-	private final boolean ALLOW_NON_PLAYER_KILLS, ALLOW_INDIRECT_KILLS, ALLOW_PROJECTILE_KILLS, USE_RANGED_WEAPON_FOR_LOOTING;
+//	private final boolean ALLOW_NON_PLAYER_KILLS, ALLOW_INDIRECT_KILLS, ALLOW_PROJECTILE_KILLS,
+	private final boolean USE_RANGED_WEAPON_FOR_LOOTING;
+	private final EntitySetting<Boolean> allowNonPlayerKills, allowIndirectKills, allowProjectileKills;//, useRangedWeaponForLooting;
 	//TODO: pkillonly config per-mob?
 	private final boolean CHARGED_CREEPER_DROPS, VANILLA_WSKELE_HANDLING;
 	private final long INDIRECT_KILL_THRESHOLD_MILLIS;
@@ -54,10 +57,15 @@ public class EntityDeathListener implements Listener{
 		pl = DropHeads.getPlugin();
 		this.deathMessageBlocker = deathMessageBlocker;
 		rand = new Random();
-		ALLOW_NON_PLAYER_KILLS = pl.getConfig().getBoolean("drop-for-nonplayer-kills", false);
-		ALLOW_INDIRECT_KILLS = pl.getConfig().getBoolean("drop-for-indirect-kills", false);
-		ALLOW_PROJECTILE_KILLS = pl.getConfig().getBoolean("drop-for-ranged-kills", false);
+//		ALLOW_NON_PLAYER_KILLS = pl.getConfig().getBoolean("drop-for-nonplayer-kills", false);
+//		ALLOW_INDIRECT_KILLS = pl.getConfig().getBoolean("drop-for-indirect-kills", false);
+//		ALLOW_PROJECTILE_KILLS = pl.getConfig().getBoolean("drop-for-ranged-kills", false);
 		USE_RANGED_WEAPON_FOR_LOOTING = pl.getConfig().getBoolean("use-ranged-weapon-for-looting", true);
+		allowNonPlayerKills = EntitySetting.fromConfig(pl, "drop-for-nonplayer-kills", false, null);
+		allowIndirectKills = EntitySetting.fromConfig(pl, "drop-for-indirect-kills", false, null);
+		allowProjectileKills = EntitySetting.fromConfig(pl, "drop-for-ranged-kills", false, null);
+//		useRangedWeaponForLooting = EntitySetting.fromYamlConfig(pl, pl.getConfig(), "use-ranged-weapon-for-looting", false, null);
+
 		CHARGED_CREEPER_DROPS = pl.getConfig().getBoolean("charged-creeper-drops", true);
 		VANILLA_WSKELE_HANDLING = pl.getConfig().getBoolean("vanilla-wither-skeleton-skulls", false);
 		PRIORITY = JunkUtils.parseEnumOrDefault(pl.getConfig().getString("death-listener-priority", "LOW"), EventPriority.LOW);
@@ -119,7 +127,7 @@ public class EntityDeathListener implements Listener{
 	boolean onEntityDeath(@Nonnull final Entity victim, final Entity killer, final Event evt){
 		Permissible killerPermCheck = killer;
 		if(killer != null){
-			if(ALLOW_PROJECTILE_KILLS && killer instanceof Projectile && ((Projectile)killer).getShooter() instanceof Permissible){
+			if(allowProjectileKills.get(victim) && killer instanceof Projectile && ((Projectile)killer).getShooter() instanceof Permissible){
 				killerPermCheck = (Permissible)((Projectile)killer).getShooter();
 			}
 			if(!killerPermCheck.hasPermission("dropheads.canbehead."+victim.getType().name().toLowerCase())){
@@ -153,14 +161,14 @@ public class EntityDeathListener implements Listener{
 			}
 		}
 		// Check if killer qualifies to trigger a behead.
-		if((!ALLOW_INDIRECT_KILLS && killer == null
+		if((!allowIndirectKills.get(victim) && killer == null
 				// Note: Won't use timeSinceLastEntityDamage()... it would be expensive to keep track of
 				&& JunkUtils.timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS) ||
-			(!ALLOW_PROJECTILE_KILLS && killer != null && killer instanceof Projectile) ||
-			(!ALLOW_NON_PLAYER_KILLS && (killer != null ? (
+			(!allowProjectileKills.get(victim) && killer != null && killer instanceof Projectile) ||
+			(!allowNonPlayerKills.get(victim) && (killer != null ? (
 				killer instanceof Player == false &&
 				(
-					!ALLOW_PROJECTILE_KILLS ||
+					!allowProjectileKills.get(victim) ||
 					killer instanceof Projectile == false ||
 					((Projectile)killer).getShooter() instanceof Player == false
 				)

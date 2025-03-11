@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.function.BiFunction;
 import javax.annotation.Nonnull;
-import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -148,11 +147,11 @@ public record EntitySetting<T>(T globalDefault, Map<EntityType, T> typeSettings,
 	 * @return EntitySetting<T>
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> EntitySetting<T> fromYamlConfig(@Nonnull final DropHeads pl, @Nonnull final Configuration config, @Nonnull final String path,
+	public static <T> EntitySetting<T> fromConfig(@Nonnull final DropHeads pl, @Nonnull final String path,
 			//boolean deep,
 			@Nonnull final T defaultValue, final BiFunction<String, Object, T> valueParser)
 	{
-		if(!config.contains(path)) return new EntitySetting<T>(defaultValue, null, null);
+		if(!pl.getConfig().contains(path)) return new EntitySetting<T>(defaultValue, null, null);
 
 		final HashMap<EntityType, T> typeSettings = new HashMap<>();
 		final HashMap<String, T> subtypeSettings = new HashMap<>();
@@ -165,10 +164,10 @@ public record EntitySetting<T>(T globalDefault, Map<EntityType, T> typeSettings,
 			pl.getLogger().severe("Invalid value for "+k+" in '"+path+"': "+v);
 			return null;
 		};
-		ConfigurationSection cs = config.isConfigurationSection(path) ? config.getConfigurationSection(path) : null;
+		ConfigurationSection cs = pl.getConfig().isConfigurationSection(path) ? pl.getConfig().getConfigurationSection(path) : null;
 		// No ConfigurationSection indicates no per-EntityType details, so just attempt to parse as default (for all entities)
 		if(cs == null){
-			final T t = internalValueParser.apply("DEFAULT", config.get(path));
+			final T t = internalValueParser.apply("DEFAULT", pl.getConfig().get(path));
 			return t == null ? null : new EntitySetting<T>(t, /*typeSettings=*/null, /*subtypeSettings=*/null);
 		}
 		Map<String, Object> values = cs.getValues(/*deep=*/false);

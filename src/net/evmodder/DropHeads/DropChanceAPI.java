@@ -204,18 +204,18 @@ public final class DropChanceAPI{
 		LOCAL_RANGE = pl.getConfig().getInt("local-broadcast-distance", 200);
 		CROSS_DIMENSIONAL_BROADCAST = pl.getConfig().getBoolean("local-broadcast-cross-dimension", true);
 
-		lootingLevelMult = EntitySetting.fromYamlConfig(pl, pl.getConfig(), "looting-multiplier", 1.01d, (k,v)->{
+		lootingLevelMult = EntitySetting.fromConfig(pl, "looting-multiplier", 1.01d, (k,v)->{
 			double d = v instanceof Number n ? n.doubleValue() : Double.parseDouble(v.toString());
 			if(d < 1) pl.getLogger().warning("looting-multiplier is set below 1.0, this means looting will DECREASE the chance of head drops!");
 			return d;
 		});
-		lootingLevelAdd = EntitySetting.fromYamlConfig(pl, pl.getConfig(), "looting-addition", 0d, (k,v)->{
+		lootingLevelAdd = EntitySetting.fromConfig(pl, "looting-addition", 0d, (k,v)->{
 			double d = v instanceof Number n ? n.doubleValue() : Double.parseDouble(v.toString());
 			if(d >= 1) pl.getLogger().warning("looting-addition is set to 1.0 or greater, this means heads will ALWAYS drop when looting is used!");
 			return d;
 		});
 
-		requiredWeapons = EntitySetting.fromYamlConfig(pl, pl.getConfig(), "require-weapon", Set.of(), (k,v)->{
+		requiredWeapons = EntitySetting.fromConfig(pl, "require-weapon", Set.of(), (k,v)->{
 			// Parse String[] -> Set<Material>
 			if(v instanceof String[] list){
 				return Collections.unmodifiableSet(Arrays.stream(list).map(matName -> {
@@ -235,7 +235,7 @@ public final class DropChanceAPI{
 		});
 
 		//weaponMults = new HashMap<Material, Double>();
-		weaponMults = EntitySetting.fromYamlConfig(pl, pl.getConfig(), "weapon-multipliers", Map.of(), (k,v)->{
+		weaponMults = EntitySetting.fromConfig(pl, "weapon-multipliers", Map.of(), (k,v)->{
 			if(v instanceof ConfigurationSection cs){
 				HashMap<Material, Double> specificWeaponMults = new HashMap<>();
 				for(String matName : cs.getKeys(/*deep=*/false)){
@@ -251,7 +251,7 @@ public final class DropChanceAPI{
 
 		final TreeMap<Integer, Double> defaultTimeAliveMults = new TreeMap<>();
 		defaultTimeAliveMults.put(Integer.MIN_VALUE, 1d);
-		timeAliveMults = EntitySetting.fromYamlConfig(pl, pl.getConfig(), "time-alive-multipliers", defaultTimeAliveMults, (k,v) -> {
+		timeAliveMults = EntitySetting.fromConfig(pl, "time-alive-multipliers", defaultTimeAliveMults, (k,v) -> {
 			if(v instanceof ConfigurationSection cs){
 				@SuppressWarnings("unchecked")
 				final TreeMap<Integer, Double> timeAliveMults = (TreeMap<Integer, Double>)defaultTimeAliveMults.clone();
@@ -270,7 +270,7 @@ public final class DropChanceAPI{
 			return null;
 		});
 
-		permissionMults = EntitySetting.fromYamlConfig(pl, pl.getConfig(), "permission-multipliers", Map.of(), (k,v) -> {
+		permissionMults = EntitySetting.fromConfig(pl, "permission-multipliers", Map.of(), (k,v) -> {
 			if(v instanceof ConfigurationSection cs){
 				HashMap<String, Double> specificPermMults = new HashMap<>();
 				for(String perm : cs.getKeys(/*deep=*/true)){
