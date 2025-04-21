@@ -18,6 +18,7 @@ CAVE_SPIDER:        0.001
 CHICKEN:            0.001
 COD:                0.002
 COW:                0.004
+CREAKING:           0.005
 CREEPER:            0.006
 DOLPHIN:            0.005
 DONKEY:             0.007

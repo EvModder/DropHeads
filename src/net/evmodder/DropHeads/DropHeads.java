@@ -66,6 +66,12 @@ public final class DropHeads extends EvPlugin{
 	private boolean LOGFILE_ENABLED;
 	private String LOGFILE_NAME;
 
+	@Override public void reloadConfig(){
+		InputStream defaultConfig = getClass().getResourceAsStream("/configs/config.yml");
+		FileIO.verifyDir(this);
+		config = FileIO.loadConfig(this, "config-"+getName()+".yml", defaultConfig, /*notifyIfNew=*/true);
+	}
+
 	@Override public void onEvEnable(){
 		if(config.getBoolean("update-plugin", false)){
 			new Updater(/*plugin=*/this, /*id=*/274151, getFile(), Updater.UpdateType.DEFAULT, /*announce=*/true);
