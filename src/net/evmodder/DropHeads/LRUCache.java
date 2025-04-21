@@ -7,18 +7,18 @@ import java.util.Queue;
 
 public class LRUCache<K, V>{
 	private final int MAX_SIZE;
-	private Map<K, V> map;
-	private Queue<K> fifo;
+	private final Map<K, V> map;
+	private final Queue<K> fifo;
 
 	public LRUCache(int max_size) {
 		MAX_SIZE = max_size;
 		map = new HashMap<>();
 		fifo = new LinkedList<>();
 	}
-	public V get(K k){
+	public final V get(K k){
 		return map.get(k);
 	}
-	public V put(K k, V v){
+	public final V put(K k, V v){
 		V old_v = map.put(k, v);
 		if(old_v == null){// else, move k to end of fifo?
 			fifo.add(k);

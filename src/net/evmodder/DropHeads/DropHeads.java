@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import org.bukkit.configuration.file.YamlConfiguration;
 import net.evmodder.DropHeads.commands.*;
+import net.evmodder.DropHeads.datatypes.NoteblockMode;
 import net.evmodder.DropHeads.listeners.*;
 import net.evmodder.EvLib.EvPlugin;
 import net.evmodder.EvLib.FileIO;
@@ -58,8 +59,7 @@ import net.evmodder.EvLib.Updater;
 // ` TellrawUtils.` -> ` `, `(TellrawUtils.` -> `(`, `>TellrawUtils.` -> `>`, `(HeadUtils.` -> `(`
 
 public final class DropHeads extends EvPlugin{
-	private static DropHeads instance;
-	public static DropHeads getPlugin(){return instance;}
+	private static DropHeads instance; public static DropHeads getPlugin(){return instance;}
 	private InternalAPI api; public HeadAPI getAPI(){return api;} public InternalAPI getInternalAPI(){return api;}
 	private DropChanceAPI dropChanceAPI; public DropChanceAPI getDropChanceAPI(){return dropChanceAPI;}
 	private DeathMessagePacketIntercepter deathMessageBlocker;

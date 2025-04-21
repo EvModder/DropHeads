@@ -18,10 +18,10 @@ public class BeheadMessageEvent extends Event implements Cancellable{
 	private final Player recipient;
 	private final Entity victim;
 	private final Entity killer;
+	private final boolean isGlobal;
+	private final boolean isPetDeath;
 	private Component beheadMessage;
 	private boolean cancelled = false;
-	private boolean isGlobal;
-	private boolean isPetDeath;
 
 	/** Create an BeheadMessageEvent for DropHeads.
 	 * @param recipient the Player being sent the behead message
@@ -36,9 +36,9 @@ public class BeheadMessageEvent extends Event implements Cancellable{
 		this.recipient = recipient;
 		this.victim = victim;
 		this.killer = killer;
-		this.beheadMessage = beheadMessage;
 		this.isGlobal = isGlobal;
 		this.isPetDeath = isPetDeath;
+		this.beheadMessage = beheadMessage;
 	}
 
 	/** Get the player who is being sent the behead message.

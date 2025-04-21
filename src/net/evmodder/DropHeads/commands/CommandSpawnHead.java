@@ -45,14 +45,14 @@ import net.evmodder.EvLib.extras.SelectorUtils.Selector;
 import net.evmodder.EvLib.extras.TellrawUtils;
 
 public class CommandSpawnHead extends EvCommand{
-	final private DropHeads pl;
-	final private String CMD_TRANSLATE_PATH = "commands.spawnhead.";
-	final private boolean ENABLE_LOG;
-	final private String LOG_FORMAT;
-//	final private int MAX_HDB_IDS_SHOWN = 200;
-	final private int MAX_ENTITIES_SELECTED;
+	private final DropHeads pl;
+	private final String CMD_TRANSLATE_PATH = "commands.spawnhead.";
+	private final boolean ENABLE_LOG;
+	private final String LOG_FORMAT;
+//	private final int MAX_HDB_IDS_SHOWN = 200;
+	private final int MAX_ENTITIES_SELECTED;
 
-	final private String MOB_PREFIX, PLAYER_PREFIX, HDB_PREFIX, SELF_PREFIX, CODE_PREFIX, AMT_PREFIX, GIVETO_PREFIX, SLOT_PREFIX;
+	private final String MOB_PREFIX, PLAYER_PREFIX, HDB_PREFIX, SELF_PREFIX, CODE_PREFIX, AMT_PREFIX, GIVETO_PREFIX, SLOT_PREFIX;
 
 	private final HashMap<String, String> translations;
 	private String translate(String key){

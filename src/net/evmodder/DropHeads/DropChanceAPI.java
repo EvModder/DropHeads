@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
@@ -52,12 +53,14 @@ import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import net.evmodder.DropHeads.commands.CommandDropRate;
 import net.evmodder.DropHeads.datatypes.AnnounceMode;
 import net.evmodder.DropHeads.datatypes.DropMode;
 import net.evmodder.DropHeads.datatypes.EntitySetting;
 import net.evmodder.DropHeads.events.BeheadMessageEvent;
 import net.evmodder.DropHeads.events.EntityBeheadEvent;
 import net.evmodder.DropHeads.listeners.DeathMessagePacketIntercepter;
+import net.evmodder.DropHeads.listeners.EntityDeathListener;
 import net.evmodder.EvLib.EvUtils;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.extras.HeadUtils;
@@ -92,25 +95,17 @@ public final class DropChanceAPI{
 	private final LRUCache<ItemStack, Component> weaponCompCache;
 	private final int WEAPON_COMP_CACHE_SIZE;
 
-	public final EntitySetting<Double> lootingLevelMult, lootingLevelAdd; // TODO: public (not private) due to CommandDropRate
-	public final EntitySetting<Set<Material>> requiredWeapons; // TODO: public (not private) due to CommandDropRate
+	private final EntitySetting<Double> lootingLevelMult, lootingLevelAdd;
+	private final EntitySetting<Set<Material>> requiredWeapons;
 	private final EntitySetting<Double> dropChances;
 	private final HashMap<EntityType, AnnounceMode> mobAnnounceModes;
 	private final EntitySetting<Map<String, Double>> permissionMults;
-	public final EntitySetting<Map<Material, Double>> weaponMults;//TODO: public for CommandDropRate
-	//TODO: public for CommandDropRate
-	public final EntitySetting<TreeMap</*timeAlive=*/Integer, Double>> timeAliveMults;// Note: Bukkit's e.getTicksLived() returns an int.
+	private final EntitySetting<Map<Material, Double>> weaponMults;
+	private final EntitySetting<TreeMap</*timeAlive=*/Integer, Double>> timeAliveMults;// Note: Bukkit's e.getTicksLived() returns an int.
 
-//	private final Class<?> classJSONComponentSerializer, classAudience;
-//	private final Method methodDeserialize, methodGson, methodSendMessage;
 	private final RefMethod methodDeserialize, methodGson, methodSendMessage;
 
 //	int numMobBeheads, numPlayerBeheads;
-
-	/** Get the default head drop chance for an entity when a drop chance chance is specified in the config.
-	 * @return The default drop chance [0, 1]
-	 */
-	public double getDefaultDropChance(){return dropChances.globalDefault();}
 
 	private AnnounceMode parseAnnounceMode(@Nonnull String value, AnnounceMode defaultMode){
 		value = value.toUpperCase();
@@ -124,16 +119,16 @@ public final class DropChanceAPI{
 		}
 	}
 
-//	private static String[] parseStringOrStringList(String key, String defaultMsg, Configuration... configs){
-//		for(Configuration config : configs){
-//			List<String> strList = null;
-//			if(config.isList(key) && (strList=config.getStringList(key)) != null && !strList.isEmpty())
-//				return strList.stream().map(msg -> TextUtils.translateAlternateColorCodes('&', msg)).toArray(size -> new String[size]);
-//			if(config.isString(key) && !defaultMsg.equals(config.getString(key)))
-//				return new String[]{TextUtils.translateAlternateColorCodes('&', config.getString(key))};
-//		}
-//		return new String[]{TextUtils.translateAlternateColorCodes('&', defaultMsg)};
-//	}
+	/*private static String[] parseStringOrStringList(String key, String defaultMsg, Configuration... configs){
+		for(Configuration config : configs){
+			List<String> strList = null;
+			if(config.isList(key) && (strList=config.getStringList(key)) != null && !strList.isEmpty())
+				return strList.stream().map(msg -> TextUtils.translateAlternateColorCodes('&', msg)).toArray(size -> new String[size]);
+			if(config.isString(key) && !defaultMsg.equals(config.getString(key)))
+				return new String[]{TextUtils.translateAlternateColorCodes('&', config.getString(key))};
+		}
+		return new String[]{TextUtils.translateAlternateColorCodes('&', defaultMsg)};
+	}*/
 	private String[] parseStringOrStringList(String key, String defaultMsg){
 		List<String> strList = null;
 		if(pl.getConfig().isList(key) && (strList=pl.getConfig().getStringList(key)) != null && !strList.isEmpty())
@@ -352,6 +347,11 @@ public final class DropChanceAPI{
 		methodSendMessage = tempSendMessage;
 	}
 
+	/** Get the default head drop chance for an entity when a drop chance chance is specified in the config.
+	 * @return The default drop chance [0, 1]
+	 */
+	public double getDefaultDropChance(){return dropChances.globalDefault();}
+
 //	/** Get the set of weapons that are allowed to cause a head drop; will be <code>null</code> if no specific weapon(s) are required.
 //	 * @return An unmodifiable set of Material types, or <code>null</code>
 //	 */
@@ -378,11 +378,6 @@ public final class DropChanceAPI{
 	 * @return The drop chance [0, 1]
 	 */
 	public double getRawDropChance(Entity entity){return dropChances.get(entity);}
-	/** Get a map of all configured drop chances.
-	 * @return An unmodifiable map (EntityType => drop chance)
-	 */
-	@Deprecated
-	public Map<EntityType, Double> getRawDropChances(){return Collections.unmodifiableMap(dropChances.typeSettings());}
 	/** Get the percent chance added to the drop chance (per looting level).
 	 * @return The drop chance increase amount
 	 */
@@ -715,5 +710,32 @@ public final class DropChanceAPI{
 	 */
 	public boolean triggerHeadDropEvent(Entity entity, Entity killer, Event evt, ItemStack weapon){
 		return triggerHeadDropEvent(entity, killer, evt, weapon, ()->getBeheadMessage(entity, killer, weapon));
+	}
+
+	//========== Friend EntityDeathListener
+	/** Get raw drop chances (EntityType -> Double).
+	 * @return An unmodifiable map (EntityType => drop chance)
+	 */
+	public Map<EntityType, Double> getEntityDropChances(EntityDeathListener.Friend f){
+		Objects.requireNonNull(f);
+		return dropChances.typeSettings();
+	}
+
+	//========== Friend CommandDropRate
+	public boolean hasTimeAliveMults(CommandDropRate.Friend f){
+		Objects.requireNonNull(f);
+		return timeAliveMults.hasAnyValue();
+	}
+	public boolean hasWeaponMults(CommandDropRate.Friend f){
+		Objects.requireNonNull(f);
+		return weaponMults.hasAnyValue();
+	}
+	public boolean hasLootingMults(CommandDropRate.Friend f){
+		Objects.requireNonNull(f);
+		return lootingLevelAdd.hasAnyValue() || lootingLevelMult.hasAnyValue();
+	}
+	public EntitySetting<Set<Material>> getRequiredWeapons(CommandDropRate.Friend f){
+		Objects.requireNonNull(f);
+		return requiredWeapons;
 	}
 }

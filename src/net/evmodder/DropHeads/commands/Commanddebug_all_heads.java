@@ -25,11 +25,11 @@ import net.evmodder.EvLib.EvCommand;
 import net.evmodder.EvLib.extras.HeadUtils;
 
 public class Commanddebug_all_heads extends EvCommand{
-	final private DropHeads pl;
-	final boolean SHOW_PLAIN_IF_HAS_CHILDREN = false;
-	final boolean REMOVE_DUPLICATE_TEXTURES = true;
-	enum OrderBy{ALPHABETICAL, NUM_SUBKEYS_ASC}
-	final OrderBy orderBy = OrderBy.NUM_SUBKEYS_ASC;
+	private final DropHeads pl;
+	private final boolean SHOW_PLAIN_IF_HAS_CHILDREN = false;
+	private final boolean REMOVE_DUPLICATE_TEXTURES = true;
+	private enum OrderBy{ALPHABETICAL, NUM_SUBKEYS_ASC}
+	private final OrderBy orderBy = OrderBy.NUM_SUBKEYS_ASC;
 
 	public Commanddebug_all_heads(DropHeads plugin){
 		super(plugin);

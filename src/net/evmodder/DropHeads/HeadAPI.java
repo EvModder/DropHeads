@@ -38,6 +38,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import me.arcaniax.hdb.api.DatabaseLoadEvent;
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
+import net.evmodder.DropHeads.datatypes.NoteblockMode;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.extras.EntityUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
@@ -74,12 +75,12 @@ public class HeadAPI{
 	// Key & value are textureKeys, EXCEPT when ASSIGN_KEY_TO_MATCHING_HEADS=true, in which case key can be either textureKey or Base64 code
 	private final HashMap<String, String> replaceHeadsFromTo;
 	private final Material PIGLIN_HEAD_TYPE;
-	private final static String TEXTURE_DL_URL = "https://raw.githubusercontent.com/EvModder/DropHeads/master/extra-textures/";
-	private final static String DH_TEXTURE_KEY = "dh_key";
-	private final static String DH_RANDOM_UUID = "random_uuid";
-	private final static int MAX_NAME_LENGTH = 16;
-
 	private final String PLAYER_PREFIX, MOB_PREFIX, MHF_PREFIX, HDB_PREFIX, CODE_PREFIX;
+
+	private static final String TEXTURE_DL_URL = "https://raw.githubusercontent.com/EvModder/DropHeads/master/extra-textures/";
+	private static final String DH_TEXTURE_KEY = "dh_key";
+	private static final String DH_RANDOM_UUID = "random_uuid";
+	private static final int MAX_NAME_LENGTH = 16;
 
 	void loadTextures(String headsList, boolean logMissingEntities, boolean logUnknownEntities){
 		final HashSet<EntityType> missingHeads = new HashSet<EntityType>();
@@ -152,6 +153,13 @@ public class HeadAPI{
 				if(REPLACE_REDIRECTS) replaceHeadsFromTo.put(e.getKey(), redirect);
 			}
 		}
+	}
+
+	private String downloadTexturesFile(String remoteFilename, String descriptiveName){
+		pl.getLogger().info("Downloading "+descriptiveName+" head textures...");
+		final String downloadedTextures = WebUtils.getReadURL(TEXTURE_DL_URL+remoteFilename);
+		pl.getLogger().info("Downloaded "+descriptiveName+" head textures");
+		return downloadedTextures;//JunkUtils.stripComments(downloadedTextures);
 	}
 
 	HeadAPI(final NoteblockMode m, final boolean CRACKED_IRON_GOLEMS_ENABLED){
@@ -279,41 +287,21 @@ public class HeadAPI{
 		}
 		String downloadedList = "";
 		if(SIDEWAYS_SHULKERS_ENABLED && (!localList.contains("SHULKER|SIDE_LEFT") || updateTextures)){
-			pl.getLogger().info("Downloading sideways-shulker head textures...");
-			final String shulkers = WebUtils.getReadURL(TEXTURE_DL_URL+"sideways-shulker-head-textures.txt");
-			downloadedList += "\n" + shulkers;//JunkUtils.stripComments(shulkers);
-			writeTextureFile = true;
-			pl.getLogger().info("Finished downloading sideways-shulker head textures");
+			downloadedList += "\n" + downloadTexturesFile(/*remoteFile=*/"sideways-shulker-head-textures.txt", /*logName=*/"sideways-shulker");
 		}
 		if(COLORED_COLLARS_ENABLED && (!localList.contains("|RED_COLLARED:") || updateTextures)){
-			pl.getLogger().info("Downloading colored-collar head textures...");
-			final String collared = WebUtils.getReadURL(TEXTURE_DL_URL+"colored-collar-head-textures.txt");
-			downloadedList += "\n" + collared;//JunkUtils.stripComments(collared);
-			writeTextureFile = true;
-			pl.getLogger().info("Finished downloading colored-collar head textures");
+			downloadedList += "\n" + downloadTexturesFile("colored-collar-head-textures.txt", "colored-collar");
 		}
 		if(USE_PRE_JAPPA && (!localList.contains("|PRE_JAPPA:") || updateTextures)){
-			pl.getLogger().info("Downloading pre-JAPPA head textures...");
-			final String preJappas = WebUtils.getReadURL(TEXTURE_DL_URL+"pre-jappa-head-textures.txt");
-			downloadedList += "\n" + preJappas;//JunkUtils.stripComments(preJappas);
-			writeTextureFile = true;
-			pl.getLogger().info("Finished downloading pre-JAPPA head textures");
+			downloadedList += "\n" + downloadTexturesFile("pre-jappa-head-textures.txt", "pre-JAPPA");
 		}
 		if(GRUMM_ENABLED && (!localList.contains("|GRUMM:") || updateTextures)){
-			pl.getLogger().info("Downloading Grumm head textures...");
-			final String grumms = WebUtils.getReadURL(TEXTURE_DL_URL+"grumm-head-textures.txt");
-			downloadedList += "\n" + grumms;//JunkUtils.stripComments(grumms);
-			writeTextureFile = true;
-			pl.getLogger().info("Finished downloading Grumm head textures");
+			downloadedList += "\n" + downloadTexturesFile("grumm-head-textures.txt", "Grumm");
 		}
 		if(GRUMM_ENABLED && COLORED_COLLARS_ENABLED && (!localList.contains("|BLACK_COLLARED|GRUMM:") || updateTextures)){
-			pl.getLogger().info("Downloading [Grumm with colored-collar] head textures...");
-			final String collaredGrumms = WebUtils.getReadURL(TEXTURE_DL_URL+"grumm-colored-collar-head-textures.txt");
-			downloadedList += "\n" + collaredGrumms;//JunkUtils.stripComments(collaredGrumms);
-			writeTextureFile = true;
-			pl.getLogger().info("Finished downloading [Grumm with colored-collar] head textures");
+			downloadedList += "\n" + downloadTexturesFile("grumm-colored-collar-head-textures.txt", "[Grumm with colored-collar]");
 		}
-		if(writeTextureFile){
+		if(!downloadedList.isEmpty() || writeTextureFile){
 			FileIO.deleteFile("head-textures.txt");
 			FileIO.loadFile("head-textures.txt", getClass().getResourceAsStream("/configs/head-textures.txt")); // Copy with comments
 			if(!downloadedList.isEmpty()) FileIO.saveFile("head-textures.txt", downloadedList, /*append=*/true); // Append downloads

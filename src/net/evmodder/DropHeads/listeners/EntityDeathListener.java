@@ -45,7 +45,6 @@ public class EntityDeathListener implements Listener{
 	private final Random rand;
 	private final HashSet<UUID> explodingChargedCreepers;
 	private final EventPriority PRIORITY;
-//	private final boolean ALLOW_NON_PLAYER_KILLS, ALLOW_INDIRECT_KILLS, ALLOW_PROJECTILE_KILLS,
 	private final boolean USE_RANGED_WEAPON_FOR_LOOTING;
 	private final EntitySetting<Boolean> allowNonPlayerKills, allowIndirectKills, allowProjectileKills;//, useRangedWeaponForLooting;
 	//TODO: pkillonly config per-mob?
@@ -53,18 +52,16 @@ public class EntityDeathListener implements Listener{
 	private final long INDIRECT_KILL_THRESHOLD_MILLIS;
 	private final boolean DEBUG_MODE;
 
+	public static final class Friend{private Friend(){}}
+
 	public EntityDeathListener(DeathMessagePacketIntercepter deathMessageBlocker){
 		pl = DropHeads.getPlugin();
 		this.deathMessageBlocker = deathMessageBlocker;
 		rand = new Random();
-//		ALLOW_NON_PLAYER_KILLS = pl.getConfig().getBoolean("drop-for-nonplayer-kills", false);
-//		ALLOW_INDIRECT_KILLS = pl.getConfig().getBoolean("drop-for-indirect-kills", false);
-//		ALLOW_PROJECTILE_KILLS = pl.getConfig().getBoolean("drop-for-ranged-kills", false);
 		USE_RANGED_WEAPON_FOR_LOOTING = pl.getConfig().getBoolean("use-ranged-weapon-for-looting", true);
 		allowNonPlayerKills = EntitySetting.fromConfig(pl, "drop-for-nonplayer-kills", false, null);
 		allowIndirectKills = EntitySetting.fromConfig(pl, "drop-for-indirect-kills", false, null);
 		allowProjectileKills = EntitySetting.fromConfig(pl, "drop-for-ranged-kills", false, null);
-//		useRangedWeaponForLooting = EntitySetting.fromYamlConfig(pl, pl.getConfig(), "use-ranged-weapon-for-looting", false, null);
 
 		CHARGED_CREEPER_DROPS = pl.getConfig().getBoolean("charged-creeper-drops", true);
 		VANILLA_WSKELE_HANDLING = pl.getConfig().getBoolean("vanilla-wither-skeleton-skulls", false);
@@ -72,9 +69,8 @@ public class EntityDeathListener implements Listener{
 		INDIRECT_KILL_THRESHOLD_MILLIS = TextUtils.parseTimeInMillis(pl.getConfig().getString("indirect-kill-threshold", "30s"));
 		DEBUG_MODE = pl.getConfig().getBoolean("debug-messages", true);
 
-		@SuppressWarnings("deprecation")
-			final Map<EntityType, Double> mobChances = pl.getDropChanceAPI().getRawDropChances();
-			final double DEFAULT_CHANCE = pl.getDropChanceAPI().getDefaultDropChance();
+		final Map<EntityType, Double> mobChances = pl.getDropChanceAPI().getEntityDropChances(new Friend());
+		final double DEFAULT_CHANCE = pl.getDropChanceAPI().getDefaultDropChance();
 
 		final boolean entityHeads = DEFAULT_CHANCE > 0D || mobChances.entrySet().stream().anyMatch(  // All non-Player living entities
 				entry -> entry.getKey().isAlive() && entry.getKey() != EntityType.PLAYER && entry.getValue() > 0D);

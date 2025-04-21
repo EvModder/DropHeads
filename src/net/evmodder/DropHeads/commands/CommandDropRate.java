@@ -20,6 +20,7 @@ import net.evmodder.DropHeads.DropChanceAPI;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.InternalAPI;
 import net.evmodder.DropHeads.JunkUtils;
+import net.evmodder.DropHeads.datatypes.EntitySetting;
 import net.evmodder.EvLib.EvCommand;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
@@ -28,19 +29,21 @@ import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
 import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
 
 public class CommandDropRate extends EvCommand{
-	final private DropHeads pl;
-	final private String CMD_TRANSLATE_PATH = "commands.droprate.";
-	final private DropChanceAPI dropChanceAPI;
-	final private boolean ONLY_SHOW_VALID_ENTITIES = true;
-	final private boolean USING_SPAWN_MULTS, USING_LOOTING_MULTS, USING_TIME_ALIVE_MULTS, USING_WEAPON_MULTS;
-	final private boolean VANILLA_WSKELE_HANDLING;
-	final private HashSet<String> entityNames;
-	final private int JSON_LIMIT;
-	final private String LIST_SEP;
+	private final DropHeads pl;
+	private final String CMD_TRANSLATE_PATH = "commands.droprate.";
+	private final DropChanceAPI dropChanceAPI;
+	private final boolean ONLY_SHOW_VALID_ENTITIES = true;
+	private final boolean USING_SPAWN_MULTS, USING_LOOTING_MULTS, USING_TIME_ALIVE_MULTS, USING_WEAPON_MULTS;
+	private final boolean VANILLA_WSKELE_HANDLING;
+	private final HashSet<String> entityNames;
+	private final int JSON_LIMIT;
+	private final String LIST_SEP;
 	private final String MOB_PREFIX;
 	///tellraw EvDoc [{"text":"a","color":"green"},"§7b","c"]
 
-//	final private Component REQUIRED_WEAPONS;
+	public static final class Friend{private Friend(){}}
+	private static final Friend friend = new Friend();
+
 	final private TranslationComponent LOOTING_COMP; //TODO: Use comp (instead of String) for other translations as well
 	private final HashMap<String, String> translations;
 	private String translate(String key){
@@ -63,9 +66,9 @@ public class CommandDropRate extends EvCommand{
 		LIST_SEP = api.loadTranslationStr(CMD_TRANSLATE_PATH+"list-sep");
 
 		USING_SPAWN_MULTS = pl.getConfig().getBoolean("track-mob-spawns", true);
-		USING_TIME_ALIVE_MULTS = dropChanceAPI.timeAliveMults.hasAnyValue();
-		USING_WEAPON_MULTS = dropChanceAPI.weaponMults.hasAnyValue();
-		USING_LOOTING_MULTS = dropChanceAPI.lootingLevelAdd.hasAnyValue() || dropChanceAPI.lootingLevelMult.hasAnyValue();
+		USING_TIME_ALIVE_MULTS = dropChanceAPI.hasTimeAliveMults(friend);
+		USING_WEAPON_MULTS = dropChanceAPI.hasWeaponMults(friend);
+		USING_LOOTING_MULTS = dropChanceAPI.hasLootingMults(friend);
 
 		VANILLA_WSKELE_HANDLING = pl.getConfig().getBoolean("vanilla-wither-skeleton-skulls", true);
 
@@ -199,7 +202,8 @@ public class CommandDropRate extends EvCommand{
 			if(senderAlwaysBeheads){rawChance=-1D;droprateDetails.addComponent(translate("restrictions.always-behead-perm"));}
 			if(notUsingRequiredWeapon){
 				rawChance=-1D;
-				Set<Material> weapons = entity != null ? dropChanceAPI.requiredWeapons.get(entity) : dropChanceAPI.requiredWeapons.get(EntityType.UNKNOWN);
+				final EntitySetting<Set<Material>> requiredWeapons = dropChanceAPI.getRequiredWeapons(friend);
+				Set<Material> weapons = entity != null ? requiredWeapons.get(entity) : requiredWeapons.get(EntityType.UNKNOWN);
 				//TODO: wow can future me please make a proper joiner/collector for ListComponent
 				ListComponent weaponsComp = new ListComponent();
 				boolean firstElement = true;

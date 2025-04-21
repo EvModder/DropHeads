@@ -55,11 +55,11 @@ import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
 
 // A trashy place to dump stuff that I should probably move to EvLib after ensure cross-version safety
 public final class JunkUtils{
-	public final static String SPAWN_CAUSE_MULTIPLIER_KEY = "SRM";
-	public final static String TXT_KEY_PROFILE_NAME_PREFIX = "dropheads:";//TODO: delete
-	public final static String DH_LORE_KEY = "dh_lore";
+	public static final String SPAWN_CAUSE_MULTIPLIER_KEY = "SRM";
+	public static final String TXT_KEY_PROFILE_NAME_PREFIX = "dropheads:";//TODO: delete
+	public static final String DH_LORE_KEY = "dh_lore";
 
-	public final static <E extends Enum<E>> E parseEnumOrDefault(@Nonnull String stringValue, E defaultValue){
+	public static final <E extends Enum<E>> E parseEnumOrDefault(@Nonnull String stringValue, E defaultValue){
 		Class<E> enumClass = defaultValue.getDeclaringClass();
 		stringValue = stringValue.toUpperCase();
 		try{return Enum.valueOf(enumClass, stringValue);}
@@ -71,7 +71,7 @@ public final class JunkUtils{
 		}
 	}
 
-	public final static long getJarCreationTime(Plugin pl){
+	public static final long getJarCreationTime(Plugin pl){
 		try{
 			java.lang.reflect.Method getFileMethod = JavaPlugin.class.getDeclaredMethod("getFile");
 			getFileMethod.setAccessible(true);
@@ -82,7 +82,7 @@ public final class JunkUtils{
 		}
 	}
 
-	public final static HashMap<String, Sound> getNoteblockSounds(){
+	public static final HashMap<String, Sound> getNoteblockSounds(){
 		HashMap<String, Sound> nbSounds = new HashMap</*txtrKey, Sound*/>();
 
 		String sounds = FileIO.loadFile("noteblock-sounds.txt", (String)null);
@@ -113,12 +113,12 @@ public final class JunkUtils{
 		return nbSounds;
 	}
 
-	public final static long timeSinceLastPlayerDamage(Entity entity){
+	public static final long timeSinceLastPlayerDamage(Entity entity){
 		long lastDamage = entity.hasMetadata("PlayerDamage") ? entity.getMetadata("PlayerDamage").get(0).asLong() : 0;
 		return System.currentTimeMillis() - lastDamage;
 	}
 
-	public final static double getSpawnCauseMult(Entity e){
+	public static final double getSpawnCauseMult(Entity e){
 		if(e.hasMetadata(SPAWN_CAUSE_MULTIPLIER_KEY)) return e.getMetadata(SPAWN_CAUSE_MULTIPLIER_KEY).get(0).asDouble();
 		for(String tag : e.getScoreboardTags()) if(tag.startsWith(SPAWN_CAUSE_MULTIPLIER_KEY)) return Float.parseFloat(
 				tag.substring(SPAWN_CAUSE_MULTIPLIER_KEY.length()+1/*+1 because of '_'*/));
@@ -126,17 +126,17 @@ public final class JunkUtils{
 	}
 
 	@SuppressWarnings("deprecation")
-	public final static int getLootingLevel(ItemStack item){
+	public static final int getLootingLevel(ItemStack item){
 		if(item == null) return 0;
 		Enchantment ench = Enchantment.getByName("LOOTING");
 		if(ench == null) ench = Enchantment.getByName("LOOT_BONUS_MOBS");
 		return item.getEnchantmentLevel(ench);
 	}
 
-	private final static RefField displayNameField = ReflectionUtils.getRefClass("{cb}.inventory.CraftMetaItem").getField("displayName");
-	private final static RefField loreField = ReflectionUtils.getRefClass("{cb}.inventory.CraftMetaItem").getField("lore");
-	private final static RefMethod fromJsonMethod, toJsonMethod;
-	private final static Object registryAccessObj;//class: IRegistryCustom.Dimension
+	private static final RefField displayNameField = ReflectionUtils.getRefClass("{cb}.inventory.CraftMetaItem").getField("displayName");
+	private static final RefField loreField = ReflectionUtils.getRefClass("{cb}.inventory.CraftMetaItem").getField("lore");
+	private static final RefMethod fromJsonMethod, toJsonMethod;
+	private static final Object registryAccessObj;//class: IRegistryCustom.Dimension
 	static{
 		if(ReflectionUtils.getServerVersionString().compareTo("v1_20_5") >= 0){
 			final RefClass iChatBaseComponentClass = ReflectionUtils.getRefClass("{nm}.network.chat.IChatBaseComponent");
@@ -155,7 +155,7 @@ public final class JunkUtils{
 		}
 		else registryAccessObj = fromJsonMethod = toJsonMethod = null;
 	}
-	public final static ItemStack setDisplayName(@Nonnull ItemStack item, @Nonnull Component name){
+	public static final ItemStack setDisplayName(@Nonnull ItemStack item, @Nonnull Component name){
 		if(fromJsonMethod != null){
 			final ItemMeta meta = item.getItemMeta();
 			displayNameField.of(meta).set(fromJsonMethod.call(name.toString(), registryAccessObj));
@@ -170,7 +170,7 @@ public final class JunkUtils{
 			return NBTTagUtils.setTag(item, tag);
 		}
 	}
-	public final static String getDisplayName(@Nonnull ItemStack item){
+	public static final String getDisplayName(@Nonnull ItemStack item){
 		if(toJsonMethod != null){
 			if(!item.hasItemMeta()) return null;
 			try{return (String)toJsonMethod.call(displayNameField.of(item.getItemMeta()).get(), registryAccessObj);}
@@ -187,7 +187,7 @@ public final class JunkUtils{
 		}
 	}
 
-	public final static ItemStack setLore(@Nonnull ItemStack item, @Nonnull Component... lore){
+	public static final ItemStack setLore(@Nonnull ItemStack item, @Nonnull Component... lore){
 		if(fromJsonMethod != null){
 			Object lines = Stream.of(lore).map(line -> fromJsonMethod.call(line.toString(), registryAccessObj)).collect(Collectors.toList());
 			ItemMeta meta = item.getItemMeta();
@@ -206,7 +206,7 @@ public final class JunkUtils{
 		}
 	}
 
-	public final static List<String> getLore(@Nonnull ItemStack item){
+	public static final List<String> getLore(@Nonnull ItemStack item){
 		if(toJsonMethod != null){
 			if(!item.hasItemMeta()) return null;
 			//TODO: do we need to unescape anything?
@@ -234,11 +234,11 @@ public final class JunkUtils{
 	}
 
 	// New non-NMS way (1.20.6+?)
-	private final static RefMethod mItemMetaGetAsString;
+	private static final RefMethod mItemMetaGetAsString;
 	// Old NMS way
-	private final static RefMethod asNMSCopyMethod;
-	private final static RefMethod saveNmsItemStackMethod;
-	private final static RefClass nbtTagCompoundClazz;
+	private static final RefMethod asNMSCopyMethod;
+	private static final RefMethod saveNmsItemStackMethod;
+	private static final RefClass nbtTagCompoundClazz;
 	static{
 		RefMethod mItemMetaGetAsStringTemp;
 		try{mItemMetaGetAsStringTemp = ReflectionUtils.getRefClass(ItemMeta.class).getMethod("getAsString");}
@@ -281,7 +281,7 @@ public final class JunkUtils{
 	 * @param itemStack the item to convert
 	 * @return the JSON string representation of the item
 	 */
-	public final static String convertItemStackToJson(ItemStack item, int JSON_LIMIT){
+	public static final String convertItemStackToJson(ItemStack item, int JSON_LIMIT){
 		if(mItemMetaGetAsString != null){
 			if(!item.hasItemMeta()) return "{id:\""+item.getType().getKey().getKey()+"\",count:"+item.getAmount()+"}";
 			else return "{id:\""+item.getType().getKey().getKey()+"\",count:"+item.getAmount()
@@ -303,7 +303,7 @@ public final class JunkUtils{
 	}
 	//tellraw @p {"text":"Test","hoverEvent":{"action":"show_item","value":"{\"id\":\"bow\",\"count\":1,\"components\":{\"Unbreakable\":\"1\"}}"}}
 
-	public final static Component getItemDisplayNameComponent(@Nonnull ItemStack item){
+	public static final Component getItemDisplayNameComponent(@Nonnull ItemStack item){
 		String rarityColor = TextUtils.getRarityColor(item).name().toLowerCase();
 		String rawDisplayName = JunkUtils.getDisplayName(item);
 		if(rawDisplayName != null){
@@ -319,7 +319,7 @@ public final class JunkUtils{
 					TellrawUtils.getLocalizedDisplayName(item));
 		}
 	}
-	public final static Component getMurderItemComponent(@Nonnull ItemStack item, int JSON_LIMIT){
+	public static final Component getMurderItemComponent(@Nonnull ItemStack item, int JSON_LIMIT){
 		TextHoverAction hoverAction = new TextHoverAction(HoverEvent.SHOW_ITEM, JunkUtils.convertItemStackToJson(item, JSON_LIMIT));
 		String rarityColor = TextUtils.getRarityColor(item).name().toLowerCase();
 		String rawDisplayName = JunkUtils.getDisplayName(item);
@@ -353,7 +353,7 @@ public final class JunkUtils{
 //		return entityAsJsonObject.toString();
 //	}
 
-	public final static Component getDisplayNameSelectorComponent(Entity entity, boolean fakeSelector){
+	public static final Component getDisplayNameSelectorComponent(Entity entity, boolean fakeSelector){
 		if(fakeSelector || (entity instanceof Player && !((Player)entity).getDisplayName().equals(entity.getName()))){
 			TextClickAction clickAction = entity instanceof Player ? new TextClickAction(ClickEvent.SUGGEST_COMMAND, "/tell "+entity.getName()+" ") : null;
 			Component entityName = TellrawUtils.getLocalizedDisplayName(entity, true);
@@ -379,7 +379,7 @@ public final class JunkUtils{
 		}
 	}
 
-	public final static boolean setIfEmpty(@Nonnull EntityEquipment equipment, @Nonnull ItemStack item, @Nonnull EquipmentSlot slot){
+	public static final boolean setIfEmpty(@Nonnull EntityEquipment equipment, @Nonnull ItemStack item, @Nonnull EquipmentSlot slot){
 		switch(slot){
 			case HAND:
 				if(equipment.getItemInMainHandDropChance() >= 1f && equipment.getItemInMainHand() != null) return false;
@@ -412,7 +412,7 @@ public final class JunkUtils{
 
 	private static RefMethod essMethodGetUser, essMethodIsVanished;
 	private static RefMethod vanishMethodGetManager, vanishMethodIsVanished;
-	public final static boolean isVanished(Player p){
+	public static final boolean isVanished(Player p){
 		Plugin essPlugin = p.getServer().getPluginManager().getPlugin("Essentials");
 		if(essPlugin != null){
 			if(essMethodGetUser == null){
@@ -433,7 +433,7 @@ public final class JunkUtils{
 			&& p.getServer().getOnlinePlayers().stream().anyMatch(p2 -> !p2.canSee(p));
 	}
 
-	public final static ItemStack giveItemToEntity(Entity entity, ItemStack item){
+	public static final ItemStack giveItemToEntity(Entity entity, ItemStack item){
 		if(entity instanceof InventoryHolder){
 			Collection<ItemStack> leftovers = ((InventoryHolder)entity).getInventory().addItem(item).values();
 			return leftovers.isEmpty() ? null : leftovers.iterator().next();
@@ -448,7 +448,7 @@ public final class JunkUtils{
 		return item;
 	}
 
-	public final static Entity getTargetEntity(Player looker, int range){
+	public static final Entity getTargetEntity(Player looker, int range){
 		Entity closestEntity = null;
 		double closestDistSq = Double.MAX_VALUE;
 		for(Entity entity : looker.getNearbyEntities(range, range, range)){
@@ -485,15 +485,15 @@ public final class JunkUtils{
 		return getClosestBlockFace(vec, possibleHeadRotations).getOppositeFace();//TODO: why is it opposite?
 	}
 
-	private final static RefClass craftPlayerClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftPlayer");
-	private final static RefMethod playerGetProfileMethod = craftPlayerClazz.getMethod("getProfile");
-	private final static GameProfile getGameProfile(Player player){return (GameProfile)playerGetProfileMethod.of(player).call();}
+	private static final RefClass craftPlayerClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftPlayer");
+	private static final RefMethod playerGetProfileMethod = craftPlayerClazz.getMethod("getProfile");
+	private static final GameProfile getGameProfile(Player player){return (GameProfile)playerGetProfileMethod.of(player).call();}
 
-	private final static RefMethod propertyGetValueMethod = ReflectionUtils.getRefClass(Property.class).findMethodByName("getValue", "value");
-	public final static String getPropertyValue(Property p){return (String)propertyGetValueMethod.of(p).call();}
+	private static final RefMethod propertyGetValueMethod = ReflectionUtils.getRefClass(Property.class).findMethodByName("getValue", "value");
+	public static final String getPropertyValue(Property p){return (String)propertyGetValueMethod.of(p).call();}
 
 	@SuppressWarnings("deprecation")
-	public final static GameProfile getGameProfile(String nameOrUUID, boolean fetchSkin, Plugin nullForSync){
+	public static final GameProfile getGameProfile(String nameOrUUID, boolean fetchSkin, Plugin nullForSync){
 		Player player;
 		try{player = Bukkit.getServer().getPlayer(UUID.fromString(nameOrUUID));}
 		catch(java.lang.IllegalArgumentException e){player = null;/*thrown by UUID.fromString*/}
