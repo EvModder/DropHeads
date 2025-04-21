@@ -99,6 +99,7 @@ public record EntitySetting<T>(T globalDefault, Map<EntityType, T> typeSettings,
 		else subtypeSettings.put(key, t);
 	}
 
+	// Note: currently this is only called by DropChanceAPI, and only for one variable: mobChances
 	/** Parses EntitySetting<T> from a raw text file
 	 * @param pl DropHeads plugin
 	 * @param filename File to read from

@@ -31,6 +31,18 @@ looting-addition: 0.0
 # If this list is empty, any weapon can be used to get heads
 require-weapon: []
 
+# How the head item from a beheading should be handled, options are:
+# EVENT - add the head to normally dropped loot,
+# SPAWN - spawn the head separately from the event,
+# SPAWN_RANDOM - same as SPAWN, but with random velocity on the item entity
+# PLACE - place the head on the ground if spot is available (within 3 blocks)
+# PLACE_BY_KILLER - same as PLACE but checks if killer has build permissions
+# PLACE_BY_VICTIM - same as PLACE but checks if victim has build permissions
+# GIVE - try to put the head directly into the killer's inventory
+# You can do multiple of these in a list; i.e., ['GIVE', 'SPAWN'] will try to
+# give a head to the killer, but will drop the item if their inventory is full
+head-item-drop-mode: ['EVENT', 'SPAWN_RANDOM']
+
 # Give specific hand-held items a modified chance of beheading
 # The number seen is a multiplier for the drop chance when using that weapon
 # Eg: 2 = twice as likely, 1.5 = 50% more likely, 0.1 = 10% as likely

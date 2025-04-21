@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,6 +18,7 @@ import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Material;
@@ -77,7 +77,6 @@ import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
  */
 public final class DropChanceAPI{
 	private final AnnounceMode DEFAULT_ANNOUNCE, SILENT_ANNOUNCE;
-	private final ArrayList<DropMode> DROP_MODES; // TODO: per-mob drop mode?
 
 	private final boolean REPLACE_PLAYER_DEATH_EVT_MESSAGE, REPLACE_PET_DEATH_MESSAGE, REPLACE_PLAYER_DEATH_MESSAGE/*, USE_TRANSLATE_FALLBACKS*/;
 	private final boolean VANILLA_WSKELE_HANDLING;
@@ -98,6 +97,7 @@ public final class DropChanceAPI{
 	private final EntitySetting<Double> lootingLevelMult, lootingLevelAdd;
 	private final EntitySetting<Set<Material>> requiredWeapons;
 	private final EntitySetting<Double> dropChances;
+	private final EntitySetting<List<DropMode>> dropModes;
 	private final HashMap<EntityType, AnnounceMode> mobAnnounceModes;
 	private final EntitySetting<Map<String, Double>> permissionMults;
 	private final EntitySetting<Map<Material, Double>> weaponMults;
@@ -165,21 +165,43 @@ public final class DropChanceAPI{
 //		USE_TRANSLATE_FALLBACKS = pl.getAPI().translationsFile.getBoolean("use-translation-fallbacks", false)
 //				&& Bukkit.getBukkitVersion().compareTo("1.19.4") >= 0;
 
-		DROP_MODES = new ArrayList<>();
-		if(pl.getConfig().contains("head-item-drop-mode"))
-		for(String dropModeName : pl.getConfig().getStringList("head-item-drop-mode")){
-			try{DROP_MODES.add(DropMode.valueOf(dropModeName.toUpperCase()));}
-			catch(IllegalArgumentException ex){pl.getLogger().severe("Unknown head DropMode: "+dropModeName);}
-		}
-		if(DROP_MODES.isEmpty()) DROP_MODES.add(DropMode.EVENT);
+		dropModes = EntitySetting.fromConfig(pl, "head-item-drop-mode", List.of(DropMode.EVENT, DropMode.SPAWN_RANDOM), (k,v)->{
+			final boolean isList = v instanceof List;
+			final List<?> vs = isList ? (List<?>)v : List.of(v);
+			final List<DropMode> modes = new ArrayList<>(/*capacity=*/vs.size());
+			for(Object o : isList ? (List<?>)v : List.of(v)){
+				if(o instanceof String s){
+					try{modes.add(DropMode.valueOf(s.toUpperCase()));}
+					catch(IllegalArgumentException ex){pl.getLogger().severe("Unknown head DropMode: "+s);}
+				}
+				else{
+					pl.getLogger().warning("Invalid entity-setting (expected DropMode) for "+k+": "+v);
+					return null;
+				}
+			}
+			if(modes.isEmpty()){
+				pl.getLogger().severe("No DropMode(s) specified for "+k+"! Heads will not be dropped!");
+				return List.of(DropMode.EVENT, DropMode.SPAWN_RANDOM);
+			}
+			return modes;
+		});
+		boolean anyPlacementMode = Stream.concat( // TODO: there's gotta be a better shorthand, right?
+				dropModes.globalDefault().stream(),
+				Stream.concat(
+					dropModes.typeSettings() == null ? Stream.of() : dropModes.typeSettings().values().stream().flatMap(List::stream),
+					dropModes.subtypeSettings() == null ? Stream.of() : dropModes.subtypeSettings().values().stream().flatMap(List::stream)
+				)
+			).anyMatch(mode -> mode.name().startsWith("PLACE"));
 
-		headOverwriteBlocks = new HashSet<>();
-		if(pl.getConfig().contains("head-place-overwrite-blocks") && DROP_MODES.stream().anyMatch(mode -> mode.name().startsWith("PLACE")))
-		for(String matName : pl.getConfig().getStringList("head-place-overwrite-blocks")){
-			try{headOverwriteBlocks.add(Material.valueOf(matName.toUpperCase()));}
-			catch(IllegalArgumentException ex){pl.getLogger().severe("Unknown material in 'head-place-overwrite-blocks': "+matName);}
+		if(!anyPlacementMode) headOverwriteBlocks = null;
+		else{
+			List<String> matNames = pl.getConfig().getStringList("head-place-overwrite-blocks");
+			headOverwriteBlocks = new HashSet<>(matNames.size());
+			for(String matName : matNames){
+				try{headOverwriteBlocks.add(Material.valueOf(matName.toUpperCase()));}
+				catch(IllegalArgumentException ex){pl.getLogger().severe("Unknown material in 'head-place-overwrite-blocks': "+matName);}
+			}
 		}
-		else headOverwriteBlocks.add(Material.AIR);
 
 		SILENT_ANNOUNCE = parseAnnounceMode(pl.getConfig().getString("silentbehead-announcement", "OFF"), AnnounceMode.OFF);
 		mobAnnounceModes = new HashMap<>();
@@ -211,9 +233,9 @@ public final class DropChanceAPI{
 		});
 
 		requiredWeapons = EntitySetting.fromConfig(pl, "require-weapon", Set.of(), (k,v)->{
-			// Parse String[] -> Set<Material>
-			if(v instanceof String[] list){
-				return Collections.unmodifiableSet(Arrays.stream(list).map(matName -> {
+			// Parse List<String> -> Set<Material>
+			if(v instanceof List){
+				return Collections.unmodifiableSet(((List<?>)v).stream().map(n -> n.toString()).map(matName -> {
 					if(matName.isEmpty()){
 						pl.getLogger().warning("Empty weapon name! (should be unreachable, please report this to the developer)");
 						return (Material)null;
@@ -225,7 +247,7 @@ public final class DropChanceAPI{
 				.filter(mat -> mat != null)
 				.collect(Collectors.toSet()));
 			}
-			pl.getLogger().warning("Invalid configuration (expected weapon list): "+k);
+			pl.getLogger().warning("Invalid entity-setting (expected weapon list) for "+k+": "+v);
 			return null;
 		});
 
@@ -240,7 +262,7 @@ public final class DropChanceAPI{
 				}
 				return specificWeaponMults;
 			}
-			pl.getLogger().warning("Invalid configuration section (expected weapon:number list): "+k);
+			pl.getLogger().warning("Invalid entity-setting section (expected weapon:number list) for "+k+": "+v);
 			return null;
 		});
 
@@ -295,7 +317,7 @@ public final class DropChanceAPI{
 			}
 		};
 		//Load individual mobs' drop chances
-		dropChances = EntitySetting.fromTextFile(pl, "head-drop-rates.txt", "/configs/head-drop-rates.txt", 0d, parseDropChance);
+		dropChances = EntitySetting.fromTextFile(pl, "head-drop-rates.txt", "configs/head-drop-rates.txt", 0d, parseDropChance);
 		if(VANILLA_WSKELE_HANDLING && dropChances.get(EntityType.WITHER_SKELETON, 0.025d) != 0.025d){
 			pl.getLogger().warning("Wither Skeleton Skull drop chance has been modified in 'head-drop-rates.txt'"
 					+ " (0.025->"+dropChances.get(EntityType.WITHER_SKELETON)+"), "
@@ -455,13 +477,11 @@ public final class DropChanceAPI{
 	 */
 	@SuppressWarnings("deprecation")
 	public void dropHeadItem(ItemStack headItem, Entity entity, Entity killer, Event evt){
-		for(DropMode mode : DROP_MODES){
+		for(DropMode mode : dropModes.get(entity)){
 			if(headItem == null) break;
 			switch(mode){
 				case EVENT:
-					if(evt instanceof EntityDeathEvent) ((EntityDeathEvent)evt).getDrops().add(headItem);
-					else EvUtils.dropItemNaturally(entity.getLocation(), headItem, rand);
-					headItem = null;
+					if(evt instanceof EntityDeathEvent ede){ede.getDrops().add(headItem); headItem = null;}
 					break;
 				case PLACE_BY_KILLER:
 				case PLACE_BY_VICTIM:
@@ -507,8 +527,12 @@ public final class DropChanceAPI{
 				case GIVE:
 					headItem = JunkUtils.giveItemToEntity(killer, headItem);
 					break;
+				case SPAWN_RANDOM:
+					EvUtils.dropItemNaturally(entity.getLocation(), headItem, rand);
+					headItem = null;
+					break;
 				case SPAWN:
-					entity.getWorld().dropItemNaturally(entity.getLocation(), headItem);
+					entity.getWorld().dropItem(entity.getLocation(), headItem);
 					headItem = null;
 					break;
 			}//switch(mode)

@@ -28,7 +28,7 @@ public final class InternalAPI extends HeadAPI{
 	 * @return the value at that path, or the value of <code>defaultValue</code> if not found
 	 */
 	public String loadTranslationStr(String key, String defaultValue){
-		if(!pl.getConfig().isString(key)) DropHeads.getPlugin().getLogger().severe("Undefined key in 'translations.yml': "+key);
+		if(!pl.getConfig().isString(key)) pl.getLogger().severe("Unable to find translation for key: "+key);
 		final String msg = TextUtils.translateAlternateColorCodes('&', pl.getConfig().getString(key, defaultValue));
 		int i = msg.indexOf('$');
 		if(i == -1) return msg;

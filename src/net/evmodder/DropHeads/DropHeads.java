@@ -98,11 +98,12 @@ public final class DropHeads extends EvPlugin{
 		// Load translations
 		final InputStream translationsIS = getClass().getResourceAsStream("/configs/translations.yml");
 		final Configuration translations = FileIO.loadConfig(this, "translations.yml", translationsIS, /*notifyIfNew=*/false);
+		// No need to assign defaults if new (because it was just copied. Also the InputStream will be invalid)
 		if(!translations.getBoolean("new")) translations.setDefaults(YamlConfiguration.loadConfiguration(new InputStreamReader(translationsIS)));
-		config.setDefaults(translations);
+		config.addDefaults(translations);
 
 		// Load entity-settings
-		config.setDefaults(FileIO.loadConfig(this, "entity-settings.yml",
+		config.addDefaults(FileIO.loadConfig(this, "entity-settings.yml",
 				getClass().getResourceAsStream("/configs/entity-settings.yml"), /*notifyIfNew=*/false));
 
 		api = new InternalAPI(m, CRACKED_IRON_GOLEMS_ENABLED);

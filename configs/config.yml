@@ -139,17 +139,8 @@ noteblock-mob-sounds: 'OFF'
 # A list of mob heads a player can wear to avoid provoking endermen
 endermen-camouflage-heads: []
 
-# How the head item from a beheading should be handled, options are:
-# EVENT - add the head to normally dropped loot,
-# SPAWN - spawn the head separately from the event,
-# PLACE - place the head on the ground if spot is available (within 3 blocks)
-# PLACE_BY_KILLER - same as PLACE but checks if killer has build permissions
-# PLACE_BY_VICTIM - same as PLACE but checks if victim has build permissions
-# GIVE - try to put the head directly into the killer's inventory
-# You can do multiple of these in a list; i.e., ['GIVE', 'SPAWN'] will try to
-# give a head to the killer, but will drop the item if their inventory is full
-head-item-drop-mode: 'EVENT'
-
+# Only used when 'head-item-drop-mode' = 'PLACE' in entity-settings.yml
+# Controls what blocks heads can be placed in
 head-place-overwrite-blocks: ['AIR', 'WATER', 'SHORT_GRASS']
 
 # Changes the death `Event Priority` that DropHeads registers at

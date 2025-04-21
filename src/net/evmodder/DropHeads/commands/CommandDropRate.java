@@ -1,6 +1,7 @@
 package net.evmodder.DropHeads.commands;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,9 +33,9 @@ public class CommandDropRate extends EvCommand{
 	private final DropHeads pl;
 	private final String CMD_TRANSLATE_PATH = "commands.droprate.";
 	private final DropChanceAPI dropChanceAPI;
-	private final boolean ONLY_SHOW_VALID_ENTITIES = true;
 	private final boolean USING_SPAWN_MULTS, USING_LOOTING_MULTS, USING_TIME_ALIVE_MULTS, USING_WEAPON_MULTS;
 	private final boolean VANILLA_WSKELE_HANDLING;
+	private final boolean ONLY_SHOW_VALID_ENTITIES = true;
 	private final HashSet<String> entityNames;
 	private final int JSON_LIMIT;
 	private final String LIST_SEP;
@@ -51,6 +52,25 @@ public class CommandDropRate extends EvCommand{
 		if(value == null) translations.put(key, value = pl.getInternalAPI().loadTranslationStr(CMD_TRANSLATE_PATH + key)
 				.replaceAll("%%?(?!s)", "%%")); // Allow a bit more flexibility with using %
 		return value;
+	}
+
+	private HashSet<String> loadEntitiesWithNonZeroDropChance(){
+		//String defaultChances = FileIO.loadResource(pl, "configs/head-drop-rates.txt"); // Already done in EntityDeathListener
+		String chances = FileIO.loadFile("head-drop-rates.txt", "");
+		HashSet<String> entityNames = new HashSet<>();
+		for(String line : chances.split("\n")){
+			String[] parts = line.replace(" ", "").replace("\t", "").toUpperCase().split(":");
+			if(parts.length < 2) continue;
+			parts[0] = parts[0].replace("DEFAULT", "UNKNOWN");
+			if(ONLY_SHOW_VALID_ENTITIES){
+				final int dataTagSep = parts[0].indexOf('|');
+				final String eName = dataTagSep == -1 ? parts[0] : parts[0].substring(0, dataTagSep);
+				try{EntityType.valueOf(eName);}
+				catch(IllegalArgumentException ex){continue;}
+			}
+			entityNames.add(parts[0]);
+		}
+		return entityNames;
 	}
 
 	public CommandDropRate(DropHeads plugin) {
@@ -72,21 +92,7 @@ public class CommandDropRate extends EvCommand{
 
 		VANILLA_WSKELE_HANDLING = pl.getConfig().getBoolean("vanilla-wither-skeleton-skulls", true);
 
-		//String defaultChances = FileIO.loadResource(pl, "head-drop-rates.txt"); // Already done in EntityDeathListener
-		String chances = FileIO.loadFile("head-drop-rates.txt", "");
-		entityNames = new HashSet<String>();
-		for(String line : chances.split("\n")){
-			String[] parts = line.replace(" ", "").replace("\t", "").toUpperCase().split(":");
-			if(parts.length < 2) continue;
-			parts[0] = parts[0].replace("DEFAULT", "UNKNOWN");
-			if(ONLY_SHOW_VALID_ENTITIES){
-				final int dataTagSep = parts[0].indexOf('|');
-				final String eName = dataTagSep == -1 ? parts[0] : parts[0].substring(0, dataTagSep);
-				try{EntityType.valueOf(eName);}
-				catch(IllegalArgumentException ex){continue;}
-			}
-			entityNames.add(parts[0]);
-		}
+		entityNames = loadEntitiesWithNonZeroDropChance();
 	}
 
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
