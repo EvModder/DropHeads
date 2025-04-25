@@ -19,10 +19,11 @@ import net.evmodder.EvLib.FileIO;
 //}
 public record EntitySetting<T>(T globalDefault, Map<EntityType, T> typeSettings, Map<String, T> subtypeSettings){
 	public T get(EntityType type, T orDefault){
-		return typeSettings != null ? typeSettings.getOrDefault(type, orDefault) : orDefault;
+		return typeSettings != null && type != null ? typeSettings.getOrDefault(type, orDefault) : orDefault;
 	}
 	public T get(EntityType type){return get(type, globalDefault);}
 	public T get(String key, T orDefault){
+		if(key == null) return orDefault;
 		if(subtypeSettings != null){
 			int lastSep = key.lastIndexOf('|');
 			T subtypeValue = null;
@@ -39,6 +40,7 @@ public record EntitySetting<T>(T globalDefault, Map<EntityType, T> typeSettings,
 	}
 	public T get(String key){return get(key, globalDefault);}
 	public T get(Entity entity, T orDefault){
+		if(entity == null) return orDefault;
 		if(subtypeSettings != null){
 			String textureKey = TextureKeyLookup.getTextureKey(entity);
 			int keyDataTagIdx = textureKey.lastIndexOf('|');

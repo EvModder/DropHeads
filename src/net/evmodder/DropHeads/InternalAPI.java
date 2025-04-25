@@ -15,19 +15,13 @@ import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
 public final class InternalAPI extends HeadAPI{
 	InternalAPI(NoteblockMode m, boolean crackedIronGolemHeads){super(m, crackedIronGolemHeads);}
 
-	// Loads config.getString(key), replacing '${abc-xyz}' with config.getString('abc-xyz')
-	/** <strong>DO NOT USE:</strong> This function will likely disappear in a future release
-	 * @param key path in <a href="https://github.com/EvModder/DropHeads/blob/master/translations.yml">translations.yml"</a>
-	 * @return the value at that path, or the value of <code>key</code> if not found
-	 */
-	public String loadTranslationStr(String key){return loadTranslationStr(key, key);}
-
 	/** <strong>DO NOT USE:</strong> This function will likely disappear in a future release
 	 * @param key path in <a href="https://github.com/EvModder/DropHeads/blob/master/translations.yml">translations.yml"</a>
 	 * @param defaultValue a value for if the key is not found
 	 * @return the value at that path, or the value of <code>defaultValue</code> if not found
 	 */
 	public String loadTranslationStr(String key, String defaultValue){
+		// Loads config.getString(key), replacing '${abc-xyz}' with config.getString('abc-xyz')
 		if(!pl.getConfig().isString(key)) pl.getLogger().severe("Unable to find translation for key: "+key);
 		final String msg = TextUtils.translateAlternateColorCodes('&', pl.getConfig().getString(key, defaultValue));
 		int i = msg.indexOf('$');
@@ -53,6 +47,11 @@ public final class InternalAPI extends HeadAPI{
 		builder.append(msg.substring(i));
 		return builder.toString();
 	}
+	/** <strong>DO NOT USE:</strong> This function will likely disappear in a future release
+	 * @param key path in <a href="https://github.com/EvModder/DropHeads/blob/master/translations.yml">translations.yml"</a>
+	 * @return the value at that path, or the value of <code>key</code> if not found
+	 */
+	public String loadTranslationStr(String key){return loadTranslationStr(key, key);}
 
 	// Loads config.getString(key), replacing '${abc-xyz}' with % in the key and config.getString('abc-xyz') in withComps.
 	/** <strong>DO NOT USE:</strong> This function will likely disappear in a future release
