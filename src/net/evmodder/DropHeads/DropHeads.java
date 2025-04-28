@@ -106,7 +106,7 @@ public final class DropHeads extends EvPlugin{
 		// Load entity-settings
 		final Configuration entitySettings = FileIO.loadConfig(this, "entity-settings.yml",
 				getClass().getResourceAsStream("/configs/entity-settings.yml"), /*notifyIfNew=*/false);
-		for(String key : entitySettings.getKeys(true)) if(!config.isSet(key)) config.set(key, translations.get(key));
+		for(String key : entitySettings.getKeys(true)) if(!config.isSet(key)) config.set(key, entitySettings.get(key));
 
 		api = new InternalAPI(m, CRACKED_IRON_GOLEMS_ENABLED);
 		final boolean WANT_TO_REPLACE_PLAYER_DEATH_MSG = config.getBoolean("behead-announcement-replaces-player-death-message", true);

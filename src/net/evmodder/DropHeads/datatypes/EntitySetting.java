@@ -154,7 +154,10 @@ public record EntitySetting<T>(T globalDefault, Map<EntityType, T> typeSettings,
 			//boolean deep,
 			@Nonnull final T defaultValue, final BiFunction<String, Object, T> valueParser)
 	{
-		if(!pl.getConfig().contains(path)) return new EntitySetting<T>(defaultValue, null, null);
+		if(!pl.getConfig().contains(path)){
+			pl.getLogger().warning("Value is missing from config/entity-settings: "+path);
+			return new EntitySetting<T>(defaultValue, null, null);
+		}
 
 		final HashMap<EntityType, T> typeSettings = new HashMap<>();
 		final HashMap<String, T> subtypeSettings = new HashMap<>();
@@ -164,12 +167,13 @@ public record EntitySetting<T>(T globalDefault, Map<EntityType, T> typeSettings,
 //		else internalValueParser = (k,v)->defaultValue.getClass().isInstance(v) ? (T)v : null;
 		else internalValueParser = (k,v)->{
 			if(defaultValue.getClass().isInstance(v)) return (T)v;
-			pl.getLogger().severe("Invalid value for "+k+" in '"+path+"': "+v);
+			pl.getLogger().severe("Invalid entity-setting in "+path+" for '"+k+"': "+v);
 			return null;
 		};
 		ConfigurationSection cs = pl.getConfig().isConfigurationSection(path) ? pl.getConfig().getConfigurationSection(path) : null;
 		// No ConfigurationSection indicates no per-EntityType details, so just attempt to parse as default (for all entities)
 		if(cs == null){
+			pl.getLogger().fine("EntitySetting for "+path+" is not a ConfigSection, parsing it as a default");
 			final T t = internalValueParser.apply("DEFAULT", pl.getConfig().get(path));
 			return t == null ? null : new EntitySetting<T>(t, /*typeSettings=*/null, /*subtypeSettings=*/null);
 		}

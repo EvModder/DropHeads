@@ -78,6 +78,8 @@ time-alive-multipliers:
 
 # Modify drop chance with custom permissions
 # Any player(s) with these permission will have the modified droprate
+permission-multipliers: ~
+
 #permission-multipliers:
 #  default:
 #    dropheads.reallybadluck: 0.1
