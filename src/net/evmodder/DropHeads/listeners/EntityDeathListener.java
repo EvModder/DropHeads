@@ -123,14 +123,14 @@ public class EntityDeathListener implements Listener{
 	boolean onEntityDeath(@Nonnull final Entity victim, final Entity killer, final Event evt){
 		Permissible killerPermCheck = killer;
 		if(killer != null){
-			if(allowProjectileKills.get(victim) && killer instanceof Projectile && ((Projectile)killer).getShooter() instanceof Permissible){
-				killerPermCheck = (Permissible)((Projectile)killer).getShooter();
+			if(allowProjectileKills.get(victim) && killer instanceof Projectile proj && proj.getShooter() instanceof Permissible permissible){
+				killerPermCheck = permissible;
 			}
 			if(!killerPermCheck.hasPermission("dropheads.canbehead."+victim.getType().name().toLowerCase())){
 				if(DEBUG_MODE) pl.getLogger().info("dropheads.canbehead.<type>=false: "+getName(killerPermCheck));
 				return false;
 			}
-			if(killer instanceof Creeper && ((Creeper)killer).isPowered()){
+			if(killer instanceof Creeper creeper && creeper.isPowered()){
 				if(CHARGED_CREEPER_DROPS){
 					if(!victim.hasPermission("dropheads.canlosehead")){
 						if(DEBUG_MODE) pl.getLogger().info("dropheads.canlosehead=false: "+victim.getName());
@@ -157,19 +157,23 @@ public class EntityDeathListener implements Listener{
 			}
 		}
 		// Check if killer qualifies to trigger a behead.
-		if((!allowIndirectKills.get(victim) && killer == null
-				// Note: Won't use timeSinceLastEntityDamage()... it would be expensive to keep track of
-				&& JunkUtils.timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS) ||
-			(!allowProjectileKills.get(victim) && killer != null && killer instanceof Projectile) ||
-			(!allowNonPlayerKills.get(victim) && (killer != null ? (
-				killer instanceof Player == false &&
-				(
-					!allowProjectileKills.get(victim) ||
-					killer instanceof Projectile == false ||
-					((Projectile)killer).getShooter() instanceof Player == false
-				)
-			) : JunkUtils.timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS))
+		if(killer == null
+			? (!allowIndirectKills.get(victim) ||
+				(INDIRECT_KILL_THRESHOLD_MILLIS >= 0 && JunkUtils.timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS))
+			:
+			(!allowProjectileKills.get(victim) && killer instanceof Projectile) ||
+			(!allowNonPlayerKills.get(victim) && killer instanceof Player == false &&
+				!(allowProjectileKills.get(victim) && killer instanceof Projectile proj && proj.getShooter() instanceof Player)
+			)
 		) return false;
+//		if(
+//			// Note: Won't use timeSinceLastEntityDamage()... it would be expensive to keep track of
+//			(killer == null && (!allowIndirectKills.get(victim) || JunkUtils.timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS)) ||
+//			(killer != null && !allowProjectileKills.get(victim) && killer instanceof Projectile) ||
+//			(killer != null && !allowNonPlayerKills.get(victim) &&
+//				!(allowProjectileKills.get(victim) && killer instanceof Projectile proj && proj.getShooter() instanceof Player)
+//			)
+//		) return false;
 
 		final ItemStack murderWeapon = getWeaponFromKiller(killer);
 		final Material murderWeaponType = murderWeapon == null ? Material.AIR : murderWeapon.getType();
@@ -267,8 +271,7 @@ public class EntityDeathListener implements Listener{
 
 	class DeathEventExecutor implements EventExecutor{
 		@Override public void execute(Listener listener, Event originalEvent){
-			if(originalEvent instanceof EntityDeathEvent){
-				final EntityDeathEvent evt = (EntityDeathEvent) originalEvent;
+			if(originalEvent instanceof EntityDeathEvent evt){
 				final LivingEntity victim = evt.getEntity();
 				final Entity killer = victim.getLastDamageCause() != null && victim.getLastDamageCause() instanceof EntityDamageByEntityEvent
 						? ((EntityDamageByEntityEvent)victim.getLastDamageCause()).getDamager()

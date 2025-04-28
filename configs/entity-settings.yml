@@ -9,17 +9,23 @@ behead-announcement:
 #  wither_skeleton: 'OFF'
 
 # Whether to drop heads if not killed by a player
-drop-for-nonplayer-kills: false
+drop-for-nonplayer-kills:
+  default: false
+  creaking: true
+
+# Whether to drop heads if last-damage-cause is not a valid entity
+# Instead, any entity damaged by a player within the time threshold is able
+# to drop its head. Set threshold <= 0 to allow head drops for any death
+drop-for-indirect-kills:
+  default: false
+  creaking: true
+indirect-kill-threshold: '30s'
 
 # Whether to drop heads if killed by a projectile weapon
 drop-for-ranged-kills: false
 
 # In vanilla, the main-hand item is used for looting even if shot from offhand
 use-ranged-weapon-for-looting: true
-
-# Whether to drop heads if last-damage-cause is not a valid entity
-drop-for-indirect-kills: false
-indirect-kill-threshold: '30s'
 
 # Drop chances are multiplied by this number for each level of looting
 looting-multiplier: 1.1
