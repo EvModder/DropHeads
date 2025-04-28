@@ -148,6 +148,9 @@ head-place-overwrite-blocks: ['AIR', 'WATER', 'SHORT_GRASS']
 # Possible values: [LOWEST, LOW, NORMAL, HIGH, HIGHEST, MONITOR]
 death-listener-priority: LOW
 
+# In vanilla, the main-hand item is used for looting even if shot from offhand
+use-ranged-weapon-for-looting: true
+
 # Attempt to replace headA with headB whenever possible (server-wide)
 # The head on the left is replaced with the one on the right when updated
 replace-heads:

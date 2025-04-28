@@ -8,20 +8,23 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import net.evmodder.DropHeads.DropHeads;
+import net.evmodder.DropHeads.datatypes.EntitySetting;
 
+//Only enabled if drop-for-indirect-kills:TRUE && drop-for-nonplayer-kills:FALSE
 public class EntityDamageListener implements Listener{
 	private final DropHeads pl;
-	private final boolean ALLOW_PROJECTILE_KILLS;
+	private final EntitySetting<Boolean> allowProjectileKills;
 
-	// Only enabled if drop-for-indirect-kills:TRUE && drop-for-nonplayer-kills:FALSE
-	public EntityDamageListener(){
+	public EntityDamageListener(EntitySetting<Boolean> allowProjectileKills){
 		pl = DropHeads.getPlugin();
-		ALLOW_PROJECTILE_KILLS = pl.getConfig().getBoolean("drop-for-ranged-kills", false);
+		this.allowProjectileKills = allowProjectileKills;
 	}
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void entityDamageEvent(EntityDamageByEntityEvent evt){
-		if(evt.getDamager() instanceof Player || (ALLOW_PROJECTILE_KILLS && evt.getDamager() instanceof Projectile
-				&& ((Projectile)evt.getDamager()).getShooter() instanceof Player)){
+		if(evt.getDamager() instanceof Player ||
+				(allowProjectileKills.get(evt.getEntity()) && evt.getDamager() instanceof Projectile proj && proj.getShooter() instanceof Player)
+		){
+			pl.getLogger().warning("entity dmged by player: "+evt.getEntityType());
 			evt.getEntity().setMetadata("PlayerDamage", new FixedMetadataValue(pl, System.currentTimeMillis()));
 		}
 	}
