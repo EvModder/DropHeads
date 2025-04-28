@@ -16,9 +16,9 @@ public class ProjectileFireListener implements Listener{
 	private final DropHeads pl;
 	private final boolean ALLOW_NON_PLAYER_KILLS;
 	
-	public ProjectileFireListener(){
+	public ProjectileFireListener(boolean ALLOW_NON_PLAYER_KILLS){
+		this.ALLOW_NON_PLAYER_KILLS = ALLOW_NON_PLAYER_KILLS;
 		pl = DropHeads.getPlugin();
-		ALLOW_NON_PLAYER_KILLS = pl.getConfig().getBoolean("drop-for-nonplayer-kills", false);
 	}
 
 	private boolean canShootProjectiles(Material type){
@@ -41,18 +41,19 @@ public class ProjectileFireListener implements Listener{
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onProjectileLaunch(ProjectileLaunchEvent evt){
-		// Skip if already has metadata (defers to EntityShootBowEvent)
-		if(evt.getEntity().hasMetadata("ShotUsing") || evt.getEntity().getShooter() instanceof LivingEntity == false
-				|| (!ALLOW_NON_PLAYER_KILLS && evt.getEntity().getShooter() instanceof Player == false)) return;
+		if(evt.getEntity().getShooter() instanceof LivingEntity shooter){
+			// Skip if already has metadata (defers to EntityShootBowEvent)
+			if(evt.getEntity().hasMetadata("ShotUsing")) return;
+			if(!ALLOW_NON_PLAYER_KILLS && evt.getEntity().getShooter() instanceof Player == false) return;
 
-		final LivingEntity shooter = (LivingEntity)evt.getEntity().getShooter();
-		final ItemStack mainHandItem = shooter.getEquipment().getItemInMainHand();
-		final ItemStack offHandItem  = shooter.getEquipment().getItemInOffHand();
-		if((mainHandItem == null || !canShootProjectiles(mainHandItem.getType())) && offHandItem != null && canShootProjectiles(offHandItem.getType())){
-			evt.getEntity().setMetadata("ShotUsing", new FixedMetadataValue(pl, offHandItem));
-		}
-		else if(mainHandItem != null){
-			evt.getEntity().setMetadata("ShotUsing", new FixedMetadataValue(pl, mainHandItem));
+			final ItemStack mainHandItem = shooter.getEquipment().getItemInMainHand();
+			final ItemStack offHandItem  = shooter.getEquipment().getItemInOffHand();
+			if((mainHandItem == null || !canShootProjectiles(mainHandItem.getType())) && offHandItem != null && canShootProjectiles(offHandItem.getType())){
+				evt.getEntity().setMetadata("ShotUsing", new FixedMetadataValue(pl, offHandItem));
+			}
+			else if(mainHandItem != null){
+				evt.getEntity().setMetadata("ShotUsing", new FixedMetadataValue(pl, mainHandItem));
+			}
 		}
 	}
 

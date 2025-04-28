@@ -21,6 +21,7 @@ package net.evmodder.DropHeads;
 import org.bukkit.configuration.Configuration;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.stream.Stream;
 import org.bukkit.configuration.file.YamlConfiguration;
 import net.evmodder.DropHeads.commands.*;
 import net.evmodder.DropHeads.datatypes.EntitySetting;
@@ -124,19 +125,32 @@ public final class DropHeads extends EvPlugin{
 		}
 		dropChanceAPI = new DropChanceAPI(REPLACE_PLAYER_DEATH_MSG, REPLACE_PET_DEATH_MSG, deathMessageBlocker);
 
-		EntitySetting<Boolean> allowNonPlayerKills = EntitySetting.fromConfig(this, "drop-for-nonplayer-kills", false, null);
-		EntitySetting<Boolean> allowIndirectPlayerKills = EntitySetting.fromConfig(this, "drop-for-indirect-player-kills", false, null);
-		EntitySetting<Boolean> allowProjectileKills = EntitySetting.fromConfig(this, "drop-for-ranged-kills", false, null);
-		new EntityDeathListener(deathMessageBlocker, allowNonPlayerKills, allowIndirectKills, allowProjectileKills);
+		
+		final EntitySetting<Boolean> allowNonPlayerKills = EntitySetting.fromConfig(this, "drop-for-nonplayer-kills", false, null);
+		final EntitySetting<Boolean> allowIndirectPlayerKills = EntitySetting.fromConfig(this, "drop-for-indirect-player-kills", false, null);
+		Stream.concat(
+			allowIndirectPlayerKills.typeSettings() == null ? Stream.of() :
+			allowIndirectPlayerKills.typeSettings().entrySet().stream()
+				.filter(e -> e.getValue() && allowNonPlayerKills.get(e.getKey())).map(e -> e.getKey().name()),
+			allowIndirectPlayerKills.subtypeSettings() == null ? Stream.of() :
+			allowIndirectPlayerKills.subtypeSettings().entrySet().stream()
+				.filter(e -> e.getValue() && allowNonPlayerKills.get(e.getKey())).map(e -> e.getKey())
+		).forEach(e ->{
+			getLogger().warning("drop-for-indirect-player-kills is true for '"+e+"', which is unnecessary because this mob does not require a player to kill");
+		});
+		final EntitySetting<Boolean> allowProjectileKills = EntitySetting.fromConfig(this, "drop-for-ranged-kills", false, null);
+		final boolean TRACK_RANGED_WEAPON_FOR_LOOTING = allowProjectileKills.hasAnyValue() && config.getBoolean("use-ranged-weapon-for-looting", true);
+		new EntityDeathListener(deathMessageBlocker, allowNonPlayerKills, allowIndirectPlayerKills, allowProjectileKills, TRACK_RANGED_WEAPON_FOR_LOOTING);
 
 		if(config.getBoolean("track-mob-spawns", true)){
 			getServer().getPluginManager().registerEvents(new EntitySpawnListener(), this);
 		}
-		if(allowProjectileKills.hasAnyValue() && config.getBoolean("use-ranged-weapon-for-looting", true)){
-			getServer().getPluginManager().registerEvents(new ProjectileFireListener(), this);
+		if(TRACK_RANGED_WEAPON_FOR_LOOTING){
+			// TODO: (intersection of allowNonPlayerKills && allowProjectileKills).hasAnyValue()
+			getServer().getPluginManager().registerEvents(new ProjectileFireListener(allowNonPlayerKills.hasAnyValue()), this);
 		}
 		if(allowIndirectPlayerKills.hasAnyValue()){
-			getServer().getPluginManager().registerEvents(new EntityDamageListener(), this);
+			getServer().getPluginManager().registerEvents(new EntityDamageListener(allowNonPlayerKills, allowIndirectPlayerKills, allowProjectileKills), this);
 		}
 		if(config.getBoolean("refresh-textures", false)){
 			getServer().getPluginManager().registerEvents(new ItemDropListener(), this);

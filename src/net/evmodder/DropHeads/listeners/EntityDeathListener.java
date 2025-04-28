@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
 import javax.annotation.Nonnull;
@@ -34,7 +33,6 @@ import org.bukkit.plugin.EventExecutor;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.DropHeads.TextureKeyLookup;
-import net.evmodder.DropHeads.commands.CommandDropRate;
 import net.evmodder.DropHeads.datatypes.EntitySetting;
 import net.evmodder.DropHeads.events.HeadRollEvent;
 import net.evmodder.EvLib.EvUtils;
@@ -49,7 +47,7 @@ public class EntityDeathListener implements Listener{
 	private final EventPriority PRIORITY;
 	private final EntitySetting<Boolean> allowNonPlayerKills, allowIndirectPlayerKills, allowProjectileKills;//, useRangedWeaponForLooting;
 	//TODO: pkillonly config per-mob?
-	private final boolean USE_RANGED_WEAPON_FOR_LOOTING;
+	private final boolean TRACK_RANGED_WEAPON_FOR_LOOTING;
 	private final boolean CHARGED_CREEPER_DROPS, VANILLA_WSKELE_HANDLING;
 	private final long INDIRECT_KILL_THRESHOLD_MILLIS;
 	private final boolean DEBUG_MODE;
@@ -57,14 +55,15 @@ public class EntityDeathListener implements Listener{
 	public static final class Friend{private Friend(){}}
 
 	public EntityDeathListener(DeathMessagePacketIntercepter deathMessageBlocker,
-			EntitySetting<Boolean> allowNonPlayerKills, EntitySetting<Boolean> allowIndirectPlayerKills, EntitySetting<Boolean> allowProjectileKills){
+			EntitySetting<Boolean> allowNonPlayerKills, EntitySetting<Boolean> allowIndirectPlayerKills, EntitySetting<Boolean> allowProjectileKills,
+			boolean useRangedWeaponForLooting){
 		this.deathMessageBlocker = deathMessageBlocker;
 		this.allowNonPlayerKills = allowNonPlayerKills;
 		this.allowIndirectPlayerKills = allowIndirectPlayerKills;
 		this.allowProjectileKills = allowProjectileKills;
+		TRACK_RANGED_WEAPON_FOR_LOOTING = useRangedWeaponForLooting;
 		pl = DropHeads.getPlugin();
 		rand = new Random();
-		USE_RANGED_WEAPON_FOR_LOOTING = pl.getConfig().getBoolean("use-ranged-weapon-for-looting", true);
 
 		CHARGED_CREEPER_DROPS = pl.getConfig().getBoolean("charged-creeper-drops", true);
 		VANILLA_WSKELE_HANDLING = pl.getConfig().getBoolean("vanilla-wither-skeleton-skulls", false);
@@ -102,7 +101,7 @@ public class EntityDeathListener implements Listener{
 		return
 			killer == null ? null :
 			killer instanceof LivingEntity le ? le.getEquipment().getItemInMainHand() :
-			!USE_RANGED_WEAPON_FOR_LOOTING ? null :
+			!TRACK_RANGED_WEAPON_FOR_LOOTING ? null :
 			killer instanceof Projectile == false ? null :
 			killer.hasMetadata("ShotUsing") ? (ItemStack)killer.getMetadata("ShotUsing").get(0).value() :
 			((Projectile)killer).getShooter() instanceof LivingEntity le ? le.getEquipment().getItemInMainHand() :
@@ -160,25 +159,14 @@ public class EntityDeathListener implements Listener{
 			}
 		}
 		// Check if killer qualifies to trigger a behead.
-//		if(killer != null){
-//			if(!allowProjectileKills.get(victim) && killer instanceof Projectile) return false;
-//			if(!allowNonPlayerKills.get(victim) && killer instanceof Player == false &&
-//					!(allowProjectileKills.get(victim) && killer instanceof Projectile proj && proj.getShooter() instanceof Player)
-//			) return false;
-//		}
-//		else if(!allowNonPlayerKills.get(victim) &&
-//			(!allowIndirectPlayerKills.get(victim) || JunkUtils.timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS)
-//		) return false;
-//			
-//		}
-		if(killer == null
-			? (!allowIndirectKills.get(victim) ||
-				(INDIRECT_KILL_THRESHOLD_MILLIS >= 0 && JunkUtils.timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS))
-			:
-			(!allowProjectileKills.get(victim) && killer instanceof Projectile) ||
-			(!allowNonPlayerKills.get(victim) && killer instanceof Player == false &&
-				!(allowProjectileKills.get(victim) && killer instanceof Projectile proj && proj.getShooter() instanceof Player)
-			)
+		if(killer != null){
+			if(!allowProjectileKills.get(victim) && killer instanceof Projectile) return false;
+			if(!allowNonPlayerKills.get(victim) && killer instanceof Player == false &&
+					!(allowProjectileKills.get(victim) && killer instanceof Projectile proj && proj.getShooter() instanceof Player)
+			) return false;
+		}
+		else if(!allowNonPlayerKills.get(victim) &&
+			(!allowIndirectPlayerKills.get(victim) || JunkUtils.timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS)
 		) return false;
 
 		final ItemStack murderWeapon = getWeaponFromKiller(killer);
