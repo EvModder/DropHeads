@@ -547,14 +547,14 @@ public final class DropChanceAPI{
 		if(killer == null) return null;
 		if(killer instanceof Projectile){
 			ProjectileSource shooter = ((Projectile)killer).getShooter();
-			if(shooter instanceof Entity) return JunkUtils.getDisplayNameSelectorComponent((Entity)shooter, false);
+			if(shooter instanceof Entity) return JunkUtils.getDisplayNameSelectorComponent((Entity)shooter, true);
 			else if(shooter instanceof BlockProjectileSource){
 				return TellrawUtils.getLocalizedDisplayName(((BlockProjectileSource)shooter).getBlock().getState());
 			}
 			// In theory should never happen:
 			else pl.getLogger().warning("Unrecognized projectile source: "+shooter.getClass().getName());
 		}
-		return JunkUtils.getDisplayNameSelectorComponent(killer, false);
+		return JunkUtils.getDisplayNameSelectorComponent(killer, true);
 	}
 	private Component getWeaponComponent(Entity killer, ItemStack weapon){
 		if(weapon != null && weapon.getType() != Material.AIR){
@@ -626,7 +626,7 @@ public final class DropChanceAPI{
 	 */
 	public void announceHeadDrop(@Nonnull Component message, Entity entity, Entity killer, Event evt){
 		if(message.toPlainText().replaceAll(" ", "").isEmpty()) return;
-		if(DEBUG_MODE) pl.getLogger().info(/*"Tellraw message: "+*/message.toPlainText());
+		if(DEBUG_MODE) pl.getLogger().info("Behead message json: "+message.toString());
 
 		AnnounceMode mode = mobAnnounceModes.getOrDefault(entity.getType(), DEFAULT_ANNOUNCE);
 		if(mode != AnnounceMode.OFF && mode != SILENT_ANNOUNCE && killer != null && (
@@ -693,8 +693,8 @@ public final class DropChanceAPI{
 				(entity instanceof Player ? LOG_PLAYER_FORMAT : LOG_MOB_FORMAT)
 				.replaceAll("(?i)\\$\\{(VICTIM|BEHEADED)_UUID\\}", ""+entity.getUniqueId())
 				.replaceAll("(?i)\\$\\{(KILLER|BEHEADER)_UUID\\}", killer == null ? "" : ""+killer.getUniqueId())
-				.replaceAll("(?i)\\$\\{(VICTIM|BEHEADED)\\}", Matcher.quoteReplacement(getVictimComponent(entity).toPlainText()))
-				.replaceAll("(?i)\\$\\{(KILLER|BEHEADER)\\}", killer == null ? "" : Matcher.quoteReplacement(getKillerComponent(killer).toPlainText()))
+				.replaceAll("(?i)\\$\\{(VICTIM|BEHEADED)(_NAME)?\\}", Matcher.quoteReplacement(getVictimComponent(entity).toPlainText()))
+				.replaceAll("(?i)\\$\\{(KILLER|BEHEADER)(_NAME)?\\}", killer == null ? "" : Matcher.quoteReplacement(getKillerComponent(killer).toPlainText()))
 				.replaceAll("(?i)\\$\\{(ITEM|WEAPON)\\}", weapon == null ? "" : Matcher.quoteReplacement(getWeaponComponent(killer, weapon).toPlainText()))
 				.replaceAll("(?i)\\$\\{TIMESTAMP\\}", ""+System.currentTimeMillis())
 		);

@@ -353,7 +353,7 @@ public final class JunkUtils{
 //		return entityAsJsonObject.toString();
 //	}
 
-	public static final Component getDisplayNameSelectorComponent(Entity entity, boolean fakeSelector){
+	public static final Component getDisplayNameSelectorComponent(Entity entity, boolean fakeSelector){//TODO: make fakeSelector=false whenever possible
 		if(fakeSelector || (entity instanceof Player && !((Player)entity).getDisplayName().equals(entity.getName()))){
 			TextClickAction clickAction = entity instanceof Player ? new TextClickAction(ClickEvent.SUGGEST_COMMAND, "/tell "+entity.getName()+" ") : null;
 			Component entityName = TellrawUtils.getLocalizedDisplayName(entity, true);

@@ -46,6 +46,8 @@ import net.evmodder.EvLib.Updater;
 // * mob: prefix for /droprate
 // * create tester tool to call `getHead(entity)` for every supported variant
 // * maybe add another 0 to the threshold for final drop chance vs raw drop chance for deciding to print it in /droprate
+// * Evlib-TellrawUtils: make ListComponent immutable (gotta pass Component[] to constructor, and it can optimize/flatten them
+// as much as it likes, cuz u can't do .add() later)
 //TEST:
 // * /droprate edit
 // * head-noteblock-sound in ItemMeta
