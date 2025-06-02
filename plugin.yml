@@ -5,8 +5,8 @@ description: Heads for every mob and player.
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
 #10=Java8->Java21, entity-settings grouping, config file reorg
-#1=fix translation loading, fix creaking head not dropping, fix entity settings not applying, creaking head drops enabled by default
-version: 3.10.1
+#2=uuid instead of name fix, pig/cow/chicken variants
+version: 3.10.2
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 
