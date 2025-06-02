@@ -128,7 +128,7 @@ public final class TextureKeyLookup{
 	private static RefMethod mFoxGetType, mFoxIsSleeping;
 	private static RefMethod mPandaGetMainGene, mPandaGetHiddenGene;
 	private static RefMethod mTraderLlamaGetColor;
-	private static RefMethod mAxolotlGetVariant, mFrogGetVariant, mWolfGetVariant, mMushroomCowGetVariant;
+	private static RefMethod mAxolotlGetVariant, mCowGetVariant, mChickenGetVariant, mFrogGetVariant, mPigGetVariant, mWolfGetVariant, mMushroomCowGetVariant;
 	private static RefMethod mVexIsCharging;
 	private static RefMethod mChestBoatGetType;
 	private static RefMethod mGoatIsScreaming, mGoatHasLeftHorn, mGoatHasRightHorn;
@@ -153,8 +153,15 @@ public final class TextureKeyLookup{
 			case "HORSE":
 				//TODO: isSaddled
 				return "HORSE|"+((Horse)entity).getColor().name();
-			case "DONKEY": case "MULE": case "PIG":
-				//TODO: isSaddled
+			case "PIG": //TODO: isSaddled
+				if(ReflectionUtils.getServerVersionString().compareTo("v1_21_5") < 0) return "PIG";
+				if(mPigGetVariant == null) mPigGetVariant = ReflectionUtils.getRefClass("org.bukkit.entity.Pig").getMethod("getVariant");
+				return "PIG|"+getEnumNameOrKeyedName(entity, mPigGetVariant);
+			case "CHICKEN": //TODO: isSaddled
+				if(ReflectionUtils.getServerVersionString().compareTo("v1_21_5") < 0) return "CHICKEN";
+				if(mChickenGetVariant == null) mChickenGetVariant = ReflectionUtils.getRefClass("org.bukkit.entity.Chicken").getMethod("getVariant");
+				return "CHICKEN|"+getEnumNameOrKeyedName(entity, mChickenGetVariant);
+			case "DONKEY": case "MULE": //TODO: isSaddled
 				return entity.getType().name();
 			case "LLAMA":
 				//TODO: getCarpetColor
@@ -239,6 +246,10 @@ public final class TextureKeyLookup{
 				}
 				return "CAT|"+catType;
 			}
+			case "COW":
+				if(ReflectionUtils.getServerVersionString().compareTo("v1_21_5") < 0) return "COW";
+				if(mCowGetVariant == null) mCowGetVariant = ReflectionUtils.getRefClass("org.bukkit.entity.Cow").getMethod("getVariant");
+				return "COW|"+getEnumNameOrKeyedName(entity, mCowGetVariant);
 			case "MUSHROOM_COW":
 				if(ReflectionUtils.getServerVersionString().compareTo("v1_14") < 0) return "MUSHROOM_COW";
 				if(mMushroomCowGetVariant == null) mMushroomCowGetVariant =
