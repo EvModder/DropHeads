@@ -35,6 +35,7 @@ GIANT:              0.050
 GLOW_SQUID:         0.004
 GOAT:               0.004
 GUARDIAN:           0.004
+HAPPY_GHAST:        0.030
 HOGLIN:             0.004
 HORSE:              0.006
 HUSK:               0.005
@@ -60,7 +61,7 @@ RAVAGER:            0.006
 SALMON:             0.004
 SHEEP:              0.005
 SHULKER:            0.015
-SHULKER|RED:        0.014
+#SHULKER|RED:        0.014
 SILVERFISH:         0.005
 SKELETON:           0.003
 SKELETON_HORSE:     0.009
@@ -105,7 +106,16 @@ FURNACE_MINECART: 0
 HOPPER_MINECART: 0
 SPAWNER_MINECART: 0
 TNT_MINECART: 0
-BOAT: 0
-CHEST_BOAT: 0
+
+ACACIA_CHEST_BOAT: 0
+BAMBOO_CHEST_RAFT: 0
+BIRCH_CHEST_BOAT: 0
+CHERRY_CHEST_BOAT: 0
+DARK_OAK_CHEST_BOAT: 0
+JUNGLE_CHEST_BOAT: 0
+MANGROVE_CHEST_BOAT: 0
+OAK_CHEST_BOAT: 0
+PALE_OAK_CHEST_BOAT: 0
+SPRUCE_CHEST_BOAT: 0
 
 # You can add custom mobs to this list, but it will only work if an EntityType is defined
