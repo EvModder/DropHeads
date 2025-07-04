@@ -19,7 +19,7 @@ import org.bukkit.inventory.ItemStack;
 import net.evmodder.DropHeads.DropChanceAPI;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.InternalAPI;
-import net.evmodder.DropHeads.JunkUtils;
+import net.evmodder.DropHeads.MiscUtils;
 import net.evmodder.DropHeads.datatypes.EntitySetting;
 import net.evmodder.EvLib.EvCommand;
 import net.evmodder.EvLib.FileIO;
@@ -124,7 +124,7 @@ public class CommandDropRate extends EvCommand{
 		Double rawChance = 0D;
 		if(args.length == 0){
 			if(sender instanceof Player){
-				entity = JunkUtils.getTargetEntity((Player)sender, /*range=*/10);
+				entity = MiscUtils.getTargetEntity((Player)sender, /*range=*/10);
 			}
 			if(entity == null) return false;
 		}
@@ -224,12 +224,12 @@ public class CommandDropRate extends EvCommand{
 
 		// Multipliers:
 		final double weaponMult = weapon == null ? 1D : dropChanceAPI.getWeaponMult(entity, weapon.getType());
-		final int lootingLevel = JunkUtils.getLootingLevel(weapon);
+		final int lootingLevel = MiscUtils.getLootingLevel(weapon);
 		final double lootingMult = lootingLevel == 0 ? 1d
 				: Math.min(Math.pow(dropChanceAPI.getLootingMult(entity), lootingLevel), dropChanceAPI.getLootingMult(entity)*lootingLevel);
 		final double lootingAdd = dropChanceAPI.getLootingAdd(entity)*lootingLevel;
 		final double timeAliveMult = entity == null ? 1d : dropChanceAPI.getTimeAliveMult(entity);
-		final double spawnCauseMult = entity == null ? 1d : JunkUtils.getSpawnCauseMult(entity);
+		final double spawnCauseMult = entity == null ? 1d : MiscUtils.getSpawnCauseMult(entity);
 		final double permMult = dropChanceAPI.getPermissionsMult(entity, sender);
 		final double finalDropChance = Math.min(1D, rawChance*spawnCauseMult*timeAliveMult*weaponMult*lootingMult*permMult + lootingAdd);
 		DecimalFormat multFormatter = new DecimalFormat("0.##");
@@ -265,7 +265,7 @@ public class CommandDropRate extends EvCommand{
 			else if(weapon != null && Math.abs(1D-weaponMult) > 0.001D){
 				if(!droprateMultipliers.isEmpty()) droprateMultipliers.addComponent(LIST_SEP);
 				droprateMultipliers.addComponent(translate("multipliers.weapon-type"));
-				droprateMultipliers.addComponent(JunkUtils.getMurderItemComponent(weapon, JSON_LIMIT));
+				droprateMultipliers.addComponent(MiscUtils.getMurderItemComponent(weapon, JSON_LIMIT));
 				droprateMultipliers.addComponent(":§6x"+multFormatter.format(weaponMult));
 			}
 			if(Math.abs(1D-permMult) > 0.001D){

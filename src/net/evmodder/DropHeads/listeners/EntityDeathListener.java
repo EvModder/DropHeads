@@ -31,7 +31,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.permissions.Permissible;
 import org.bukkit.plugin.EventExecutor;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.DropHeads.JunkUtils;
+import net.evmodder.DropHeads.MiscUtils;
 import net.evmodder.DropHeads.TextureKeyLookup;
 import net.evmodder.DropHeads.datatypes.EntitySetting;
 import net.evmodder.DropHeads.events.HeadRollEvent;
@@ -67,7 +67,7 @@ public class EntityDeathListener implements Listener{
 
 		CHARGED_CREEPER_DROPS = pl.getConfig().getBoolean("charged-creeper-drops", true);
 		VANILLA_WSKELE_HANDLING = pl.getConfig().getBoolean("vanilla-wither-skeleton-skulls", false);
-		PRIORITY = JunkUtils.parseEnumOrDefault(pl.getConfig().getString("death-listener-priority", "LOW"), EventPriority.LOW);
+		PRIORITY = MiscUtils.parseEnumOrDefault(pl.getConfig().getString("death-listener-priority", "LOW"), EventPriority.LOW);
 		INDIRECT_KILL_THRESHOLD_MILLIS = TextUtils.parseTimeInMillis(pl.getConfig().getString("indirect-kill-threshold", "30s"));
 		DEBUG_MODE = pl.getConfig().getBoolean("debug-messages", true);
 
@@ -166,7 +166,7 @@ public class EntityDeathListener implements Listener{
 			) return false;
 		}
 		else if(!allowNonPlayerKills.get(victim) &&
-			(!allowIndirectPlayerKills.get(victim) || JunkUtils.timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS)
+			(!allowIndirectPlayerKills.get(victim) || MiscUtils.timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS)
 		) return false;
 
 		final ItemStack murderWeapon = getWeaponFromKiller(killer);
@@ -174,14 +174,14 @@ public class EntityDeathListener implements Listener{
 
 		if(!pl.getDropChanceAPI().isWeaponAbleToBehead(victim, murderWeaponType)) return false;
 
-		final int lootingLevel = JunkUtils.getLootingLevel(murderWeapon);
+		final int lootingLevel = MiscUtils.getLootingLevel(murderWeapon);
 		final double lootingMod = lootingLevel == 0 ? 1D : Math.pow(pl.getDropChanceAPI().getLootingMult(victim), lootingLevel);
 		final double lootingAdd = pl.getDropChanceAPI().getLootingAdd(victim)*lootingLevel;
 		final double weaponMod = pl.getDropChanceAPI().getWeaponMult(victim, murderWeaponType);
 		final double timeAliveMod = pl.getDropChanceAPI().getTimeAliveMult(victim);
 		final double rawDropChance = pl.getDropChanceAPI().getRawDropChance(victim);
 		final double permsMod = pl.getDropChanceAPI().getPermissionsMult(victim, killerPermCheck);
-		final double spawnCauseMod = JunkUtils.getSpawnCauseMult(victim);
+		final double spawnCauseMod = MiscUtils.getSpawnCauseMult(victim);
 		final double dropChance = rawDropChance*lootingMod*weaponMod*timeAliveMod*permsMod*spawnCauseMod + lootingAdd;
 
 		final double dropRoll = rand.nextDouble();

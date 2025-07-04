@@ -11,7 +11,7 @@ import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.metadata.FixedMetadataValue;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.DropHeads.JunkUtils;
+import net.evmodder.DropHeads.MiscUtils;
 import net.evmodder.EvLib.FileIO;
 
 public class EntitySpawnListener implements Listener{
@@ -49,7 +49,7 @@ public class EntitySpawnListener implements Listener{
 		final Float mult = spawnMultipliers.get(evt.getSpawnReason());
 		if(mult == null) return;
 
-		evt.getEntity().setMetadata(JunkUtils.SPAWN_CAUSE_MULTIPLIER_KEY, new FixedMetadataValue(pl, mult));
-		evt.getEntity().addScoreboardTag(JunkUtils.SPAWN_CAUSE_MULTIPLIER_KEY+'_'+mult);
+		evt.getEntity().setMetadata(MiscUtils.SPAWN_CAUSE_MULTIPLIER_KEY, new FixedMetadataValue(pl, mult));
+		evt.getEntity().addScoreboardTag(MiscUtils.SPAWN_CAUSE_MULTIPLIER_KEY+'_'+mult);
 	}
 }

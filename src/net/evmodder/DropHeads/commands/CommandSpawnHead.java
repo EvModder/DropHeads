@@ -29,7 +29,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.InternalAPI;
-import net.evmodder.DropHeads.JunkUtils;
+import net.evmodder.DropHeads.MiscUtils;
 import net.evmodder.DropHeads.TextureKeyLookup;
 import net.evmodder.EvLib.EvCommand;
 import net.evmodder.EvLib.extras.EntityUtils;
@@ -211,7 +211,7 @@ public class CommandSpawnHead extends EvCommand{
 //			p = pl.getServer().getOfflinePlayer(UUID.fromString(target));
 //			if(p != null && p.hasPlayedBefore()) return new GameProfile(p.getUniqueId(), p.getName());
 //		}catch(IllegalArgumentException ex){}
-		return JunkUtils.getGameProfile(target, /*fetchSkin=*/false, /*nullForSync=*/null);
+		return MiscUtils.getGameProfile(target, /*fetchSkin=*/false, /*nullForSync=*/null);
 	}
 
 	private record HeadFromString(ItemStack head, boolean noFurtherError, String targetHead){}
@@ -326,7 +326,7 @@ public class CommandSpawnHead extends EvCommand{
 		}
 		// This should be unreachable due to earlier checks, but still nice to have in case code breaks.
 		if(!(entity instanceof LivingEntity)) pl.getLogger().severe("Cannot give item to non-LivingEntity!");
-		return JunkUtils.setIfEmpty(((LivingEntity)entity).getEquipment(), item, EquipmentSlot.valueOf(slot.toUpperCase()));
+		return MiscUtils.setIfEmpty(((LivingEntity)entity).getEquipment(), item, EquipmentSlot.valueOf(slot.toUpperCase()));
 	}
 
 	private void logGiveHeadCommand(String headName, String senderName, int amount, String recipients){
@@ -384,7 +384,7 @@ public class CommandSpawnHead extends EvCommand{
 		}
 		if(args.length > 0) fullTarget = String.join("_", args);
 		else{
-			Entity entity = JunkUtils.getTargetEntity((Player)sender, /*range=*/10);
+			Entity entity = MiscUtils.getTargetEntity((Player)sender, /*range=*/10);
 			if(entity == null && sender instanceof Player) entity = (Player)sender;
 			if(entity == null){
 				sender.sendMessage(String.format(translate("errors.head-not-found"), "", ""));//Only reachable by server console
@@ -486,7 +486,7 @@ public class CommandSpawnHead extends EvCommand{
 		ArrayList<SelectorComponent> recipientComps = new ArrayList<>();
 		boolean firstHeadSoAddRecipients = true;
 		for(ItemStack head : headItems){
-			Component headNameComp = JunkUtils.getItemDisplayNameComponent(head);
+			Component headNameComp = MiscUtils.getItemDisplayNameComponent(head);
 			String headNameStr = headNameComp.toString();
 			int amtSum = amtOfEachHead.getOrDefault(headNameStr, 0);
 			if(amtSum == 0) headNameComps.add(headNameComp);

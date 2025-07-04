@@ -23,7 +23,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.DropHeads.JunkUtils;
+import net.evmodder.DropHeads.MiscUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
 import net.evmodder.EvLib.extras.TellrawUtils;
 import net.evmodder.EvLib.extras.TextUtils;
@@ -72,7 +72,7 @@ public class BlockClickListener implements Listener{
 	private GameProfile stripCustomLoreAndNamespace(GameProfile profile){//TODO: delete soon(tm) since lore isn't stored in profile name since v3.9.4
 		if(profile != null && profile.getName() != null){
 			String name = profile.getName();
-			int startIdx = name.startsWith(JunkUtils.TXT_KEY_PROFILE_NAME_PREFIX) ? JunkUtils.TXT_KEY_PROFILE_NAME_PREFIX.length() : 0;
+			int startIdx = name.startsWith(MiscUtils.TXT_KEY_PROFILE_NAME_PREFIX) ? MiscUtils.TXT_KEY_PROFILE_NAME_PREFIX.length() : 0;
 			int endIdx = name.indexOf('>');
 			name = name.substring(startIdx, endIdx == -1 ? name.length() : endIdx);
 			if(!name.equals(profile.getName())) return new GameProfile(profile.getId(), name);
@@ -121,7 +121,7 @@ public class BlockClickListener implements Listener{
 		//player
 		else if(profile.getId() != null && (data.player=pl.getServer().getOfflinePlayer(profile.getId())) != null
 				&& (data.player.hasPlayedBefore()
-					|| (tempProfile=JunkUtils.getGameProfile(profile.getId().toString(), /*fetchSkin=*/false, ASYNC_PROFILE_REQUESTS ? pl : null)) != null)
+					|| (tempProfile=MiscUtils.getGameProfile(profile.getId().toString(), /*fetchSkin=*/false, ASYNC_PROFILE_REQUESTS ? pl : null)) != null)
 		){
 			data.headType = HeadUtils.getDroppedHeadType(EntityType.PLAYER);  // "Head"
 			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(EntityType.PLAYER.name());  // "Player"
@@ -145,7 +145,7 @@ public class BlockClickListener implements Listener{
 			HeadNameData headData = getHeadNameData(HeadUtils.getGameProfile((Skull)skull));
 			if(((Skull)skull).hasOwner() && headData.player == null){
 				OfflinePlayer player = ((Skull)skull).getOwningPlayer();
-				GameProfile profile = JunkUtils.getGameProfile(player.getUniqueId().toString(), /*fetchSkin=*/false, ASYNC_PROFILE_REQUESTS ? pl : null);
+				GameProfile profile = MiscUtils.getGameProfile(player.getUniqueId().toString(), /*fetchSkin=*/false, ASYNC_PROFILE_REQUESTS ? pl : null);
 				if(player.hasPlayedBefore() || profile != null){
 					headData.player = player;
 					final String headName;
@@ -266,7 +266,7 @@ public class BlockClickListener implements Listener{
 			if(isPlayerHead){
 				GameProfile profile = HeadUtils.getGameProfile((Skull)evt.getClickedBlock().getState());
 				Collection<Property> textures = profile.getProperties().get("textures");
-				if(textures != null && !textures.isEmpty()) code0 = JunkUtils.getPropertyValue(profile.getProperties().get("textures").iterator().next());
+				if(textures != null && !textures.isEmpty()) code0 = MiscUtils.getPropertyValue(profile.getProperties().get("textures").iterator().next());
 			}
 			blob.replaceRawTextWithComponent("${TEXTURE}", new RawTextComponent(code0));
 			blob.replaceRawTextWithComponent("${BASE64}", new RawTextComponent(code0));

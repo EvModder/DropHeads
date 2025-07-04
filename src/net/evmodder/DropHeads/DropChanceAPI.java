@@ -490,7 +490,7 @@ public final class DropChanceAPI{
 					BlockState state = headBlock.getState();
 					state.setType(headItem.getType());
 					Vector facingVector = entity.getLocation().getDirection(); facingVector.setY(0);  // loc.setPitch(0F)
-					BlockFace blockRotation = JunkUtils.getHeadPlacementDirection(facingVector);
+					BlockFace blockRotation = MiscUtils.getHeadPlacementDirection(facingVector);
 					try{
 						Rotatable data = (Rotatable)headBlock.getBlockData();
 						data.setRotation(blockRotation);
@@ -525,7 +525,7 @@ public final class DropChanceAPI{
 					break;
 				}
 				case GIVE:
-					headItem = JunkUtils.giveItemToEntity(killer, headItem);
+					headItem = MiscUtils.giveItemToEntity(killer, headItem);
 					break;
 				case SPAWN_RANDOM:
 					EvUtils.dropItemNaturally(entity.getLocation(), headItem, rand);
@@ -541,32 +541,32 @@ public final class DropChanceAPI{
 
 	private Component getVictimComponent(Entity entity){
 		//Arrays.stream(entities).map(e -> JunkUtils.getDisplayNameSelectorComponent(entity)).collect(Collectors.joining(ChatColor.GRAY+", "+ChatColor.RESET));
-		return JunkUtils.getDisplayNameSelectorComponent(entity, true);
+		return MiscUtils.getDisplayNameSelectorComponent(entity, true);
 	}
 	private Component getKillerComponent(Entity killer){
 		if(killer == null) return null;
 		if(killer instanceof Projectile){
 			ProjectileSource shooter = ((Projectile)killer).getShooter();
-			if(shooter instanceof Entity) return JunkUtils.getDisplayNameSelectorComponent((Entity)shooter, true);
+			if(shooter instanceof Entity) return MiscUtils.getDisplayNameSelectorComponent((Entity)shooter, true);
 			else if(shooter instanceof BlockProjectileSource){
 				return TellrawUtils.getLocalizedDisplayName(((BlockProjectileSource)shooter).getBlock().getState());
 			}
 			// In theory should never happen:
 			else pl.getLogger().warning("Unrecognized projectile source: "+shooter.getClass().getName());
 		}
-		return JunkUtils.getDisplayNameSelectorComponent(killer, true);
+		return MiscUtils.getDisplayNameSelectorComponent(killer, true);
 	}
 	private Component getWeaponComponent(Entity killer, ItemStack weapon){
 		if(weapon != null && weapon.getType() != Material.AIR){
-			if(weaponCompCache == null) return JunkUtils.getMurderItemComponent(weapon, JSON_LIMIT);
+			if(weaponCompCache == null) return MiscUtils.getMurderItemComponent(weapon, JSON_LIMIT);
 			Component weaponComp = weaponCompCache.get(weapon);
 			if(weaponComp == null){
-				weaponComp = JunkUtils.getMurderItemComponent(weapon, JSON_LIMIT);
+				weaponComp = MiscUtils.getMurderItemComponent(weapon, JSON_LIMIT);
 				weaponCompCache.put(weapon, weaponComp);
 			}
 			return weaponComp;
 		}
-		if(killer != null && killer instanceof Projectile) return JunkUtils.getDisplayNameSelectorComponent(killer, true);
+		if(killer != null && killer instanceof Projectile) return MiscUtils.getDisplayNameSelectorComponent(killer, true);
 		return null;
 	}
 
@@ -635,7 +635,7 @@ public final class DropChanceAPI{
 				&& killer instanceof LivingEntity && ((LivingEntity)killer).hasPotionEffect(PotionEffectType.INVISIBILITY)
 			) ||
 			(killer.hasPermission("dropheads.silentbehead.vanished")
-				&& killer instanceof Player && JunkUtils.isVanished((Player)killer)
+				&& killer instanceof Player && MiscUtils.isVanished((Player)killer)
 			)
 		)) mode = SILENT_ANNOUNCE;
 

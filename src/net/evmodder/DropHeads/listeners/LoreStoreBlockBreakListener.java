@@ -15,7 +15,7 @@ import org.bukkit.inventory.ItemStack;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.DropHeads.JunkUtils;
+import net.evmodder.DropHeads.MiscUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
 import net.evmodder.EvLib.extras.TellrawUtils;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
@@ -34,14 +34,14 @@ public class LoreStoreBlockBreakListener implements Listener{
 
 		List<String> lore = null;
 		GameProfile profileWithoutLore = null;
-		if(profile.getProperties() != null && profile.getProperties().containsKey(JunkUtils.DH_LORE_KEY)){
-			final Collection<Property> props = profile.getProperties().get(JunkUtils.DH_LORE_KEY);
+		if(profile.getProperties() != null && profile.getProperties().containsKey(MiscUtils.DH_LORE_KEY)){
+			final Collection<Property> props = profile.getProperties().get(MiscUtils.DH_LORE_KEY);
 			if(props != null && !props.isEmpty()){
 				if(props.size() != 1) DropHeads.getPlugin().getLogger().warning("Multiple lore keys on a single head profile in getItemWithLore()");
-				lore = Arrays.asList(JunkUtils.getPropertyValue(props.iterator().next()).split("\\n"));
+				lore = Arrays.asList(MiscUtils.getPropertyValue(props.iterator().next()).split("\\n"));
 				profileWithoutLore = new GameProfile(profile.getId(), profile.getName());
 				profileWithoutLore.getProperties().putAll(profile.getProperties());
-				profileWithoutLore.getProperties().removeAll(JunkUtils.DH_LORE_KEY);
+				profileWithoutLore.getProperties().removeAll(MiscUtils.DH_LORE_KEY);
 			}
 		}
 		if(lore == null){
@@ -56,7 +56,7 @@ public class LoreStoreBlockBreakListener implements Listener{
 		if(lore.size() > 1 || (lore.size() == 1 && !lore.get(0).isEmpty())){
 			final Component[] loreComps = new Component[lore.size()];
 			for(int i=0; i<lore.size(); ++i) loreComps[i] = TellrawUtils.parseComponentFromString(lore.get(i));
-			headItem = JunkUtils.setLore(headItem, loreComps);
+			headItem = MiscUtils.setLore(headItem, loreComps);
 		}
 		return headItem;
 	}

@@ -12,7 +12,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.DropHeads.JunkUtils;
+import net.evmodder.DropHeads.MiscUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
 
 public class LoreStoreBlockPlaceListener implements Listener{
@@ -36,15 +36,15 @@ public class LoreStoreBlockPlaceListener implements Listener{
 		final GameProfile profile = HeadUtils.getGameProfile(meta);
 		if(profile == null) return; // We can't append lore to an invalid GameProfile...
 
-		final List<String> customLore = JunkUtils.getLore(headItem);
+		final List<String> customLore = MiscUtils.getLore(headItem);
 		if(customLore == null) return;
 		if(HAS_DEFAULT_LORE){
-			final List<String> defaultLore = JunkUtils.getLore(DropHeads.getPlugin().getAPI().getHead(profile));
+			final List<String> defaultLore = MiscUtils.getLore(DropHeads.getPlugin().getAPI().getHead(profile));
 			if(customLore.equals(defaultLore)) return; // Nothing to save!
 		}
 		final String combinedLore = String.join("\n", customLore);
 
-		profile.getProperties().put(JunkUtils.DH_LORE_KEY, new Property(JunkUtils.DH_LORE_KEY, combinedLore));
+		profile.getProperties().put(MiscUtils.DH_LORE_KEY, new Property(MiscUtils.DH_LORE_KEY, combinedLore));
 		final Skull skull = (Skull)evt.getBlockPlaced().getState();
 		HeadUtils.setGameProfile(skull, profile);
 		skull.update(true);

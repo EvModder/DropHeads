@@ -30,7 +30,6 @@ import net.evmodder.DropHeads.listeners.*;
 import net.evmodder.EvLib.EvPlugin;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.Updater;
-import net.evmodder.EvLib.extras.ReflectionUtils;
 
 //TODO:
 // * /dropheads reload
@@ -97,9 +96,9 @@ public final class DropHeads extends EvPlugin{
 //				}
 //			}));
 		}
-		getLogger().warning("server version: "+ReflectionUtils.getServerVersionString());
+//		getLogger().warning("server version: "+ReflectionUtils.getServerVersionString());
 		instance = this;
-		final NoteblockMode m = JunkUtils.parseEnumOrDefault(config.getString("noteblock-mob-sounds", "OFF"), NoteblockMode.OFF);
+		final NoteblockMode m = MiscUtils.parseEnumOrDefault(config.getString("noteblock-mob-sounds", "OFF"), NoteblockMode.OFF);
 		final boolean CRACKED_IRON_GOLEMS_ENABLED = config.getBoolean("cracked-iron-golem-heads", false);
 
 		// Load translations

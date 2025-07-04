@@ -282,7 +282,7 @@ public class HeadAPI{
 		boolean writeTextureFile = false, updateTextures = false;
 		if(pl.getConfig().getBoolean("update-textures", false)){
 			final long oldTextureTime = new File(FileIO.DIR+"/head-textures.txt").lastModified();
-			final long newTextureTime = JunkUtils.getJarCreationTime(pl);
+			final long newTextureTime = MiscUtils.getJarCreationTime(pl);
 			if(newTextureTime > oldTextureTime) writeTextureFile = updateTextures = true;
 		}
 		String downloadedList = "";
@@ -333,7 +333,7 @@ public class HeadAPI{
 			textures.keySet().forEach(k->replaceHeadsFromTo.put(UUID.nameUUIDFromBytes(k.getBytes()).toString(), k));
 		}
 
-		if(m == NoteblockMode.ITEM_META && Bukkit.getBukkitVersion().compareTo("1.19.4") >= 0) nbSounds = JunkUtils.getNoteblockSounds();
+		if(m == NoteblockMode.ITEM_META && Bukkit.getBukkitVersion().compareTo("1.19.4") >= 0) nbSounds = MiscUtils.getNoteblockSounds();
 		else nbSounds = null;
 
 		boolean hdbInstalled = true;
@@ -392,12 +392,12 @@ public class HeadAPI{
 			final Collection<Property> props = profile.getProperties().get(DH_TEXTURE_KEY);
 			if(props != null && !props.isEmpty()){
 				if(props.size() != 1) pl.getLogger().warning("Multiple texture keys on a single head profile in getTextureKey()");
-				return trimTextureKeyUntilFoundOrNull(JunkUtils.getPropertyValue(props.iterator().next()));
+				return trimTextureKeyUntilFoundOrNull(MiscUtils.getPropertyValue(props.iterator().next()));
 			}
 		}
 		if(profile.getName() != null && !profile.getName().isEmpty()){
 			String name = profile.getName();
-			int startIdx = name.startsWith(JunkUtils.TXT_KEY_PROFILE_NAME_PREFIX) ? JunkUtils.TXT_KEY_PROFILE_NAME_PREFIX.length() : 0;
+			int startIdx = name.startsWith(MiscUtils.TXT_KEY_PROFILE_NAME_PREFIX) ? MiscUtils.TXT_KEY_PROFILE_NAME_PREFIX.length() : 0;
 			int endIdx = name.indexOf('>');
 			name = name.substring(startIdx, endIdx == -1 ? name.length() : endIdx);
 			return trimTextureKeyUntilFoundOrNull(name);
@@ -405,7 +405,7 @@ public class HeadAPI{
 		if(ASSIGN_KEY_FROM_TEXTURE && profile.getProperties().containsKey("textures")){
 			final Collection<Property> textures = profile.getProperties().get("textures");
 			if(textures != null && textures.size() == 1){
-				final String code = JunkUtils.getPropertyValue(textures.iterator().next());
+				final String code = MiscUtils.getPropertyValue(textures.iterator().next());
 				// Will return the associated textureKey if `code` is a known texture value
 				return replaceHeadsFromTo.get(code);
 			}
@@ -622,11 +622,11 @@ public class HeadAPI{
 		final String code = textures.getOrDefault(textureKey, UNKNOWN_TEXTURE_CODE);
 //		if(code == null || code.isEmpty()) return null;
 		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-		head = JunkUtils.setDisplayName(head, getFullHeadNameFromKey(textureKey, /*customName=*/""));
+		head = MiscUtils.setDisplayName(head, getFullHeadNameFromKey(textureKey, /*customName=*/""));
 		final int i = textureKey.indexOf('|');
 		String eTypeName = i==-1 ? textureKey : textureKey.substring(0, i);
 		if(SAVE_TYPE_IN_LORE){
-			head = JunkUtils.setLore(head, new RawTextComponent(
+			head = MiscUtils.setLore(head, new RawTextComponent(
 					MOB_PREFIX + eTypeName.toLowerCase(),
 					/*insert=*/null, /*click=*/null, /*hover=*/null,
 					/*color=*/"dark_gray", /*formats=*/Collections.singletonMap(Format.ITALIC, false)));
@@ -656,7 +656,7 @@ public class HeadAPI{
 		GameProfile profile = HeadUtils.getGameProfile((SkullMeta)hdbHead.getItemMeta());
 		ItemStack head = HeadUtils.makeCustomHead(profile, /*setOwner=*/false);
 		if(SAVE_TYPE_IN_LORE){
-			head = JunkUtils.setLore(head, new RawTextComponent(
+			head = MiscUtils.setLore(head, new RawTextComponent(
 					HDB_PREFIX + hdbId,
 					/*insert=*/null, /*click=*/null, /*hover=*/null,
 					/*color=*/"dark_gray", /*formats=*/Collections.singletonMap(Format.ITALIC, false)));
@@ -696,12 +696,12 @@ public class HeadAPI{
 	public ItemStack getHead(byte[] code){
 		String strCode = new String(code);
 		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-		head = JunkUtils.setDisplayName(head, pl.getAPI().getFullHeadNameFromKey(/*textureKey=*/"UNKNOWN|CUSTOM", /*customName=*/strCode));
+		head = MiscUtils.setDisplayName(head, pl.getAPI().getFullHeadNameFromKey(/*textureKey=*/"UNKNOWN|CUSTOM", /*customName=*/strCode));
 		GameProfile profile = new GameProfile(UUID.nameUUIDFromBytes(code), /*name=*/strCode.substring(0, Math.min(strCode.length(), MAX_NAME_LENGTH)));
 		profile.getProperties().put("textures", new Property("textures", strCode));
 		if(MAKE_UNSTACKABLE) profile.getProperties().put(DH_RANDOM_UUID, new Property(DH_RANDOM_UUID, UUID.randomUUID().toString()));
 		if(SAVE_TYPE_IN_LORE){
-			head = JunkUtils.setLore(head, new RawTextComponent(
+			head = MiscUtils.setLore(head, new RawTextComponent(
 					CODE_PREFIX + (strCode.length() > 18 ? strCode.substring(0, 16)+"..." : strCode),
 					/*insert=*/null, /*click=*/null, /*hover=*/null,
 					/*color=*/"dark_gray", /*formats=*/Collections.singletonMap(Format.ITALIC, false)));
@@ -780,7 +780,7 @@ public class HeadAPI{
 		else{
 			hasPlayedBefore = pl.getServer().getOfflinePlayer(profile.getId()).hasPlayedBefore();
 			final String profileName;
-			final GameProfile freshProfile = JunkUtils.getGameProfile(profile.getId().toString(), updateSkin, ASYNC_PROFILE_REQUESTS ? pl : null);
+			final GameProfile freshProfile = MiscUtils.getGameProfile(profile.getId().toString(), updateSkin, ASYNC_PROFILE_REQUESTS ? pl : null);
 			if(freshProfile == null){profileName = profile.getName(); realGameProfile = false;}
 			else{
 				// If we've reached this point, we have confirmed this is a REAL player head
@@ -799,7 +799,7 @@ public class HeadAPI{
 						head.setItemMeta(meta);
 					}
 					else{
-						final String minCode0 = minimizeTextureCode(JunkUtils.getPropertyValue(textures.iterator().next()));
+						final String minCode0 = minimizeTextureCode(MiscUtils.getPropertyValue(textures.iterator().next()));
 						//TODO: Decide which properties to clear and which to keep
 						profile.getProperties().clear();
 //						profile.getProperties().get("textures").clear();
@@ -810,12 +810,12 @@ public class HeadAPI{
 			}
 			if(profileName != null && !profileName.isEmpty()){
 				final boolean isMHF = profileName.startsWith("MHF_");
-				head = JunkUtils.setDisplayName(head, isMHF
+				head = MiscUtils.setDisplayName(head, isMHF
 					? new RawTextComponent(ChatColor.YELLOW+profileName, /*insert=*/null, /*click=*/null, /*hover=*/null,
 							/*color=*/null, /*formats=*/Collections.singletonMap(Format.ITALIC, false))
 					: getFullHeadNameFromKey("PLAYER", /*customName=*/profileName));
 				if(SAVE_TYPE_IN_LORE){
-					head = JunkUtils.setLore(head, new RawTextComponent(
+					head = MiscUtils.setLore(head, new RawTextComponent(
 							(isMHF ? MHF_PREFIX : PLAYER_PREFIX) + profileName,
 							/*insert=*/null, /*click=*/null, /*hover=*/null,
 							/*color=*/"dark_gray", /*formats=*/Collections.singletonMap(Format.ITALIC, false)));
@@ -828,9 +828,9 @@ public class HeadAPI{
 			final Collection<Property> textures = profile.getProperties().get("textures");
 			if(textures != null && !textures.isEmpty()){
 				if(textures.size() > 1) pl.getLogger().warning("Multiple textures in getHead() request: "+profile.getName());
-				final String code0 = JunkUtils.getPropertyValue(textures.iterator().next());
+				final String code0 = MiscUtils.getPropertyValue(textures.iterator().next());
 				// Confirm (as best we can) that this is a DropHeads Custom Texture Head
-				if(UUID.nameUUIDFromBytes(code0.getBytes()).equals(profile.getId()) || profile.getProperties().containsKey(JunkUtils.DH_LORE_KEY)){
+				if(UUID.nameUUIDFromBytes(code0.getBytes()).equals(profile.getId()) || profile.getProperties().containsKey(MiscUtils.DH_LORE_KEY)){
 					return getHead(code0.getBytes());
 				}
 			}

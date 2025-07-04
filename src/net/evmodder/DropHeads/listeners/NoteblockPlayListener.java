@@ -12,14 +12,14 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.NotePlayEvent;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.DropHeads.JunkUtils;
+import net.evmodder.DropHeads.MiscUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
 
 public class NoteblockPlayListener implements Listener{
 	private final HashMap<String, Sound> nbSounds;
 
 	public NoteblockPlayListener(){
-		nbSounds = JunkUtils.getNoteblockSounds();
+		nbSounds = MiscUtils.getNoteblockSounds();
 	}
 
 	/*public Sound getAmbientSound(String eType){

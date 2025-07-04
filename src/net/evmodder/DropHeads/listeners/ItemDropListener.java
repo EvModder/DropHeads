@@ -10,7 +10,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.DropHeads.JunkUtils;
+import net.evmodder.DropHeads.MiscUtils;
 import net.evmodder.EvLib.extras.HeadUtils;
 import net.evmodder.EvLib.extras.TellrawUtils;
 import net.evmodder.EvLib.extras.TellrawUtils.Component;
@@ -73,7 +73,7 @@ public class ItemDropListener implements Listener{
 
 		if(!hasCustomName(originalMeta, originalProfile) || FORCE_NAME_UPDATE){
 			if(refreshedItem.getItemMeta().hasDisplayName()){
-				originalItem = JunkUtils.setDisplayName(originalItem, TellrawUtils.parseComponentFromString(JunkUtils.getDisplayName(refreshedItem)));
+				originalItem = MiscUtils.setDisplayName(originalItem, TellrawUtils.parseComponentFromString(MiscUtils.getDisplayName(refreshedItem)));
 			}
 			else{
 				final ItemMeta meta = originalItem.getItemMeta();
@@ -83,10 +83,10 @@ public class ItemDropListener implements Listener{
 		}
 		if(!hasCustomLore(originalMeta) || FORCE_LORE_UPDATE){
 			if(refreshedItem.getItemMeta().hasLore()){
-				final List<String> lores = JunkUtils.getLore(refreshedItem);
+				final List<String> lores = MiscUtils.getLore(refreshedItem);
 				final Component[] loreComps = new Component[lores.size()];
 				for(int i=0; i<lores.size(); ++i) loreComps[i] = TellrawUtils.parseComponentFromString(lores.get(i));
-				originalItem = JunkUtils.setLore(originalItem, loreComps);
+				originalItem = MiscUtils.setLore(originalItem, loreComps);
 			}
 			else{
 				final ItemMeta meta = originalItem.getItemMeta();

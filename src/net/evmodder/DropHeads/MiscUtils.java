@@ -54,7 +54,7 @@ import net.evmodder.EvLib.extras.TellrawUtils.TextHoverAction;
 import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
 
 // A trashy place to dump stuff that I should probably move to EvLib after ensure cross-version safety
-public final class JunkUtils{
+public final class MiscUtils{
 	public static final String SPAWN_CAUSE_MULTIPLIER_KEY = "SRM";
 	public static final String TXT_KEY_PROFILE_NAME_PREFIX = "dropheads:";//TODO: delete
 	public static final String DH_LORE_KEY = "dh_lore";
@@ -305,7 +305,7 @@ public final class JunkUtils{
 
 	public static final Component getItemDisplayNameComponent(@Nonnull ItemStack item){
 		String rarityColor = TextUtils.getRarityColor(item).name().toLowerCase();
-		String rawDisplayName = JunkUtils.getDisplayName(item);
+		String rawDisplayName = MiscUtils.getDisplayName(item);
 		if(rawDisplayName != null){
 			return new ListComponent(
 					new RawTextComponent(/*text=*/"", /*insert=*/null, /*click=*/null, /*hover=*/null,
@@ -320,9 +320,9 @@ public final class JunkUtils{
 		}
 	}
 	public static final Component getMurderItemComponent(@Nonnull ItemStack item, int JSON_LIMIT){
-		TextHoverAction hoverAction = new TextHoverAction(HoverEvent.SHOW_ITEM, JunkUtils.convertItemStackToJson(item, JSON_LIMIT));
+		TextHoverAction hoverAction = new TextHoverAction(HoverEvent.SHOW_ITEM, MiscUtils.convertItemStackToJson(item, JSON_LIMIT));
 		String rarityColor = TextUtils.getRarityColor(item).name().toLowerCase();
-		String rawDisplayName = JunkUtils.getDisplayName(item);
+		String rawDisplayName = MiscUtils.getDisplayName(item);
 		if(rawDisplayName != null){
 			return new ListComponent(
 					new RawTextComponent(/*text=*/"[", /*insert=*/null, /*click=*/null, hoverAction, /*color=*/rarityColor, /*formats=*/null),
