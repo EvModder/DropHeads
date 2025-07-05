@@ -1,5 +1,8 @@
 package net.evmodder.DropHeads;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Optional;
 import com.google.gson.JsonElement;
 import com.mojang.serialization.DataResult;
 import net.evmodder.EvLib.extras.ReflectionUtils;
@@ -13,7 +16,7 @@ public class Cursed_1_21_6_stuff{
 			Class<?> clazzJsonOps = Class.forName("com.mojang.serialization.JsonOps");
 			Class<?> clazzDynamicOps = Class.forName("com.mojang.serialization.DynamicOps");
 			Class<?> clazzRegistryOps = Class.forName("net.minecraft.resources.RegistryOps");
-//			Class<?> clazzDataResult = Class.forName("com.mojang.serialization.DataResult");
+			Class<?> clazzDataResult = Class.forName("com.mojang.serialization.DataResult");
 			RefClass classCodec = ReflectionUtils.getRefClass("com.mojang.serialization.Codec");
 			RefClass classComponentSerialization = ReflectionUtils.getRefClass("net.minecraft.network.chat.ComponentSerialization");
 			RefClass classCraftRegistry = ReflectionUtils.getRefClass("{cb}.CraftRegistry");
@@ -25,15 +28,19 @@ public class Cursed_1_21_6_stuff{
 			Object objJsonOps = clazzJsonOps.getField("INSTANCE").get(null);
 			Object objDynamicOps = methodCreateSerializationContext.of(objIRegistryCustom).call(objJsonOps);
 
-			RefMethod methodEncodeStart = classCodec.findMethod(/*isStatic=*/false, /*return=*/DataResult.class, clazzDynamicOps, Object.class);
-			DataResult<?> objDataResult = (DataResult<?>)methodEncodeStart.of(objCODEC).call(objDynamicOps, chatComponent);
-			Object objJsonElement = objDataResult.result().orElse(null);
+			Method methodEncodeStart = Class.forName("com.mojang.serialization.Encoder").getMethod("encodeStart", clazzDynamicOps, Object.class);
+//			RefMethod methodEncodeStart = classCodec.findMethod(/*isStatic=*/false, /*return=*/DataResult.class, clazzDynamicOps, Object.class);
+			Object objDataResult = methodEncodeStart.invoke(objCODEC, objDynamicOps, chatComponent);
+//			Object objDataResult = methodEncodeStart.of(objCODEC).call(objDynamicOps, chatComponent);
+
+			Optional<?> objOptional = (Optional<?>)clazzDataResult.getMethod("result").invoke(objDataResult);
+			Object objJsonElement = objOptional.orElse(null);
 			if(objJsonElement == null || !(objJsonElement instanceof JsonElement je)) return "{}";
 			return je.toString();
 
 			// Serialize into JsonElement
 //			JsonElement jsonElement = (JsonElement) ComponentSerialization.CODEC.encodeStart(
-//					org.bukkit.craftbukkit.v1_21_R5.CraftRegistry.getMinecraftRegistry()..createSerializationContext(
+//					org.bukkit.craftbukkit.v1_21_R5.CraftRegistry.getMinecraftRegistry().createSerializationContext(
 //							com.mojang.serialization.JsonOps.INSTANCE),
 //					chatComponent
 //					)
@@ -46,7 +53,8 @@ public class Cursed_1_21_6_stuff{
 	//		net.minecraft.network.codec.ByteBufCodecs.lenientJson(Integer.MAX_VALUE).encode(tmpByteBuf, jsonElement);
 	//		return net.minecraft.network.Utf8String.read(tmpByteBuf, Integer.MAX_VALUE);
 		}
-		catch(IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException | ClassNotFoundException e){
+		catch(IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException
+				| ClassNotFoundException | InvocationTargetException | NoSuchMethodException e){
 			e.printStackTrace();
 			return null;
 		}
@@ -63,6 +71,7 @@ public class Cursed_1_21_6_stuff{
 			Class<?> clazzJsonOps = Class.forName("com.mojang.serialization.JsonOps");
 			Class<?> clazzDynamicOps = Class.forName("com.mojang.serialization.DynamicOps");
 			Class<?> clazzRegistryOps = Class.forName("net.minecraft.resources.RegistryOps");
+			Class<?> clazzDataResult = Class.forName("com.mojang.serialization.DataResult");
 			RefClass classCodec = ReflectionUtils.getRefClass("com.mojang.serialization.Codec");
 			RefClass classComponentSerialization = ReflectionUtils.getRefClass("net.minecraft.network.chat.ComponentSerialization");
 			RefClass classCraftRegistry = ReflectionUtils.getRefClass("{cb}.CraftRegistry");
@@ -73,12 +82,14 @@ public class Cursed_1_21_6_stuff{
 			Object objJsonOps = clazzJsonOps.getField("INSTANCE").get(null);
 			Object objDynamicOps = methodCreateSerializationContext.of(objIRegistryCustom).call(objJsonOps);
 			Object objCODEC = classComponentSerialization.findField(classCodec).of(null).get();
-			RefMethod methodParse = classCodec.findMethod(/*isStatic=*/false, /*return=*/DataResult.class, clazzDynamicOps, JsonElement.class);
-			
-			DataResult<?> objDataResult = (DataResult<?>)methodParse.of(objCODEC).call(objDynamicOps, jsonString);
-			return objDataResult.result().orElse(null);
+			Method methodParse = Class.forName("com.mojang.serialization.Decoder").getMethod("parse", clazzDynamicOps, Object.class);
+
+			Object objDataResult = methodParse.invoke(objCODEC, objDynamicOps, je);
+			Optional<?> objOptional = (Optional<?>)clazzDataResult.getMethod("result").invoke(objDataResult);
+			return objOptional.orElse(null);
 		}
-		catch(IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException | ClassNotFoundException e){
+		catch(IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException
+				| ClassNotFoundException | NoSuchMethodException | InvocationTargetException e){
 			e.printStackTrace();
 			return null;
 		}

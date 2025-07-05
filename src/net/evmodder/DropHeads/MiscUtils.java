@@ -133,25 +133,36 @@ public final class MiscUtils{
 		return item.getEnchantmentLevel(ench);
 	}
 
-	private static RefMethod fromJsonMethod, toJsonMethod;
+	private static RefMethod toStrMethod, toCompMethod;
 	static{
 		if(ReflectionUtils.getServerVersionString().compareTo("v1_21_6") >= 0){
-			toJsonMethod = ReflectionUtils.getRefClass("net.evmodder.DropHeads.Cursed_1_21_6_stuff").getMethod("chatComponentToJson", Object.class);
-			fromJsonMethod = ReflectionUtils.getRefClass("net.evmodder.DropHeads.Cursed_1_21_6_stuff").getMethod("jsonToChatComponent", String.class);
+			toStrMethod = ReflectionUtils.getRefClass("net.evmodder.DropHeads.Cursed_1_21_6_stuff").getMethod("chatComponentToJson", Object.class);
+			toCompMethod = ReflectionUtils.getRefClass("net.evmodder.DropHeads.Cursed_1_21_6_stuff").getMethod("jsonToChatComponent", String.class);
 		}
 		else{
 			final RefClass iChatBaseComponentClass = ReflectionUtils.getRefClass("{nm}.network.chat.IChatBaseComponent");
-			final RefClass chatSerializerClass = ReflectionUtils.getRefClass("{nm}.network.chat.IChatBaseComponent$ChatSerializer", "{nm}.network.chat.ComponentSerialization");
+			final RefClass chatSerializerClass = ReflectionUtils.getRefClass("{nm}.network.chat.IChatBaseComponent$ChatSerializer",
+					"{nm}.network.chat.ComponentSerialization");
 			final RefClass holderLookupProviderClass = ReflectionUtils.getRefClass("{nm}.core.HolderLookup$Provider", "{nm}.core.HolderLookup$a");
 //			fromJsonMethod = chatSerializerClass.getMethod("fromJson", String.class, holderLookupProviderClass);
 			try{
-				fromJsonMethod = chatSerializerClass.findMethod(/*isStatic=*/true,
+				toCompMethod = chatSerializerClass.findMethod(/*isStatic=*/true,
 						ReflectionUtils.getRefClass("{nm}.network.chat.IChatMutableComponent"), String.class, holderLookupProviderClass);
 //				toJsonMethod = chatSerializerClass.getMethod("toJson", iChatBaseComponentClass, holderLookupProviderClass);
-				toJsonMethod = chatSerializerClass.findMethod(/*isStatic=*/true, String.class, iChatBaseComponentClass, holderLookupProviderClass);
+				toStrMethod = chatSerializerClass.findMethod(/*isStatic=*/true, String.class, iChatBaseComponentClass, holderLookupProviderClass);
 			}
-			catch(RuntimeException re){fromJsonMethod = toJsonMethod = null;}
+			catch(RuntimeException re){toStrMethod = toCompMethod = null; re.printStackTrace();}
 		}
+	}
+	private static final Object chatCompFromJsonStr(String jsonStr){
+		if(ReflectionUtils.getServerVersionString().compareTo("v1_21_6") >= 0)
+			return toCompMethod.call(jsonStr);
+		else return toCompMethod.call(jsonStr, registryAccessObj);
+	}
+	private static final String jsonStrFromChatComp(Object chatComp){
+		if(ReflectionUtils.getServerVersionString().compareTo("v1_21_6") >= 0)
+			return (String)toStrMethod.call(chatComp);
+		else return (String)toStrMethod.call(chatComp, registryAccessObj);
 	}
 
 	private static final RefField displayNameField = ReflectionUtils.getRefClass("{cb}.inventory.CraftMetaItem").getField("displayName");
@@ -167,9 +178,9 @@ public final class MiscUtils{
 		else registryAccessObj = null;
 	}
 	public static final ItemStack setDisplayName(@Nonnull ItemStack item, @Nonnull Component name){
-		if(fromJsonMethod != null){
+		if(toCompMethod != null){
 			final ItemMeta meta = item.getItemMeta();
-			displayNameField.of(meta).set(fromJsonMethod.call(name.toString(), registryAccessObj));
+			displayNameField.of(meta).set(chatCompFromJsonStr(name.toString()));
 			item.setItemMeta(meta);
 			return item;
 		}
@@ -182,9 +193,9 @@ public final class MiscUtils{
 		}
 	}
 	public static final String getDisplayName(@Nonnull ItemStack item){
-		if(toJsonMethod != null){
+		if(toStrMethod != null){
 			if(!item.hasItemMeta()) return null;
-			try{return (String)toJsonMethod.call(displayNameField.of(item.getItemMeta()).get(), registryAccessObj);}
+			try{return jsonStrFromChatComp(displayNameField.of(item.getItemMeta()).get());}
 			catch(RuntimeException ex){
 				//Caused by: java.lang.reflect.InvocationTargetException
 				//Caused by: java.lang.NullPointerException: Cannot invoke "net.minecraft.network.chat.Component.tryCollapseToString()" because "text" is null
@@ -199,8 +210,8 @@ public final class MiscUtils{
 	}
 
 	public static final ItemStack setLore(@Nonnull ItemStack item, @Nonnull Component... lore){
-		if(fromJsonMethod != null){
-			Object lines = Stream.of(lore).map(line -> fromJsonMethod.call(line.toString(), registryAccessObj)).collect(Collectors.toList());
+		if(toCompMethod != null){
+			Object lines = Stream.of(lore).map(line -> chatCompFromJsonStr(line.toString())).collect(Collectors.toList());
 			ItemMeta meta = item.getItemMeta();
 			loreField.of(meta).set(lines);
 			item.setItemMeta(meta);
@@ -218,11 +229,10 @@ public final class MiscUtils{
 	}
 
 	public static final List<String> getLore(@Nonnull ItemStack item){
-		if(toJsonMethod != null){
+		if(toStrMethod != null){
 			if(!item.hasItemMeta()) return null;
 			//TODO: do we need to unescape anything?
-			return ((List<?>)loreField.of(item.getItemMeta()).get()).stream().map(l -> (String)toJsonMethod.call(l, registryAccessObj))
-					.collect(Collectors.toList());
+			return ((List<?>)loreField.of(item.getItemMeta()).get()).stream().map(MiscUtils::jsonStrFromChatComp).toList();
 		}
 		else{
 			RefNBTTagCompound tag = NBTTagUtils.getTag(item);

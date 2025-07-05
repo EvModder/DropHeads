@@ -17,7 +17,6 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
-import net.evmodder.DropHeads.Cursed_1_21_6_stuff;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.EvLib.extras.PacketUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils;
@@ -127,7 +126,9 @@ public class DeathMessagePacketIntercepter implements Listener{
 				return;
 			}
 //			if(chatBaseCompField != null) pl.getLogger().info("chat packet base comp:\n"+chatBaseComp+"\n");
-			final String jsonMsg = (String)(chatBaseCompField != null ?
+			final String jsonMsg = ReflectionUtils.getServerVersionString().compareTo("v1_21_6")>=0 ? (String)toJsonMethod.call(chatBaseComp) :
+					
+					(String)(chatBaseCompField != null ?
 				(registryAccessObj != null ? toJsonMethod.call(chatBaseComp, registryAccessObj) : toJsonMethod.call(chatBaseComp)) :
 				getJsonKyori == null ? getChatBaseComp.of(packet).call() : getJsonKyori.of(jsonSerializerKyori).call(getChatBaseComp.of(packet).call())
 			);
