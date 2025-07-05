@@ -17,6 +17,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
+import net.evmodder.DropHeads.Cursed_1_21_6_stuff;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.EvLib.extras.PacketUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils;
@@ -36,7 +37,7 @@ public class DeathMessagePacketIntercepter implements Listener{
 	private final RefClass chatBaseCompClazz = ReflectionUtils.getRefClass(
 			"{nms}.IChatBaseComponent", "{nm}.network.chat.IChatBaseComponent");
 	private final RefClass chatSerializerClazz = ReflectionUtils.getRefClass(
-			"{nms}.IChatBaseComponent$ChatSerializer", "{nm}.network.chat.IChatBaseComponent$ChatSerializer");
+			"{nms}.IChatBaseComponent$ChatSerializer", "{nm}.network.chat.IChatBaseComponent$ChatSerializer", "{nm}.network.chat.ComponentSerialization");
 	private final RefField chatBaseCompField;
 	private final RefMethod getChatBaseComp;
 	private final RefMethod getJsonKyori; private final Object jsonSerializerKyori;
@@ -71,7 +72,10 @@ public class DeathMessagePacketIntercepter implements Listener{
 		}
 		RefMethod toJsonMethodTemp; Object registryAccessObjTemp = null;
 		try{//1.20.5+
-			toJsonMethodTemp = chatSerializerClazz.findMethod(/*isStatic=*/true, String.class, chatBaseCompClazz,
+			if(ReflectionUtils.getServerVersionString().compareTo("v1_21_6") >= 0){
+				toJsonMethodTemp = ReflectionUtils.getRefClass("net.evmodder.DropHeads.Cursed_1_21_6_stuff").getMethod("chatComponentToJson", Object.class);
+			}
+			else toJsonMethodTemp = chatSerializerClazz.findMethod(/*isStatic=*/true, String.class, chatBaseCompClazz,
 					ReflectionUtils.getRefClass("{nm}.core.HolderLookup$Provider", "{nm}.core.HolderLookup$a"));
 			// If above succeeds:
 			try{
