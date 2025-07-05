@@ -4,7 +4,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Optional;
 import com.google.gson.JsonElement;
-import com.mojang.serialization.DataResult;
 import net.evmodder.EvLib.extras.ReflectionUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
