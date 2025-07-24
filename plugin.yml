@@ -6,7 +6,7 @@ website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
 #10=Java8->Java21, entity-settings grouping, config file reorg
 #4=1.21.8 compatibility, fix noteblock-sounds.txt download
-version: 3.10.2
+version: 3.10.4
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 
