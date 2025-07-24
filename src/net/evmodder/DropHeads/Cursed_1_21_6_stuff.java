@@ -29,7 +29,8 @@ public class Cursed_1_21_6_stuff{
 			methodCreateSerializationContext = classIRegistryCustom.findMethod(/*isStatic=*/false, clazzRegistryOps, clazzDynamicOps);
 			objJsonOps = clazzJsonOps.getField("INSTANCE").get(null);
 
-			methodEncodeStart = Class.forName("com.mojang.serialization.Encoder").getMethod("encodeStart", clazzDynamicOps, Object.class);
+			Class<?> clazzIChatBaseComponent = Class.forName("net.minecraft.network.chat.IChatBaseComponent");
+			methodEncodeStart = Class.forName("com.mojang.serialization.Encoder").getMethod("encodeStart", clazzDynamicOps, clazzIChatBaseComponent);
 			methodParse = Class.forName("com.mojang.serialization.Decoder").getMethod("parse", clazzDynamicOps, Object.class);
 		}
 		catch(IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException
@@ -41,6 +42,11 @@ public class Cursed_1_21_6_stuff{
 		try{
 			Object objDynamicOps = methodCreateSerializationContext.of(objIRegistryCustom).call(objJsonOps);
 			Object objDataResult = methodEncodeStart.invoke(objCODEC, objDynamicOps, chatComponent);
+
+			// Last checked: 1.21.8
+//			net.minecraft.network.chat.ComponentSerialization.CODEC.encodeStart(
+//					CraftRegistry.getMinecraftRegistry().createSerializationContext(com.mojang.serialization.JsonOps.INSTANCE),
+//					(net.minecraft.network.chat.IChatBaseComponent)chatComponent);
 
 			Optional<?> objOptional = (Optional<?>)clazzDataResult.getMethod("result").invoke(objDataResult);
 			Object objJsonElement = objOptional.orElse(null);

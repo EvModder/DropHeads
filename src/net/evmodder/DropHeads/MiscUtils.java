@@ -88,7 +88,7 @@ public final class MiscUtils{
 		String sounds = FileIO.loadFile("noteblock-sounds.txt", (String)null);
 		if(sounds == null){
 			DropHeads.getPlugin().getLogger().info("Downloading noteblock sound config...");
-			sounds = WebUtils.getReadURL("https://raw.githubusercontent.com/EvModder/DropHeads/master/noteblock-sounds.txt");
+			sounds = WebUtils.getReadURL("https://raw.githubusercontent.com/EvModder/DropHeads/master/configs/noteblock-sounds.txt");
 			sounds = FileIO.loadFile("noteblock-sounds.txt", sounds);
 			if(sounds == null){DropHeads.getPlugin().getLogger().severe("Request to download noteblock-sounds.txt failed"); return null;}
 		}
@@ -155,13 +155,13 @@ public final class MiscUtils{
 		}
 	}
 	private static final Object chatCompFromJsonStr(String jsonStr){
-		if(ReflectionUtils.getServerVersionString().compareTo("v1_21_6") >= 0)
-			return toCompMethod.call(jsonStr);
+		if(jsonStr == null) return null;
+		if(ReflectionUtils.getServerVersionString().compareTo("v1_21_6") >= 0) return toCompMethod.call(jsonStr);
 		else return toCompMethod.call(jsonStr, registryAccessObj);
 	}
 	private static final String jsonStrFromChatComp(Object chatComp){
-		if(ReflectionUtils.getServerVersionString().compareTo("v1_21_6") >= 0)
-			return (String)toStrMethod.call(chatComp);
+		if(chatComp == null) return null;
+		if(ReflectionUtils.getServerVersionString().compareTo("v1_21_6") >= 0) return (String)toStrMethod.call(chatComp);
 		else return (String)toStrMethod.call(chatComp, registryAccessObj);
 	}
 
