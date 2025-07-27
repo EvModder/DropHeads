@@ -599,6 +599,7 @@ public final class DropChanceAPI{
 		return message;
 	}
 
+	@SuppressWarnings("deprecation")
 	private void sendComponent(Player target, Component component){
 		if(methodSendMessage == null){
 			pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+target+" "+component.toString());

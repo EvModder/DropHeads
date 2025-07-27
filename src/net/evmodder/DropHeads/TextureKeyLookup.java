@@ -142,7 +142,7 @@ public final class TextureKeyLookup{
 	 * @param entity The entity for which we want a texture key
 	 * @return The String key used to identify the target texture
 	 */
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes", "deprecation" })
 	public static String getTextureKey(Entity entity){
 		switch(entity.getType().name()){
 			case "BOGGED":

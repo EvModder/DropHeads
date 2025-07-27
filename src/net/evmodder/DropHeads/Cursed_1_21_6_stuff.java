@@ -29,8 +29,8 @@ public class Cursed_1_21_6_stuff{
 			methodCreateSerializationContext = classIRegistryCustom.findMethod(/*isStatic=*/false, clazzRegistryOps, clazzDynamicOps);
 			objJsonOps = clazzJsonOps.getField("INSTANCE").get(null);
 
-			Class<?> clazzIChatBaseComponent = Class.forName("net.minecraft.network.chat.IChatBaseComponent");
-			methodEncodeStart = Class.forName("com.mojang.serialization.Encoder").getMethod("encodeStart", clazzDynamicOps, clazzIChatBaseComponent);
+//			Class<?> clazzIChatBaseComponent = Class.forName("net.minecraft.network.chat.IChatBaseComponent");
+			methodEncodeStart = Class.forName("com.mojang.serialization.Encoder").getMethod("encodeStart", clazzDynamicOps, Object.class);
 			methodParse = Class.forName("com.mojang.serialization.Decoder").getMethod("parse", clazzDynamicOps, Object.class);
 		}
 		catch(IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException

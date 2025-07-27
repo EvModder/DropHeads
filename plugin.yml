@@ -5,8 +5,8 @@ description: Heads for every mob and player.
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
 #10=Java8->Java21, entity-settings grouping, config file reorg
-#4=1.21.8 compatibility, fix noteblock-sounds.txt download
-version: 3.10.4
+#5=1.21.8 fix attempt 2
+version: 3.10.5
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 

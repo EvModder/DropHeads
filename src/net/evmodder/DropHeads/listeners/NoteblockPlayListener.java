@@ -86,6 +86,7 @@ public class NoteblockPlayListener implements Listener{
 		}
 	}*/
 
+	@SuppressWarnings("deprecation")
 	@EventHandler(ignoreCancelled = true)
 	public void onNoteblockPlay(NotePlayEvent evt){
 		final Block nb = evt.getBlock();

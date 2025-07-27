@@ -82,6 +82,7 @@ public final class MiscUtils{
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	public static final HashMap<String, Sound> getNoteblockSounds(){
 		HashMap<String, Sound> nbSounds = new HashMap</*txtrKey, Sound*/>();
 
@@ -98,7 +99,7 @@ public final class MiscUtils{
 			if(i == -1) continue;
 			final String key = line.substring(0, i);
 			final String sound = line.substring(i+1);
-			try{nbSounds.put(key, Sound.valueOf(sound));}
+			try{nbSounds.put(key, /*Registry.SOUNDS.get(NamespacedKey.fromString(sound))*/Sound.valueOf(sound));}
 			catch(IllegalArgumentException e1){
 				final int endIdx = key.indexOf('|');
 				try{
@@ -302,6 +303,7 @@ public final class MiscUtils{
 	 * @param itemStack the item to convert
 	 * @return the JSON string representation of the item
 	 */
+	@SuppressWarnings("deprecation")
 	public static final String convertItemStackToJson(ItemStack item, int JSON_LIMIT){
 		if(mItemMetaGetAsString != null){
 			if(!item.hasItemMeta()) return "{id:\""+item.getType().getKey().getKey()+"\",count:"+item.getAmount()+"}";
