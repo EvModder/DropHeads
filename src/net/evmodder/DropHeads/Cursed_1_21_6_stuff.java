@@ -38,7 +38,7 @@ public class Cursed_1_21_6_stuff{
 			e.printStackTrace();
 		}
 	}
-	public static final String chatComponentToJson(/*IChatBaseComponent*/Object chatComponent){
+	static final String chatComponentToJson(/*IChatBaseComponent*/Object chatComponent){
 		try{
 			Object objDynamicOps = methodCreateSerializationContext.of(objIRegistryCustom).call(objJsonOps);
 			Object objDataResult = methodEncodeStart.invoke(objCODEC, objDynamicOps, chatComponent);
@@ -59,7 +59,7 @@ public class Cursed_1_21_6_stuff{
 		}
 	}
 
-	public static final Object jsonToChatComponent(String jsonString){
+	static final Object jsonToChatComponent(String jsonString){
 		try{
 			RefClass classJsonParser = ReflectionUtils.getRefClass("com.google.gson.JsonParser");
 			JsonElement je = (JsonElement)classJsonParser.findMethod(/*isStatic=*/true, JsonElement.class, String.class).call(jsonString);

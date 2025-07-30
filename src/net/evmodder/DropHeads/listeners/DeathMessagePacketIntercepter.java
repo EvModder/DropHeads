@@ -196,10 +196,10 @@ public class DeathMessagePacketIntercepter implements Listener{
 	}
 	private void removePlayer(Player player){
 		final Channel channel = PacketUtils.getPlayerChannel(player);
-//		channel.eventLoop().submit(()->{
+		channel.eventLoop().submit(()->{
 			channel.pipeline().remove("replace_death_with_behead_msg");
-//			return null;
-//		});
+			return null;
+		});
 	}
 
 	@EventHandler private void onJoin(PlayerJoinEvent evt){
