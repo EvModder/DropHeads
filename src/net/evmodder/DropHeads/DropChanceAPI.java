@@ -351,7 +351,7 @@ public final class DropChanceAPI{
 		catch(IllegalArgumentException ex){/*The permissions are already defined; perhaps this is just a plugin or server reload*/}
 
 		RefMethod tempGson, tempDeserialize, tempSendMessage;
-		try{
+		try{// Paper/Purpur servers
 			RefClass classGson = ReflectionUtils.getRefClass("net.kyori.adventure.text.serializer.gson.GsonComponentSerializer");
 			RefClass classAudience = ReflectionUtils.getRefClass("net.kyori.adventure.audience.Audience");
 			RefClass classComponent = ReflectionUtils.getRefClass("net.kyori.adventure.text.Component");
@@ -360,8 +360,8 @@ public final class DropChanceAPI{
 //			tempDeserialize = classGson.getMethod("deserializeFromTree​", JsonElement.class);
 			tempSendMessage = classAudience.getMethod("sendMessage", classComponent);
 		}
-		catch(RuntimeException e){
-			e.printStackTrace();
+		catch(RuntimeException e){// Craftbukkit/Spigot servers
+//			e.printStackTrace();
 			tempGson = tempDeserialize = tempSendMessage = null;
 		}
 		methodGson = tempGson;
@@ -601,10 +601,10 @@ public final class DropChanceAPI{
 
 	@SuppressWarnings("deprecation")
 	private void sendComponent(Player target, Component component){
-		if(methodSendMessage == null){
-			pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+target+" "+component.toString());
+		if(methodSendMessage == null){ // Craftbukkit/Spigot
+			pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+target.getName()+" "+component.toString());
 		}
-		else try{
+		else try{ // Paper/Purpur
 			methodSendMessage.of(target).call(methodDeserialize.of(methodGson.call()).call(new JsonParser().parse(component.toString())));
 		}
 		catch(JsonSyntaxException e){e.printStackTrace();}
