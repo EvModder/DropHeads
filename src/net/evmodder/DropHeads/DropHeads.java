@@ -79,7 +79,7 @@ public final class DropHeads extends EvPlugin{
 
 	@Override public void onEvEnable(){
 		if(config.getBoolean("update-plugin", false)){
-			new Updater(/*plugin=*/this, /*id=*/274151, getFile(), Updater.UpdateType.DEFAULT, /*announce=*/true);
+			new Updater(/*plugin=*/this, /*id=*/274151, getFile(), Updater.UpdateType.DEFAULT, /*apiKey=*/null, /*callback=*/null, /*announce=*/true);
 		}
 		if(config.getBoolean("bstats-enabled", false) && !config.getBoolean("new")){
 //			MetricsLite metrics =
