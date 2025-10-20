@@ -5,7 +5,7 @@ description: Heads for every mob and player.
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
 #10=Java8->Java21, entity-settings grouping, config file reorg
-#6=update updater, add copper golem heads
+#6=update updater, add copper golem heads, fixed wolf|pale|tame|light_blue-collared, updated grumms(happyghast, copper golem)
 version: 3.10.6
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
