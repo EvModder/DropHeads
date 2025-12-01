@@ -61,16 +61,16 @@ import net.evmodder.DropHeads.events.BeheadMessageEvent;
 import net.evmodder.DropHeads.events.EntityBeheadEvent;
 import net.evmodder.DropHeads.listeners.DeathMessagePacketIntercepter;
 import net.evmodder.DropHeads.listeners.EntityDeathListener;
-import net.evmodder.EvLib.EvUtils;
+import net.evmodder.EvLib.bukkit.EvUtils;
 import net.evmodder.EvLib.FileIO;
-import net.evmodder.EvLib.extras.HeadUtils;
-import net.evmodder.EvLib.extras.ReflectionUtils;
-import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
-import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
-import net.evmodder.EvLib.extras.TellrawUtils;
-import net.evmodder.EvLib.extras.TextUtils;
-import net.evmodder.EvLib.extras.TellrawUtils.Component;
-import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
+import net.evmodder.EvLib.bukkit.HeadUtils;
+import net.evmodder.EvLib.bukkit.ReflectionUtils;
+import net.evmodder.EvLib.bukkit.ReflectionUtils.RefClass;
+import net.evmodder.EvLib.bukkit.ReflectionUtils.RefMethod;
+import net.evmodder.EvLib.bukkit.TellrawUtils;
+import net.evmodder.EvLib.TextUtils;
+import net.evmodder.EvLib.bukkit.TellrawUtils.Component;
+import net.evmodder.EvLib.bukkit.TellrawUtils.ListComponent;
 
 /** Public API for head drop chance logic loaded from DropHeads configs.
  * Warning: Functions may change or disappear in future releases

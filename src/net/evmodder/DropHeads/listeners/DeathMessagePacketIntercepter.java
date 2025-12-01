@@ -18,7 +18,7 @@ import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.EvLib.extras.PacketUtils;
+import net.evmodder.EvLib.bukkit.PacketUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
 import net.evmodder.EvLib.extras.ReflectionUtils.RefField;

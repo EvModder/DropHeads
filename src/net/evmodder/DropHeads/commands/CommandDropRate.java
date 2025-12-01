@@ -21,12 +21,12 @@ import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.InternalAPI;
 import net.evmodder.DropHeads.MiscUtils;
 import net.evmodder.DropHeads.datatypes.EntitySetting;
-import net.evmodder.EvLib.EvCommand;
+import net.evmodder.EvLib.bukkit.EvCommand;
 import net.evmodder.EvLib.FileIO;
-import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
-import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
-import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
-import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
+import net.evmodder.EvLib.bukkit.TellrawUtils.ListComponent;
+import net.evmodder.EvLib.bukkit.TellrawUtils.TranslationComponent;
+import net.evmodder.EvLib.bukkit.TellrawUtils.RawTextComponent;
+import net.evmodder.EvLib.bukkit.TellrawUtils.SelectorComponent;
 
 public class CommandDropRate extends EvCommand{
 	private final DropHeads pl;

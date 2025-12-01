@@ -5,9 +5,9 @@ import javax.annotation.Nonnull;
 import org.bukkit.inventory.ItemStack;
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import net.evmodder.DropHeads.datatypes.NoteblockMode;
-import net.evmodder.EvLib.extras.TextUtils;
-import net.evmodder.EvLib.extras.TellrawUtils.Component;
-import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
+import net.evmodder.EvLib.TextUtils;
+import net.evmodder.EvLib.bukkit.TellrawUtils.Component;
+import net.evmodder.EvLib.bukkit.TellrawUtils.TranslationComponent;
 
 /** Internal-only API for DropHeads.
  * WARNING: Functions here are highly subject to change and should not be used by other plugins

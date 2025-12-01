@@ -27,9 +27,9 @@ import net.evmodder.DropHeads.commands.*;
 import net.evmodder.DropHeads.datatypes.EntitySetting;
 import net.evmodder.DropHeads.datatypes.NoteblockMode;
 import net.evmodder.DropHeads.listeners.*;
-import net.evmodder.EvLib.EvPlugin;
+import net.evmodder.EvLib.bukkit.EvPlugin;
 import net.evmodder.EvLib.FileIO;
-import net.evmodder.EvLib.Updater;
+import net.evmodder.EvLib.bukkit.Updater;
 
 //TODO:
 // * /dropheads reload
@@ -79,7 +79,7 @@ public final class DropHeads extends EvPlugin{
 
 	@Override public void onEvEnable(){
 		if(config.getBoolean("update-plugin", false)){
-			new Updater(/*plugin=*/this, /*id=*/274151, getFile(), Updater.UpdateType.DEFAULT, /*apiKey=*/null, /*callback=*/null, /*announce=*/true);
+			new Updater(/*plugin=*/this, /*id=*/274151, getFile(), Updater.UpdateType.DEFAULT, /*callback=*/null, /*announce=*/true);
 		}
 		if(config.getBoolean("bstats-enabled", false) && !config.getBoolean("new")){
 //			MetricsLite metrics =

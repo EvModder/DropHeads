@@ -5,7 +5,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
-import net.evmodder.EvLib.extras.TellrawUtils.Component;
+import net.evmodder.EvLib.bukkit.TellrawUtils.Component;
 
 /** Cancellable event created by the DropHeads plugin when a behead message is sent.
  */

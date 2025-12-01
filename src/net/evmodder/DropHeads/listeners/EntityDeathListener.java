@@ -35,9 +35,9 @@ import net.evmodder.DropHeads.MiscUtils;
 import net.evmodder.DropHeads.TextureKeyLookup;
 import net.evmodder.DropHeads.datatypes.EntitySetting;
 import net.evmodder.DropHeads.events.HeadRollEvent;
-import net.evmodder.EvLib.EvUtils;
-import net.evmodder.EvLib.extras.HeadUtils;
-import net.evmodder.EvLib.extras.TextUtils;
+import net.evmodder.EvLib.bukkit.EvUtils;
+import net.evmodder.EvLib.bukkit.HeadUtils;
+import net.evmodder.EvLib.TextUtils;
 
 public class EntityDeathListener implements Listener{
 	private final DropHeads pl;
