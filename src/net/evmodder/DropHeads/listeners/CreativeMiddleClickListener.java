@@ -11,7 +11,7 @@ import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.inventory.ItemStack;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.EvLib.extras.HeadUtils;
+import net.evmodder.EvLib.bukkit.HeadUtils;
 
 public class CreativeMiddleClickListener implements Listener{
 	// This listener is only registered when 'fix-creative-nbt-copy' = true

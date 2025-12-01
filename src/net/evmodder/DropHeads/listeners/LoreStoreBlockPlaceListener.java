@@ -13,7 +13,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.MiscUtils;
-import net.evmodder.EvLib.extras.HeadUtils;
+import net.evmodder.EvLib.bukkit.HeadUtils;
 
 public class LoreStoreBlockPlaceListener implements Listener{
 	private final boolean HAS_DEFAULT_LORE;

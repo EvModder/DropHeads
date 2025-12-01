@@ -11,7 +11,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.EvLib.extras.HeadUtils;
+import net.evmodder.EvLib.bukkit.HeadUtils;
 
 public class EndermanProvokeListener implements Listener{
 	private final DropHeads pl;

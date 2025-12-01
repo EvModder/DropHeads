@@ -3,7 +3,6 @@ package net.evmodder.DropHeads;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
@@ -85,10 +84,10 @@ public class HeadAPI{
 	void loadTextures(String headsList, boolean logMissingEntities, boolean logUnknownEntities){
 		final HashSet<EntityType> missingHeads = new HashSet<EntityType>();
 		final HashSet<String> unknownHeads = new HashSet<String>();
-		if(logMissingEntities) missingHeads.addAll(Arrays.asList(EntityType.values()).stream()
-				.filter(x -> x.isAlive()/* && x.isMeow() */).collect(Collectors.toList()));
+		if(logMissingEntities) missingHeads.addAll(Stream.of(EntityType.values()).filter(EntityType::isAlive/* && x.isMeow() */).toList());
 		missingHeads.remove(EntityType.PLAYER);
-		missingHeads.remove(EntityType.ARMOR_STAND); // These 2 are 'alive', but aren't in head-textures.txt
+		try{missingHeads.remove(EntityType.valueOf("MANNEQUIN"));} catch(IllegalArgumentException e){}
+		missingHeads.remove(EntityType.ARMOR_STAND); // These 3 are 'alive', but aren't in head-textures.txt
 		for(String head : headsList.split("\n")){
 			head = head.replaceAll(" ", "");
 			final int i = head.indexOf(":");
