@@ -71,7 +71,8 @@ public class DeathMessagePacketIntercepter implements Listener{
 		}
 		RefMethod toJsonMethodTemp; Object registryAccessObjTemp = null;
 		try{//1.20.5+
-			if(ReflectionUtils.getServerVersionString().compareTo("v1_21_6") >= 0){
+			if(ReflectionUtils.getServerVersionString().compareTo("v1_21_6") >= 0 ||
+					ReflectionUtils.getServerVersionString().compareTo("v1_21_10") >= 0){
 				toJsonMethodTemp = ReflectionUtils.getRefClass("net.evmodder.DropHeads.Cursed_1_21_6_stuff").getMethod("chatComponentToJson", Object.class);
 			}
 			else toJsonMethodTemp = chatSerializerClazz.findMethod(/*isStatic=*/true, String.class, chatBaseCompClazz,
@@ -87,13 +88,16 @@ public class DeathMessagePacketIntercepter implements Listener{
 			catch(RuntimeException ex){ex.printStackTrace();}
 		}
 		catch(RuntimeException e){
-			toJsonMethodTemp = chatSerializerClazz.findMethod(/*isStatic=*/true, String.class, chatBaseCompClazz);
+			try{toJsonMethodTemp = chatSerializerClazz.findMethod(/*isStatic=*/true, String.class, chatBaseCompClazz);}
+			catch(RuntimeException re){toJsonMethodTemp = null; re.printStackTrace();}
 		}
 		toJsonMethod = toJsonMethodTemp;
 		registryAccessObj = registryAccessObjTemp;
 
-		pl.getServer().getPluginManager().registerEvents(this, pl);
-		for(Player p : pl.getServer().getOnlinePlayers()) injectPlayer(p);
+		if(toJsonMethod != null){
+			pl.getServer().getPluginManager().registerEvents(this, pl);
+			for(Player p : pl.getServer().getOnlinePlayers()) injectPlayer(p);
+		}
 	}
 
 	public boolean hasDeathMessage(Entity e){
@@ -192,6 +196,7 @@ public class DeathMessagePacketIntercepter implements Listener{
 		}
 	}
 	private void injectPlayer(Player player){
+		if(toJsonMethod != null)
 		PacketUtils.getPlayerChannel(player).pipeline().addBefore("packet_handler", "replace_death_with_behead_msg", new CustomPacketHandler(player));
 	}
 	private void removePlayer(Player player){

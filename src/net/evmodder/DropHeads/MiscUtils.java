@@ -136,7 +136,8 @@ public final class MiscUtils{
 
 	private static RefMethod toStrMethod, toCompMethod;
 	static{
-		if(ReflectionUtils.getServerVersionString().compareTo("v1_21_6") >= 0){
+		if(ReflectionUtils.getServerVersionString().compareTo("v1_21_6") >= 0 || //TODO: this doesn't properly catch v1_21_10!! need some API for ts
+				ReflectionUtils.getServerVersionString().compareTo("v1_21_10") >= 0){
 			toStrMethod = ReflectionUtils.getRefClass("net.evmodder.DropHeads.Cursed_1_21_6_stuff").getMethod("chatComponentToJson", Object.class);
 			toCompMethod = ReflectionUtils.getRefClass("net.evmodder.DropHeads.Cursed_1_21_6_stuff").getMethod("jsonToChatComponent", String.class);
 		}
@@ -149,6 +150,9 @@ public final class MiscUtils{
 			try{
 				toCompMethod = chatSerializerClass.findMethod(/*isStatic=*/true,
 						ReflectionUtils.getRefClass("{nm}.network.chat.IChatMutableComponent"), String.class, holderLookupProviderClass);
+				//TODO: findMethod() fails in 1.21.10
+				
+				
 //				toJsonMethod = chatSerializerClass.getMethod("toJson", iChatBaseComponentClass, holderLookupProviderClass);
 				toStrMethod = chatSerializerClass.findMethod(/*isStatic=*/true, String.class, iChatBaseComponentClass, holderLookupProviderClass);
 			}
