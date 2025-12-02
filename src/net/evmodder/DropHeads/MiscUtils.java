@@ -29,6 +29,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+import com.mojang.authlib.properties.PropertyMap;
 import javax.annotation.Nonnull;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.bukkit.NBTTagUtils;
@@ -40,6 +41,7 @@ import net.evmodder.EvLib.bukkit.TellrawUtils;
 import net.evmodder.EvLib.TextUtils;
 import net.evmodder.EvLib.bukkit.WebUtils;
 import net.evmodder.EvLib.bukkit.ReflectionUtils.RefClass;
+import net.evmodder.EvLib.bukkit.ReflectionUtils.RefConstructor;
 import net.evmodder.EvLib.bukkit.ReflectionUtils.RefField;
 import net.evmodder.EvLib.bukkit.ReflectionUtils.RefMethod;
 import net.evmodder.EvLib.bukkit.TellrawUtils.ClickEvent;
@@ -161,12 +163,14 @@ public final class MiscUtils{
 	}
 	private static final Object chatCompFromJsonStr(String jsonStr){
 		if(jsonStr == null) return null;
-		if(ReflectionUtils.getServerVersionString().compareTo("v1_21_6") >= 0) return toCompMethod.call(jsonStr);
+		if(ReflectionUtils.getServerVersionString().compareTo("v1_21_6") >= 0
+				|| ReflectionUtils.getServerVersionString().compareTo("v1_21_10") >= 0) return toCompMethod.call(jsonStr);
 		else return toCompMethod.call(jsonStr, registryAccessObj);
 	}
 	private static final String jsonStrFromChatComp(Object chatComp){
 		if(chatComp == null) return null;
-		if(ReflectionUtils.getServerVersionString().compareTo("v1_21_6") >= 0) return (String)toStrMethod.call(chatComp);
+		if(ReflectionUtils.getServerVersionString().compareTo("v1_21_6") >= 0
+				|| ReflectionUtils.getServerVersionString().compareTo("v1_21_10") >= 0) return (String)toStrMethod.call(chatComp);
 		else return (String)toStrMethod.call(chatComp, registryAccessObj);
 	}
 
@@ -516,8 +520,20 @@ public final class MiscUtils{
 	private static final RefMethod playerGetProfileMethod = craftPlayerClazz.getMethod("getProfile");
 	private static final GameProfile getGameProfile(Player player){return (GameProfile)playerGetProfileMethod.of(player).call();}
 
-	private static final RefMethod propertyGetValueMethod = ReflectionUtils.getRefClass(Property.class).findMethodByName("getValue", "value");
+	private static final RefMethod propertyGetValueMethod = ReflectionUtils.getRefClass(Property.class).findMethodByName("value", "getValue");
 	public static final String getPropertyValue(Property p){return (String)propertyGetValueMethod.of(p).call();}
+
+	private static final RefMethod gameProfileGetName = ReflectionUtils.getRefClass(GameProfile.class).findMethodByName("name", "getName");
+	public static final String getName(GameProfile profile){return (String)gameProfileGetName.of(profile).call();}
+
+	private static final RefMethod gameProfileGetId = ReflectionUtils.getRefClass(GameProfile.class).findMethodByName("id", "getId");
+	public static final UUID getId(GameProfile profile){return (UUID)gameProfileGetId.of(profile).call();}
+
+	private static final RefMethod gameProfileGetProperties = ReflectionUtils.getRefClass(GameProfile.class).findMethodByName("properties", "getProperties");
+	public static final PropertyMap getProperties(GameProfile profile){return (PropertyMap)gameProfileGetProperties.of(profile).call();}
+
+	private static final RefConstructor newGameProfile = ReflectionUtils.getRefClass(GameProfile.class).getConstructor(UUID.class, String.class, PropertyMap.class);
+	public static final GameProfile newGameProfile(UUID id, String name, PropertyMap properties){return (GameProfile)newGameProfile.create(id, name, properties);}
 
 	@SuppressWarnings("deprecation")
 	public static final GameProfile getGameProfile(String nameOrUUID, boolean fetchSkin, Plugin nullForSync){
@@ -526,15 +542,18 @@ public final class MiscUtils{
 		catch(java.lang.IllegalArgumentException e){player = null;/*thrown by UUID.fromString*/}
 		if(player == null) player = Bukkit.getServer().getPlayer(nameOrUUID);
 		if(player != null){
-			final GameProfile profile = new GameProfile(player.getUniqueId(), player.getName());
-			if(fetchSkin){
+			final GameProfile profile;
+			if(!fetchSkin) profile = new GameProfile(player.getUniqueId(), player.getName());
+			else{
 				final GameProfile rawProfile = getGameProfile(player);
-				if(rawProfile.getProperties() != null && rawProfile.getProperties().containsKey("textures")){
-					final Collection<Property> textures = rawProfile.getProperties().get("textures");
-					if(textures != null && !textures.isEmpty()){
-						final String code0 = getPropertyValue(textures.iterator().next());
-						profile.getProperties().put("textures", new Property("textures", code0));
-					}
+				final PropertyMap properties = getProperties(rawProfile);
+				final Collection<Property> textures = properties == null ? null : properties.get("textures");
+				if(textures == null || textures.isEmpty()) profile = new GameProfile(player.getUniqueId(), player.getName());
+				else{
+					final String code0 = getPropertyValue(textures.iterator().next());
+					PropertyMap pm = new PropertyMap();
+					pm.put("textures", new Property("textures", code0));
+					profile = newGameProfile(player.getUniqueId(), player.getName(), pm);
 				}
 			}
 			WebUtils.addGameProfileToCache(nameOrUUID, profile);

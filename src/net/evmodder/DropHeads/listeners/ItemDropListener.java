@@ -38,11 +38,11 @@ public class ItemDropListener implements Listener{
 
 	private boolean hasCustomName(ItemMeta meta, GameProfile profile){
 		if(!meta.hasDisplayName()) return false;
-		if(profile.getName() == null) return true; // why return true?
+		if(MiscUtils.getName(profile) == null) return true; // why return true?
 
 		String textureKey = pl.getAPI().getTextureKey(profile);
 		final String customName;
-		if(textureKey == null){textureKey = "PLAYER"; customName = profile.getName();}
+		if(textureKey == null){textureKey = "PLAYER"; customName = MiscUtils.getName(profile);}
 		else customName = "";//todo?
 
 		final String expectedName = ChatColor.stripColor(pl.getInternalAPI().getFullHeadNameFromKey(textureKey, customName).toPlainText());

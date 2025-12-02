@@ -34,23 +34,23 @@ public class LoreStoreBlockBreakListener implements Listener{
 
 		List<String> lore = null;
 		GameProfile profileWithoutLore = null;
-		if(profile.getProperties() != null && profile.getProperties().containsKey(MiscUtils.DH_LORE_KEY)){
-			final Collection<Property> props = profile.getProperties().get(MiscUtils.DH_LORE_KEY);
+		if(MiscUtils.getProperties(profile) != null && MiscUtils.getProperties(profile).containsKey(MiscUtils.DH_LORE_KEY)){
+			final Collection<Property> props = MiscUtils.getProperties(profile).get(MiscUtils.DH_LORE_KEY);
 			if(props != null && !props.isEmpty()){
 				if(props.size() != 1) DropHeads.getPlugin().getLogger().warning("Multiple lore keys on a single head profile in getItemWithLore()");
 				lore = Arrays.asList(MiscUtils.getPropertyValue(props.iterator().next()).split("\\n"));
-				profileWithoutLore = new GameProfile(profile.getId(), profile.getName());
-				profileWithoutLore.getProperties().putAll(profile.getProperties());
-				profileWithoutLore.getProperties().removeAll(MiscUtils.DH_LORE_KEY);
+				profileWithoutLore = new GameProfile(MiscUtils.getId(profile), MiscUtils.getName(profile));
+				MiscUtils.getProperties(profileWithoutLore).putAll(MiscUtils.getProperties(profile));
+				MiscUtils.getProperties(profileWithoutLore).removeAll(MiscUtils.DH_LORE_KEY);
 			}
 		}
 		if(lore == null){
-			if(profile.getName() == null) return null;
-			final int loreStart = profile.getName().indexOf('>');
+			if(MiscUtils.getName(profile) == null) return null;
+			final int loreStart = MiscUtils.getName(profile).indexOf('>');
 			if(loreStart == -1) return null;
-			lore = Arrays.asList(profile.getName().substring(loreStart + 1).split("\\n", -1));
-			profileWithoutLore = new GameProfile(profile.getId(), profile.getName().substring(0, loreStart));
-			profileWithoutLore.getProperties().putAll(profile.getProperties());
+			lore = Arrays.asList(MiscUtils.getName(profile).substring(loreStart + 1).split("\\n", -1));
+			profileWithoutLore = new GameProfile(MiscUtils.getId(profile), MiscUtils.getName(profile).substring(0, loreStart));
+			MiscUtils.getProperties(profileWithoutLore).putAll(MiscUtils.getProperties(profile));
 		}
 		ItemStack headItem = DropHeads.getPlugin().getAPI().getHead(profileWithoutLore);
 		if(lore.size() > 1 || (lore.size() == 1 && !lore.get(0).isEmpty())){

@@ -70,12 +70,12 @@ public class BlockClickListener implements Listener{
 	}
 
 	private GameProfile stripCustomLoreAndNamespace(GameProfile profile){//TODO: delete soon(tm) since lore isn't stored in profile name since v3.9.4
-		if(profile != null && profile.getName() != null){
-			String name = profile.getName();
+		if(profile != null && MiscUtils.getName(profile) != null){
+			String name = MiscUtils.getName(profile);
 			int startIdx = name.startsWith(MiscUtils.TXT_KEY_PROFILE_NAME_PREFIX) ? MiscUtils.TXT_KEY_PROFILE_NAME_PREFIX.length() : 0;
 			int endIdx = name.indexOf('>');
 			name = name.substring(startIdx, endIdx == -1 ? name.length() : endIdx);
-			if(!name.equals(profile.getName())) return new GameProfile(profile.getId(), name);
+			if(!name.equals(MiscUtils.getName(profile))) return new GameProfile(MiscUtils.getId(profile), name);
 		}
 		return profile;
 	}
@@ -116,24 +116,24 @@ public class BlockClickListener implements Listener{
 			try{data.headType = HeadUtils.getDroppedHeadType(EntityType.valueOf(eTypeName));}
 			catch(IllegalArgumentException ex){data.headType = HeadUtils.getDroppedHeadType(EntityType.UNKNOWN);}  // "Head"
 			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(data.textureKey);
-			data.profileName = profile.getName() != null ? new RawTextComponent(profile.getName()) : null;//data.entityTypeNames[0];
+			data.profileName = MiscUtils.getName(profile) != null ? new RawTextComponent(MiscUtils.getName(profile)) : null;//data.entityTypeNames[0];
 		}
 		//player
-		else if(profile.getId() != null && (data.player=pl.getServer().getOfflinePlayer(profile.getId())) != null
+		else if(profile.getId() != null && (data.player=pl.getServer().getOfflinePlayer(MiscUtils.getId(profile))) != null
 				&& (data.player.hasPlayedBefore()
-					|| (tempProfile=MiscUtils.getGameProfile(profile.getId().toString(), /*fetchSkin=*/false, ASYNC_PROFILE_REQUESTS ? pl : null)) != null)
+					|| (tempProfile=MiscUtils.getGameProfile(MiscUtils.getId(profile).toString(), /*fetchSkin=*/false, ASYNC_PROFILE_REQUESTS ? pl : null)) != null)
 		){
 			data.headType = HeadUtils.getDroppedHeadType(EntityType.PLAYER);  // "Head"
 			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(EntityType.PLAYER.name());  // "Player"
-			data.profileName = new RawTextComponent(UPDATE_PLAYER_HEADS || profile.getName() == null 
-					? tempProfile == null ? data.player.getName() : tempProfile.getName()
-					: profile.getName());
+			data.profileName = new RawTextComponent(UPDATE_PLAYER_HEADS || MiscUtils.getName(profile) == null 
+					? tempProfile == null ? data.player.getName() : MiscUtils.getName(tempProfile)
+					: MiscUtils.getName(profile));
 		}
 		//unknown
 		else{
 			data.headType = HeadUtils.getDroppedHeadType(EntityType.UNKNOWN);  // "Head"
 			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(EntityType.UNKNOWN.name());  // "Unknown"
-			data.profileName = profile.getName() != null ? new RawTextComponent(profile.getName()) : null;//data.entityTypeNames[0];
+			data.profileName = MiscUtils.getName(profile) != null ? new RawTextComponent(MiscUtils.getName(profile)) : null;//data.entityTypeNames[0];
 		}
 		if(data.hdbId != null && !hdbAPI.isHead(data.hdbId)) data.hdbId = null;
 		if(data.player != null && data.player.getName() == null) data.player = null;
@@ -150,7 +150,7 @@ public class BlockClickListener implements Listener{
 					headData.player = player;
 					final String headName;
 					if(player.getName() != null) headName = player.getName();
-					else if(profile != null && profile.getName() != null && !profile.getName().isEmpty()) headName = profile.getName();
+					else if(profile != null && MiscUtils.getName(profile) != null && !MiscUtils.getName(profile).isEmpty()) headName = MiscUtils.getName(profile);
 					else if(((Skull)skull).getOwner() != null) headName = ((Skull)skull).getOwner();
 					else headName = null;// = EntityType.UNKNOWN.name();
 					if(headName != null) headData.profileName = new RawTextComponent(headName);
@@ -265,8 +265,8 @@ public class BlockClickListener implements Listener{
 			String code0 = "";
 			if(isPlayerHead){
 				GameProfile profile = HeadUtils.getGameProfile((Skull)evt.getClickedBlock().getState());
-				Collection<Property> textures = profile.getProperties().get("textures");
-				if(textures != null && !textures.isEmpty()) code0 = MiscUtils.getPropertyValue(profile.getProperties().get("textures").iterator().next());
+				Collection<Property> textures = MiscUtils.getProperties(profile).get("textures");
+				if(textures != null && !textures.isEmpty()) code0 = MiscUtils.getPropertyValue(MiscUtils.getProperties(profile).get("textures").iterator().next());
 			}
 			blob.replaceRawTextWithComponent("${TEXTURE}", new RawTextComponent(code0));
 			blob.replaceRawTextWithComponent("${BASE64}", new RawTextComponent(code0));

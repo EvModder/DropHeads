@@ -44,7 +44,7 @@ public class LoreStoreBlockPlaceListener implements Listener{
 		}
 		final String combinedLore = String.join("\n", customLore);
 
-		profile.getProperties().put(MiscUtils.DH_LORE_KEY, new Property(MiscUtils.DH_LORE_KEY, combinedLore));
+		MiscUtils.getProperties(profile).put(MiscUtils.DH_LORE_KEY, new Property(MiscUtils.DH_LORE_KEY, combinedLore));
 		final Skull skull = (Skull)evt.getBlockPlaced().getState();
 		HeadUtils.setGameProfile(skull, profile);
 		skull.update(true);

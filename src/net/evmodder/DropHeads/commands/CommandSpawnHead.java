@@ -300,11 +300,11 @@ public class CommandSpawnHead extends EvCommand{
 			final GameProfile profile = searchForPlayer(target);
 			if(profile != null){
 				if(!sender.hasPermission("dropheads.spawn.players")
-						&& (!profile.getName().equals(sender.getName()) || !sender.hasPermission("dropheads.spawn.self"))){
+						&& (!MiscUtils.getName(profile).equals(sender.getName()) || !sender.hasPermission("dropheads.spawn.self"))){
 					sender.sendMessage(translate("errors.permissions.player-heads"));
 					return new HeadFromString(null, true, null);
 				}
-				target = profile.getName();
+				target = MiscUtils.getName(profile);
 				head = pl.getAPI().getHead(profile);
 			}
 		}
