@@ -26,14 +26,13 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import com.mojang.authlib.GameProfile;
+import org.bukkit.profile.PlayerProfile;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.InternalAPI;
 import net.evmodder.DropHeads.MiscUtils;
 import net.evmodder.DropHeads.TextureKeyLookup;
 import net.evmodder.EvLib.bukkit.EvCommand;
 import net.evmodder.EvLib.bukkit.EntityUtils;
-import net.evmodder.EvLib.bukkit.HeadUtils;
 import net.evmodder.EvLib.bukkit.TellrawUtils.Component;
 import net.evmodder.EvLib.bukkit.TellrawUtils.ListComponent;
 import net.evmodder.EvLib.bukkit.TellrawUtils.RawTextComponent;
@@ -202,7 +201,7 @@ public class CommandSpawnHead extends EvCommand{
 		return tabCompletes;
 	}
 
-	private GameProfile searchForPlayer(String target){
+	private PlayerProfile searchForPlayer(String target){
 		if(!target.matches("[a-zA-Z0-9_-]+")) return null;
 //		@SuppressWarnings("deprecation")
 //		OfflinePlayer p = pl.getServer().getOfflinePlayer(target);
@@ -211,7 +210,8 @@ public class CommandSpawnHead extends EvCommand{
 //			p = pl.getServer().getOfflinePlayer(UUID.fromString(target));
 //			if(p != null && p.hasPlayedBefore()) return new GameProfile(p.getUniqueId(), p.getName());
 //		}catch(IllegalArgumentException ex){}
-		return MiscUtils.getGameProfile(target, /*fetchSkin=*/false, /*nullForSync=*/null);
+		return MiscUtils.getPlayerProfile(target, false);
+//		return MiscUtils.getGameProfile(target, /*fetchSkin=*/false, /*nullForSync=*/null);
 	}
 
 	private record HeadFromString(ItemStack head, boolean noFurtherError, String targetHead){}
@@ -267,7 +267,7 @@ public class CommandSpawnHead extends EvCommand{
 				return new HeadFromString(null, true, null);
 			}
 			ItemStack unwrappedHDBhead = pl.getInternalAPI().getHeadDatabaseAPI().getItemHead(target);
-			head = pl.getAPI().getHead(HeadUtils.getGameProfile((SkullMeta)unwrappedHDBhead.getItemMeta()));
+			head = pl.getAPI().getHead(((SkullMeta)unwrappedHDBhead.getItemMeta()).getOwnerProfile());
 		}
 		else if(prefix.equals(CODE_PREFIX) || (prefix.isEmpty() && target.length() > TextUtils.MAX_PLAYERNAME_MONO_WIDTH
 				&& searchForPlayer(target) == null)){
@@ -297,14 +297,14 @@ public class CommandSpawnHead extends EvCommand{
 			}
 		}
 		else if(prefix.equals(PLAYER_PREFIX) || (prefix.isEmpty()/* && ... */)){
-			final GameProfile profile = searchForPlayer(target);
+			final PlayerProfile profile = searchForPlayer(target);
 			if(profile != null){
 				if(!sender.hasPermission("dropheads.spawn.players")
-						&& (!MiscUtils.getName(profile).equals(sender.getName()) || !sender.hasPermission("dropheads.spawn.self"))){
+						&& (!profile.getName().equals(sender.getName()) || !sender.hasPermission("dropheads.spawn.self"))){
 					sender.sendMessage(translate("errors.permissions.player-heads"));
 					return new HeadFromString(null, true, null);
 				}
-				target = MiscUtils.getName(profile);
+				target = profile.getName();
 				head = pl.getAPI().getHead(profile);
 			}
 		}

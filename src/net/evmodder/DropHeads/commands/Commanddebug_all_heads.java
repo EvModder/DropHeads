@@ -22,7 +22,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.EvLib.bukkit.EvCommand;
-import net.evmodder.EvLib.bukkit.HeadUtils;
 
 public class Commanddebug_all_heads extends EvCommand{
 	private final DropHeads pl;
@@ -44,7 +43,7 @@ public class Commanddebug_all_heads extends EvCommand{
 		blockState.setType(facing == null ? Material.PLAYER_HEAD : Material.PLAYER_WALL_HEAD);
 		if(facing != null) blockState.setRotation(facing);
 		//blockState.setData(skull.getData());
-		HeadUtils.setGameProfile(blockState, HeadUtils.getGameProfile((SkullMeta)skullItem.getItemMeta()));
+		blockState.setOwnerProfile(((SkullMeta)skullItem.getItemMeta()).getOwnerProfile());
 		blockState.update();
 	}
 

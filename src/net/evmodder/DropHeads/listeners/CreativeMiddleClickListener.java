@@ -9,7 +9,7 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.inventory.ItemStack;
-import com.mojang.authlib.GameProfile;
+import org.bukkit.profile.PlayerProfile;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.EvLib.bukkit.HeadUtils;
 
@@ -29,7 +29,7 @@ public class CreativeMiddleClickListener implements Listener{
 					evt.setCursor(itemWithAddedLore);
 				}
 				else{
-					final GameProfile profile = HeadUtils.getGameProfile((Skull)headBlock.getState());
+					final PlayerProfile profile = ((Skull)headBlock.getState()).getOwnerProfile();
 					final ItemStack headItem = DropHeads.getPlugin().getAPI().getHead(profile);
 					if(headItem != null) evt.setCursor(headItem);
 				}

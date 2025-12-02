@@ -3,6 +3,7 @@ package net.evmodder.DropHeads.listeners;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -12,7 +13,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
-import com.mojang.authlib.GameProfile;
+import org.bukkit.profile.PlayerProfile;
+import com.google.common.collect.Multimap;
 import com.mojang.authlib.properties.Property;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.MiscUtils;
@@ -29,28 +31,31 @@ public class LoreStoreBlockBreakListener implements Listener{
 		if(!HeadUtils.isPlayerHead(block.getType())) return null;
 
 		final Skull skull = (Skull)block.getState();
-		final GameProfile profile = HeadUtils.getGameProfile(skull);
+		final PlayerProfile profile = skull.getOwnerProfile();
 		if(profile == null) return null;
 
 		List<String> lore = null;
-		GameProfile profileWithoutLore = null;
-		if(MiscUtils.getProperties(profile) != null && MiscUtils.getProperties(profile).containsKey(MiscUtils.DH_LORE_KEY)){
-			final Collection<Property> props = MiscUtils.getProperties(profile).get(MiscUtils.DH_LORE_KEY);
+		PlayerProfile profileWithoutLore = null;
+		Multimap<String, Property> properties = MiscUtils.getProperties(profile);
+		if(properties.containsKey(MiscUtils.DH_LORE_KEY)){
+			final Collection<Property> props = properties.get(MiscUtils.DH_LORE_KEY);
 			if(props != null && !props.isEmpty()){
 				if(props.size() != 1) DropHeads.getPlugin().getLogger().warning("Multiple lore keys on a single head profile in getItemWithLore()");
-				lore = Arrays.asList(MiscUtils.getPropertyValue(props.iterator().next()).split("\\n"));
-				profileWithoutLore = new GameProfile(MiscUtils.getId(profile), MiscUtils.getName(profile));
-				MiscUtils.getProperties(profileWithoutLore).putAll(MiscUtils.getProperties(profile));
-				MiscUtils.getProperties(profileWithoutLore).removeAll(MiscUtils.DH_LORE_KEY);
+				lore = Arrays.asList(props.iterator().next().value().split("\\n"));
+				profileWithoutLore = Bukkit.createPlayerProfile(profile.getUniqueId(), profile.getName());
+				Multimap<String, Property> propertiesWithoutLore = MiscUtils.getProperties(profileWithoutLore);
+				propertiesWithoutLore.putAll(properties);
+				propertiesWithoutLore.removeAll(MiscUtils.DH_LORE_KEY);
 			}
 		}
 		if(lore == null){
-			if(MiscUtils.getName(profile) == null) return null;
-			final int loreStart = MiscUtils.getName(profile).indexOf('>');
+			if(profile.getName() == null) return null;
+			final int loreStart = profile.getName().indexOf('>');
 			if(loreStart == -1) return null;
-			lore = Arrays.asList(MiscUtils.getName(profile).substring(loreStart + 1).split("\\n", -1));
-			profileWithoutLore = new GameProfile(MiscUtils.getId(profile), MiscUtils.getName(profile).substring(0, loreStart));
-			MiscUtils.getProperties(profileWithoutLore).putAll(MiscUtils.getProperties(profile));
+			lore = Arrays.asList(profile.getName().substring(loreStart + 1).split("\\n", -1));
+			profileWithoutLore = Bukkit.createPlayerProfile(profile.getUniqueId(), profile.getName().substring(0, loreStart));
+			Multimap<String, Property> propertiesWithoutLore = MiscUtils.getProperties(profileWithoutLore);
+			propertiesWithoutLore.putAll(properties);
 		}
 		ItemStack headItem = DropHeads.getPlugin().getAPI().getHead(profileWithoutLore);
 		if(lore.size() > 1 || (lore.size() == 1 && !lore.get(0).isEmpty())){

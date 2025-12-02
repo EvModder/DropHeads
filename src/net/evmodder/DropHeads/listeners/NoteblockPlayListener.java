@@ -10,7 +10,7 @@ import org.bukkit.block.Skull;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.NotePlayEvent;
-import com.mojang.authlib.GameProfile;
+import org.bukkit.profile.PlayerProfile;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.MiscUtils;
 import net.evmodder.EvLib.bukkit.HeadUtils;
@@ -97,7 +97,7 @@ public class NoteblockPlayListener implements Listener{
 
 		String textureKey;
 		if(skull.getType() == Material.PLAYER_HEAD){
-			final GameProfile profile = HeadUtils.getGameProfile(skull);
+			final PlayerProfile profile = skull.getOwnerProfile();
 			textureKey = DropHeads.getPlugin().getAPI().getTextureKey(profile);
 			if(textureKey == null) return;
 		}

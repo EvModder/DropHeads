@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.block.BlockFace;
+import org.bukkit.craftbukkit.v1_21_R6.profile.CraftPlayerProfile;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -26,10 +27,11 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.profile.PlayerProfile;
+import org.bukkit.profile.PlayerTextures;
 import org.bukkit.util.Vector;
-import com.mojang.authlib.GameProfile;
+import com.google.common.collect.Multimap;
 import com.mojang.authlib.properties.Property;
-import com.mojang.authlib.properties.PropertyMap;
 import javax.annotation.Nonnull;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.bukkit.NBTTagUtils;
@@ -41,7 +43,6 @@ import net.evmodder.EvLib.bukkit.TellrawUtils;
 import net.evmodder.EvLib.TextUtils;
 import net.evmodder.EvLib.bukkit.WebUtils;
 import net.evmodder.EvLib.bukkit.ReflectionUtils.RefClass;
-import net.evmodder.EvLib.bukkit.ReflectionUtils.RefConstructor;
 import net.evmodder.EvLib.bukkit.ReflectionUtils.RefField;
 import net.evmodder.EvLib.bukkit.ReflectionUtils.RefMethod;
 import net.evmodder.EvLib.bukkit.TellrawUtils.ClickEvent;
@@ -516,50 +517,34 @@ public final class MiscUtils{
 		return getClosestBlockFace(vec, possibleHeadRotations).getOppositeFace();//TODO: why is it opposite?
 	}
 
-	private static final RefClass craftPlayerClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftPlayer");
-	private static final RefMethod playerGetProfileMethod = craftPlayerClazz.getMethod("getProfile");
-	private static final GameProfile getGameProfile(Player player){return (GameProfile)playerGetProfileMethod.of(player).call();}
+	public static final RefField fieldGameProfileProperties = ReflectionUtils.getRefClass(CraftPlayerProfile.class).getField("properties");
+	@SuppressWarnings("unchecked")
+	public static final Multimap<String, Property> getProperties(PlayerProfile pp){
+		return (Multimap<String, Property>)(fieldGameProfileProperties.of(pp).get());
+	}
 
-	private static final RefMethod propertyGetValueMethod = ReflectionUtils.getRefClass(Property.class).findMethodByName("value", "getValue");
-	public static final String getPropertyValue(Property p){return (String)propertyGetValueMethod.of(p).call();}
-
-	private static final RefMethod gameProfileGetName = ReflectionUtils.getRefClass(GameProfile.class).findMethodByName("name", "getName");
-	public static final String getName(GameProfile profile){return (String)gameProfileGetName.of(profile).call();}
-
-	private static final RefMethod gameProfileGetId = ReflectionUtils.getRefClass(GameProfile.class).findMethodByName("id", "getId");
-	public static final UUID getId(GameProfile profile){return (UUID)gameProfileGetId.of(profile).call();}
-
-	private static final RefMethod gameProfileGetProperties = ReflectionUtils.getRefClass(GameProfile.class).findMethodByName("properties", "getProperties");
-	public static final PropertyMap getProperties(GameProfile profile){return (PropertyMap)gameProfileGetProperties.of(profile).call();}
-
-	private static final RefConstructor newGameProfile = ReflectionUtils.getRefClass(GameProfile.class).getConstructor(UUID.class, String.class, PropertyMap.class);
-	public static final GameProfile newGameProfile(UUID id, String name, PropertyMap properties){return (GameProfile)newGameProfile.create(id, name, properties);}
-
-	@SuppressWarnings("deprecation")
-	public static final GameProfile getGameProfile(String nameOrUUID, boolean fetchSkin, Plugin nullForSync){
+	public static final PlayerProfile getPlayerProfile(String nameOrUUID, boolean fetchSkin){
 		Player player;
-		try{player = Bukkit.getServer().getPlayer(UUID.fromString(nameOrUUID));}
-		catch(java.lang.IllegalArgumentException e){player = null;/*thrown by UUID.fromString*/}
+		UUID uuid;
+		try{
+			uuid = UUID.fromString(nameOrUUID);
+			player = Bukkit.getServer().getPlayer(uuid);
+		}
+		catch(java.lang.IllegalArgumentException e){uuid = null; player = null;}
 		if(player == null) player = Bukkit.getServer().getPlayer(nameOrUUID);
-		if(player != null){
-			final GameProfile profile;
-			if(!fetchSkin) profile = new GameProfile(player.getUniqueId(), player.getName());
-			else{
-				final GameProfile rawProfile = getGameProfile(player);
-				final PropertyMap properties = getProperties(rawProfile);
-				final Collection<Property> textures = properties == null ? null : properties.get("textures");
-				if(textures == null || textures.isEmpty()) profile = new GameProfile(player.getUniqueId(), player.getName());
-				else{
-					final String code0 = getPropertyValue(textures.iterator().next());
-					PropertyMap pm = new PropertyMap();
-					pm.put("textures", new Property("textures", code0));
-					profile = newGameProfile(player.getUniqueId(), player.getName(), pm);
-				}
-			}
-			WebUtils.addGameProfileToCache(nameOrUUID, profile);
+		if(player == null){
+			PlayerProfile profile = uuid != null ? Bukkit.createPlayerProfile(uuid) : Bukkit.createPlayerProfile(nameOrUUID);
+			if(fetchSkin) profile.update();
 			return profile;
 		}
-		return WebUtils.getGameProfile(nameOrUUID, fetchSkin, nullForSync);
+		else{
+			PlayerProfile profile = Bukkit.createPlayerProfile(player.getUniqueId(), player.getName());
+			if(!fetchSkin) return profile;
+			final PlayerProfile rawProfile = player.getPlayerProfile();
+			final PlayerTextures rawTextures = rawProfile.getTextures();
+			profile.getTextures().setSkin(rawTextures.getSkin());
+			return profile;
+		}
 	}
 
 // not currently used

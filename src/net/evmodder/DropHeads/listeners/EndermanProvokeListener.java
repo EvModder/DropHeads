@@ -9,7 +9,7 @@ import org.bukkit.event.entity.EntityTargetEvent.TargetReason;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import com.mojang.authlib.GameProfile;
+import org.bukkit.profile.PlayerProfile;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.EvLib.bukkit.HeadUtils;
 
@@ -34,7 +34,7 @@ public class EndermanProvokeListener implements Listener{
 	private EntityType getEntityTypeFromHead(ItemStack head){
 		if(head == null || !HeadUtils.isHead(head.getType())) return null;
 		if(!HeadUtils.isPlayerHead(head.getType())) return HeadUtils.getEntityFromHead(head.getType());
-		final GameProfile profile = HeadUtils.getGameProfile((SkullMeta)head.getItemMeta());
+		final PlayerProfile profile = ((SkullMeta)head.getItemMeta()).getOwnerProfile();
 		if(profile != null){
 			final String textureKey = pl.getAPI().getTextureKey(profile);
 			final int idx = textureKey.indexOf('|');

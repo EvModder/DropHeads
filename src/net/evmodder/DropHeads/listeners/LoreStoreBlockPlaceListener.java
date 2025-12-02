@@ -9,7 +9,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import com.mojang.authlib.GameProfile;
+import org.bukkit.profile.PlayerProfile;
 import com.mojang.authlib.properties.Property;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.MiscUtils;
@@ -33,7 +33,7 @@ public class LoreStoreBlockPlaceListener implements Listener{
 
 		if(!headItem.hasItemMeta() || !headItem.getItemMeta().hasLore()) return; // Nothing to save!
 		final SkullMeta meta = (SkullMeta)headItem.getItemMeta();
-		final GameProfile profile = HeadUtils.getGameProfile(meta);
+		final PlayerProfile profile = meta.getOwnerProfile();
 		if(profile == null) return; // We can't append lore to an invalid GameProfile...
 
 		final List<String> customLore = MiscUtils.getLore(headItem);
@@ -46,7 +46,7 @@ public class LoreStoreBlockPlaceListener implements Listener{
 
 		MiscUtils.getProperties(profile).put(MiscUtils.DH_LORE_KEY, new Property(MiscUtils.DH_LORE_KEY, combinedLore));
 		final Skull skull = (Skull)evt.getBlockPlaced().getState();
-		HeadUtils.setGameProfile(skull, profile);
+		skull.setOwnerProfile(profile);
 		skull.update(true);
 	}
 }
