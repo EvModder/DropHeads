@@ -17,6 +17,7 @@ CAT:                0.004
 CAVE_SPIDER:        0.001
 CHICKEN:            0.001
 COD:                0.002
+COPPER_GOLEM:       0.007
 COW:                0.004
 CREAKING:           0.005
 CREEPER:            0.006
@@ -117,5 +118,6 @@ MANGROVE_CHEST_BOAT: 0
 OAK_CHEST_BOAT: 0
 PALE_OAK_CHEST_BOAT: 0
 SPRUCE_CHEST_BOAT: 0
+
 
 # You can add custom mobs to this list, but it will only work if an EntityType is defined
