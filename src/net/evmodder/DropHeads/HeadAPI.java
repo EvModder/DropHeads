@@ -33,7 +33,6 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
 import me.arcaniax.hdb.api.DatabaseLoadEvent;
@@ -50,6 +49,7 @@ import net.evmodder.EvLib.bukkit.TellrawUtils.RawTextComponent;
 import net.evmodder.EvLib.bukkit.TellrawUtils.TranslationComponent;
 import net.evmodder.EvLib.TextUtils;
 import net.evmodder.EvLib.bukkit.WebUtils;
+import net.evmodder.EvLib.bukkit.YetAnotherProfile;
 
 /** Public API for general DropHeads features.
  * Warning: Functions may change or disappear in future releases
@@ -386,32 +386,32 @@ public class HeadAPI{
 	 * @param profile the GameProfile of a head
 	 * @return a String representing the textureKey or <code>null</code> if not a DH mob head
 	 */
-	public String getTextureKey(GameProfile profile){
+	public String getTextureKey(YetAnotherProfile profile){
 		if(profile == null) return null;
-		if(MiscUtils.getProperties(profile) != null && MiscUtils.getProperties(profile).containsKey(DH_TEXTURE_KEY)){
-			final Collection<Property> props = MiscUtils.getProperties(profile).get(DH_TEXTURE_KEY);
+		if(profile.properties().containsKey(DH_TEXTURE_KEY)){
+			final Collection<Property> props = profile.properties().get(DH_TEXTURE_KEY);
 			if(props != null && !props.isEmpty()){
 				if(props.size() != 1) pl.getLogger().warning("Multiple texture keys on a single head profile in getTextureKey()");
 				return trimTextureKeyUntilFoundOrNull(MiscUtils.getPropertyValue(props.iterator().next()));
 			}
 		}
-		String name = MiscUtils.getName(profile);
+		String name = profile.name();
 		if(name != null && !name.isEmpty()){
 			int startIdx = name.startsWith(MiscUtils.TXT_KEY_PROFILE_NAME_PREFIX) ? MiscUtils.TXT_KEY_PROFILE_NAME_PREFIX.length() : 0;
 			int endIdx = name.indexOf('>');
 			name = name.substring(startIdx, endIdx == -1 ? name.length() : endIdx);
 			return trimTextureKeyUntilFoundOrNull(name);
 		}
-		if(ASSIGN_KEY_FROM_TEXTURE && MiscUtils.getProperties(profile).containsKey("textures")){
-			final Collection<Property> textures = MiscUtils.getProperties(profile).get("textures");
+		if(ASSIGN_KEY_FROM_TEXTURE && profile.properties().containsKey("textures")){
+			final Collection<Property> textures = profile.properties().get("textures");
 			if(textures != null && textures.size() == 1){
 				final String code = MiscUtils.getPropertyValue(textures.iterator().next());
 				// Will return the associated textureKey if `code` is a known texture value
 				return replaceHeadsFromTo.get(code);
 			}
 		}
-		if(ASSIGN_KEY_FROM_NAMED_UUID && MiscUtils.getId(profile) != null){
-			final String key = replaceHeadsFromTo.get(MiscUtils.getId(profile).toString());
+		if(ASSIGN_KEY_FROM_NAMED_UUID && profile.id() != null){
+			final String key = replaceHeadsFromTo.get(profile.id().toString());
 			if(key != null) return key;
 		}
 		return null;
@@ -647,15 +647,14 @@ public class HeadAPI{
 			catch(Exception e){e.printStackTrace();}
 		}
 		final String name = eTypeName.substring(0, Math.min(eTypeName.length(), MAX_NAME_LENGTH));
-//		GameProfile profile = new GameProfile(uuid, name);
-		GameProfile profile = MiscUtils.newGameProfile(uuid, name, pm);
-		HeadUtils.setGameProfile(meta, profile);
+		final YetAnotherProfile profile = new YetAnotherProfile(uuid, name, pm);
+		profile.set(meta);
 		head.setItemMeta(meta);
 		return head;
 	}
 	private ItemStack hdb_getItemHead_wrapper(String hdbId){// Calling hdbAPI.getItemHead(id) directly is bad.
 		ItemStack hdbHead = hdbAPI.getItemHead(hdbId);
-		GameProfile profile = HeadUtils.getGameProfile((SkullMeta)hdbHead.getItemMeta());
+		YetAnotherProfile profile = YetAnotherProfile.fromSkullMeta((SkullMeta)hdbHead.getItemMeta());
 		ItemStack head = HeadUtils.makeCustomHead(profile, /*setOwner=*/false);
 		if(SAVE_TYPE_IN_LORE){
 			head = MiscUtils.setLore(head, new RawTextComponent(
@@ -666,8 +665,8 @@ public class HeadAPI{
 		SkullMeta meta = (SkullMeta)head.getItemMeta();
 		meta.setDisplayName(hdbHead.getItemMeta().getDisplayName());
 		if(MAKE_UNSTACKABLE){
-			MiscUtils.getProperties(profile).put(DH_RANDOM_UUID, new Property(DH_RANDOM_UUID, UUID.randomUUID().toString()));
-			HeadUtils.setGameProfile(meta, profile);
+			profile.properties().put(DH_RANDOM_UUID, new Property(DH_RANDOM_UUID, UUID.randomUUID().toString()));
+			profile.set(meta);
 		}
 		head.setItemMeta(meta);
 		return head;
@@ -696,12 +695,13 @@ public class HeadAPI{
 	 * @return The result head ItemStack
 	 */
 	public ItemStack getHead(byte[] code){
-		String strCode = new String(code);
+		final String strCode = new String(code);
 		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 		head = MiscUtils.setDisplayName(head, pl.getAPI().getFullHeadNameFromKey(/*textureKey=*/"UNKNOWN|CUSTOM", /*customName=*/strCode));
-		GameProfile profile = new GameProfile(UUID.nameUUIDFromBytes(code), /*name=*/strCode.substring(0, Math.min(strCode.length(), MAX_NAME_LENGTH)));
-		MiscUtils.getProperties(profile).put("textures", new Property("textures", strCode));
-		if(MAKE_UNSTACKABLE) MiscUtils.getProperties(profile).put(DH_RANDOM_UUID, new Property(DH_RANDOM_UUID, UUID.randomUUID().toString()));
+		final String name = strCode.substring(0, Math.min(strCode.length(), MAX_NAME_LENGTH));
+		final YetAnotherProfile profile = new YetAnotherProfile(UUID.nameUUIDFromBytes(code), name);
+		profile.properties().put("textures", new Property("textures", strCode));
+		if(MAKE_UNSTACKABLE) profile.properties().put(DH_RANDOM_UUID, new Property(DH_RANDOM_UUID, UUID.randomUUID().toString()));
 		if(SAVE_TYPE_IN_LORE){
 			head = MiscUtils.setLore(head, new RawTextComponent(
 					CODE_PREFIX + (strCode.length() > 18 ? strCode.substring(0, 16)+"..." : strCode),
@@ -709,7 +709,7 @@ public class HeadAPI{
 					/*color=*/"dark_gray", /*formats=*/Collections.singletonMap(Format.ITALIC, false)));
 		}
 		SkullMeta meta = (SkullMeta)head.getItemMeta();
-		HeadUtils.setGameProfile(meta, profile);
+		profile.set(meta);
 		head.setItemMeta(meta);
 		return head;
 	}
@@ -754,7 +754,7 @@ public class HeadAPI{
 	 * @param profile The profile information to create a head
 	 * @return The result head ItemStack
 	 */
-	public ItemStack getHead(GameProfile profile/*, boolean saveTypeInLore, boolean unstackable*/){
+	public ItemStack getHead(YetAnotherProfile profile/*, boolean saveTypeInLore, boolean unstackable*/){
 		if(profile == null) return null;
 		//-------------------- Handle Entities with textureKey
 		final String textureKey = getTextureKey(profile);
@@ -764,8 +764,8 @@ public class HeadAPI{
 		}
 
 		// Create dummy item for HDB and players section
-		if(MAKE_UNSTACKABLE && !MiscUtils.getProperties(profile).containsKey(DH_RANDOM_UUID)){
-			MiscUtils.getProperties(profile).put(DH_RANDOM_UUID, new Property(DH_RANDOM_UUID, UUID.randomUUID().toString()));
+		if(MAKE_UNSTACKABLE && !profile.properties().containsKey(DH_RANDOM_UUID)){
+			profile.properties().put(DH_RANDOM_UUID, new Property(DH_RANDOM_UUID, UUID.randomUUID().toString()));
 		}
 		ItemStack head = HeadUtils.makeCustomHead(profile, /*setOwner=*/!LOCK_PLAYER_SKINS);
 
@@ -775,37 +775,36 @@ public class HeadAPI{
 			if(id != null && hdbAPI.isHead(id)) return hdb_getItemHead_wrapper(id);
 		}
 		//-------------------- Handle players
-		final boolean updateSkin = !MiscUtils.getProperties(profile).containsKey("textures") || !LOCK_PLAYER_SKINS;
-		final boolean hasProfileID = MiscUtils.getId(profile) != null;
+		final boolean updateSkin = !profile.properties().containsKey("textures") || !LOCK_PLAYER_SKINS;
+		final boolean hasProfileID = profile.id() != null;
 		final boolean hasPlayedBefore, realGameProfile;
 		if(!hasProfileID) hasPlayedBefore = realGameProfile = false;
 		else{
-			hasPlayedBefore = pl.getServer().getOfflinePlayer(MiscUtils.getId(profile)).hasPlayedBefore();
+			hasPlayedBefore = pl.getServer().getOfflinePlayer(profile.id()).hasPlayedBefore();
 			final String profileName;
-			final GameProfile freshProfile = MiscUtils.getGameProfile(MiscUtils.getId(profile).toString(), updateSkin, ASYNC_PROFILE_REQUESTS ? pl : null);
-			if(freshProfile == null){profileName = MiscUtils.getName(profile); realGameProfile = false;}
+			final YetAnotherProfile freshProfile = MiscUtils.getProfile(profile.id().toString(), updateSkin, ASYNC_PROFILE_REQUESTS ? pl : null);
+			if(freshProfile == null){profileName = profile.name(); realGameProfile = false;}
 			else{
 				// If we've reached this point, we have confirmed this is a REAL player head
 				realGameProfile = true;
 				if(updateSkin) profile = freshProfile;
-				profileName = MiscUtils.getName(freshProfile);
+				profileName = freshProfile.name();
 
 				if(LOCK_PLAYER_SKINS){
-					Collection<Property> textures = MiscUtils.getProperties(profile).get("textures");
+					Collection<Property> textures = profile.properties().get("textures");
 					if(textures == null || textures.isEmpty() || textures.size() > 1){
 						pl.getLogger().warning("Unable to find skin for player: "+profileName);
 						pl.getLogger().warning("num textures: "+textures.size());
 						head = new ItemStack(Material.PLAYER_HEAD);
 						final SkullMeta meta = (SkullMeta) head.getItemMeta();
-						meta.setOwningPlayer(Bukkit.getOfflinePlayer(MiscUtils.getId(profile)));
+						meta.setOwningPlayer(Bukkit.getOfflinePlayer(profile.id()));
 						head.setItemMeta(meta);
 					}
 					else{
 						final String minCode0 = minimizeTextureCode(MiscUtils.getPropertyValue(textures.iterator().next()));
 						//TODO: Decide which properties to clear and which to keep
-						MiscUtils.getProperties(profile).clear();
-//						MiscUtils.getProperties(profile).get("textures").clear();
-						MiscUtils.getProperties(profile).put("textures", new Property("textures", minCode0));
+						profile.properties().clear();
+						profile.properties().put("textures", new Property("textures", minCode0));
 						head = HeadUtils.makeCustomHead(profile, /*setOwner=*/false);
 					}
 				}
@@ -826,19 +825,19 @@ public class HeadAPI{
 			if(hasPlayedBefore || realGameProfile) return head;
 		}
 		//-------------------- Handle raw textures
-		if(/*!hasPlayedBefore && !realGameProfile && */MiscUtils.getProperties(profile).containsKey("textures")){
-			final Collection<Property> textures = MiscUtils.getProperties(profile).get("textures");
+		if(/*!hasPlayedBefore && !realGameProfile && */profile.properties().containsKey("textures")){
+			final Collection<Property> textures = profile.properties().get("textures");
 			if(textures != null && !textures.isEmpty()){
-				if(textures.size() > 1) pl.getLogger().warning("Multiple textures in getHead() request: "+MiscUtils.getName(profile));
+				if(textures.size() > 1) pl.getLogger().warning("Multiple textures in getHead() request: "+profile.name());
 				final String code0 = MiscUtils.getPropertyValue(textures.iterator().next());
 				// Confirm (as best we can) that this is a DropHeads Custom Texture Head
-				if(UUID.nameUUIDFromBytes(code0.getBytes()).equals(MiscUtils.getId(profile)) || MiscUtils.getProperties(profile).containsKey(MiscUtils.DH_LORE_KEY)){
+				if(UUID.nameUUIDFromBytes(code0.getBytes()).equals(profile.id()) || profile.properties().containsKey(MiscUtils.DH_LORE_KEY)){
 					return getHead(code0.getBytes());
 				}
 			}
 		}
 		// Reachable for custom heads created outside DropHeads (and HeadDatabase), or occasionally Player heads when async lookup is enabled
-		/*if(DEBUG_MODE)*/pl.getLogger().fine("Unrecognized head profile [name:"+MiscUtils.getName(profile)+",id:"+MiscUtils.getId(profile)+"]");
+		/*if(DEBUG_MODE)*/pl.getLogger().fine("Unrecognized head profile [name:"+profile.name()+",id:"+profile.id()+"]");
 		return head;
 	}
 
@@ -848,7 +847,7 @@ public class HeadAPI{
 	 */
 	public ItemStack getHead(Entity entity/*, boolean saveTypeInLore, boolean unstackable*/){
 		if(entity.getType() == EntityType.PLAYER){
-			return getHead(new GameProfile(entity.getUniqueId(), entity.getName()));
+			return getHead(new YetAnotherProfile(entity.getUniqueId(), entity.getName()));
 		}
 		String textureKey = TextureKeyLookup.getTextureKey(entity);
 		if(!SADDLES_ENABLED && textureKey.endsWith("|SADDLED")) textureKey = textureKey.substring(0, textureKey.length()-8);

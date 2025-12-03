@@ -8,12 +8,12 @@ import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
-import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.MiscUtils;
 import net.evmodder.EvLib.bukkit.HeadUtils;
 import net.evmodder.EvLib.bukkit.TellrawUtils;
 import net.evmodder.EvLib.bukkit.TellrawUtils.Component;
+import net.evmodder.EvLib.bukkit.YetAnotherProfile;
 
 public class ItemDropListener implements Listener{
 	private final DropHeads pl;
@@ -36,13 +36,13 @@ public class ItemDropListener implements Listener{
 		return true;
 	}
 
-	private boolean hasCustomName(ItemMeta meta, GameProfile profile){
+	private boolean hasCustomName(ItemMeta meta, YetAnotherProfile profile){
 		if(!meta.hasDisplayName()) return false;
-		if(MiscUtils.getName(profile) == null) return true; // why return true?
+		if(profile.name() == null) return true; // why return true?
 
 		String textureKey = pl.getAPI().getTextureKey(profile);
 		final String customName;
-		if(textureKey == null){textureKey = "PLAYER"; customName = MiscUtils.getName(profile);}
+		if(textureKey == null){textureKey = "PLAYER"; customName = profile.name();}
 		else customName = "";//todo?
 
 		final String expectedName = ChatColor.stripColor(pl.getInternalAPI().getFullHeadNameFromKey(textureKey, customName).toPlainText());
@@ -57,19 +57,18 @@ public class ItemDropListener implements Listener{
 
 		ItemStack originalItem = evt.getEntity().getItemStack();
 		final SkullMeta originalMeta = (SkullMeta) originalItem.getItemMeta();
-		final GameProfile originalProfile = HeadUtils.getGameProfile(originalMeta);
+		final YetAnotherProfile originalProfile = YetAnotherProfile.fromSkullMeta(originalMeta);
 		if(originalProfile == null) return;
 		final ItemStack refreshedItem = pl.getAPI().getHead(originalProfile); // Gets a refreshed texture by textureKey (profile name)
 		if(refreshedItem == null) return;
 		//if(FORCE_TEXTURE_UPDATE){
-			final GameProfile refreshedProfile = HeadUtils.getGameProfile((SkullMeta)refreshedItem.getItemMeta());
-			HeadUtils.setGameProfile(originalMeta, refreshedProfile); // This refreshes the texture
+			YetAnotherProfile.fromSkullMeta((SkullMeta)refreshedItem.getItemMeta()).set(originalMeta); // This refreshes the texture
+			originalItem.setItemMeta(originalMeta);
 		//}
 		if(TYPE_UPDATE && originalItem.getType() != refreshedItem.getType()) originalItem.setType(refreshedItem.getType());
 
 //		if(!originalMeta.hasDisplayName() || FORCE_NAME_UPDATE) originalMeta.setDisplayName(refreshedItem.getItemMeta().getDisplayName());
 //		if(!hasCustomLore(originalMeta) || FORCE_LORE_UPDATE) originalMeta.setLore(refreshedItem.getItemMeta().getLore());
-		originalItem.setItemMeta(originalMeta);
 
 		if(!hasCustomName(originalMeta, originalProfile) || FORCE_NAME_UPDATE){
 			if(refreshedItem.getItemMeta().hasDisplayName()){

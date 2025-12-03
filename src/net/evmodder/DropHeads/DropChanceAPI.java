@@ -63,7 +63,6 @@ import net.evmodder.DropHeads.listeners.DeathMessagePacketIntercepter;
 import net.evmodder.DropHeads.listeners.EntityDeathListener;
 import net.evmodder.EvLib.bukkit.EvUtils;
 import net.evmodder.EvLib.FileIO;
-import net.evmodder.EvLib.bukkit.HeadUtils;
 import net.evmodder.EvLib.bukkit.ReflectionUtils;
 import net.evmodder.EvLib.bukkit.ReflectionUtils.RefClass;
 import net.evmodder.EvLib.bukkit.ReflectionUtils.RefMethod;
@@ -71,6 +70,7 @@ import net.evmodder.EvLib.bukkit.TellrawUtils;
 import net.evmodder.EvLib.TextUtils;
 import net.evmodder.EvLib.bukkit.TellrawUtils.Component;
 import net.evmodder.EvLib.bukkit.TellrawUtils.ListComponent;
+import net.evmodder.EvLib.bukkit.YetAnotherProfile;
 
 /** Public API for head drop chance logic loaded from DropHeads configs.
  * Warning: Functions may change or disappear in future releases
@@ -500,7 +500,7 @@ public final class DropChanceAPI{
 						((Skull)state).setRotation(blockRotation);
 					}
 					if(headItem.getType() == Material.PLAYER_HEAD){
-						HeadUtils.setGameProfile((Skull)state, HeadUtils.getGameProfile((SkullMeta)headItem.getItemMeta()));
+						YetAnotherProfile.fromSkullMeta((SkullMeta)headItem.getItemMeta()).set((Skull)state);
 					}
 					if(mode != DropMode.PLACE){
 						Entity entityToCheck = (killer == null ||

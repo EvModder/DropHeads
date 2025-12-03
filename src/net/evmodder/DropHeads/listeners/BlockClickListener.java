@@ -19,7 +19,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import net.evmodder.DropHeads.DropHeads;
@@ -34,6 +33,7 @@ import net.evmodder.EvLib.bukkit.TellrawUtils.ClickEvent;
 import net.evmodder.EvLib.bukkit.TellrawUtils.Component;
 import net.evmodder.EvLib.bukkit.TellrawUtils.ListComponent;
 import net.evmodder.EvLib.bukkit.TellrawUtils.TranslationComponent;
+import net.evmodder.EvLib.bukkit.YetAnotherProfile;
 
 public class BlockClickListener implements Listener{
 	private final DropHeads pl;
@@ -69,13 +69,13 @@ public class BlockClickListener implements Listener{
 		}
 	}
 
-	private GameProfile stripCustomLoreAndNamespace(GameProfile profile){//TODO: delete soon(tm) since lore isn't stored in profile name since v3.9.4
-		if(profile != null && MiscUtils.getName(profile) != null){
-			String name = MiscUtils.getName(profile);
+	private YetAnotherProfile stripCustomLoreAndNamespace(YetAnotherProfile profile){//TODO: delete soon(tm) since lore isn't stored in profile name since v3.9.4
+		if(profile != null && profile.name() != null){
+			String name = profile.name();
 			int startIdx = name.startsWith(MiscUtils.TXT_KEY_PROFILE_NAME_PREFIX) ? MiscUtils.TXT_KEY_PROFILE_NAME_PREFIX.length() : 0;
 			int endIdx = name.indexOf('>');
 			name = name.substring(startIdx, endIdx == -1 ? name.length() : endIdx);
-			if(!name.equals(MiscUtils.getName(profile))) return new GameProfile(MiscUtils.getId(profile), name);
+			if(!name.equals(profile.name())) return new YetAnotherProfile(profile.id(), name);
 		}
 		return profile;
 	}
@@ -89,9 +89,9 @@ public class BlockClickListener implements Listener{
 		public Component profileName;
 		public HeadType headType;
 	}
-	private HeadNameData getHeadNameData(GameProfile profile){
+	private HeadNameData getHeadNameData(YetAnotherProfile profile){
 		HeadNameData data = new HeadNameData();
-		GameProfile tempProfile = null;
+		YetAnotherProfile tempProfile = null;
 		if(profile == null){
 			data.textureKey = EntityType.PLAYER.name();  // This is considered a mob head
 			data.headType = HeadUtils.getDroppedHeadType(EntityType.PLAYER);  // "Head"
@@ -116,42 +116,43 @@ public class BlockClickListener implements Listener{
 			try{data.headType = HeadUtils.getDroppedHeadType(EntityType.valueOf(eTypeName));}
 			catch(IllegalArgumentException ex){data.headType = HeadUtils.getDroppedHeadType(EntityType.UNKNOWN);}  // "Head"
 			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(data.textureKey);
-			data.profileName = MiscUtils.getName(profile) != null ? new RawTextComponent(MiscUtils.getName(profile)) : null;//data.entityTypeNames[0];
+			data.profileName = profile.name() != null ? new RawTextComponent(profile.name()) : null;//data.entityTypeNames[0];
 		}
 		//player
-		else if(profile.getId() != null && (data.player=pl.getServer().getOfflinePlayer(MiscUtils.getId(profile))) != null
+		else if(profile.id() != null && (data.player=pl.getServer().getOfflinePlayer(profile.id())) != null
 				&& (data.player.hasPlayedBefore()
-					|| (tempProfile=MiscUtils.getGameProfile(MiscUtils.getId(profile).toString(), /*fetchSkin=*/false, ASYNC_PROFILE_REQUESTS ? pl : null)) != null)
+					|| (tempProfile=MiscUtils.getProfile(profile.id().toString(), /*fetchSkin=*/false, ASYNC_PROFILE_REQUESTS ? pl : null)) != null)
 		){
 			data.headType = HeadUtils.getDroppedHeadType(EntityType.PLAYER);  // "Head"
 			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(EntityType.PLAYER.name());  // "Player"
-			data.profileName = new RawTextComponent(UPDATE_PLAYER_HEADS || MiscUtils.getName(profile) == null 
-					? tempProfile == null ? data.player.getName() : MiscUtils.getName(tempProfile)
-					: MiscUtils.getName(profile));
+			data.profileName = new RawTextComponent(UPDATE_PLAYER_HEADS || profile.name() == null 
+					? tempProfile == null ? data.player.getName() : tempProfile.name()
+					: profile.name());
 		}
 		//unknown
 		else{
 			data.headType = HeadUtils.getDroppedHeadType(EntityType.UNKNOWN);  // "Head"
 			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(EntityType.UNKNOWN.name());  // "Unknown"
-			data.profileName = MiscUtils.getName(profile) != null ? new RawTextComponent(MiscUtils.getName(profile)) : null;//data.entityTypeNames[0];
+			data.profileName = profile.name() != null ? new RawTextComponent(profile.name()) : null;//data.entityTypeNames[0];
 		}
 		if(data.hdbId != null && !hdbAPI.isHead(data.hdbId)) data.hdbId = null;
 		if(data.player != null && data.player.getName() == null) data.player = null;
 		return data;
 	}
 	@SuppressWarnings("deprecation")
-	private HeadNameData getHeadNameData(BlockState skull){
-		if(HeadUtils.isPlayerHead(skull.getType())){
-			HeadNameData headData = getHeadNameData(HeadUtils.getGameProfile((Skull)skull));
-			if(((Skull)skull).hasOwner() && headData.player == null){
-				OfflinePlayer player = ((Skull)skull).getOwningPlayer();
-				GameProfile profile = MiscUtils.getGameProfile(player.getUniqueId().toString(), /*fetchSkin=*/false, ASYNC_PROFILE_REQUESTS ? pl : null);
+	private HeadNameData getHeadNameData(final BlockState blockState){
+		if(HeadUtils.isPlayerHead(blockState.getType())){
+			final Skull skull = (Skull)blockState;
+			HeadNameData headData = getHeadNameData(YetAnotherProfile.fromSkull(skull));
+			if(skull.hasOwner() && headData.player == null){
+				OfflinePlayer player = skull.getOwningPlayer();
+				YetAnotherProfile profile = MiscUtils.getProfile(player.getUniqueId().toString(), /*fetchSkin=*/false, ASYNC_PROFILE_REQUESTS ? pl : null);
 				if(player.hasPlayedBefore() || profile != null){
 					headData.player = player;
 					final String headName;
 					if(player.getName() != null) headName = player.getName();
-					else if(profile != null && MiscUtils.getName(profile) != null && !MiscUtils.getName(profile).isEmpty()) headName = MiscUtils.getName(profile);
-					else if(((Skull)skull).getOwner() != null) headName = ((Skull)skull).getOwner();
+					else if(profile != null && profile.name() != null && !profile.name().isEmpty()) headName = profile.name();
+					else if(skull.getOwner() != null) headName = skull.getOwner();
 					else headName = null;// = EntityType.UNKNOWN.name();
 					if(headName != null) headData.profileName = new RawTextComponent(headName);
 				}
@@ -159,7 +160,7 @@ public class BlockClickListener implements Listener{
 			return headData;
 		}
 		//else: creeper, zombie, dragon, (wither)skeleton
-		EntityType entityType = HeadUtils.getEntityFromHead(skull.getType());
+		EntityType entityType = HeadUtils.getEntityFromHead(blockState.getType());
 		HeadNameData data = new HeadNameData();
 		data.textureKey = entityType.name();
 		data.headType = HeadUtils.getDroppedHeadType(entityType);
@@ -192,7 +193,7 @@ public class BlockClickListener implements Listener{
 				&& evt.getPlayer().getInventory().getItemInMainHand() != null
 				&& evt.getPlayer().getInventory().getItemInMainHand().getType() == Material.IRON_INGOT){
 			final Skull skull = (Skull) evt.getClickedBlock().getState();
-			final String textureKey = pl.getAPI().getTextureKey(HeadUtils.getGameProfile(skull));
+			final String textureKey = pl.getAPI().getTextureKey(YetAnotherProfile.fromSkull(skull));
 			if(textureKey != null && textureKey.startsWith("IRON_GOLEM|")){
 				ItemStack newHeadItem = null;
 				if(textureKey.contains("|HIGH_CRACKINESS")){
@@ -215,7 +216,7 @@ public class BlockClickListener implements Listener{
 						return;
 					}
 
-					HeadUtils.setGameProfile(skull, HeadUtils.getGameProfile((SkullMeta)newHeadItem.getItemMeta()));
+					YetAnotherProfile.fromSkullMeta((SkullMeta)newHeadItem.getItemMeta()).set(skull);
 					skull.update(/*force=*/true);
 					if(evt.getPlayer().getGameMode() != GameMode.CREATIVE){
 						int newIngotAmt = evt.getPlayer().getInventory().getItemInMainHand().getAmount() - 1;
@@ -264,9 +265,9 @@ public class BlockClickListener implements Listener{
 		if(HEAD_DISPLAY.contains("${TEXTURE}") || HEAD_DISPLAY.contains("${BASE64}") || HEAD_DISPLAY.contains("${URL}")){
 			String code0 = "";
 			if(isPlayerHead){
-				GameProfile profile = HeadUtils.getGameProfile((Skull)evt.getClickedBlock().getState());
-				Collection<Property> textures = MiscUtils.getProperties(profile).get("textures");
-				if(textures != null && !textures.isEmpty()) code0 = MiscUtils.getPropertyValue(MiscUtils.getProperties(profile).get("textures").iterator().next());
+				YetAnotherProfile profile = YetAnotherProfile.fromSkull((Skull)evt.getClickedBlock().getState());
+				Collection<Property> textures = profile.properties().get("textures");
+				if(textures != null && !textures.isEmpty()) code0 = MiscUtils.getPropertyValue(textures.iterator().next());
 			}
 			blob.replaceRawTextWithComponent("${TEXTURE}", new RawTextComponent(code0));
 			blob.replaceRawTextWithComponent("${BASE64}", new RawTextComponent(code0));

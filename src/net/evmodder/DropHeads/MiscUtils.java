@@ -27,7 +27,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
-import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
 import javax.annotation.Nonnull;
@@ -40,8 +39,8 @@ import net.evmodder.EvLib.bukkit.ReflectionUtils;
 import net.evmodder.EvLib.bukkit.TellrawUtils;
 import net.evmodder.EvLib.TextUtils;
 import net.evmodder.EvLib.bukkit.WebUtils;
+import net.evmodder.EvLib.bukkit.YetAnotherProfile;
 import net.evmodder.EvLib.bukkit.ReflectionUtils.RefClass;
-import net.evmodder.EvLib.bukkit.ReflectionUtils.RefConstructor;
 import net.evmodder.EvLib.bukkit.ReflectionUtils.RefField;
 import net.evmodder.EvLib.bukkit.ReflectionUtils.RefMethod;
 import net.evmodder.EvLib.bukkit.TellrawUtils.ClickEvent;
@@ -516,50 +515,33 @@ public final class MiscUtils{
 		return getClosestBlockFace(vec, possibleHeadRotations).getOppositeFace();//TODO: why is it opposite?
 	}
 
-	private static final RefClass craftPlayerClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftPlayer");
-	private static final RefMethod playerGetProfileMethod = craftPlayerClazz.getMethod("getProfile");
-	private static final GameProfile getGameProfile(Player player){return (GameProfile)playerGetProfileMethod.of(player).call();}
-
 	private static final RefMethod propertyGetValueMethod = ReflectionUtils.getRefClass(Property.class).findMethodByName("value", "getValue");
 	public static final String getPropertyValue(Property p){return (String)propertyGetValueMethod.of(p).call();}
 
-	private static final RefMethod gameProfileGetName = ReflectionUtils.getRefClass(GameProfile.class).findMethodByName("name", "getName");
-	public static final String getName(GameProfile profile){return (String)gameProfileGetName.of(profile).call();}
-
-	private static final RefMethod gameProfileGetId = ReflectionUtils.getRefClass(GameProfile.class).findMethodByName("id", "getId");
-	public static final UUID getId(GameProfile profile){return (UUID)gameProfileGetId.of(profile).call();}
-
-	private static final RefMethod gameProfileGetProperties = ReflectionUtils.getRefClass(GameProfile.class).findMethodByName("properties", "getProperties");
-	public static final PropertyMap getProperties(GameProfile profile){return (PropertyMap)gameProfileGetProperties.of(profile).call();}
-
-	private static final RefConstructor newGameProfile = ReflectionUtils.getRefClass(GameProfile.class).getConstructor(UUID.class, String.class, PropertyMap.class);
-	public static final GameProfile newGameProfile(UUID id, String name, PropertyMap properties){return (GameProfile)newGameProfile.create(id, name, properties);}
-
 	@SuppressWarnings("deprecation")
-	public static final GameProfile getGameProfile(String nameOrUUID, boolean fetchSkin, Plugin nullForSync){
+	public static final YetAnotherProfile getProfile(String nameOrUUID, boolean fetchSkin, Plugin nullForSync){
 		Player player;
 		try{player = Bukkit.getServer().getPlayer(UUID.fromString(nameOrUUID));}
 		catch(java.lang.IllegalArgumentException e){player = null;/*thrown by UUID.fromString*/}
 		if(player == null) player = Bukkit.getServer().getPlayer(nameOrUUID);
 		if(player != null){
-			final GameProfile profile;
-			if(!fetchSkin) profile = new GameProfile(player.getUniqueId(), player.getName());
+			YetAnotherProfile profile = new YetAnotherProfile(player.getUniqueId(), player.getName());
+			if(!fetchSkin) return profile;
 			else{
-				final GameProfile rawProfile = getGameProfile(player);
-				final PropertyMap properties = getProperties(rawProfile);
-				final Collection<Property> textures = properties == null ? null : properties.get("textures");
-				if(textures == null || textures.isEmpty()) profile = new GameProfile(player.getUniqueId(), player.getName());
+				final YetAnotherProfile rawProfile = YetAnotherProfile.fromPlayer(player);
+				final Collection<Property> textures = rawProfile.properties().get("textures");
+				if(textures == null || textures.isEmpty()) profile = new YetAnotherProfile(player.getUniqueId(), player.getName());
 				else{
 					final String code0 = getPropertyValue(textures.iterator().next());
 					PropertyMap pm = new PropertyMap();
 					pm.put("textures", new Property("textures", code0));
-					profile = newGameProfile(player.getUniqueId(), player.getName(), pm);
+					profile = new YetAnotherProfile(player.getUniqueId(), player.getName(), pm);
 				}
 			}
-			WebUtils.addGameProfileToCache(nameOrUUID, profile);
+			WebUtils.addProfileToCache(nameOrUUID, profile);
 			return profile;
 		}
-		return WebUtils.getGameProfile(nameOrUUID, fetchSkin, nullForSync);
+		return WebUtils.getProfile(nameOrUUID, fetchSkin, nullForSync);
 	}
 
 // not currently used

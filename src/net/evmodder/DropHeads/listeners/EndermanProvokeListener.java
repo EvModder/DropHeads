@@ -9,9 +9,9 @@ import org.bukkit.event.entity.EntityTargetEvent.TargetReason;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.EvLib.bukkit.HeadUtils;
+import net.evmodder.EvLib.bukkit.YetAnotherProfile;
 
 public class EndermanProvokeListener implements Listener{
 	private final DropHeads pl;
@@ -34,7 +34,7 @@ public class EndermanProvokeListener implements Listener{
 	private EntityType getEntityTypeFromHead(ItemStack head){
 		if(head == null || !HeadUtils.isHead(head.getType())) return null;
 		if(!HeadUtils.isPlayerHead(head.getType())) return HeadUtils.getEntityFromHead(head.getType());
-		final GameProfile profile = HeadUtils.getGameProfile((SkullMeta)head.getItemMeta());
+		final YetAnotherProfile profile = YetAnotherProfile.fromSkullMeta((SkullMeta)head.getItemMeta());
 		if(profile != null){
 			final String textureKey = pl.getAPI().getTextureKey(profile);
 			final int idx = textureKey.indexOf('|');

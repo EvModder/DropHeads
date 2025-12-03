@@ -10,10 +10,10 @@ import org.bukkit.block.Skull;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.NotePlayEvent;
-import com.mojang.authlib.GameProfile;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.MiscUtils;
 import net.evmodder.EvLib.bukkit.HeadUtils;
+import net.evmodder.EvLib.bukkit.YetAnotherProfile;
 
 public class NoteblockPlayListener implements Listener{
 	private final HashMap<String, Sound> nbSounds;
@@ -97,8 +97,7 @@ public class NoteblockPlayListener implements Listener{
 
 		String textureKey;
 		if(skull.getType() == Material.PLAYER_HEAD){
-			final GameProfile profile = HeadUtils.getGameProfile(skull);
-			textureKey = DropHeads.getPlugin().getAPI().getTextureKey(profile);
+			textureKey = DropHeads.getPlugin().getAPI().getTextureKey(YetAnotherProfile.fromSkull(skull));
 			if(textureKey == null) return;
 		}
 		else textureKey = HeadUtils.getEntityFromHead(skull.getType()).name();

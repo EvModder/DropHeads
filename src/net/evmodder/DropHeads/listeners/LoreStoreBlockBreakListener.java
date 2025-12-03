@@ -12,13 +12,13 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
-import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.MiscUtils;
 import net.evmodder.EvLib.bukkit.HeadUtils;
 import net.evmodder.EvLib.bukkit.TellrawUtils;
 import net.evmodder.EvLib.bukkit.TellrawUtils.Component;
+import net.evmodder.EvLib.bukkit.YetAnotherProfile;
 
 public class LoreStoreBlockBreakListener implements Listener{
 	// This listener is only registered when 'save-custom-lore' = true
@@ -29,28 +29,27 @@ public class LoreStoreBlockBreakListener implements Listener{
 		if(!HeadUtils.isPlayerHead(block.getType())) return null;
 
 		final Skull skull = (Skull)block.getState();
-		final GameProfile profile = HeadUtils.getGameProfile(skull);
+		final YetAnotherProfile profile = YetAnotherProfile.fromSkull(skull);
 		if(profile == null) return null;
 
 		List<String> lore = null;
-		GameProfile profileWithoutLore = null;
-		if(MiscUtils.getProperties(profile) != null && MiscUtils.getProperties(profile).containsKey(MiscUtils.DH_LORE_KEY)){
-			final Collection<Property> props = MiscUtils.getProperties(profile).get(MiscUtils.DH_LORE_KEY);
+		YetAnotherProfile profileWithoutLore = null;
+		if(profile.properties() != null && profile.properties().containsKey(MiscUtils.DH_LORE_KEY)){
+			final Collection<Property> props = profile.properties().get(MiscUtils.DH_LORE_KEY);
 			if(props != null && !props.isEmpty()){
 				if(props.size() != 1) DropHeads.getPlugin().getLogger().warning("Multiple lore keys on a single head profile in getItemWithLore()");
 				lore = Arrays.asList(MiscUtils.getPropertyValue(props.iterator().next()).split("\\n"));
-				profileWithoutLore = new GameProfile(MiscUtils.getId(profile), MiscUtils.getName(profile));
-				MiscUtils.getProperties(profileWithoutLore).putAll(MiscUtils.getProperties(profile));
-				MiscUtils.getProperties(profileWithoutLore).removeAll(MiscUtils.DH_LORE_KEY);
+				profileWithoutLore = new YetAnotherProfile(profile.id(), profile.name());
+				profileWithoutLore.properties().putAll(profile.properties());
+				profileWithoutLore.properties().removeAll(MiscUtils.DH_LORE_KEY);
 			}
 		}
-		if(lore == null){
-			if(MiscUtils.getName(profile) == null) return null;
-			final int loreStart = MiscUtils.getName(profile).indexOf('>');
+		if(lore == null){//TODO: remove this at some point in the future
+			if(profile.name() == null) return null;
+			final int loreStart = profile.name().indexOf('>');
 			if(loreStart == -1) return null;
-			lore = Arrays.asList(MiscUtils.getName(profile).substring(loreStart + 1).split("\\n", -1));
-			profileWithoutLore = new GameProfile(MiscUtils.getId(profile), MiscUtils.getName(profile).substring(0, loreStart));
-			MiscUtils.getProperties(profileWithoutLore).putAll(MiscUtils.getProperties(profile));
+			lore = Arrays.asList(profile.name().substring(loreStart + 1).split("\\n", -1));
+			profileWithoutLore = new YetAnotherProfile(profile.id(), profile.name().substring(0, loreStart), profile.properties());
 		}
 		ItemStack headItem = DropHeads.getPlugin().getAPI().getHead(profileWithoutLore);
 		if(lore.size() > 1 || (lore.size() == 1 && !lore.get(0).isEmpty())){
