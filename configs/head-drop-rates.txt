@@ -120,4 +120,5 @@ OAK_CHEST_BOAT: 0
 PALE_OAK_CHEST_BOAT: 0
 SPRUCE_CHEST_BOAT: 0
 
+
 # You can add custom mobs to this list, but it will only work if an EntityType is defined
