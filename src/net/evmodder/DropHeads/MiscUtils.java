@@ -30,8 +30,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimap;
 import com.mojang.authlib.properties.Property;
-import com.mojang.authlib.properties.PropertyMap;
 import javax.annotation.Nonnull;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.bukkit.NBTTagUtils;
@@ -537,11 +538,11 @@ public final class MiscUtils{
 			if(!fetchSkin) return profile;
 			else{
 				final YetAnotherProfile rawProfile = YetAnotherProfile.fromPlayer(player);
-				final Collection<Property> textures = rawProfile.properties().get("textures");
+				final Collection<Property> textures = rawProfile.properties() == null ? null : rawProfile.properties().get("textures");
 				if(textures == null || textures.isEmpty()) profile = new YetAnotherProfile(player.getUniqueId(), player.getName());
 				else{
 					final String code0 = getPropertyValue(textures.iterator().next());
-					PropertyMap pm = new PropertyMap();
+					Multimap<String, Property> pm = LinkedListMultimap.create();
 					pm.put("textures", new Property("textures", code0));
 					profile = new YetAnotherProfile(player.getUniqueId(), player.getName(), pm);
 				}

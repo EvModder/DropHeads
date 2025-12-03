@@ -53,7 +53,10 @@ public class DeathMessagePacketIntercepter implements Listener{
 
 		Field field = null;
 		Method method = null, kyoriMethod = null; Object kyoriObj = null;
-		try{field = ReflectionUtils.findField(outboundChatPacketClazz, chatBaseCompClazz);}
+		try{
+			field = ReflectionUtils.findField(outboundChatPacketClazz, chatBaseCompClazz);
+			field.setAccessible(true);
+		}
 		catch(RuntimeException e1){
 			try{
 				method = ReflectionUtils.getMethod(outboundChatPacketClazz, "adventure$content");

@@ -33,8 +33,9 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimap;
 import com.mojang.authlib.properties.Property;
-import com.mojang.authlib.properties.PropertyMap;
 import me.arcaniax.hdb.api.DatabaseLoadEvent;
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import net.evmodder.DropHeads.datatypes.NoteblockMode;
@@ -388,7 +389,7 @@ public class HeadAPI{
 	 */
 	public String getTextureKey(YetAnotherProfile profile){
 		if(profile == null) return null;
-		if(profile.properties().containsKey(DH_TEXTURE_KEY)){
+		if(profile.properties() != null && profile.properties().containsKey(DH_TEXTURE_KEY)){
 			final Collection<Property> props = profile.properties().get(DH_TEXTURE_KEY);
 			if(props != null && !props.isEmpty()){
 				if(props.size() != 1) pl.getLogger().warning("Multiple texture keys on a single head profile in getTextureKey()");
@@ -402,7 +403,7 @@ public class HeadAPI{
 			name = name.substring(startIdx, endIdx == -1 ? name.length() : endIdx);
 			return trimTextureKeyUntilFoundOrNull(name);
 		}
-		if(ASSIGN_KEY_FROM_TEXTURE && profile.properties().containsKey("textures")){
+		if(ASSIGN_KEY_FROM_TEXTURE && profile.properties() != null && profile.properties().containsKey("textures")){
 			final Collection<Property> textures = profile.properties().get("textures");
 			if(textures != null && textures.size() == 1){
 				final String code = MiscUtils.getPropertyValue(textures.iterator().next());
@@ -632,13 +633,13 @@ public class HeadAPI{
 					/*color=*/"dark_gray", /*formats=*/Collections.singletonMap(Format.ITALIC, false)));
 		}
 		UUID uuid = UUID.nameUUIDFromBytes(textureKey.getBytes());// Stable UUID for this textureKey
-		// Initialize GameProfile with UUID and name
-		PropertyMap pm = new PropertyMap();
+
+		final Multimap<String, Property> pm = LinkedListMultimap.create();
 		pm.put("textures", new Property("textures", code));
 		pm.put(DH_TEXTURE_KEY, new Property(DH_TEXTURE_KEY, textureKey));
 		if(MAKE_UNSTACKABLE) pm.put(DH_RANDOM_UUID, new Property(DH_RANDOM_UUID, UUID.randomUUID().toString()));
 
-		SkullMeta meta = (SkullMeta) head.getItemMeta();
+		final SkullMeta meta = (SkullMeta) head.getItemMeta();
 		if(nbSounds != null){
 			Sound sound;
 			int endIdx;
@@ -665,7 +666,9 @@ public class HeadAPI{
 		SkullMeta meta = (SkullMeta)head.getItemMeta();
 		meta.setDisplayName(hdbHead.getItemMeta().getDisplayName());
 		if(MAKE_UNSTACKABLE){
-			profile.properties().put(DH_RANDOM_UUID, new Property(DH_RANDOM_UUID, UUID.randomUUID().toString()));
+			Multimap<String, Property> pm = profile.properties() != null ? profile.properties() : LinkedListMultimap.create();
+			pm.put(DH_RANDOM_UUID, new Property(DH_RANDOM_UUID, UUID.randomUUID().toString()));
+			profile = new YetAnotherProfile(profile.id(), profile.name(), pm);
 			profile.set(meta);
 		}
 		head.setItemMeta(meta);
@@ -698,16 +701,17 @@ public class HeadAPI{
 		final String strCode = new String(code);
 		ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 		head = MiscUtils.setDisplayName(head, pl.getAPI().getFullHeadNameFromKey(/*textureKey=*/"UNKNOWN|CUSTOM", /*customName=*/strCode));
-		final String name = strCode.substring(0, Math.min(strCode.length(), MAX_NAME_LENGTH));
-		final YetAnotherProfile profile = new YetAnotherProfile(UUID.nameUUIDFromBytes(code), name);
-		profile.properties().put("textures", new Property("textures", strCode));
-		if(MAKE_UNSTACKABLE) profile.properties().put(DH_RANDOM_UUID, new Property(DH_RANDOM_UUID, UUID.randomUUID().toString()));
+		Multimap<String, Property> pm = LinkedListMultimap.create();
+		pm.put("textures", new Property("textures", strCode));
+		if(MAKE_UNSTACKABLE) pm.put(DH_RANDOM_UUID, new Property(DH_RANDOM_UUID, UUID.randomUUID().toString()));
 		if(SAVE_TYPE_IN_LORE){
 			head = MiscUtils.setLore(head, new RawTextComponent(
 					CODE_PREFIX + (strCode.length() > 18 ? strCode.substring(0, 16)+"..." : strCode),
 					/*insert=*/null, /*click=*/null, /*hover=*/null,
 					/*color=*/"dark_gray", /*formats=*/Collections.singletonMap(Format.ITALIC, false)));
 		}
+		final String name = strCode.substring(0, Math.min(strCode.length(), MAX_NAME_LENGTH));
+		final YetAnotherProfile profile = new YetAnotherProfile(UUID.nameUUIDFromBytes(code), name, pm);
 		SkullMeta meta = (SkullMeta)head.getItemMeta();
 		profile.set(meta);
 		head.setItemMeta(meta);
@@ -775,7 +779,7 @@ public class HeadAPI{
 			if(id != null && hdbAPI.isHead(id)) return hdb_getItemHead_wrapper(id);
 		}
 		//-------------------- Handle players
-		final boolean updateSkin = !profile.properties().containsKey("textures") || !LOCK_PLAYER_SKINS;
+		final boolean updateSkin = profile.properties() == null || !profile.properties().containsKey("textures") || !LOCK_PLAYER_SKINS;
 		final boolean hasProfileID = profile.id() != null;
 		final boolean hasPlayedBefore, realGameProfile;
 		if(!hasProfileID) hasPlayedBefore = realGameProfile = false;
@@ -791,10 +795,10 @@ public class HeadAPI{
 				profileName = freshProfile.name();
 
 				if(LOCK_PLAYER_SKINS){
-					Collection<Property> textures = profile.properties().get("textures");
+					Collection<Property> textures = profile.properties() == null ? null : profile.properties().get("textures");
 					if(textures == null || textures.isEmpty() || textures.size() > 1){
 						pl.getLogger().warning("Unable to find skin for player: "+profileName);
-						pl.getLogger().warning("num textures: "+textures.size());
+						pl.getLogger().warning("num textures: "+(textures == null ? "null " : ""+textures.size()));
 						head = new ItemStack(Material.PLAYER_HEAD);
 						final SkullMeta meta = (SkullMeta) head.getItemMeta();
 						meta.setOwningPlayer(Bukkit.getOfflinePlayer(profile.id()));
@@ -803,8 +807,9 @@ public class HeadAPI{
 					else{
 						final String minCode0 = minimizeTextureCode(MiscUtils.getPropertyValue(textures.iterator().next()));
 						//TODO: Decide which properties to clear and which to keep
-						profile.properties().clear();
-						profile.properties().put("textures", new Property("textures", minCode0));
+						Multimap<String, Property> pm = LinkedListMultimap.create();
+						pm.put("textures", new Property("textures", minCode0));
+						profile = new YetAnotherProfile(profile.id(), profile.name(), pm);
 						head = HeadUtils.makeCustomHead(profile, /*setOwner=*/false);
 					}
 				}
@@ -825,7 +830,7 @@ public class HeadAPI{
 			if(hasPlayedBefore || realGameProfile) return head;
 		}
 		//-------------------- Handle raw textures
-		if(/*!hasPlayedBefore && !realGameProfile && */profile.properties().containsKey("textures")){
+		if(/*!hasPlayedBefore && !realGameProfile && */profile.properties() != null && profile.properties().containsKey("textures")){
 			final Collection<Property> textures = profile.properties().get("textures");
 			if(textures != null && !textures.isEmpty()){
 				if(textures.size() > 1) pl.getLogger().warning("Multiple textures in getHead() request: "+profile.name());
