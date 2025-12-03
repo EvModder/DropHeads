@@ -71,8 +71,7 @@ public class DeathMessagePacketIntercepter implements Listener{
 		}
 		RefMethod toJsonMethodTemp; Object registryAccessObjTemp = null;
 		try{//1.20.5+
-			if(ReflectionUtils.getServerVersionString().compareTo("v1_21_6") >= 0 ||
-					ReflectionUtils.getServerVersionString().compareTo("v1_21_10") >= 0){
+			if(ReflectionUtils.isAtLeastVersion("v1_21_6")){
 				toJsonMethodTemp = ReflectionUtils.getRefClass("net.evmodder.DropHeads.Cursed_1_21_6_stuff").getMethod("chatComponentToJson", Object.class);
 			}
 			else toJsonMethodTemp = chatSerializerClazz.findMethod(/*isStatic=*/true, String.class, chatBaseCompClazz,
@@ -130,10 +129,8 @@ public class DeathMessagePacketIntercepter implements Listener{
 				return;
 			}
 //			if(chatBaseCompField != null) pl.getLogger().info("chat packet base comp:\n"+chatBaseComp+"\n");
-			final String jsonMsg = ReflectionUtils.getServerVersionString().compareTo("v1_21_6")>=0
-					|| ReflectionUtils.getServerVersionString().compareTo("v1_21_10")>=0
+			final String jsonMsg = ReflectionUtils.isAtLeastVersion("v1_21_6")
 					? (String)toJsonMethod.call(chatBaseComp) :
-
 					(String)(chatBaseCompField != null ?
 				(registryAccessObj != null ? toJsonMethod.call(chatBaseComp, registryAccessObj) : toJsonMethod.call(chatBaseComp)) :
 				getJsonKyori == null ? getChatBaseComp.of(packet).call() : getJsonKyori.of(jsonSerializerKyori).call(getChatBaseComp.of(packet).call())

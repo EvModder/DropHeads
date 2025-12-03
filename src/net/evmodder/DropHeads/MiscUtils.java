@@ -137,8 +137,7 @@ public final class MiscUtils{
 
 	private static RefMethod toStrMethod, toCompMethod;
 	static{
-		if(ReflectionUtils.getServerVersionString().compareTo("v1_21_6") >= 0 || //TODO: this doesn't properly catch v1_21_10!! need some API for ts
-				ReflectionUtils.getServerVersionString().compareTo("v1_21_10") >= 0){
+		if(ReflectionUtils.isAtLeastVersion("v1_21_6")){
 			toStrMethod = ReflectionUtils.getRefClass("net.evmodder.DropHeads.Cursed_1_21_6_stuff").getMethod("chatComponentToJson", Object.class);
 			toCompMethod = ReflectionUtils.getRefClass("net.evmodder.DropHeads.Cursed_1_21_6_stuff").getMethod("jsonToChatComponent", String.class);
 		}
@@ -162,14 +161,12 @@ public final class MiscUtils{
 	}
 	private static final Object chatCompFromJsonStr(String jsonStr){
 		if(jsonStr == null) return null;
-		if(ReflectionUtils.getServerVersionString().compareTo("v1_21_6") >= 0
-				|| ReflectionUtils.getServerVersionString().compareTo("v1_21_10") >= 0) return toCompMethod.call(jsonStr);
+		if(ReflectionUtils.isAtLeastVersion("v1_21_6")) return toCompMethod.call(jsonStr);
 		else return toCompMethod.call(jsonStr, registryAccessObj);
 	}
 	private static final String jsonStrFromChatComp(Object chatComp){
 		if(chatComp == null) return null;
-		if(ReflectionUtils.getServerVersionString().compareTo("v1_21_6") >= 0
-				|| ReflectionUtils.getServerVersionString().compareTo("v1_21_10") >= 0) return (String)toStrMethod.call(chatComp);
+		if(ReflectionUtils.isAtLeastVersion("v1_21_6")) return (String)toStrMethod.call(chatComp);
 		else return (String)toStrMethod.call(chatComp, registryAccessObj);
 	}
 
@@ -177,7 +174,7 @@ public final class MiscUtils{
 	private static final RefField loreField = ReflectionUtils.getRefClass("{cb}.inventory.CraftMetaItem").getField("lore");
 	private static Object registryAccessObj;//class: IRegistryCustom.Dimension
 	static{
-		if(ReflectionUtils.getServerVersionString().compareTo("v1_20_5") >= 0){
+		if(ReflectionUtils.isAtLeastVersion("v1_20_5")){
 			final Object nmsServerObj = ReflectionUtils.getRefClass("{cb}.CraftServer").getMethod("getServer").of(Bukkit.getServer()).call();
 			//registryAccessObj = ReflectionUtils.getRefClass("{nm}.server.MinecraftServer").getMethod("registryAccess").of(nmsServerObj).call();
 			registryAccessObj = ReflectionUtils.getRefClass("{nm}.server.MinecraftServer").findMethod(/*isStatic=*/false,

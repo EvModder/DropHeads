@@ -77,7 +77,7 @@ public final class TextureKeyLookup{
 		final String shulkerAndColorKey = color == null ? "SHULKER" : "SHULKER|"+color.name();
 		//org.bukkit.Bukkit.getLogger().info("shulker facing: "+shulker.getFacing());
 
-		if(ReflectionUtils.getServerVersionString().compareTo("v1_16_4") < 0) return shulkerAndColorKey;
+		if(!ReflectionUtils.isAtLeastVersion("v1_16_4")) return shulkerAndColorKey;
 		if(mShulkerGetAttachedFace == null){
 			try{
 				final RefClass classShulker = ReflectionUtils.getRefClass("org.bukkit.entity.Shulker");
@@ -154,11 +154,11 @@ public final class TextureKeyLookup{
 				//TODO: isSaddled
 				return "HORSE|"+((Horse)entity).getColor().name();
 			case "PIG": //TODO: isSaddled
-				if(ReflectionUtils.getServerVersionString().compareTo("v1_21_5") < 0) return "PIG";
+				if(!ReflectionUtils.isAtLeastVersion("v1_21_5")) return "PIG";
 				if(mPigGetVariant == null) mPigGetVariant = ReflectionUtils.getRefClass("org.bukkit.entity.Pig").getMethod("getVariant");
 				return "PIG|"+getEnumNameOrKeyedName(entity, mPigGetVariant);
 			case "CHICKEN": //TODO: isSaddled
-				if(ReflectionUtils.getServerVersionString().compareTo("v1_21_5") < 0) return "CHICKEN";
+				if(!ReflectionUtils.isAtLeastVersion("v1_21_5")) return "CHICKEN";
 				if(mChickenGetVariant == null) mChickenGetVariant = ReflectionUtils.getRefClass("org.bukkit.entity.Chicken").getMethod("getVariant");
 				return "CHICKEN|"+getEnumNameOrKeyedName(entity, mChickenGetVariant);
 			case "DONKEY": case "MULE": //TODO: isSaddled
@@ -201,7 +201,7 @@ public final class TextureKeyLookup{
 				final String tameAndCollarOrAngry =
 						((Wolf)entity).isTamed() ? "|TAME|"+((Wolf)entity).getCollarColor().name()+"_COLLARED" :
 						((Wolf)entity).isAngry() ? "|ANGRY" : "";
-				if(ReflectionUtils.getServerVersionString().compareTo("v1_20_5") < 0) return "WOLF"+tameAndCollarOrAngry;
+				if(!ReflectionUtils.isAtLeastVersion("v1_20_5")) return "WOLF"+tameAndCollarOrAngry;
 				if(mWolfGetVariant == null) mWolfGetVariant = ReflectionUtils.getRefClass("org.bukkit.entity.Wolf").getMethod("getVariant");
 				return "WOLF|"+((Keyed)mWolfGetVariant.of(entity).call()).getKey().getKey().toUpperCase()+tameAndCollarOrAngry;
 			}
@@ -209,7 +209,7 @@ public final class TextureKeyLookup{
 				if(mChestBoatGetType == null) mChestBoatGetType = ReflectionUtils.getRefClass("org.bukkit.entity.ChestBoat").getMethod("getBoatType");
 				return "CHEST_BOAT|"+((Enum)mChestBoatGetType.of(entity).call()).name();
 			case "VEX":
-				if(ReflectionUtils.getServerVersionString().compareTo("v1_13_2") < 0) return "VEX";
+				if(!ReflectionUtils.isAtLeastVersion("v1_13_2")) return "VEX";
 				if(mVexIsCharging == null) mVexIsCharging = ReflectionUtils.getRefClass("org.bukkit.entity.Vex").getMethod("isCharging");
 				if(mVexIsCharging.of(entity).call().equals(true)) return "VEX|CHARGING";
 				else return "VEX";
@@ -247,11 +247,11 @@ public final class TextureKeyLookup{
 				return "CAT|"+catType;
 			}
 			case "COW":
-				if(ReflectionUtils.getServerVersionString().compareTo("v1_21_5") < 0) return "COW";
+				if(!ReflectionUtils.isAtLeastVersion("v1_21_5")) return "COW";
 				if(mCowGetVariant == null) mCowGetVariant = ReflectionUtils.getRefClass("org.bukkit.entity.Cow").getMethod("getVariant");
 				return "COW|"+getEnumNameOrKeyedName(entity, mCowGetVariant);
 			case "MUSHROOM_COW":
-				if(ReflectionUtils.getServerVersionString().compareTo("v1_14") < 0) return "MUSHROOM_COW";
+				if(!ReflectionUtils.isAtLeastVersion("v1_14")) return "MUSHROOM_COW";
 				if(mMushroomCowGetVariant == null) mMushroomCowGetVariant =
 					ReflectionUtils.getRefClass("org.bukkit.entity.MushroomCow").getMethod("getVariant");
 				return "MUSHROOM_COW|"+((Enum)mMushroomCowGetVariant.of(entity).call()).name();
@@ -322,7 +322,7 @@ public final class TextureKeyLookup{
 				if(isScreaming) return "GHAST|SCREAMING";
 				else return "GHAST";
 			case "GOAT":
-				if(ReflectionUtils.getServerVersionString().compareTo("v1_17") < 0) return "GOAT";
+				if(!ReflectionUtils.isAtLeastVersion("v1_17")) return "GOAT";
 				if(mGoatHasLeftHorn == null){
 					mGoatHasLeftHorn = ReflectionUtils.getRefClass("org.bukkit.entity.Goat").getMethod("hasLeftHorn");
 					mGoatHasRightHorn = ReflectionUtils.getRefClass("org.bukkit.entity.Goat").getMethod("hasRightHorn");
