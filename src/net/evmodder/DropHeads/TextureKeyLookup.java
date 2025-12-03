@@ -1,5 +1,7 @@
 package net.evmodder.DropHeads;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import org.bukkit.DyeColor;
 import org.bukkit.Keyed;
 import org.bukkit.Location;
@@ -17,9 +19,7 @@ import org.bukkit.entity.Shulker;
 import org.bukkit.entity.Tameable;
 import org.bukkit.entity.TropicalFish;
 import net.evmodder.EvLib.bukkit.EntityUtils;
-import net.evmodder.EvLib.bukkit.ReflectionUtils;
-import net.evmodder.EvLib.bukkit.ReflectionUtils.RefClass;
-import net.evmodder.EvLib.bukkit.ReflectionUtils.RefMethod;
+import net.evmodder.EvLib.util.ReflectionUtils;
 import org.bukkit.entity.Villager;
 import org.bukkit.entity.Wolf;
 import org.bukkit.entity.Zombie;
@@ -80,16 +80,16 @@ public final class TextureKeyLookup{
 		if(!ReflectionUtils.isAtLeastVersion("v1_16_4")) return shulkerAndColorKey;
 		if(mShulkerGetAttachedFace == null){
 			try{
-				final RefClass classShulker = ReflectionUtils.getRefClass("org.bukkit.entity.Shulker");
-				mShulkerGetPeek = classShulker.getMethod("getPeek");
-				mShulkerGetAttachedFace = classShulker.getMethod("getAttachedFace");
+				final Class<?> classShulker = ReflectionUtils.getClass("org.bukkit.entity.Shulker");
+				mShulkerGetPeek = ReflectionUtils.getMethod(classShulker, "getPeek");
+				mShulkerGetAttachedFace = ReflectionUtils.getMethod(classShulker, "getAttachedFace");
 			}
 			catch(RuntimeException ex){return shulkerAndColorKey;}
 		}
-		float peek = (float)mShulkerGetPeek.of(shulker).call();
+		float peek = (float)ReflectionUtils.call(mShulkerGetPeek, shulker);
 		//TODO: Add textures for "peeking" shulkers
 		final String peekState = peek == 0 ? "|CLOSED" : peek == 1 ? "" : ""/*"|PEEKING"*/;
-		final BlockFace attachedFace = (BlockFace)mShulkerGetAttachedFace.of(shulker).call();
+		final BlockFace attachedFace = (BlockFace)ReflectionUtils.call(mShulkerGetAttachedFace, shulker);
 		final String rotation;
 		switch(attachedFace){
 			case UP:
@@ -116,27 +116,28 @@ public final class TextureKeyLookup{
 	}
 
 	@SuppressWarnings("rawtypes")
-	private static String getEnumNameOrKeyedName(Entity entity, RefMethod mGetType){
-		try{return ((Keyed)mGetType.of(entity).call()).getKey().getKey().toUpperCase();}//1.21+
-		catch(ClassCastException e){return ((Enum)mGetType.of(entity).call()).name();}//pre 1.21
+	private static String getEnumNameOrKeyedName(Entity entity, Method mGetType){
+		Object type = ReflectionUtils.call(mGetType, entity);
+		try{return ((Keyed)type).getKey().getKey().toUpperCase();}//1.21+
+		catch(ClassCastException e){return ((Enum)type).name();}//pre 1.21
 	}
 
-	private static RefMethod mGetVillagerType, mGetZombieVillagerType;
-	private static RefMethod mBoggedIsSheared;
-	private static RefMethod mBeeHasNectar, mBeeGetAnger, mBeeHasStung;
-	private static RefMethod mCatGetType, mCatGetCollarColor;
-	private static RefMethod mFoxGetType, mFoxIsSleeping;
-	private static RefMethod mPandaGetMainGene, mPandaGetHiddenGene;
-	private static RefMethod mTraderLlamaGetColor;
-	private static RefMethod mAxolotlGetVariant, mCowGetVariant, mChickenGetVariant, mFrogGetVariant, mPigGetVariant, mWolfGetVariant, mMushroomCowGetVariant;
-	private static RefMethod mVexIsCharging;
-	private static RefMethod mChestBoatGetType;
-	private static RefMethod mGoatIsScreaming, mGoatHasLeftHorn, mGoatHasRightHorn;
-	private static RefMethod mStriderIsShivering, mStriderHasSaddle;
-	private static RefMethod mShulkerGetPeek, mShulkerGetAttachedFace;
-	private static RefMethod mGetHandle, mGetDataWatcher, mGet_FromDataWatcher;
-	private static java.lang.reflect.Field ghastIsAttackingField;
-	private static RefMethod mGhastIsCharging;
+	private static Method mGetVillagerType, mGetZombieVillagerType;
+	private static Method mBoggedIsSheared;
+	private static Method mBeeHasNectar, mBeeGetAnger, mBeeHasStung;
+	private static Method mCatGetType, mCatGetCollarColor;
+	private static Method mFoxGetType, mFoxIsSleeping;
+	private static Method mPandaGetMainGene, mPandaGetHiddenGene;
+	private static Method mTraderLlamaGetColor;
+	private static Method mAxolotlGetVariant, mCowGetVariant, mChickenGetVariant, mFrogGetVariant, mPigGetVariant, mWolfGetVariant, mMushroomCowGetVariant;
+	private static Method mVexIsCharging;
+	private static Method mChestBoatGetType;
+	private static Method mGoatIsScreaming, mGoatHasLeftHorn, mGoatHasRightHorn;
+	private static Method mStriderIsShivering, mStriderHasSaddle;
+	private static Method mShulkerGetPeek, mShulkerGetAttachedFace;
+	private static Method mGetHandle, mGetDataWatcher, mGet_FromDataWatcher;
+	private static Field ghastIsAttackingField;
+	private static Method mGhastIsCharging;
 
 	/** Find the most specific available head texture for a given entity.
 	 * @param entity The entity for which we want a texture key
@@ -146,8 +147,8 @@ public final class TextureKeyLookup{
 	public static String getTextureKey(Entity entity){
 		switch(entity.getType().name()){
 			case "BOGGED":
-				if(mBoggedIsSheared == null) mBoggedIsSheared = ReflectionUtils.getRefClass("org.bukkit.entity.Bogged").getMethod("isSheared");
-				return mBoggedIsSheared.of(entity).call().equals(true) ? "BOGGED|SHEARED" : "BOGGED";
+				if(mBoggedIsSheared == null) mBoggedIsSheared = ReflectionUtils.getMethod(ReflectionUtils.getClass("org.bukkit.entity.Bogged"), "isSheared");
+				return ReflectionUtils.call(mBoggedIsSheared, entity).equals(true) ? "BOGGED|SHEARED" : "BOGGED";
 			case "CREEPER":
 				return ((Creeper)entity).isPowered() ? "CREEPER|CHARGED" : "CREEPER";
 			case "HORSE":
@@ -155,11 +156,11 @@ public final class TextureKeyLookup{
 				return "HORSE|"+((Horse)entity).getColor().name();
 			case "PIG": //TODO: isSaddled
 				if(!ReflectionUtils.isAtLeastVersion("v1_21_5")) return "PIG";
-				if(mPigGetVariant == null) mPigGetVariant = ReflectionUtils.getRefClass("org.bukkit.entity.Pig").getMethod("getVariant");
+				if(mPigGetVariant == null) mPigGetVariant = ReflectionUtils.getMethod(ReflectionUtils.getClass("org.bukkit.entity.Pig"), "getVariant");
 				return "PIG|"+getEnumNameOrKeyedName(entity, mPigGetVariant);
 			case "CHICKEN": //TODO: isSaddled
 				if(!ReflectionUtils.isAtLeastVersion("v1_21_5")) return "CHICKEN";
-				if(mChickenGetVariant == null) mChickenGetVariant = ReflectionUtils.getRefClass("org.bukkit.entity.Chicken").getMethod("getVariant");
+				if(mChickenGetVariant == null) mChickenGetVariant = ReflectionUtils.getMethod(ReflectionUtils.getClass("org.bukkit.entity.Chicken"), "getVariant");
 				return "CHICKEN|"+getEnumNameOrKeyedName(entity, mChickenGetVariant);
 			case "DONKEY": case "MULE": //TODO: isSaddled
 				return entity.getType().name();
@@ -187,14 +188,14 @@ public final class TextureKeyLookup{
 				return HeadUtils.makeSkull(code, name);*/
 			case "BEE": {
 				if(mBeeHasNectar == null){
-					final RefClass classBee = ReflectionUtils.getRefClass("org.bukkit.entity.Bee");
-					mBeeHasNectar = classBee.getMethod("hasNectar");
-					mBeeHasStung = classBee.getMethod("hasStung");
-					mBeeGetAnger = classBee.getMethod("getAnger");
+					final Class<?> classBee = ReflectionUtils.getClass("org.bukkit.entity.Bee");
+					mBeeHasNectar = ReflectionUtils.getMethod(classBee, "hasNectar");
+					mBeeHasStung = ReflectionUtils.getMethod(classBee, "hasStung");
+					mBeeGetAnger = ReflectionUtils.getMethod(classBee, "getAnger");
 				}
-				final String pollinated = mBeeHasNectar.of(entity).call().equals(true) ? "|POLLINATED" : "";
-				final String angry = ((int)mBeeGetAnger.of(entity).call()) > 0 ? "|ANGRY" : "";
-				final String usedSting = mBeeHasStung.of(entity).call().equals(true) ? "|STUNG" : "";
+				final String pollinated = ReflectionUtils.call(mBeeHasNectar, entity).equals(true) ? "|POLLINATED" : "";
+				final String angry = ((int)ReflectionUtils.call(mBeeGetAnger, entity)) > 0 ? "|ANGRY" : "";
+				final String usedSting = ReflectionUtils.call(mBeeHasStung, entity).equals(true) ? "|STUNG" : "";
 				return "BEE" + pollinated + angry + usedSting;
 			}
 			case "WOLF": {
@@ -202,21 +203,21 @@ public final class TextureKeyLookup{
 						((Wolf)entity).isTamed() ? "|TAME|"+((Wolf)entity).getCollarColor().name()+"_COLLARED" :
 						((Wolf)entity).isAngry() ? "|ANGRY" : "";
 				if(!ReflectionUtils.isAtLeastVersion("v1_20_5")) return "WOLF"+tameAndCollarOrAngry;
-				if(mWolfGetVariant == null) mWolfGetVariant = ReflectionUtils.getRefClass("org.bukkit.entity.Wolf").getMethod("getVariant");
-				return "WOLF|"+((Keyed)mWolfGetVariant.of(entity).call()).getKey().getKey().toUpperCase()+tameAndCollarOrAngry;
+				if(mWolfGetVariant == null) mWolfGetVariant = ReflectionUtils.getMethod(ReflectionUtils.getClass("org.bukkit.entity.Wolf"), "getVariant");
+				return "WOLF|"+((Keyed)ReflectionUtils.call(mWolfGetVariant, entity)).getKey().getKey().toUpperCase()+tameAndCollarOrAngry;
 			}
 			case "CHEST_BOAT":
-				if(mChestBoatGetType == null) mChestBoatGetType = ReflectionUtils.getRefClass("org.bukkit.entity.ChestBoat").getMethod("getBoatType");
-				return "CHEST_BOAT|"+((Enum)mChestBoatGetType.of(entity).call()).name();
+				if(mChestBoatGetType == null) mChestBoatGetType = ReflectionUtils.getMethod(ReflectionUtils.getClass("org.bukkit.entity.ChestBoat"), "getBoatType");
+				return "CHEST_BOAT|"+((Enum)ReflectionUtils.call(mChestBoatGetType, entity)).name();
 			case "VEX":
 				if(!ReflectionUtils.isAtLeastVersion("v1_13_2")) return "VEX";
-				if(mVexIsCharging == null) mVexIsCharging = ReflectionUtils.getRefClass("org.bukkit.entity.Vex").getMethod("isCharging");
-				if(mVexIsCharging.of(entity).call().equals(true)) return "VEX|CHARGING";
+				if(mVexIsCharging == null) mVexIsCharging = ReflectionUtils.getMethod(ReflectionUtils.getClass("org.bukkit.entity.Vex"), "isCharging");
+				if(ReflectionUtils.call(mVexIsCharging, entity).equals(true)) return "VEX|CHARGING";
 				else return "VEX";
 			case "VILLAGER": {
 				final String villagerProfession = ((Villager)entity).getProfession().name();
 				if(mGetVillagerType == null){
-					try{mGetVillagerType = ReflectionUtils.getRefClass("org.bukkit.entity.Villager").getMethod("getVillagerType");}
+					try{mGetVillagerType = ReflectionUtils.getMethod(ReflectionUtils.getClass("org.bukkit.entity.Villager"), "getVillagerType");}
 					catch(RuntimeException ex){return "VILLAGER|"+villagerProfession;}
 				}
 				return "VILLAGER|"+villagerProfession+"|"+getEnumNameOrKeyedName(entity, mGetVillagerType);
@@ -224,7 +225,7 @@ public final class TextureKeyLookup{
 			case "ZOMBIE_VILLAGER": {
 				final String zombieVillagerProfession = ((ZombieVillager)entity).getVillagerProfession().name();
 				if(mGetZombieVillagerType == null){
-					try{mGetZombieVillagerType = ReflectionUtils.getRefClass("org.bukkit.entity.ZombieVillager").getMethod("getVillagerType");}
+					try{mGetZombieVillagerType = ReflectionUtils.getMethod(ReflectionUtils.getClass("org.bukkit.entity.ZombieVillager"), "getVillagerType");}
 					catch(RuntimeException ex){return "ZOMBIE_VILLAGER|"+zombieVillagerProfession;}
 				}
 				return "ZOMBIE_VILLAGER|"+zombieVillagerProfession+"|"+getEnumNameOrKeyedName(entity, mGetZombieVillagerType);
@@ -234,88 +235,87 @@ public final class TextureKeyLookup{
 				return catType.equals("WILD_OCELOT") ? "OCELOT" : "OCELOT|"+catType;
 			}
 			case "CAT": {
-				if(mCatGetType == null) mCatGetType = ReflectionUtils.getRefClass("org.bukkit.entity.Cat").getMethod("getCatType");
+				if(mCatGetType == null) mCatGetType = ReflectionUtils.getMethod(ReflectionUtils.getClass("org.bukkit.entity.Cat"), "getCatType");
 				String catType = getEnumNameOrKeyedName(entity, mCatGetType);
 				if(catType.equals("RED")) catType = "GINGER";
 				if(catType.equals("BLACK")) catType = "TUXEDO";
 				if(catType.equals("ALL_BLACK")) catType = "BLACK";
 				if(((Tameable)entity).isTamed()){
 					if(mCatGetCollarColor == null) mCatGetCollarColor =
-							ReflectionUtils.getRefClass("org.bukkit.entity.Cat").getMethod("getCollarColor");
-					return "CAT|"+catType+"|"+((DyeColor)mCatGetCollarColor.of(entity).call()).name()+"_COLLARED";
+							ReflectionUtils.getMethod(ReflectionUtils.getClass("org.bukkit.entity.Cat"), "getCollarColor");
+					return "CAT|"+catType+"|"+((DyeColor)ReflectionUtils.call(mCatGetCollarColor, entity)).name()+"_COLLARED";
 				}
 				return "CAT|"+catType;
 			}
 			case "COW":
 				if(!ReflectionUtils.isAtLeastVersion("v1_21_5")) return "COW";
-				if(mCowGetVariant == null) mCowGetVariant = ReflectionUtils.getRefClass("org.bukkit.entity.Cow").getMethod("getVariant");
+				if(mCowGetVariant == null) mCowGetVariant = ReflectionUtils.getMethod(ReflectionUtils.getClass("org.bukkit.entity.Cow"), "getVariant");
 				return "COW|"+getEnumNameOrKeyedName(entity, mCowGetVariant);
 			case "MUSHROOM_COW":
 				if(!ReflectionUtils.isAtLeastVersion("v1_14")) return "MUSHROOM_COW";
 				if(mMushroomCowGetVariant == null) mMushroomCowGetVariant =
-					ReflectionUtils.getRefClass("org.bukkit.entity.MushroomCow").getMethod("getVariant");
-				return "MUSHROOM_COW|"+((Enum)mMushroomCowGetVariant.of(entity).call()).name();
+						ReflectionUtils.getMethod(ReflectionUtils.getClass("org.bukkit.entity.MushroomCow"), "getVariant");
+				return "MUSHROOM_COW|"+((Enum)ReflectionUtils.call(mMushroomCowGetVariant, entity)).name();
 			case "FOX": {
 				if(mFoxGetType == null){
-					final RefClass classFox = ReflectionUtils.getRefClass("org.bukkit.entity.Fox");
-					mFoxGetType = classFox.getMethod("getFoxType");
-					mFoxIsSleeping = classFox.getMethod("isSleeping");
+					final Class<?> classFox = ReflectionUtils.getClass("org.bukkit.entity.Fox");
+					mFoxGetType = ReflectionUtils.getMethod(classFox, "getFoxType");
+					mFoxIsSleeping = ReflectionUtils.getMethod(classFox, "isSleeping");
 				}
-				final String foxType = ((Enum)mFoxGetType.of(entity).call()).name();
-				if(mFoxIsSleeping.of(entity).call().equals(true)) return "FOX|"+foxType+"|SLEEPING";
+				final String foxType = ((Enum)ReflectionUtils.call(mFoxGetType, entity)).name();
+				if(ReflectionUtils.call(mFoxIsSleeping, entity).equals(true)) return "FOX|"+foxType+"|SLEEPING";
 				else return "FOX|"+foxType;
 			}
 			case "FROG":
 				if(mFrogGetVariant == null) mFrogGetVariant =
-					ReflectionUtils.getRefClass("org.bukkit.entity.Frog").getMethod("getVariant");
+						ReflectionUtils.getMethod(ReflectionUtils.getClass("org.bukkit.entity.Frog"), "getVariant");
 				return "FROG|"+getEnumNameOrKeyedName(entity, mFrogGetVariant);
 			case "PANDA": {
 				if(mPandaGetMainGene == null){
-					final RefClass classPanda = ReflectionUtils.getRefClass("org.bukkit.entity.Panda");
-					mPandaGetMainGene = classPanda.getMethod("getMainGene");
-					mPandaGetHiddenGene = classPanda.getMethod("getHiddenGene");
+					final Class<?> classPanda = ReflectionUtils.getClass("org.bukkit.entity.Panda");
+					mPandaGetMainGene = ReflectionUtils.getMethod(classPanda, "getMainGene");
+					mPandaGetHiddenGene = ReflectionUtils.getMethod(classPanda, "getHiddenGene");
 				}
-				final String mainGene = ((Enum)mPandaGetMainGene.of(entity).call()).name();
-				final String hiddenGene = ((Enum)mPandaGetHiddenGene.of(entity).call()).name();
+				final String mainGene = ((Enum)ReflectionUtils.call(mPandaGetMainGene, entity)).name();
+				final String hiddenGene = ((Enum)ReflectionUtils.call(mPandaGetHiddenGene, entity)).name();
 				return "PANDA|"+EntityUtils.getPandaTrait(mainGene, hiddenGene);
 			}
 			case "TRADER_LLAMA":
 				if(mTraderLlamaGetColor == null) mTraderLlamaGetColor =
-						ReflectionUtils.getRefClass("org.bukkit.entity.TraderLlama").getMethod("getColor");
-				return "TRADER_LLAMA|"+((Enum)mTraderLlamaGetColor.of(entity).call()).name();
+						ReflectionUtils.getMethod(ReflectionUtils.getClass("org.bukkit.entity.TraderLlama"), "getColor");
+				return "TRADER_LLAMA|"+((Enum)ReflectionUtils.call(mTraderLlamaGetColor, entity)).name();
 			case "AXOLOTL":
 				if(mAxolotlGetVariant == null) mAxolotlGetVariant =
-					ReflectionUtils.getRefClass("org.bukkit.entity.Axolotl").getMethod("getVariant");
-				return "AXOLOTL|"+((Enum)mAxolotlGetVariant.of(entity).call()).name();
+						ReflectionUtils.getMethod(ReflectionUtils.getClass("org.bukkit.entity.Axolotl"), "getVariant");
+				return "AXOLOTL|"+((Enum)ReflectionUtils.call(mAxolotlGetVariant, entity)).name();
 			case "GHAST":
 				//https://wiki.vg/Entity_metadata#Ghast => isAttacking=15="" (1.13 - 1.15)
 				boolean isScreaming = false;
 				if(mGhastIsCharging == null && ghastIsAttackingField == null){
-					try{mGhastIsCharging = ReflectionUtils.getRefClass("org.bukkit.entity.Ghast").getMethod("isCharging");}
+					try{mGhastIsCharging = ReflectionUtils.getMethod(ReflectionUtils.getClass("org.bukkit.entity.Ghast"), "isCharging");}
 					catch(RuntimeException ex){}
 					
-					mGetHandle = ReflectionUtils.getRefClass("{cb}.entity.CraftEntity").getMethod("getHandle");
-					final RefClass classEntityGhast = ReflectionUtils.getRefClass("{nms}.EntityGhast", "{nm}.world.entity.monster.EntityGhast");
-					final RefClass classDataWatcher = ReflectionUtils.getRefClass("{nms}.DataWatcher", "{nm}.network.syncher.DataWatcher");
-					final RefClass classDataWatcherObject =
-							ReflectionUtils.getRefClass("{nms}.DataWatcherObject", "{nm}.network.syncher.DataWatcherObject");
+					mGetHandle = ReflectionUtils.getMethod(ReflectionUtils.getClass("{cb}.entity.CraftEntity"), "getHandle");
+					final Class<?> classEntityGhast = ReflectionUtils.getClass("{nms}.EntityGhast", "{nm}.world.entity.monster.EntityGhast");
+					final Class<?> classDataWatcher = ReflectionUtils.getClass("{nms}.DataWatcher", "{nm}.network.syncher.DataWatcher");
+					final Class<?> classDataWatcherObject = ReflectionUtils.getClass("{nms}.DataWatcherObject", "{nm}.network.syncher.DataWatcherObject");
 					// Only one field with this type: BuildTools/work/decompile-ee3ecae0/net/minecraft/world/entity/monster/EntityGhast.java
-					ghastIsAttackingField = classEntityGhast.findField(classDataWatcherObject).getRealField();
+					ghastIsAttackingField = ReflectionUtils.findField(classEntityGhast, classDataWatcherObject);
 					ghastIsAttackingField.setAccessible(true);
-					mGetDataWatcher = classEntityGhast.findMethod(/*isStatic=*/false, classDataWatcher);//.getMethod("getDataWatcher");
-					mGet_FromDataWatcher = classDataWatcher.findMethod(/*isStatic=*/false, 
+					mGetDataWatcher = ReflectionUtils.findMethod(classEntityGhast, /*isStatic=*/false, classDataWatcher);//.getMethod("getDataWatcher");
+					mGet_FromDataWatcher = ReflectionUtils.findMethod(classDataWatcher, /*isStatic=*/false, 
 							/*returnType=*/Object.class,/*classDataWatcherObject.getRealClass().getTypeParameters()[0]*/
 							/*argType(s)=*/classDataWatcherObject);//.getMethod("get", classDataWatcherObject);
 				}
 				if(mGhastIsCharging != null){
 					// TODO: Since v?.?? Does this even work? Consider deleting old DataWatcher code approach?
-					isScreaming = mGhastIsCharging.of(entity).call().equals(true);
+					isScreaming = ReflectionUtils.call(mGhastIsCharging, entity).equals(true);
 				}
 				else try{
 					final Object datawatcherobject = ghastIsAttackingField.get(null);
-					final Object entityGhast = mGetHandle.of(entity).call();
-					final Object dataWatcher = mGetDataWatcher.of(entityGhast).call();
-					isScreaming = mGet_FromDataWatcher.of(dataWatcher).call(datawatcherobject).equals(true);
+					final Object entityGhast = ReflectionUtils.call(mGetHandle, entity);
+					final Object dataWatcher = ReflectionUtils.call(mGetDataWatcher, entityGhast);
+					isScreaming = ReflectionUtils.call(mGet_FromDataWatcher, dataWatcher, datawatcherobject).equals(true);
 //					org.bukkit.Bukkit.getLogger().info("Ghast isCharging: "+mGet_FromDataWatcher.of(dataWatcher).call(datawatcherobject).toString());
 				}
 				catch(IllegalArgumentException | IllegalAccessException e){}
@@ -324,22 +324,23 @@ public final class TextureKeyLookup{
 			case "GOAT":
 				if(!ReflectionUtils.isAtLeastVersion("v1_17")) return "GOAT";
 				if(mGoatHasLeftHorn == null){
-					mGoatHasLeftHorn = ReflectionUtils.getRefClass("org.bukkit.entity.Goat").getMethod("hasLeftHorn");
-					mGoatHasRightHorn = ReflectionUtils.getRefClass("org.bukkit.entity.Goat").getMethod("hasRightHorn");
-					mGoatIsScreaming = ReflectionUtils.getRefClass("org.bukkit.entity.Goat").getMethod("isScreaming");
+					Class<?> classGoat = ReflectionUtils.getClass("org.bukkit.entity.Goat");
+					mGoatHasLeftHorn = ReflectionUtils.getMethod(classGoat, "hasLeftHorn");
+					mGoatHasRightHorn = ReflectionUtils.getMethod(classGoat, "hasRightHorn");
+					mGoatIsScreaming = ReflectionUtils.getMethod(classGoat, "isScreaming");
 				}
 				return "GOAT"
-						+ (!mGoatHasLeftHorn.of(entity).call().equals(true) ? "|NO_LEFT_HORN" : "")
-						+ (!mGoatHasRightHorn.of(entity).call().equals(true) ? "|NO_RIGHT_HORN" : "")
-						+ (mGoatIsScreaming.of(entity).call().equals(true) ? "|SCREAMING" : "");
+						+ (!ReflectionUtils.call(mGoatHasLeftHorn, entity).equals(true) ? "|NO_LEFT_HORN" : "")
+						+ (!ReflectionUtils.call(mGoatHasRightHorn, entity).equals(true) ? "|NO_RIGHT_HORN" : "")
+						+ (ReflectionUtils.call(mGoatIsScreaming, entity).equals(true) ? "|SCREAMING" : "");
 			case "STRIDER": {
 				if(mStriderIsShivering == null){
-					final RefClass classStrider = ReflectionUtils.getRefClass("org.bukkit.entity.Strider");
-					mStriderIsShivering = classStrider.getMethod("isShivering");
-					mStriderHasSaddle = classStrider.getMethod("hasSaddle");
+					final Class<?> classStrider = ReflectionUtils.getClass("org.bukkit.entity.Strider");
+					mStriderIsShivering = ReflectionUtils.getMethod(classStrider, "isShivering");
+					mStriderHasSaddle = ReflectionUtils.getMethod(classStrider, "hasSaddle");
 				}
-				final boolean isShivering = mStriderIsShivering.of(entity).call().equals(true);
-				final boolean hasSaddle = mStriderHasSaddle.of(entity).call().equals(true);
+				final boolean isShivering = ReflectionUtils.call(mStriderIsShivering, entity).equals(true);
+				final boolean hasSaddle = ReflectionUtils.call(mStriderHasSaddle, entity).equals(true);
 				return "STRIDER|"+(isShivering ? "COLD" : "WARM")+(hasSaddle ? "|SADDLED" : "");
 			}
 			case "PIG_ZOMBIE":

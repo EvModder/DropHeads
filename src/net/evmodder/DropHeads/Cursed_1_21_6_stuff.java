@@ -4,43 +4,40 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Optional;
 import com.google.gson.JsonElement;
-import net.evmodder.EvLib.bukkit.ReflectionUtils;
-import net.evmodder.EvLib.bukkit.ReflectionUtils.RefClass;
-import net.evmodder.EvLib.bukkit.ReflectionUtils.RefMethod;
+import net.evmodder.EvLib.util.ReflectionUtils;
 
 public class Cursed_1_21_6_stuff{
 	private static Class<?> clazzJsonOps, clazzDynamicOps, clazzRegistryOps, clazzDataResult;
-	private static RefClass classCodec, classComponentSerialization, classCraftRegistry, classIRegistryCustom;
+	private static Class<?> classCodec, classComponentSerialization, classCraftRegistry, classIRegistryCustom;
 	private static Object objCODEC, objIRegistryCustom, objJsonOps;
-	private static RefMethod methodCreateSerializationContext;
+	private static Method methodCreateSerializationContext;
 	private static Method methodEncodeStart, methodParse;
 	static{
 		try{
-			clazzJsonOps = Class.forName("com.mojang.serialization.JsonOps");
-			clazzDynamicOps = Class.forName("com.mojang.serialization.DynamicOps");
-			clazzRegistryOps = Class.forName("net.minecraft.resources.RegistryOps");
-			clazzDataResult = Class.forName("com.mojang.serialization.DataResult");
-			classCodec = ReflectionUtils.getRefClass("com.mojang.serialization.Codec");
-			classComponentSerialization = ReflectionUtils.getRefClass("net.minecraft.network.chat.ComponentSerialization");
-			classCraftRegistry = ReflectionUtils.getRefClass("{cb}.CraftRegistry");
-			classIRegistryCustom = ReflectionUtils.getRefClass("net.minecraft.core.IRegistryCustom");
-			objCODEC = classComponentSerialization.findField(classCodec).of(null).get();
-			objIRegistryCustom = classCraftRegistry.getMethod("getMinecraftRegistry").call();
-			methodCreateSerializationContext = classIRegistryCustom.findMethod(/*isStatic=*/false, clazzRegistryOps, clazzDynamicOps);
-			objJsonOps = clazzJsonOps.getField("INSTANCE").get(null);
+			clazzJsonOps = ReflectionUtils.getClass("com.mojang.serialization.JsonOps");
+			clazzDynamicOps = ReflectionUtils.getClass("com.mojang.serialization.DynamicOps");
+			clazzRegistryOps = ReflectionUtils.getClass("net.minecraft.resources.RegistryOps");
+			clazzDataResult = ReflectionUtils.getClass("com.mojang.serialization.DataResult");
+			classCodec = ReflectionUtils.getClass("com.mojang.serialization.Codec");
+			classComponentSerialization = ReflectionUtils.getClass("net.minecraft.network.chat.ComponentSerialization");
+			classCraftRegistry = ReflectionUtils.getClass("{cb}.CraftRegistry");
+			classIRegistryCustom = ReflectionUtils.getClass("net.minecraft.core.IRegistryCustom");
+			objCODEC = ReflectionUtils.getStatic(ReflectionUtils.findField(classComponentSerialization, classCodec));
+			objIRegistryCustom = ReflectionUtils.callStatic(ReflectionUtils.getMethod(classCraftRegistry, "getMinecraftRegistry"));
+			methodCreateSerializationContext = ReflectionUtils.findMethod(classIRegistryCustom, /*isStatic=*/false, clazzRegistryOps, clazzDynamicOps);
+			objJsonOps = ReflectionUtils.getStatic(ReflectionUtils.getField(clazzJsonOps, "INSTANCE"));
 
 //			Class<?> clazzIChatBaseComponent = Class.forName("net.minecraft.network.chat.IChatBaseComponent");
-			methodEncodeStart = Class.forName("com.mojang.serialization.Encoder").getMethod("encodeStart", clazzDynamicOps, Object.class);
-			methodParse = Class.forName("com.mojang.serialization.Decoder").getMethod("parse", clazzDynamicOps, Object.class);
+			methodEncodeStart = ReflectionUtils.getMethod(ReflectionUtils.getClass("com.mojang.serialization.Encoder"), "encodeStart", clazzDynamicOps, Object.class);
+			methodParse = ReflectionUtils.getMethod(ReflectionUtils.getClass("com.mojang.serialization.Decoder"), "parse", clazzDynamicOps, Object.class);
 		}
-		catch(IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException
-				| ClassNotFoundException | NoSuchMethodException e){
+		catch(RuntimeException e){
 			e.printStackTrace();
 		}
 	}
 	static final String chatComponentToJson(/*IChatBaseComponent*/Object chatComponent){
 		try{
-			Object objDynamicOps = methodCreateSerializationContext.of(objIRegistryCustom).call(objJsonOps);
+			Object objDynamicOps = ReflectionUtils.call(methodCreateSerializationContext, objIRegistryCustom, objJsonOps);
 			Object objDataResult = methodEncodeStart.invoke(objCODEC, objDynamicOps, chatComponent);
 
 			// Last checked: 1.21.8
@@ -61,11 +58,12 @@ public class Cursed_1_21_6_stuff{
 
 	static final Object jsonToChatComponent(String jsonString){
 		try{
-			RefClass classJsonParser = ReflectionUtils.getRefClass("com.google.gson.JsonParser");
-			JsonElement je = (JsonElement)classJsonParser.findMethod(/*isStatic=*/true, JsonElement.class, String.class).call(jsonString);
+			Class<?> classJsonParser = ReflectionUtils.getClass("com.google.gson.JsonParser");
+			Method method_JsonParser_fromString = ReflectionUtils.findMethod(classJsonParser, /*isStatic=*/true, JsonElement.class, String.class);
+			JsonElement je = (JsonElement)ReflectionUtils.callStatic(method_JsonParser_fromString, jsonString);
 			if(je == null) return null;
 	
-			Object objDynamicOps = methodCreateSerializationContext.of(objIRegistryCustom).call(objJsonOps);
+			Object objDynamicOps = ReflectionUtils.call(methodCreateSerializationContext, objIRegistryCustom, objJsonOps);
 			Object objDataResult = methodParse.invoke(objCODEC, objDynamicOps, je);
 			Optional<?> objOptional = (Optional<?>)clazzDataResult.getMethod("result").invoke(objDataResult);
 			return objOptional.orElse(null);

@@ -1,7 +1,10 @@
 package net.evmodder.DropHeads;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,14 +38,10 @@ import net.evmodder.EvLib.bukkit.NBTTagUtils;
 import net.evmodder.EvLib.bukkit.NBTTagUtils.RefNBTTagString;
 import net.evmodder.EvLib.bukkit.NBTTagUtils.RefNBTTagCompound;
 import net.evmodder.EvLib.bukkit.NBTTagUtils.RefNBTTagList;
-import net.evmodder.EvLib.bukkit.ReflectionUtils;
 import net.evmodder.EvLib.bukkit.TellrawUtils;
 import net.evmodder.EvLib.TextUtils;
 import net.evmodder.EvLib.bukkit.WebUtils;
 import net.evmodder.EvLib.bukkit.YetAnotherProfile;
-import net.evmodder.EvLib.bukkit.ReflectionUtils.RefClass;
-import net.evmodder.EvLib.bukkit.ReflectionUtils.RefField;
-import net.evmodder.EvLib.bukkit.ReflectionUtils.RefMethod;
 import net.evmodder.EvLib.bukkit.TellrawUtils.ClickEvent;
 import net.evmodder.EvLib.bukkit.TellrawUtils.Component;
 import net.evmodder.EvLib.bukkit.TellrawUtils.Format;
@@ -53,6 +52,7 @@ import net.evmodder.EvLib.bukkit.TellrawUtils.SelectorComponent;
 import net.evmodder.EvLib.bukkit.TellrawUtils.TextClickAction;
 import net.evmodder.EvLib.bukkit.TellrawUtils.TextHoverAction;
 import net.evmodder.EvLib.bukkit.TellrawUtils.TranslationComponent;
+import net.evmodder.EvLib.util.ReflectionUtils;
 
 // A trashy place to dump stuff that I should probably move to EvLib after ensure cross-version safety
 public final class MiscUtils{
@@ -135,57 +135,63 @@ public final class MiscUtils{
 		return item.getEnchantmentLevel(ench);
 	}
 
-	private static RefMethod toStrMethod, toCompMethod;
+	private static Method toStrMethod, toCompMethod;
 	static{
 		if(ReflectionUtils.isAtLeastVersion("v1_21_6")){
-			toStrMethod = ReflectionUtils.getRefClass("net.evmodder.DropHeads.Cursed_1_21_6_stuff").getMethod("chatComponentToJson", Object.class);
-			toCompMethod = ReflectionUtils.getRefClass("net.evmodder.DropHeads.Cursed_1_21_6_stuff").getMethod("jsonToChatComponent", String.class);
+			Class<?> classCursed_1_21_6_stuff = ReflectionUtils.getClass("net.evmodder.DropHeads.Cursed_1_21_6_stuff");
+			toStrMethod = ReflectionUtils.getMethod(classCursed_1_21_6_stuff, "chatComponentToJson", Object.class);
+			toCompMethod = ReflectionUtils.getMethod(classCursed_1_21_6_stuff, "jsonToChatComponent", String.class);
 		}
 		else{
-			final RefClass iChatBaseComponentClass = ReflectionUtils.getRefClass("{nm}.network.chat.IChatBaseComponent");
-			final RefClass chatSerializerClass = ReflectionUtils.getRefClass("{nm}.network.chat.IChatBaseComponent$ChatSerializer",
+			final Class<?> iChatBaseComponentClass = ReflectionUtils.getClass("{nm}.network.chat.IChatBaseComponent");
+			final Class<?> chatSerializerClass = ReflectionUtils.getClass("{nm}.network.chat.IChatBaseComponent$ChatSerializer",
 					"{nm}.network.chat.ComponentSerialization");
-			final RefClass holderLookupProviderClass = ReflectionUtils.getRefClass("{nm}.core.HolderLookup$Provider", "{nm}.core.HolderLookup$a");
+			final Class<?> holderLookupProviderClass = ReflectionUtils.getClass("{nm}.core.HolderLookup$Provider", "{nm}.core.HolderLookup$a");
 //			fromJsonMethod = chatSerializerClass.getMethod("fromJson", String.class, holderLookupProviderClass);
 			try{
-				toCompMethod = chatSerializerClass.findMethod(/*isStatic=*/true,
-						ReflectionUtils.getRefClass("{nm}.network.chat.IChatMutableComponent"), String.class, holderLookupProviderClass);
+				toCompMethod = ReflectionUtils.findMethod(chatSerializerClass, /*isStatic=*/true,
+						ReflectionUtils.getClass("{nm}.network.chat.IChatMutableComponent"), String.class, holderLookupProviderClass);
 				//TODO: findMethod() fails in 1.21.10
 				
 				
 //				toJsonMethod = chatSerializerClass.getMethod("toJson", iChatBaseComponentClass, holderLookupProviderClass);
-				toStrMethod = chatSerializerClass.findMethod(/*isStatic=*/true, String.class, iChatBaseComponentClass, holderLookupProviderClass);
+				toStrMethod = ReflectionUtils.findMethod(chatSerializerClass, /*isStatic=*/true, String.class, iChatBaseComponentClass, holderLookupProviderClass);
 			}
 			catch(RuntimeException re){toStrMethod = toCompMethod = null; re.printStackTrace();}
 		}
 	}
 	private static final Object chatCompFromJsonStr(String jsonStr){
 		if(jsonStr == null) return null;
-		if(ReflectionUtils.isAtLeastVersion("v1_21_6")) return toCompMethod.call(jsonStr);
-		else return toCompMethod.call(jsonStr, registryAccessObj);
+		if(ReflectionUtils.isAtLeastVersion("v1_21_6")) return ReflectionUtils.callStatic(toCompMethod, jsonStr);
+		else return ReflectionUtils.callStatic(toCompMethod, jsonStr, registryAccessObj);
 	}
 	private static final String jsonStrFromChatComp(Object chatComp){
 		if(chatComp == null) return null;
-		if(ReflectionUtils.isAtLeastVersion("v1_21_6")) return (String)toStrMethod.call(chatComp);
-		else return (String)toStrMethod.call(chatComp, registryAccessObj);
+		if(ReflectionUtils.isAtLeastVersion("v1_21_6")) return (String)ReflectionUtils.callStatic(toStrMethod, chatComp);
+		else return (String)ReflectionUtils.callStatic(toStrMethod, chatComp, registryAccessObj);
 	}
 
-	private static final RefField displayNameField = ReflectionUtils.getRefClass("{cb}.inventory.CraftMetaItem").getField("displayName");
-	private static final RefField loreField = ReflectionUtils.getRefClass("{cb}.inventory.CraftMetaItem").getField("lore");
+	private static final Class<?> classCraftMetaItem = ReflectionUtils.getClass("{cb}.inventory.CraftMetaItem");
+	private static final Field displayNameField = ReflectionUtils.getField(classCraftMetaItem, "displayName");
+	private static final Field loreField = ReflectionUtils.getField(classCraftMetaItem, "lore");
 	private static Object registryAccessObj;//class: IRegistryCustom.Dimension
 	static{
 		if(ReflectionUtils.isAtLeastVersion("v1_20_5")){
-			final Object nmsServerObj = ReflectionUtils.getRefClass("{cb}.CraftServer").getMethod("getServer").of(Bukkit.getServer()).call();
-			//registryAccessObj = ReflectionUtils.getRefClass("{nm}.server.MinecraftServer").getMethod("registryAccess").of(nmsServerObj).call();
-			registryAccessObj = ReflectionUtils.getRefClass("{nm}.server.MinecraftServer").findMethod(/*isStatic=*/false,
-					ReflectionUtils.getRefClass("net.minecraft.core.IRegistryCustom$Dimension")).of(nmsServerObj).call();
+			Class<?> classCraftServer = ReflectionUtils.getClass("{cb}.CraftServer");
+			Method method_CraftServer_getServer = ReflectionUtils.getMethod(classCraftServer, "getServer");
+			final Object nmsServerObj = ReflectionUtils.call(method_CraftServer_getServer, Bukkit.getServer());
+			//registryAccessObj = ReflectionUtils.getClass("{nm}.server.MinecraftServer").getMethod("registryAccess").of(nmsServerObj).call();
+			Class<?> classMinecraftServer = ReflectionUtils.getClass("{nm}.server.MinecraftServer");
+			Method method_MinecraftServer_getRegistryAccess = ReflectionUtils.findMethod(
+					classMinecraftServer, /*isStatic=*/false, ReflectionUtils.getClass("net.minecraft.core.IRegistryCustom$Dimension"));
+			registryAccessObj = ReflectionUtils.call(method_MinecraftServer_getRegistryAccess, nmsServerObj);
 		}
 		else registryAccessObj = null;
 	}
 	public static final ItemStack setDisplayName(@Nonnull ItemStack item, @Nonnull Component name){
 		if(toCompMethod != null){
 			final ItemMeta meta = item.getItemMeta();
-			displayNameField.of(meta).set(chatCompFromJsonStr(name.toString()));
+			ReflectionUtils.set(displayNameField, meta, chatCompFromJsonStr(name.toString()));
 			item.setItemMeta(meta);
 			return item;
 		}
@@ -200,7 +206,7 @@ public final class MiscUtils{
 	public static final String getDisplayName(@Nonnull ItemStack item){
 		if(toStrMethod != null){
 			if(!item.hasItemMeta()) return null;
-			try{return jsonStrFromChatComp(displayNameField.of(item.getItemMeta()).get());}
+			try{return jsonStrFromChatComp(ReflectionUtils.get(displayNameField, item.getItemMeta()));}
 			catch(RuntimeException ex){
 				//Caused by: java.lang.reflect.InvocationTargetException
 				//Caused by: java.lang.NullPointerException: Cannot invoke "net.minecraft.network.chat.Component.tryCollapseToString()" because "text" is null
@@ -218,7 +224,7 @@ public final class MiscUtils{
 		if(toCompMethod != null){
 			Object lines = Stream.of(lore).map(line -> chatCompFromJsonStr(line.toString())).collect(Collectors.toList());
 			ItemMeta meta = item.getItemMeta();
-			loreField.of(meta).set(lines);
+			ReflectionUtils.set(loreField, meta, lines);
 			item.setItemMeta(meta);
 			return item;
 		}
@@ -237,7 +243,7 @@ public final class MiscUtils{
 		if(toStrMethod != null){
 			if(!item.hasItemMeta()) return null;
 			//TODO: do we need to unescape anything?
-			return ((List<?>)loreField.of(item.getItemMeta()).get()).stream().map(MiscUtils::jsonStrFromChatComp).toList();
+			return ((List<?>)ReflectionUtils.get(loreField, item.getItemMeta())).stream().map(MiscUtils::jsonStrFromChatComp).toList();
 		}
 		else{
 			RefNBTTagCompound tag = NBTTagUtils.getTag(item);
@@ -260,14 +266,15 @@ public final class MiscUtils{
 	}
 
 	// New non-NMS way (1.20.6+?)
-	private static final RefMethod mItemMetaGetAsString;
+	private static final Method mItemMetaGetAsString;
 	// Old NMS way
-	private static final RefMethod asNMSCopyMethod;
-	private static final RefMethod saveNmsItemStackMethod;
-	private static final RefClass nbtTagCompoundClazz;
+	private static final Method asNMSCopyMethod;
+	private static final Method saveNmsItemStackMethod;
+	private static final Class<?> nbtTagCompoundClazz;
+	private static final Constructor<?> cnstr_NBTTagCompound;;
 	static{
-		RefMethod mItemMetaGetAsStringTemp;
-		try{mItemMetaGetAsStringTemp = ReflectionUtils.getRefClass(ItemMeta.class).getMethod("getAsString");}
+		Method mItemMetaGetAsStringTemp;
+		try{mItemMetaGetAsStringTemp = ReflectionUtils.getMethod(ItemMeta.class, "getAsString");}
 		catch(RuntimeException e1){mItemMetaGetAsStringTemp = null;}
 		if(mItemMetaGetAsStringTemp != null){
 			// Non-NMS method
@@ -275,25 +282,27 @@ public final class MiscUtils{
 			asNMSCopyMethod = null;
 			saveNmsItemStackMethod = null;
 			nbtTagCompoundClazz = null;
+			cnstr_NBTTagCompound = null;
 		}
 		else{
 			mItemMetaGetAsString = null;
 
 			// NMS to convert a net.minecraft.server.vX_X.ItemStack to a valid JSON string
-			final RefClass craftItemStackClazz = ReflectionUtils.getRefClass("{cb}.inventory.CraftItemStack");
-			asNMSCopyMethod = craftItemStackClazz.getMethod("asNMSCopy", ItemStack.class);
-			final RefClass nmsItemStackClazz = ReflectionUtils.getRefClass("{nms}.ItemStack", "{nm}.world.item.ItemStack");
+			final Class<?> craftItemStackClazz = ReflectionUtils.getClass("{cb}.inventory.CraftItemStack");
+			asNMSCopyMethod = ReflectionUtils.getMethod(craftItemStackClazz, "asNMSCopy", ItemStack.class);
+			final Class<?> nmsItemStackClazz = ReflectionUtils.getClass("{nms}.ItemStack", "{nm}.world.item.ItemStack");
 
-			nbtTagCompoundClazz = ReflectionUtils.getRefClass("{nms}.NBTTagCompound", "{nm}.nbt.NBTTagCompound");
-			RefMethod saveNmsItemStackMethodTemp;
+			nbtTagCompoundClazz = ReflectionUtils.getClass("{nms}.NBTTagCompound", "{nm}.nbt.NBTTagCompound");
+			cnstr_NBTTagCompound = ReflectionUtils.getConstructor(nbtTagCompoundClazz);
+			Method saveNmsItemStackMethodTemp;
 			try{
-				RefClass classHolderLookupProvider = ReflectionUtils.getRefClass("{nm}.core.HolderLookup$Provider");//1.20.5+
-				RefClass classNBTBase = ReflectionUtils.getRefClass("{nm}.nbt.NBTBase");
-				saveNmsItemStackMethodTemp = nmsItemStackClazz.findMethod(/*isStatic=*/false, classNBTBase, classHolderLookupProvider);
+				Class<?> classHolderLookupProvider = ReflectionUtils.getClass("{nm}.core.HolderLookup$Provider");//1.20.5+
+				Class<?> classNBTBase = ReflectionUtils.getClass("{nm}.nbt.NBTBase");
+				saveNmsItemStackMethodTemp = ReflectionUtils.findMethod(nmsItemStackClazz, /*isStatic=*/false, classNBTBase, classHolderLookupProvider);
 			}
 			catch(RuntimeException e2){
 				// TODO: seems we can still get a 3rd RuntimeException here in 1.20.6
-				saveNmsItemStackMethodTemp = nmsItemStackClazz.findMethod(/*isStatic=*/false, nbtTagCompoundClazz, nbtTagCompoundClazz);
+				saveNmsItemStackMethodTemp = ReflectionUtils.findMethod(nmsItemStackClazz, /*isStatic=*/false, nbtTagCompoundClazz, nbtTagCompoundClazz);
 			}
 			saveNmsItemStackMethod = saveNmsItemStackMethodTemp;
 		}
@@ -312,18 +321,18 @@ public final class MiscUtils{
 		if(mItemMetaGetAsString != null){
 			if(!item.hasItemMeta()) return "{id:\""+item.getType().getKey().getKey()+"\",count:"+item.getAmount()+"}";
 			else return "{id:\""+item.getType().getKey().getKey()+"\",count:"+item.getAmount()
-				+",components:"+mItemMetaGetAsString.of(item.getItemMeta()).call(null)+"}";
+				+",components:"+ReflectionUtils.call(mItemMetaGetAsString, item.getItemMeta())+"}";
 		}
-		Object nmsItemStackObj = asNMSCopyMethod.call(item);
-		Object newTagOrRegistryAccess = registryAccessObj != null ? registryAccessObj : nbtTagCompoundClazz.getConstructor().create();
-		Object itemAsJsonObject = saveNmsItemStackMethod.of(nmsItemStackObj).call(newTagOrRegistryAccess);
+		Object nmsItemStackObj = ReflectionUtils.callStatic(asNMSCopyMethod, item);
+		Object newTagOrRegistryAccess = registryAccessObj != null ? registryAccessObj : ReflectionUtils.construct(cnstr_NBTTagCompound);
+		Object itemAsJsonObject = ReflectionUtils.call(saveNmsItemStackMethod, nmsItemStackObj, newTagOrRegistryAccess);
 		String jsonString = itemAsJsonObject.toString();
 		if(jsonString.length() > JSON_LIMIT){
 			item = new ItemStack(item.getType(), item.getAmount());//TODO: Reduce item json data in a less destructive way-
 			//reduceItemData() -> clear book pages, clear hidden NBT, call recursively for containers
-			nmsItemStackObj = asNMSCopyMethod.call(item);
-			newTagOrRegistryAccess = registryAccessObj != null ? registryAccessObj : nbtTagCompoundClazz.getConstructor().create();
-			itemAsJsonObject = saveNmsItemStackMethod.of(nmsItemStackObj).call(newTagOrRegistryAccess);
+			nmsItemStackObj = ReflectionUtils.callStatic(asNMSCopyMethod, item);
+			newTagOrRegistryAccess = registryAccessObj != null ? registryAccessObj : ReflectionUtils.construct(cnstr_NBTTagCompound);
+			itemAsJsonObject = ReflectionUtils.call(saveNmsItemStackMethod, nmsItemStackObj, newTagOrRegistryAccess);
 			jsonString = itemAsJsonObject.toString();
 		}
 		return itemAsJsonObject.toString();
@@ -437,24 +446,26 @@ public final class MiscUtils{
 		}
 	}
 
-	private static RefMethod essMethodGetUser, essMethodIsVanished;
-	private static RefMethod vanishMethodGetManager, vanishMethodIsVanished;
+	private static Method essMethodGetUser, essMethodIsVanished;
+	private static Method vanishMethodGetManager, vanishMethodIsVanished;
 	public static final boolean isVanished(Player p){
 		Plugin essPlugin = p.getServer().getPluginManager().getPlugin("Essentials");
 		if(essPlugin != null){
 			if(essMethodGetUser == null){
-				essMethodGetUser = ReflectionUtils.getRefClass("com.earth2me.essentials.Essentials").getMethod("getUser", Player.class);
-				essMethodIsVanished = ReflectionUtils.getRefClass("com.earth2me.essentials.User").getMethod("isVanished");
+				essMethodGetUser = ReflectionUtils.getMethod(ReflectionUtils.getClass("com.earth2me.essentials.Essentials"), "getUser", Player.class);
+				essMethodIsVanished = ReflectionUtils.getMethod(ReflectionUtils.getClass("com.earth2me.essentials.User"), "isVanished");
 			}
-			return (boolean)essMethodIsVanished.of(essMethodGetUser.of(essPlugin).call(p)).call();
+			Object essUser = ReflectionUtils.call(essMethodGetUser, essPlugin, p);
+			return (boolean)ReflectionUtils.call(essMethodIsVanished, essUser);
 		}
 		Plugin vanishPlugin = p.getServer().getPluginManager().getPlugin("VanishNoPacket");
 		if(vanishPlugin != null){
 			if(vanishMethodGetManager == null){
-				vanishMethodGetManager = ReflectionUtils.getRefClass("org.kitteh.vanish.VanishPlugin").getMethod("getManager");
-				vanishMethodIsVanished = ReflectionUtils.getRefClass("org.kitteh.vanish.VanishManager").getMethod("isVanished", Player.class);
+				vanishMethodGetManager = ReflectionUtils.getMethod(ReflectionUtils.getClass("org.kitteh.vanish.VanishPlugin"), "getManager");
+				vanishMethodIsVanished = ReflectionUtils.getMethod(ReflectionUtils.getClass("org.kitteh.vanish.VanishManager"), "isVanished", Player.class);
 			}
-			return (boolean)vanishMethodIsVanished.of(vanishMethodGetManager.of(vanishPlugin).call()).call(p);
+			Object manager = ReflectionUtils.call(vanishMethodGetManager, vanishPlugin);
+			return (boolean)ReflectionUtils.call(vanishMethodIsVanished, manager, p);
 		}
 		return p.getServer().getOnlinePlayers().stream().allMatch(p2 -> !p2.canSee(p) || p2.isOp() || p2.getUniqueId().equals(p.getUniqueId()))
 			&& p.getServer().getOnlinePlayers().stream().anyMatch(p2 -> !p2.canSee(p));
@@ -512,8 +523,8 @@ public final class MiscUtils{
 		return getClosestBlockFace(vec, possibleHeadRotations).getOppositeFace();//TODO: why is it opposite?
 	}
 
-	private static final RefMethod propertyGetValueMethod = ReflectionUtils.getRefClass(Property.class).findMethodByName("value", "getValue");
-	public static final String getPropertyValue(Property p){return (String)propertyGetValueMethod.of(p).call();}
+	private static final Method propertyGetValueMethod = ReflectionUtils.findMethodByName(Property.class, "value", "getValue");
+	public static final String getPropertyValue(Property p){return (String)ReflectionUtils.call(propertyGetValueMethod, p);}
 
 	@SuppressWarnings("deprecation")
 	public static final YetAnotherProfile getProfile(String nameOrUUID, boolean fetchSkin, Plugin nullForSync){

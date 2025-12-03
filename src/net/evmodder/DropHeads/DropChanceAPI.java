@@ -1,6 +1,7 @@
 package net.evmodder.DropHeads;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -51,6 +52,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.BlockProjectileSource;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import net.evmodder.DropHeads.commands.CommandDropRate;
@@ -63,13 +65,11 @@ import net.evmodder.DropHeads.listeners.DeathMessagePacketIntercepter;
 import net.evmodder.DropHeads.listeners.EntityDeathListener;
 import net.evmodder.EvLib.bukkit.EvUtils;
 import net.evmodder.EvLib.FileIO;
-import net.evmodder.EvLib.bukkit.ReflectionUtils;
-import net.evmodder.EvLib.bukkit.ReflectionUtils.RefClass;
-import net.evmodder.EvLib.bukkit.ReflectionUtils.RefMethod;
 import net.evmodder.EvLib.bukkit.TellrawUtils;
 import net.evmodder.EvLib.TextUtils;
 import net.evmodder.EvLib.bukkit.TellrawUtils.Component;
 import net.evmodder.EvLib.bukkit.TellrawUtils.ListComponent;
+import net.evmodder.EvLib.util.ReflectionUtils;
 import net.evmodder.EvLib.bukkit.YetAnotherProfile;
 
 /** Public API for head drop chance logic loaded from DropHeads configs.
@@ -103,7 +103,7 @@ public final class DropChanceAPI{
 	private final EntitySetting<Map<Material, Double>> weaponMults;
 	private final EntitySetting<TreeMap</*timeAlive=*/Integer, Double>> timeAliveMults;// Note: Bukkit's e.getTicksLived() returns an int.
 
-	private final RefMethod methodDeserialize, methodGson, methodSendMessage;
+	private final Method methodDeserialize, methodGson, methodSendMessage;
 
 //	int numMobBeheads, numPlayerBeheads;
 
@@ -350,15 +350,15 @@ public final class DropChanceAPI{
 		}
 		catch(IllegalArgumentException ex){/*The permissions are already defined; perhaps this is just a plugin or server reload*/}
 
-		RefMethod tempGson, tempDeserialize, tempSendMessage;
+		Method tempGson, tempDeserialize, tempSendMessage;
 		try{// Paper/Purpur servers
-			RefClass classGson = ReflectionUtils.getRefClass("net.kyori.adventure.text.serializer.gson.GsonComponentSerializer");
-			RefClass classAudience = ReflectionUtils.getRefClass("net.kyori.adventure.audience.Audience");
-			RefClass classComponent = ReflectionUtils.getRefClass("net.kyori.adventure.text.Component");
-			tempGson = classGson.findMethodByName("gson");
-			tempDeserialize = classGson.findMethodByReturnType(classComponent);
+			Class<?> classGson = ReflectionUtils.getClass("net.kyori.adventure.text.serializer.gson.GsonComponentSerializer");
+			Class<?> classAudience = ReflectionUtils.getClass("net.kyori.adventure.audience.Audience");
+			Class<?> classComponent = ReflectionUtils.getClass("net.kyori.adventure.text.Component");
+			tempGson = ReflectionUtils.findMethodByName(classGson, "gson");
+			tempDeserialize = ReflectionUtils.findMethodByReturnType(classGson, classComponent);
 //			tempDeserialize = classGson.getMethod("deserializeFromTree​", JsonElement.class);
-			tempSendMessage = classAudience.getMethod("sendMessage", classComponent);
+			tempSendMessage = ReflectionUtils.getMethod(classAudience, "sendMessage", classComponent);
 		}
 		catch(RuntimeException e){// Craftbukkit/Spigot servers
 //			e.printStackTrace();
@@ -605,7 +605,9 @@ public final class DropChanceAPI{
 			pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+target.getName()+" "+component.toString());
 		}
 		else try{ // Paper/Purpur
-			methodSendMessage.of(target).call(methodDeserialize.of(methodGson.call()).call(new JsonParser().parse(component.toString())));
+			JsonElement json = new JsonParser().parse(component.toString());
+			Object chatComp = ReflectionUtils.call(methodDeserialize, ReflectionUtils.callStatic(methodGson), json);
+			ReflectionUtils.call(methodSendMessage, target, chatComp);
 		}
 		catch(JsonSyntaxException e){e.printStackTrace();}
 	}
