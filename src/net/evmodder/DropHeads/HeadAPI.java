@@ -506,6 +506,12 @@ public class HeadAPI{
 					dataFlags = textureKey.split("\\|");
 				}
 				break;
+			case "COPPER_GOLEM":
+				if(textureKey.contains("|UNAFFECTED")){
+					textureKey = textureKey.replace("|UNAFFECTED", "");
+					dataFlags = textureKey.split("\\|");
+				}
+				break;
 			case "RABBIT":
 				if(textureKey.contains("RABBIT|THE_KILLER_BUNNY")){
 					textureKey = textureKey.replace("RABBIT|THE_KILLER_BUNNY", "entity.minecraft.killer_bunny");

@@ -17,6 +17,7 @@ CAT:                0.004
 CAVE_SPIDER:        0.001
 CHICKEN:            0.001
 COD:                0.002
+COPPER_GOLEM:       0.010
 COW:                0.004
 CREAKING:           0.005
 CREEPER:            0.006
@@ -35,7 +36,8 @@ GIANT:              0.050
 GLOW_SQUID:         0.004
 GOAT:               0.004
 GUARDIAN:           0.004
-HAPPY_GHAST:        0.030
+HAPPY_GHAST:        0.008
+HAPPY_GHAST|BABY:   0.006
 HOGLIN:             0.004
 HORSE:              0.006
 HUSK:               0.005

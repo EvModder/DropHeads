@@ -126,6 +126,7 @@ public final class TextureKeyLookup{
 	private static Method mBoggedIsSheared;
 	private static Method mBeeHasNectar, mBeeGetAnger, mBeeHasStung;
 	private static Method mCatGetType, mCatGetCollarColor;
+	private static Method mCopperGolem_getWeatherState;
 	private static Method mFoxGetType, mFoxIsSleeping;
 	private static Method mPandaGetMainGene, mPandaGetHiddenGene;
 	private static Method mTraderLlamaGetColor;
@@ -136,6 +137,7 @@ public final class TextureKeyLookup{
 	private static Method mStriderIsShivering, mStriderHasSaddle;
 	private static Method mShulkerGetPeek, mShulkerGetAttachedFace;
 	private static Method mGetHandle, mGetDataWatcher, mGet_FromDataWatcher;
+	private static Method mHappyGhast_isAdult;
 	private static Field ghastIsAttackingField;
 	private static Method mGhastIsCharging;
 
@@ -247,6 +249,10 @@ public final class TextureKeyLookup{
 				}
 				return "CAT|"+catType;
 			}
+			case "COPPER_GOLEM":
+				if(mCopperGolem_getWeatherState == null) mCopperGolem_getWeatherState = ReflectionUtils.getMethod(
+						ReflectionUtils.getClass("org.bukkit.entity.CopperGolem"), "getWeatherState");
+				return "COPPER_GOLEM|"+getEnumNameOrKeyedName(entity, mCopperGolem_getWeatherState);
 			case "COW":
 				if(!ReflectionUtils.isAtLeastVersion("v1_21_5")) return "COW";
 				if(mCowGetVariant == null) mCowGetVariant = ReflectionUtils.getMethod(ReflectionUtils.getClass("org.bukkit.entity.Cow"), "getVariant");
@@ -333,6 +339,9 @@ public final class TextureKeyLookup{
 						+ (!ReflectionUtils.call(mGoatHasLeftHorn, entity).equals(true) ? "|NO_LEFT_HORN" : "")
 						+ (!ReflectionUtils.call(mGoatHasRightHorn, entity).equals(true) ? "|NO_RIGHT_HORN" : "")
 						+ (ReflectionUtils.call(mGoatIsScreaming, entity).equals(true) ? "|SCREAMING" : "");
+			case "HAPPY_GHAST":
+				if(mHappyGhast_isAdult == null) mHappyGhast_isAdult = ReflectionUtils.getMethod(ReflectionUtils.getClass("org.bukkit.entity.HappyGhast"), "isAdult");
+				return "HAPPY_GHAST" + (ReflectionUtils.call(mHappyGhast_isAdult, entity).equals(true) ? "" : "|BABY");
 			case "STRIDER": {
 				if(mStriderIsShivering == null){
 					final Class<?> classStrider = ReflectionUtils.getClass("org.bukkit.entity.Strider");
@@ -345,7 +354,7 @@ public final class TextureKeyLookup{
 			}
 			case "PIG_ZOMBIE":
 				if(((Zombie)entity).isBaby()) return "PIG_ZOMBIE|BABY";
-				else return "PIG_ZOMBIE";
+				return "PIG_ZOMBIE";
 			case "PLAYER":
 				/* hmm */
 			default:
