@@ -136,63 +136,15 @@ public final class MiscUtils{
 		return item.getEnchantmentLevel(ench);
 	}
 
-	private static Method toStrMethod, toCompMethod;
-	static{
-		if(ReflectionUtils.isAtLeastVersion("v1_21_6")){
-			Class<?> classCursed_1_21_6_stuff = ReflectionUtils.getClass("net.evmodder.DropHeads.Cursed_1_21_6_stuff");
-			toStrMethod = ReflectionUtils.getMethod(classCursed_1_21_6_stuff, "chatComponentToJson", Object.class);
-			toCompMethod = ReflectionUtils.getMethod(classCursed_1_21_6_stuff, "jsonToChatComponent", String.class);
-		}
-		else{
-			final Class<?> iChatBaseComponentClass = ReflectionUtils.getClass("{nm}.network.chat.IChatBaseComponent");
-			final Class<?> chatSerializerClass = ReflectionUtils.getClass("{nm}.network.chat.IChatBaseComponent$ChatSerializer",
-					"{nm}.network.chat.ComponentSerialization");
-			final Class<?> holderLookupProviderClass = ReflectionUtils.getClass("{nm}.core.HolderLookup$Provider", "{nm}.core.HolderLookup$a");
-//			fromJsonMethod = chatSerializerClass.getMethod("fromJson", String.class, holderLookupProviderClass);
-			try{
-				toCompMethod = ReflectionUtils.findMethod(chatSerializerClass, /*isStatic=*/true,
-						ReflectionUtils.getClass("{nm}.network.chat.IChatMutableComponent"), String.class, holderLookupProviderClass);
-				//TODO: findMethod() fails in 1.21.10
-				
-				
-//				toJsonMethod = chatSerializerClass.getMethod("toJson", iChatBaseComponentClass, holderLookupProviderClass);
-				toStrMethod = ReflectionUtils.findMethod(chatSerializerClass, /*isStatic=*/true, String.class, iChatBaseComponentClass, holderLookupProviderClass);
-			}
-			catch(RuntimeException re){toStrMethod = toCompMethod = null; re.printStackTrace();}
-		}
-	}
-	private static final Object chatCompFromJsonStr(String jsonStr){
-		if(jsonStr == null) return null;
-		if(ReflectionUtils.isAtLeastVersion("v1_21_6")) return ReflectionUtils.callStatic(toCompMethod, jsonStr);
-		else return ReflectionUtils.callStatic(toCompMethod, jsonStr, registryAccessObj);
-	}
-	private static final String jsonStrFromChatComp(Object chatComp){
-		if(chatComp == null) return null;
-		if(ReflectionUtils.isAtLeastVersion("v1_21_6")) return (String)ReflectionUtils.callStatic(toStrMethod, chatComp);
-		else return (String)ReflectionUtils.callStatic(toStrMethod, chatComp, registryAccessObj);
-	}
-
 	private static final Class<?> classCraftMetaItem = ReflectionUtils.getClass("{cb}.inventory.CraftMetaItem");
 	private static final Field displayNameField = ReflectionUtils.getField(classCraftMetaItem, "displayName");
 	private static final Field loreField = ReflectionUtils.getField(classCraftMetaItem, "lore");
-	private static Object registryAccessObj;//class: IRegistryCustom.Dimension
-	static{
-		if(ReflectionUtils.isAtLeastVersion("v1_20_5")){
-			Class<?> classCraftServer = ReflectionUtils.getClass("{cb}.CraftServer");
-			Method method_CraftServer_getServer = ReflectionUtils.getMethod(classCraftServer, "getServer");
-			final Object nmsServerObj = ReflectionUtils.call(method_CraftServer_getServer, Bukkit.getServer());
-			//registryAccessObj = ReflectionUtils.getClass("{nm}.server.MinecraftServer").getMethod("registryAccess").of(nmsServerObj).call();
-			Class<?> classMinecraftServer = ReflectionUtils.getClass("{nm}.server.MinecraftServer");
-			Method method_MinecraftServer_getRegistryAccess = ReflectionUtils.findMethod(
-					classMinecraftServer, /*isStatic=*/false, ReflectionUtils.getClass("net.minecraft.core.IRegistryCustom$Dimension"));
-			registryAccessObj = ReflectionUtils.call(method_MinecraftServer_getRegistryAccess, nmsServerObj);
-		}
-		else registryAccessObj = null;
-	}
+
+	private static final boolean useComponentsInsteadOfNBT = ReflectionUtils.isAtLeastVersion("1.20.5");
 	public static final ItemStack setDisplayName(@Nonnull ItemStack item, @Nonnull Component name){
-		if(toCompMethod != null){
+		if(useComponentsInsteadOfNBT){
 			final ItemMeta meta = item.getItemMeta();
-			ReflectionUtils.set(displayNameField, meta, chatCompFromJsonStr(name.toString()));
+			ReflectionUtils.set(displayNameField, meta, CompConverter.chatCompFromJsonStr(name.toString()));
 			item.setItemMeta(meta);
 			return item;
 		}
@@ -205,9 +157,9 @@ public final class MiscUtils{
 		}
 	}
 	public static final String getDisplayName(@Nonnull ItemStack item){
-		if(toStrMethod != null){
+		if(useComponentsInsteadOfNBT){
 			if(!item.hasItemMeta()) return null;
-			try{return jsonStrFromChatComp(ReflectionUtils.get(displayNameField, item.getItemMeta()));}
+			try{return CompConverter.jsonStrFromChatComp(ReflectionUtils.get(displayNameField, item.getItemMeta()));}
 			catch(RuntimeException ex){
 				//Caused by: java.lang.reflect.InvocationTargetException
 				//Caused by: java.lang.NullPointerException: Cannot invoke "net.minecraft.network.chat.Component.tryCollapseToString()" because "text" is null
@@ -222,8 +174,8 @@ public final class MiscUtils{
 	}
 
 	public static final ItemStack setLore(@Nonnull ItemStack item, @Nonnull Component... lore){
-		if(toCompMethod != null){
-			Object lines = Stream.of(lore).map(line -> chatCompFromJsonStr(line.toString())).collect(Collectors.toList());
+		if(useComponentsInsteadOfNBT){
+			Object lines = Stream.of(lore).map(line -> CompConverter.chatCompFromJsonStr(line.toString())).collect(Collectors.toList());
 			ItemMeta meta = item.getItemMeta();
 			ReflectionUtils.set(loreField, meta, lines);
 			item.setItemMeta(meta);
@@ -241,10 +193,10 @@ public final class MiscUtils{
 	}
 
 	public static final List<String> getLore(@Nonnull ItemStack item){
-		if(toStrMethod != null){
+		if(useComponentsInsteadOfNBT){
 			if(!item.hasItemMeta()) return null;
 			//TODO: do we need to unescape anything?
-			return ((List<?>)ReflectionUtils.get(loreField, item.getItemMeta())).stream().map(MiscUtils::jsonStrFromChatComp).toList();
+			return ((List<?>)ReflectionUtils.get(loreField, item.getItemMeta())).stream().map(CompConverter::jsonStrFromChatComp).toList();
 		}
 		else{
 			RefNBTTagCompound tag = NBTTagUtils.getTag(item);
@@ -309,6 +261,20 @@ public final class MiscUtils{
 		}
 	}
 
+	private static Object registryAccessObj;//class: IRegistryCustom.Dimension
+	static{
+		if(ReflectionUtils.isAtLeastVersion("v1_20_5")){
+			Class<?> classCraftServer = ReflectionUtils.getClass("{cb}.CraftServer");
+			Method method_CraftServer_getServer = ReflectionUtils.getMethod(classCraftServer, "getServer");
+			final Object nmsServerObj = ReflectionUtils.call(method_CraftServer_getServer, Bukkit.getServer());
+			//registryAccessObj = ReflectionUtils.getClass("{nm}.server.MinecraftServer").getMethod("registryAccess").of(nmsServerObj).call();
+			Class<?> classMinecraftServer = ReflectionUtils.getClass("{nm}.server.MinecraftServer");
+			Method method_MinecraftServer_getRegistryAccess = ReflectionUtils.findMethod(
+					classMinecraftServer, /*isStatic=*/false, ReflectionUtils.getClass("net.minecraft.core.IRegistryCustom$Dimension"));
+			registryAccessObj = ReflectionUtils.call(method_MinecraftServer_getRegistryAccess, nmsServerObj);
+		}
+		else registryAccessObj = null;
+	}
 	// https://www.spigotmc.org/threads/tut-item-tooltips-with-the-chatcomponent-api.65964/
 	/**
 	 * Converts an {@link org.bukkit.inventory.ItemStack} to a JSON string
@@ -317,7 +283,6 @@ public final class MiscUtils{
 	 * @param itemStack the item to convert
 	 * @return the JSON string representation of the item
 	 */
-	@SuppressWarnings("deprecation")
 	public static final String convertItemStackToJson(ItemStack item, int JSON_LIMIT){
 		if(mItemMetaGetAsString != null){
 			if(!item.hasItemMeta()) return "{id:\""+item.getType().getKey().getKey()+"\",count:"+item.getAmount()+"}";
