@@ -28,8 +28,9 @@ import net.evmodder.DropHeads.datatypes.EntitySetting;
 import net.evmodder.DropHeads.datatypes.NoteblockMode;
 import net.evmodder.DropHeads.listeners.*;
 import net.evmodder.EvLib.bukkit.EvPlugin;
-import net.evmodder.EvLib.FileIO;
+import net.evmodder.EvLib.bukkit.ConfigUtils;
 import net.evmodder.EvLib.bukkit.Updater;
+import net.evmodder.EvLib.util.FileIO;
 
 //TODO:
 // * /dropheads reload
@@ -73,8 +74,8 @@ public final class DropHeads extends EvPlugin{
 
 	@Override public void reloadConfig(){
 		InputStream defaultConfig = getClass().getResourceAsStream("/configs/config.yml");
-		FileIO.verifyDir(this);
-		config = FileIO.loadConfig(this, "config-"+getName()+".yml", defaultConfig, /*notifyIfNew=*/true);
+		ConfigUtils.verifyDir(this);
+		config = ConfigUtils.loadConfig(this, "config-"+getName()+".yml", defaultConfig, /*notifyIfNew=*/true);
 	}
 
 	@Override public void onEvEnable(){
@@ -103,14 +104,14 @@ public final class DropHeads extends EvPlugin{
 
 		// Load translations
 		final InputStream translationsIS = getClass().getResourceAsStream("/configs/translations.yml");
-		final Configuration translations = FileIO.loadConfig(this, "translations.yml", translationsIS, /*notifyIfNew=*/false);
+		final Configuration translations = ConfigUtils.loadConfig(this, "translations.yml", translationsIS, /*notifyIfNew=*/false);
 		// No need to assign defaults if new (because it was just copied. Also the InputStream will be invalid)
 		if(!translations.getBoolean("new")) translations.setDefaults(YamlConfiguration.loadConfiguration(new InputStreamReader(translationsIS)));
 		//config.addDefaults(translations); // Caller-supplied defaults will always overrided these, so I can't use it :(
 		for(String key : translations.getKeys(true)) if(!config.isSet(key)) config.set(key, translations.get(key));
 
 		// Load entity-settings
-		final Configuration entitySettings = FileIO.loadConfig(this, "entity-settings.yml",
+		final Configuration entitySettings = ConfigUtils.loadConfig(this, "entity-settings.yml",
 				getClass().getResourceAsStream("/configs/entity-settings.yml"), /*notifyIfNew=*/false);
 		for(String key : entitySettings.getKeys(true)) if(!config.isSet(key)) config.set(key, entitySettings.get(key));
 

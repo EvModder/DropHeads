@@ -12,7 +12,7 @@ import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.metadata.FixedMetadataValue;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.MiscUtils;
-import net.evmodder.EvLib.FileIO;
+import net.evmodder.EvLib.util.FileIO;
 
 public class EntitySpawnListener implements Listener{
 	private final DropHeads pl;

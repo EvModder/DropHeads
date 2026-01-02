@@ -34,7 +34,7 @@ import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import com.mojang.authlib.properties.Property;
 import javax.annotation.Nonnull;
-import net.evmodder.EvLib.FileIO;
+import net.evmodder.EvLib.util.FileIO;
 import net.evmodder.EvLib.bukkit.NBTTagUtils;
 import net.evmodder.EvLib.bukkit.NBTTagUtils.RefNBTTagString;
 import net.evmodder.EvLib.bukkit.NBTTagUtils.RefNBTTagCompound;
@@ -84,7 +84,6 @@ public final class MiscUtils{
 		}
 	}
 
-	@SuppressWarnings("deprecation")
 	public static final HashMap<String, Sound> getNoteblockSounds(){
 		HashMap<String, Sound> nbSounds = new HashMap</*txtrKey, Sound*/>();
 

@@ -10,7 +10,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.TextureKeyLookup;
-import net.evmodder.EvLib.FileIO;
+import net.evmodder.EvLib.util.FileIO;
 
 //public record EntitySetting(
 //	Map<String, EntitySetting> subtypeSettings,
@@ -115,7 +115,7 @@ public record EntitySetting<T>(T globalDefault, Map<EntityType, T> typeSettings,
 	public static <T> EntitySetting<T> fromTextFile(@Nonnull final DropHeads pl, @Nonnull final String filename, @Nonnull final String resourceFilename,
 			@Nonnull final T defaultValue, @Nonnull final BiFunction<String, String, T> valueParser)
 	{
-		final String defaultSettings = FileIO.loadResource(pl, resourceFilename, /*defaultContent=*/"");
+		final String defaultSettings = FileIO.loadResource(pl.getClass(), resourceFilename, /*defaultContent=*/"");
 		final String settings = FileIO.loadFile(filename, defaultSettings);
 		if(settings.isBlank()) return new EntitySetting<T>(defaultValue, null, null);
 

@@ -22,7 +22,7 @@ import net.evmodder.DropHeads.InternalAPI;
 import net.evmodder.DropHeads.MiscUtils;
 import net.evmodder.DropHeads.datatypes.EntitySetting;
 import net.evmodder.EvLib.bukkit.EvCommand;
-import net.evmodder.EvLib.FileIO;
+import net.evmodder.EvLib.util.FileIO;
 import net.evmodder.EvLib.bukkit.TellrawUtils.ListComponent;
 import net.evmodder.EvLib.bukkit.TellrawUtils.TranslationComponent;
 import net.evmodder.EvLib.bukkit.TellrawUtils.RawTextComponent;

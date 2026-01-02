@@ -39,7 +39,7 @@ import com.mojang.authlib.properties.Property;
 import me.arcaniax.hdb.api.DatabaseLoadEvent;
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import net.evmodder.DropHeads.datatypes.NoteblockMode;
-import net.evmodder.EvLib.FileIO;
+import net.evmodder.EvLib.util.FileIO;
 import net.evmodder.EvLib.bukkit.EntityUtils;
 import net.evmodder.EvLib.bukkit.HeadUtils;
 import net.evmodder.EvLib.bukkit.TellrawUtils;
@@ -275,7 +275,7 @@ public class HeadAPI{
 		//---------- </Load translations> ---------------------------------------------------------------------
 
 		//---------- <Load Textures> ----------------------------------------------------------------------
-		final String hardcodedList = FileIO.loadResource(pl, "configs/head-textures.txt", /*defaultContent=*/"");
+		final String hardcodedList = FileIO.loadResource(pl.getClass(), "configs/head-textures.txt", /*defaultContent=*/"");
 //		String localList = FileIO.loadFile("head-textures.txt", hardcodedList);  // This does not preserve comments
 		String localList = FileIO.loadFile("head-textures.txt", getClass().getResourceAsStream("/configs/head-textures.txt"));
 		UNKNOWN_TEXTURE_CODE = textures.getOrDefault(EntityType.UNKNOWN.name(), "5c90ca5073c49b898a6f8cdbc72e6aca0a425ec83bc4355e3b834fd859282bdd");

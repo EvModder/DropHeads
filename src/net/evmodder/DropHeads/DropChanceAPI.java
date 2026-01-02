@@ -64,7 +64,7 @@ import net.evmodder.DropHeads.events.EntityBeheadEvent;
 import net.evmodder.DropHeads.listeners.DeathMessagePacketIntercepter;
 import net.evmodder.DropHeads.listeners.EntityDeathListener;
 import net.evmodder.EvLib.bukkit.EvUtils;
-import net.evmodder.EvLib.FileIO;
+import net.evmodder.EvLib.util.FileIO;
 import net.evmodder.EvLib.bukkit.TellrawUtils;
 import net.evmodder.EvLib.TextUtils;
 import net.evmodder.EvLib.bukkit.TellrawUtils.Component;
