@@ -1,10 +1,12 @@
 package net.evmodder.DropHeads.listeners;
 
 import java.util.HashSet;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityTargetEvent.TargetReason;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.inventory.ItemStack;
@@ -44,13 +46,15 @@ public class EndermanProvokeListener implements Listener{
 		return null;
 	}
 
+	private static final boolean wasAttackedBy(EntityDamageEvent evt, Entity attacker){
+		return evt != null && evt instanceof EntityDamageByEntityEvent e && e.getDamager().getUniqueId().equals(attacker.getUniqueId());
+	}
+
 	@EventHandler public void entityTargetEntityEvent(EntityTargetLivingEntityEvent evt){
 		if(evt.getEntityType() == EntityType.ENDERMAN && evt.getTarget() != null && evt.getTarget().getType() == EntityType.PLAYER
 			&& evt.getReason() == TargetReason.CLOSEST_PLAYER
-			&& (evt.getEntity().getLastDamageCause() == null
-				|| !(evt.getEntity().getLastDamageCause() instanceof EntityDamageByEntityEvent
-				|| !((EntityDamageByEntityEvent)evt.getEntity().getLastDamageCause()).getDamager().getUniqueId().equals(evt.getTarget().getUniqueId()))
-			) && (ALL_HEADS_ARE_CAMOFLAGE || camouflageHeads.contains(getEntityTypeFromHead(evt.getTarget().getEquipment().getHelmet())))
+			&& wasAttackedBy(evt.getEntity().getLastDamageCause(), evt.getTarget())
+			&& (ALL_HEADS_ARE_CAMOFLAGE || camouflageHeads.contains(getEntityTypeFromHead(evt.getTarget().getEquipment().getHelmet())))
 		){
 			evt.setCancelled(true);
 		}
