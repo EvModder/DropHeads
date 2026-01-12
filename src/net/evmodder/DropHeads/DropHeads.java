@@ -73,8 +73,8 @@ public final class DropHeads extends EvPlugin{
 	private String LOGFILE_NAME;
 
 	@Override public void reloadConfig(){
+		ConfigUtils.updateConfigDirName(this);
 		InputStream defaultConfig = getClass().getResourceAsStream("/configs/config.yml");
-		ConfigUtils.verifyDir(this);
 		config = ConfigUtils.loadConfig(this, "config-"+getName()+".yml", defaultConfig, /*notifyIfNew=*/true);
 	}
 
