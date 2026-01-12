@@ -13,6 +13,7 @@ BOGGED:             0.005
 BREEZE:             0.030
 BLAZE:              0.005
 CAMEL:              0.006
+CAMEL_HUSK:         0.005
 CAT:                0.004
 CAVE_SPIDER:        0.001
 CHICKEN:            0.001
@@ -47,8 +48,10 @@ LLAMA:              0.007
 MAGMA_CUBE:         0.007
 MOOSHROOM:          0.004
 MULE:               0.008
+NAUTILUS:           0.008
 OCELOT:             0.007
 PANDA:              0.004
+PARCHED:            0.004
 PARROT:             0.008
 PHANTOM:            0.006
 PIG:                0.004
@@ -90,6 +93,7 @@ WOLF:               0.007
 ZOGLIN:             0.006
 ZOMBIE:             0.004
 ZOMBIE_HORSE:       0.070
+ZOMBIE_NAUTILUS:    0.007
 ZOMBIE_VILLAGER:    0.019
 ZOMBIFIED_PIGLIN:   0.002
 
