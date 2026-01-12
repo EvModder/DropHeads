@@ -130,7 +130,8 @@ public final class TextureKeyLookup{
 	private static Method mFoxGetType, mFoxIsSleeping;
 	private static Method mPandaGetMainGene, mPandaGetHiddenGene;
 	private static Method mTraderLlamaGetColor;
-	private static Method mAxolotlGetVariant, mCowGetVariant, mChickenGetVariant, mFrogGetVariant, mPigGetVariant, mWolfGetVariant, mMushroomCowGetVariant;
+	private static Method mAxolotlGetVariant, mCowGetVariant, mChickenGetVariant, mFrogGetVariant, mPigGetVariant, mWolfGetVariant;
+	private static Method mMushroomCowGetVariant, mZombieNautilusGetVariant;
 	private static Method mVexIsCharging;
 	private static Method mChestBoatGetType;
 	private static Method mGoatIsScreaming, mGoatHasLeftHorn, mGoatHasRightHorn;
@@ -355,6 +356,10 @@ public final class TextureKeyLookup{
 			case "PIG_ZOMBIE":
 				if(((Zombie)entity).isBaby()) return "PIG_ZOMBIE|BABY";
 				return "PIG_ZOMBIE";
+			case "ZOMBIE_NAUTILUS":
+				if(mZombieNautilusGetVariant == null) mZombieNautilusGetVariant = ReflectionUtils.getMethod(
+						ReflectionUtils.getClass("org.bukkit.entity.ZombieNautilus"), "getVariant");
+				return "ZOMBIE_NAUTILUS|"+getEnumNameOrKeyedName(entity, mZombieNautilusGetVariant);
 			case "PLAYER":
 				/* hmm */
 			default:
