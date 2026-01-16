@@ -251,6 +251,7 @@ public final class TextureKeyLookup{
 				return "CAT|"+catType;
 			}
 			case "COPPER_GOLEM":
+//				return "COPPER_GOLEM|"+((org.bukkit.entity.CopperGolem)entity).getWeatherState().name();
 				if(mCopperGolem_getWeatherState == null) mCopperGolem_getWeatherState = ReflectionUtils.getMethod(
 						ReflectionUtils.getClass("org.bukkit.entity.CopperGolem"), "getWeatherState");
 				return "COPPER_GOLEM|"+getEnumNameOrKeyedName(entity, mCopperGolem_getWeatherState);
