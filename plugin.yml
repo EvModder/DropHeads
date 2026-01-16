@@ -5,8 +5,8 @@ description: Heads for every mob and player.
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
 #10=Java8->Java21, entity-settings grouping, config file reorg
-#8=Fixing YAP error, 1.21.11 mobs (heads, droprates, grumms)
-version: 3.10.8
+#9=Misc console error fixes
+version: 3.10.9
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 
