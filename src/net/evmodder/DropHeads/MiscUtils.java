@@ -265,7 +265,7 @@ public final class MiscUtils{
 		if(ReflectionUtils.isAtLeastVersion("v1_20_5")){
 			Class<?> classCraftServer = ReflectionUtils.getClass("{cb}.CraftServer");
 			Method method_CraftServer_getServer = ReflectionUtils.getMethod(classCraftServer, "getServer");
-			final Object nmsServerObj = ReflectionUtils.call(method_CraftServer_getServer, Bukkit.getServer());
+			Object nmsServerObj = ReflectionUtils.call(method_CraftServer_getServer, Bukkit.getServer());
 			//registryAccessObj = ReflectionUtils.getClass("{nm}.server.MinecraftServer").getMethod("registryAccess").of(nmsServerObj).call();
 			Class<?> classMinecraftServer = ReflectionUtils.getClass("{nm}.server.MinecraftServer");
 			Method method_MinecraftServer_getRegistryAccess = ReflectionUtils.findMethod(
@@ -292,14 +292,15 @@ public final class MiscUtils{
 		Object newTagOrRegistryAccess = registryAccessObj != null ? registryAccessObj : ReflectionUtils.construct(cnstr_NBTTagCompound);
 		Object itemAsJsonObject = ReflectionUtils.call(saveNmsItemStackMethod, nmsItemStackObj, newTagOrRegistryAccess);
 		String jsonString = itemAsJsonObject.toString();
-		if(jsonString.length() > JSON_LIMIT){
-			item = new ItemStack(item.getType(), item.getAmount());//TODO: Reduce item json data in a less destructive way-
-			//reduceItemData() -> clear book pages, clear hidden NBT, call recursively for containers
-			nmsItemStackObj = ReflectionUtils.callStatic(asNMSCopyMethod, item);
-			newTagOrRegistryAccess = registryAccessObj != null ? registryAccessObj : ReflectionUtils.construct(cnstr_NBTTagCompound);
-			itemAsJsonObject = ReflectionUtils.call(saveNmsItemStackMethod, nmsItemStackObj, newTagOrRegistryAccess);
-			jsonString = itemAsJsonObject.toString();
-		}
+		if(jsonString.length() <= JSON_LIMIT) return jsonString;
+
+		//TODO: Reduce item json data in a less destructive way
+		item = new ItemStack(item.getType(), item.getAmount());
+		//reduceItemData() -> clear book pages, clear hidden NBT, call recursively for containers
+		nmsItemStackObj = ReflectionUtils.callStatic(asNMSCopyMethod, item);
+		newTagOrRegistryAccess = registryAccessObj != null ? registryAccessObj : ReflectionUtils.construct(cnstr_NBTTagCompound);
+		itemAsJsonObject = ReflectionUtils.call(saveNmsItemStackMethod, nmsItemStackObj, newTagOrRegistryAccess);
+		jsonString = itemAsJsonObject.toString();
 		return itemAsJsonObject.toString();
 	}
 	//tellraw @p {"text":"Test","hoverEvent":{"action":"show_item","value":"{\"id\":\"bow\",\"count\":1,\"components\":{\"Unbreakable\":\"1\"}}"}}
@@ -492,29 +493,27 @@ public final class MiscUtils{
 	public static final String getPropertyValue(Property p){return (String)ReflectionUtils.call(propertyGetValueMethod, p);}
 
 	@SuppressWarnings("deprecation")
-	public static final YetAnotherProfile getProfile(String nameOrUUID, boolean fetchSkin, Plugin nullForSync){
+	public static final YetAnotherProfile getProfile(final String nameOrUUID, final boolean includeSkin, final Plugin nullForSync){
 		Player player;
 		try{player = Bukkit.getServer().getPlayer(UUID.fromString(nameOrUUID));}
 		catch(java.lang.IllegalArgumentException e){player = null;/*thrown by UUID.fromString*/}
 		if(player == null) player = Bukkit.getServer().getPlayer(nameOrUUID);
 		if(player != null){
 			YetAnotherProfile profile = new YetAnotherProfile(player.getUniqueId(), player.getName());
-			if(!fetchSkin) return profile;
-			else{
+			if(includeSkin){
 				final YetAnotherProfile rawProfile = YetAnotherProfile.fromPlayer(player);
 				final Collection<Property> textures = rawProfile.properties() == null ? null : rawProfile.properties().get("textures");
-				if(textures == null || textures.isEmpty()) profile = new YetAnotherProfile(player.getUniqueId(), player.getName());
-				else{
+				if(textures != null && !textures.isEmpty()){
 					final String code0 = getPropertyValue(textures.iterator().next());
-					Multimap<String, Property> pm = LinkedListMultimap.create();
+					final Multimap<String, Property> pm = LinkedListMultimap.create();
 					pm.put("textures", new Property("textures", code0));
 					profile = new YetAnotherProfile(player.getUniqueId(), player.getName(), pm);
 				}
 			}
-			WebUtils.addProfileToCache(nameOrUUID, profile);
+			WebUtils.addProfileToCache(profile, includeSkin);
 			return profile;
 		}
-		return WebUtils.getProfile(nameOrUUID, fetchSkin, nullForSync);
+		return WebUtils.getProfile(nameOrUUID, includeSkin, nullForSync);
 	}
 
 // not currently used

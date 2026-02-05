@@ -121,7 +121,7 @@ public class BlockClickListener implements Listener{
 		//player
 		else if(profile.id() != null && (data.player=pl.getServer().getOfflinePlayer(profile.id())) != null
 				&& (data.player.hasPlayedBefore()
-					|| (tempProfile=MiscUtils.getProfile(profile.id().toString(), /*fetchSkin=*/false, ASYNC_PROFILE_REQUESTS ? pl : null)) != null)
+					|| (tempProfile=MiscUtils.getProfile(profile.id().toString(), /*includeSkin=*/false, ASYNC_PROFILE_REQUESTS ? pl : null)) != null)
 		){
 			data.headType = HeadUtils.getDroppedHeadType(EntityType.PLAYER);  // "Head"
 			data.entityTypeNames = pl.getAPI().getEntityTypeAndSubtypeNamesFromKey(EntityType.PLAYER.name());  // "Player"
@@ -146,7 +146,7 @@ public class BlockClickListener implements Listener{
 			HeadNameData headData = getHeadNameData(YetAnotherProfile.fromSkull(skull));
 			if(skull.hasOwner() && headData.player == null){
 				OfflinePlayer player = skull.getOwningPlayer();
-				YetAnotherProfile profile = MiscUtils.getProfile(player.getUniqueId().toString(), /*fetchSkin=*/false, ASYNC_PROFILE_REQUESTS ? pl : null);
+				YetAnotherProfile profile = MiscUtils.getProfile(player.getUniqueId().toString(), /*includeSkin=*/false, ASYNC_PROFILE_REQUESTS ? pl : null);
 				if(player.hasPlayedBefore() || profile != null){
 					headData.player = player;
 					final String headName;

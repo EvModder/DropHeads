@@ -91,7 +91,7 @@ public class CompConverter{
 	public static final Object chatCompFromJsonStr(String jsonStr){
 		if(jsonStr == null) return null;
 		try{
-			if(toCompMethod != null) return (String)ReflectionUtils.callStatic(toStrMethod, jsonStr, registryAccessObj);
+			if(toCompMethod != null) return (String)ReflectionUtils.callStatic(toCompMethod, jsonStr, registryAccessObj);
 
 			// 1.21.6+
 			Class<?> classJsonParser = ReflectionUtils.getClass("com.google.gson.JsonParser");
