@@ -54,6 +54,7 @@ import net.evmodder.EvLib.bukkit.TellrawUtils.TextClickAction;
 import net.evmodder.EvLib.bukkit.TellrawUtils.TextHoverAction;
 import net.evmodder.EvLib.bukkit.TellrawUtils.TranslationComponent;
 import net.evmodder.EvLib.util.ReflectionUtils;
+import net.evmodder.EvLib.util.WebHook;
 
 // A trashy place to dump stuff that I should probably move to EvLib after ensure cross-version safety
 public final class MiscUtils{
@@ -90,7 +91,7 @@ public final class MiscUtils{
 		String sounds = FileIO.loadFile("noteblock-sounds.txt", (String)null);
 		if(sounds == null){
 			DropHeads.getPlugin().getLogger().info("Downloading noteblock sound config...");
-			sounds = WebUtils.getReadURL("https://raw.githubusercontent.com/EvModder/DropHeads/master/configs/noteblock-sounds.txt");
+			sounds = WebHook.getReadURL("https://raw.githubusercontent.com/EvModder/DropHeads/master/configs/noteblock-sounds.txt");
 			sounds = FileIO.loadFile("noteblock-sounds.txt", sounds);
 			if(sounds == null){DropHeads.getPlugin().getLogger().severe("Request to download noteblock-sounds.txt failed"); return null;}
 		}

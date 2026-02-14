@@ -40,6 +40,7 @@ import me.arcaniax.hdb.api.DatabaseLoadEvent;
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
 import net.evmodder.DropHeads.datatypes.NoteblockMode;
 import net.evmodder.EvLib.util.FileIO;
+import net.evmodder.EvLib.util.WebHook;
 import net.evmodder.EvLib.bukkit.EntityUtils;
 import net.evmodder.EvLib.bukkit.HeadUtils;
 import net.evmodder.EvLib.bukkit.TellrawUtils;
@@ -49,7 +50,6 @@ import net.evmodder.EvLib.bukkit.TellrawUtils.Format;
 import net.evmodder.EvLib.bukkit.TellrawUtils.RawTextComponent;
 import net.evmodder.EvLib.bukkit.TellrawUtils.TranslationComponent;
 import net.evmodder.EvLib.TextUtils;
-import net.evmodder.EvLib.bukkit.WebUtils;
 import net.evmodder.EvLib.bukkit.YetAnotherProfile;
 
 /** Public API for general DropHeads features.
@@ -158,7 +158,7 @@ public class HeadAPI{
 
 	private String downloadTexturesFile(String remoteFilename, String descriptiveName){
 		pl.getLogger().info("Downloading "+descriptiveName+" head textures...");
-		final String downloadedTextures = WebUtils.getReadURL(TEXTURE_DL_URL+remoteFilename);
+		final String downloadedTextures = WebHook.getReadURL(TEXTURE_DL_URL+remoteFilename);
 		pl.getLogger().info("Downloaded "+descriptiveName+" head textures");
 		return downloadedTextures;//JunkUtils.stripComments(downloadedTextures);
 	}
