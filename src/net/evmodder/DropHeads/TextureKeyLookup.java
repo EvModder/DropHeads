@@ -252,8 +252,8 @@ public final class TextureKeyLookup{
 			}
 			case "COPPER_GOLEM":
 //				return "COPPER_GOLEM|"+((org.bukkit.entity.CopperGolem)entity).getWeatherState().name();
-				if(mCopperGolem_getWeatherState == null) mCopperGolem_getWeatherState = ReflectionUtils.getMethod(
-						ReflectionUtils.getClass("org.bukkit.entity.CopperGolem"), "getWeatherState");
+				if(mCopperGolem_getWeatherState == null) mCopperGolem_getWeatherState = ReflectionUtils.findMethodByName(
+						ReflectionUtils.getClass("org.bukkit.entity.CopperGolem"), /*bukkit=*/"getWeatherState", /*paper=*/"getWeatheringState");
 				return "COPPER_GOLEM|"+getEnumNameOrKeyedName(entity, mCopperGolem_getWeatherState);
 			case "COW":
 				if(!ReflectionUtils.isAtLeastVersion("v1_21_5")) return "COW";
