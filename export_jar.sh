@@ -22,4 +22,5 @@ net/evmodder/EvLib/bukkit/SelectorUtils* \
 net/evmodder/EvLib/bukkit/TellrawUtils* \
 net/evmodder/EvLib/bukkit/YetAnotherProfile* \
 net/evmodder/EvLib/bukkit/WebUtils* \
+net/evmodder/EvLib/util/WebHook* \
 net/evmodder/EvLib/util/ReflectionUtils* \
