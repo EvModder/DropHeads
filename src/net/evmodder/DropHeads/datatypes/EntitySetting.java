@@ -155,7 +155,7 @@ public record EntitySetting<T>(T globalDefault, Map<EntityType, T> typeSettings,
 			@Nonnull final T defaultValue, final BiFunction<String, Object, T> valueParser)
 	{
 		if(!pl.getConfig().contains(path)){
-			pl.getLogger().warning("Value is missing from config/entity-settings: "+path);
+			pl.getLogger().warning("EntitySetting for "+path+" is missing! Falling back to built-in-default: "+defaultValue);
 			return new EntitySetting<T>(defaultValue, null, null);
 		}
 
@@ -167,7 +167,7 @@ public record EntitySetting<T>(T globalDefault, Map<EntityType, T> typeSettings,
 //		else internalValueParser = (k,v)->defaultValue.getClass().isInstance(v) ? (T)v : null;
 		else internalValueParser = (k,v)->{
 			if(defaultValue.getClass().isInstance(v)) return (T)v;
-			pl.getLogger().severe("Invalid entity-setting in "+path+" for '"+k+"': "+v);
+			pl.getLogger().severe("EntitySetting for "+path+" with entity "+k+" has an invalid value!: "+v);
 			return null;
 		};
 		ConfigurationSection cs = pl.getConfig().isConfigurationSection(path) ? pl.getConfig().getConfigurationSection(path) : null;
@@ -175,13 +175,16 @@ public record EntitySetting<T>(T globalDefault, Map<EntityType, T> typeSettings,
 		if(cs == null){
 			pl.getLogger().fine("EntitySetting for "+path+" is not a ConfigSection, parsing it as a default");
 			final T t = internalValueParser.apply("DEFAULT", pl.getConfig().get(path));
-			return t == null ? null : new EntitySetting<T>(t, /*typeSettings=*/null, /*subtypeSettings=*/null);
+			if(t == null) pl.getLogger().warning("EntitySetting direct-parse failed. Falling back to built-in-default: "+defaultValue);
+			return new EntitySetting<T>(t != null ? t : defaultValue, /*typeSettings=*/null, /*subtypeSettings=*/null);
 		}
 		Map<String, Object> values = cs.getValues(/*deep=*/false);
 		// ConfigurationSection detected, but the keys are not EntityTypes/textureKeys, so again just attempt to parse as a single default value
 		if(!values.isEmpty() && values.keySet().stream().noneMatch(EntitySetting::isEntityType)){
-			final T t = valueParser.apply("DEFAULT", cs);
-			return t == null ? null : new EntitySetting<T>(t, /*typeSettings=*/null, /*subtypeSettings=*/null);
+			pl.getLogger().fine("EntitySetting for "+path+" is a ConfigSection, but the keys are NOT entity types");
+			final T t = internalValueParser.apply("DEFAULT", cs);
+			if(t == null) pl.getLogger().warning("EntitySetting CS-parse failed. Falling back to built-in-default: "+defaultValue);
+			return new EntitySetting<T>(t != null ? t : defaultValue, /*typeSettings=*/null, /*subtypeSettings=*/null);
 		}
 		values.forEach((k, v) ->
 			parseTypeAndValue(pl, cs.getCurrentPath(), k.toUpperCase(), v, /*defaultRecognizedTypes=*/null, typeSettings, subtypeSettings, internalValueParser)
