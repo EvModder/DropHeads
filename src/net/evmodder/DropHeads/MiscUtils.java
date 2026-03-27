@@ -1,7 +1,6 @@
 package net.evmodder.DropHeads;
 
 import java.io.File;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -218,94 +217,6 @@ public final class MiscUtils{
 		}
 	}
 
-	// New non-NMS way (1.20.6+?)
-	private static final Method mItemMetaGetAsString;
-	// Old NMS way
-	private static final Method asNMSCopyMethod;
-	private static final Method saveNmsItemStackMethod;
-	private static final Class<?> nbtTagCompoundClazz;
-	private static final Constructor<?> cnstr_NBTTagCompound;;
-	static{
-		Method mItemMetaGetAsStringTemp;
-		try{mItemMetaGetAsStringTemp = ReflectionUtils.getMethod(ItemMeta.class, "getAsString");}
-		catch(RuntimeException e1){mItemMetaGetAsStringTemp = null;}
-		if(mItemMetaGetAsStringTemp != null){
-			// Non-NMS method
-			mItemMetaGetAsString = mItemMetaGetAsStringTemp;
-			asNMSCopyMethod = null;
-			saveNmsItemStackMethod = null;
-			nbtTagCompoundClazz = null;
-			cnstr_NBTTagCompound = null;
-		}
-		else{
-			mItemMetaGetAsString = null;
-
-			// NMS to convert a net.minecraft.server.vX_X.ItemStack to a valid JSON string
-			final Class<?> craftItemStackClazz = ReflectionUtils.getClass("{cb}.inventory.CraftItemStack");
-			asNMSCopyMethod = ReflectionUtils.getMethod(craftItemStackClazz, "asNMSCopy", ItemStack.class);
-			final Class<?> nmsItemStackClazz = ReflectionUtils.getClass("{nms}.ItemStack", "{nm}.world.item.ItemStack");
-
-			nbtTagCompoundClazz = ReflectionUtils.getClass("{nms}.NBTTagCompound", "{nm}.nbt.NBTTagCompound");
-			cnstr_NBTTagCompound = ReflectionUtils.getConstructor(nbtTagCompoundClazz);
-			Method saveNmsItemStackMethodTemp;
-			try{
-				Class<?> classHolderLookupProvider = ReflectionUtils.getClass("{nm}.core.HolderLookup$Provider");//1.20.5+
-				Class<?> classNBTBase = ReflectionUtils.getClass("{nm}.nbt.NBTBase");
-				saveNmsItemStackMethodTemp = ReflectionUtils.findMethod(nmsItemStackClazz, /*isStatic=*/false, classNBTBase, classHolderLookupProvider);
-			}
-			catch(RuntimeException e2){
-				// TODO: seems we can still get a 3rd RuntimeException here in 1.20.6
-				saveNmsItemStackMethodTemp = ReflectionUtils.findMethod(nmsItemStackClazz, /*isStatic=*/false, nbtTagCompoundClazz, nbtTagCompoundClazz);
-			}
-			saveNmsItemStackMethod = saveNmsItemStackMethodTemp;
-		}
-	}
-
-	private static Object registryAccessObj;//class: IRegistryCustom.Dimension
-	static{
-		if(ReflectionUtils.isAtLeastVersion("v1_20_5")){
-			Class<?> classCraftServer = ReflectionUtils.getClass("{cb}.CraftServer");
-			Method method_CraftServer_getServer = ReflectionUtils.getMethod(classCraftServer, "getServer");
-			Object nmsServerObj = ReflectionUtils.call(method_CraftServer_getServer, Bukkit.getServer());
-			//registryAccessObj = ReflectionUtils.getClass("{nm}.server.MinecraftServer").getMethod("registryAccess").of(nmsServerObj).call();
-			Class<?> classMinecraftServer = ReflectionUtils.getClass("{nm}.server.MinecraftServer");
-			Method method_MinecraftServer_getRegistryAccess = ReflectionUtils.findMethod(
-					classMinecraftServer, /*isStatic=*/false, ReflectionUtils.getClass("net.minecraft.core.IRegistryCustom$Dimension"));
-			registryAccessObj = ReflectionUtils.call(method_MinecraftServer_getRegistryAccess, nmsServerObj);
-		}
-		else registryAccessObj = null;
-	}
-	// https://www.spigotmc.org/threads/tut-item-tooltips-with-the-chatcomponent-api.65964/
-	/**
-	 * Converts an {@link org.bukkit.inventory.ItemStack} to a JSON string
-	 * for sending with TextAction.ITEM
-	 *
-	 * @param itemStack the item to convert
-	 * @return the JSON string representation of the item
-	 */
-	public static final String convertItemStackToJson(ItemStack item, int JSON_LIMIT){
-		if(mItemMetaGetAsString != null){
-			if(!item.hasItemMeta()) return "{id:\""+item.getType().getKey().getKey()+"\",count:"+item.getAmount()+"}";
-			else return "{id:\""+item.getType().getKey().getKey()+"\",count:"+item.getAmount()
-				+",components:"+ReflectionUtils.call(mItemMetaGetAsString, item.getItemMeta())+"}";
-		}
-		Object nmsItemStackObj = ReflectionUtils.callStatic(asNMSCopyMethod, item);
-		Object newTagOrRegistryAccess = registryAccessObj != null ? registryAccessObj : ReflectionUtils.construct(cnstr_NBTTagCompound);
-		Object itemAsJsonObject = ReflectionUtils.call(saveNmsItemStackMethod, nmsItemStackObj, newTagOrRegistryAccess);
-		String jsonString = itemAsJsonObject.toString();
-		if(jsonString.length() <= JSON_LIMIT) return jsonString;
-
-		//TODO: Reduce item json data in a less destructive way
-		item = new ItemStack(item.getType(), item.getAmount());
-		//reduceItemData() -> clear book pages, clear hidden NBT, call recursively for containers
-		nmsItemStackObj = ReflectionUtils.callStatic(asNMSCopyMethod, item);
-		newTagOrRegistryAccess = registryAccessObj != null ? registryAccessObj : ReflectionUtils.construct(cnstr_NBTTagCompound);
-		itemAsJsonObject = ReflectionUtils.call(saveNmsItemStackMethod, nmsItemStackObj, newTagOrRegistryAccess);
-		jsonString = itemAsJsonObject.toString();
-		return itemAsJsonObject.toString();
-	}
-	//tellraw @p {"text":"Test","hoverEvent":{"action":"show_item","value":"{\"id\":\"bow\",\"count\":1,\"components\":{\"Unbreakable\":\"1\"}}"}}
-
 	public static final Component getItemDisplayNameComponent(@Nonnull ItemStack item){
 		String rarityColor = TextUtils.getRarityColor(item).name().toLowerCase();
 		String rawDisplayName = MiscUtils.getDisplayName(item);
@@ -323,7 +234,7 @@ public final class MiscUtils{
 		}
 	}
 	public static final Component getMurderItemComponent(@Nonnull ItemStack item, int JSON_LIMIT){
-		TextHoverAction hoverAction = new TextHoverAction(HoverEvent.SHOW_ITEM, MiscUtils.convertItemStackToJson(item, JSON_LIMIT));
+		TextHoverAction hoverAction = new TextHoverAction(HoverEvent.SHOW_ITEM, CompConverter.convertItemStackToJson(item, JSON_LIMIT));
 		String rarityColor = TextUtils.getRarityColor(item).name().toLowerCase();
 		String rawDisplayName = MiscUtils.getDisplayName(item);
 		if(rawDisplayName != null){
@@ -343,18 +254,6 @@ public final class MiscUtils{
 					new RawTextComponent(/*text=*/"]"));
 		}
 	}
-
-	// Similar as above, but for Entity instead of ItemStack
-//	final static RefClass craftEntityClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftEntity");
-//	final static RefMethod entityGetHandleMethod = craftEntityClazz.getMethod("getHandle");
-//	final static RefClass nmsEntityClazz = ReflectionUtils.getRefClass("{nms}.Entity", "{nm}.world.entity.Entity");
-//	final static RefMethod saveNmsEntityMethod = nmsEntityClazz.findMethod(/*isStatic=*/false, nbtTagCompoundClazz, nbtTagCompoundClazz);
-//	public final static String convertEntityToJson(Entity entity){
-//		Object nmsNbtTagCompoundObj = nbtTagCompoundClazz.getConstructor().create();
-//		Object nmsEntityObj = entityGetHandleMethod.of(entity).call();
-//		Object entityAsJsonObject = saveNmsEntityMethod.of(nmsEntityObj).call(nmsNbtTagCompoundObj);
-//		return entityAsJsonObject.toString();
-//	}
 
 	public static final Component getDisplayNameSelectorComponent(Entity entity, boolean fakeSelector){//TODO: make fakeSelector=false whenever possible
 		if(fakeSelector || (entity instanceof Player && !((Player)entity).getDisplayName().equals(entity.getName()))){
