@@ -304,9 +304,9 @@ public final class TextureKeyLookup{
 					catch(RuntimeException ex){}
 					
 					mGetHandle = ReflectionUtils.getMethod(ReflectionUtils.getClass("{cb}.entity.CraftEntity"), "getHandle");
-					final Class<?> classEntityGhast = ReflectionUtils.getClass("{nms}.EntityGhast", "{nm}.world.entity.monster.EntityGhast");
-					final Class<?> classDataWatcher = ReflectionUtils.getClass("{nms}.DataWatcher", "{nm}.network.syncher.DataWatcher");
-					final Class<?> classDataWatcherObject = ReflectionUtils.getClass("{nms}.DataWatcherObject", "{nm}.network.syncher.DataWatcherObject");
+					final Class<?> classEntityGhast = ReflectionUtils.getClass("{nms}.EntityGhast", "{nm}.world.entity.monster.EntityGhast", "{nm}.world.entity.monster.Ghast");
+					final Class<?> classDataWatcher = ReflectionUtils.getClass("{nms}.DataWatcher", "{nm}.network.syncher.DataWatcher", "{nm}.network.syncher.SynchedEntityData");
+					final Class<?> classDataWatcherObject = ReflectionUtils.getClass("{nms}.DataWatcherObject", "{nm}.network.syncher.DataWatcherObject", "{nm}.network.syncher.EntityDataAccessor");
 					// Only one field with this type: BuildTools/work/decompile-ee3ecae0/net/minecraft/world/entity/monster/EntityGhast.java
 					ghastIsAttackingField = ReflectionUtils.findField(classEntityGhast, classDataWatcherObject);
 					ghastIsAttackingField.setAccessible(true);
