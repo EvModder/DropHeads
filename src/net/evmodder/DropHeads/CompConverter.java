@@ -15,7 +15,7 @@ public class CompConverter{
 	private static Method toStrMethod, toCompMethod;
 
 	// 1.21.6+
-	// ComponentSerialization, IRegistryCustom, JsonOps
+	// ComponentSerialization, IRegistryCustom, RegistryAccess, JsonOps
 	private static Object objCODEC, objIRegistryCustom, objJsonOps;
 
 	private static Method method_IRegistryCustom_createSerializationContext;
@@ -30,7 +30,7 @@ public class CompConverter{
 				Class<?> classCodec = ReflectionUtils.getClass("com.mojang.serialization.Codec");
 				Class<?> classComponentSerialization = ReflectionUtils.getClass("net.minecraft.network.chat.ComponentSerialization");
 				Class<?> classCraftRegistry = ReflectionUtils.getClass("{cb}.CraftRegistry");
-				Class<?> classIRegistryCustom = ReflectionUtils.getClass("net.minecraft.core.IRegistryCustom");
+				Class<?> classIRegistryCustom = ReflectionUtils.getClass("{nm}.core.IRegistryCustom", "{nm}.core.RegistryAccess", "{nm}.core.HolderLookup$Provider");
 //				Class<?> clazzIChatBaseComponent = Class.forName("net.minecraft.network.chat.IChatBaseComponent");
 
 				objCODEC = ReflectionUtils.getStatic(ReflectionUtils.findField(classComponentSerialization, classCodec));
@@ -50,13 +50,13 @@ public class CompConverter{
 					final Object nmsServerObj = ReflectionUtils.call(method_CraftServer_getServer, Bukkit.getServer());
 					Class<?> classMinecraftServer = ReflectionUtils.getClass("{nm}.server.MinecraftServer");
 					Method method_MinecraftServer_getRegistryAccess = ReflectionUtils.findMethod(
-							classMinecraftServer, /*isStatic=*/false, ReflectionUtils.getClass("net.minecraft.core.IRegistryCustom$Dimension"));
+						classMinecraftServer, /*isStatic=*/false, ReflectionUtils.getClass("net.minecraft.core.IRegistryCustom$Dimension", "{nm}.core.RegistryAccess$Frozen"));
 					registryAccessObj = ReflectionUtils.call(method_MinecraftServer_getRegistryAccess, nmsServerObj);
 				}
-				final Class<?> iChatBaseComponentClass = ReflectionUtils.getClass("{nm}.network.chat.IChatBaseComponent");
+				final Class<?> iChatBaseComponentClass = ReflectionUtils.getClass("{nm}.network.chat.IChatBaseComponent", "{nm}.network.chat.Component");
 				final Class<?> chatSerializerClass = ReflectionUtils.getClass("{nm}.network.chat.IChatBaseComponent$ChatSerializer",
 						"{nm}.network.chat.ComponentSerialization");
-				final Class<?> classIChatMutableComponent = ReflectionUtils.getClass("{nm}.network.chat.IChatMutableComponent");
+				final Class<?> classIChatMutableComponent = ReflectionUtils.getClass("{nm}.network.chat.IChatMutableComponent", "{nm}.network.chat.MutableComponent");
 				final Class<?> holderLookupProviderClass = ReflectionUtils.getClass("{nm}.core.HolderLookup$Provider", "{nm}.core.HolderLookup$a");
 //				fromJsonMethod = chatSerializerClass.getMethod("fromJson", String.class, holderLookupProviderClass);
 				toCompMethod = ReflectionUtils.findMethod(chatSerializerClass, /*isStatic=*/true, classIChatMutableComponent, String.class, holderLookupProviderClass);
@@ -140,12 +140,12 @@ public class CompConverter{
 			asNMSCopyMethod = ReflectionUtils.getMethod(craftItemStackClazz, "asNMSCopy", ItemStack.class);
 			final Class<?> nmsItemStackClazz = ReflectionUtils.getClass("{nms}.ItemStack", "{nm}.world.item.ItemStack");
 
-			nbtTagCompoundClazz = ReflectionUtils.getClass("{nms}.NBTTagCompound", "{nm}.nbt.NBTTagCompound");
+			nbtTagCompoundClazz = ReflectionUtils.getClass("{nms}.NBTTagCompound", "{nm}.nbt.NBTTagCompound", "{nm}.nbt.CompoundTag");
 			cnstr_NBTTagCompound = ReflectionUtils.getConstructor(nbtTagCompoundClazz);
 			Method saveNmsItemStackMethodTemp;
 			try{
 				Class<?> classHolderLookupProvider = ReflectionUtils.getClass("{nm}.core.HolderLookup$Provider");//1.20.5+
-				Class<?> classNBTBase = ReflectionUtils.getClass("{nm}.nbt.NBTBase");
+				Class<?> classNBTBase = ReflectionUtils.getClass("{nm}.nbt.NBTBase", "{nm}.nbt.Tag");
 				saveNmsItemStackMethodTemp = ReflectionUtils.findMethod(nmsItemStackClazz, /*isStatic=*/false, classNBTBase, classHolderLookupProvider);
 			}
 			catch(RuntimeException e2){

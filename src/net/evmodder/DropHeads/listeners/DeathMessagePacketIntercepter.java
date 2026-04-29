@@ -45,7 +45,7 @@ public class DeathMessagePacketIntercepter implements Listener{
 
 		Field field = null;
 		try{
-			Class<?> chatBaseCompClazz = ReflectionUtils.getClass("{nms}.IChatBaseComponent", "{nm}.network.chat.IChatBaseComponent");
+			Class<?> chatBaseCompClazz = ReflectionUtils.getClass("{nms}.IChatBaseComponent", "{nm}.network.chat.IChatBaseComponent", "{nm}.network.chat.Component");
 			field = ReflectionUtils.findField(outboundChatPacketClazz, chatBaseCompClazz);
 			field.setAccessible(true);
 		}
