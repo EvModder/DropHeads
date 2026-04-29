@@ -1,0 +1,21 @@
+bin/
+media/
+tmp_*
+EvLib/
+.settings/
+textures/
+.classpath
+.project
+#.gitignore
+head-textures\ *.txt
+#export_jar.sh
+
+
+*.class
+*.un~
+grumm_log.txt
+.DS_Store
+*/.DS_Store
+*/*/.DS_Store
+*/*/*/.DS_Store
+*/*/*/*/.DS_Store
