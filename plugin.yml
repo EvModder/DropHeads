@@ -5,7 +5,7 @@ description: Heads for every mob and player.
 website: https://dev.bukkit.org/projects/dropheads
 #3=major rewrite
 #10=Java8->Java21, entity-settings grouping, config file reorg
-#10=More descriptive entity-setting parse errors, higher head-click-listener priority
+#10=More descriptive entity-setting parse errors, higher head-click-listener priority, 26.1.2 support
 version: 3.10.10
 api-version: 1.13
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
