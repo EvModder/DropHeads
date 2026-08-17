@@ -77,6 +77,7 @@ SPIDER:             0.004
 SQUID:              0.005
 STRAY:              0.004
 STRIDER:            0.003
+SULFUR_CUBE:        0.008
 TADPOLE:            0.004
 TRADER_LLAMA:       0.007
 TROPICAL_FISH:      0.004
