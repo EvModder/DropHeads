@@ -83,6 +83,24 @@ public class HeadAPI{
 	private static final String DH_RANDOM_UUID = "random_uuid";
 	private static final int MAX_NAME_LENGTH = 16;
 
+	/** Whether a 'translations.yml' value looks like a Minecraft translation key ("entity.minecraft.sheep")
+	 * rather than literal display text ("Angry"). Translation keys are lowercase [a-z0-9_] segments joined
+	 * by dots, so anything with a capital, a space, a non-ascii letter, or no dot at all is literal text. */
+	private static final boolean isTranslationKey(String value){
+		boolean sawDot = false, sawCharInSegment = false;
+		for(int i=0; i<value.length(); ++i){
+			final char c = value.charAt(i);
+			if(c == '.'){
+				if(!sawCharInSegment) return false; // Empty segment (leading dot or "..")
+				sawDot = true;
+				sawCharInSegment = false;
+			}
+			else if((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_') sawCharInSegment = true;
+			else return false;
+		}
+		return sawDot && sawCharInSegment; // Must contain a dot, and must not end on one
+	}
+
 	void loadTextures(String headsList, boolean logMissingEntities, boolean logUnknownEntities){
 		final HashSet<EntityType> missingHeads = new HashSet<EntityType>();
 		final HashSet<String> unknownHeads = new HashSet<String>();
@@ -258,10 +276,13 @@ public class HeadAPI{
 			if(localSubtypeName instanceof String == false){
 				pl.getLogger().severe("Invalid (non-enclosed-String) value for "+subtypeName+" in 'translations.yml': "+localSubtypeName);
 			}
-			TranslationComponent comp = new TranslationComponent(/*jsonKey=*/(String)localSubtypeName);
-			if(USE_TRANSLATE_FALLBACKS && comp.toPlainText().equals((String)localSubtypeName)){
-				comp = new TranslationComponent(/*jsonKey=*/"entity_subtype."+subtypeName, /*fallback=*/(String)localSubtypeName);
-			}//RawText if fallbacks==false && equals==true?
+			// Values are either a Minecraft translation key (eg "color.minecraft.brown"), which clients can
+			// localize on their own, or literal display text (eg "Angry"), which we hide behind our own key
+			// so that clients with the DropHeads resource pack can localize it too.
+			final String localName = (String)localSubtypeName;
+			final TranslationComponent comp = USE_TRANSLATE_FALLBACKS && !isTranslationKey(localName)
+					? new TranslationComponent(/*jsonKey=*/"entity_subtype."+subtypeName, /*fallback=*/localName)
+					: new TranslationComponent(/*jsonKey=*/localName);//RawText if fallbacks==false?
 			entitySubtypeNames.put(subtypeName.toUpperCase(), comp);
 		});
 		if(SAVE_TYPE_IN_LORE){
